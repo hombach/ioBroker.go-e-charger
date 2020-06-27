@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,7 +43,7 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
-      "0.0.4": {
+      "0.0.5": {
         "en": "setup done"
       },
       "0.0.1": {
@@ -271,62 +271,6 @@
         "name": "Total time of inverter operation",
         "type": "number",
         "unit": "h",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Statistics_Total.Yield",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Total yield of inverter lifetime",
-        "type": "number",
-        "unit": "kWh",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Statistics_Total.HouseConsumption",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Total consumption of house in inverter lifetime",
-        "type": "number",
-        "unit": "kWh",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Statistics_Total.SelfConsumption",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Total selfconsumption in inverter lifetime",
-        "type": "number",
-        "unit": "kWh",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Statistics_Total.SelfConsumptionRate",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Rate of selfconsumption in inverter lifetime",
-        "type": "number",
-        "unit": "%",
         "read": true,
         "write": false,
         "def": 0

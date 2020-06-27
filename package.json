@@ -1,6 +1,6 @@
 {
   "name": "iobroker.go-e-charger",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Adapter for reading go-eCharger data",
   "author": "hombach <NPM@Homba.ch>",
   "homepage": "https://github.com/hombach/ioBroker.go-e-charger",
