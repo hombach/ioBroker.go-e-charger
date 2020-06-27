@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -37,13 +37,13 @@
     "loglevel": "info",
     "readme": "https://github.com/hombach/ioBroker.go-e-charger/blob/master/README.md",
     "icon": "go-eCharger.png",
-    "extIcon": "https://github.com/hombach/ioBroker.go-e-charger/blob/master/admin/picoba.png",
+    "extIcon": "https://github.com/hombach/ioBroker.go-e-charger/blob/master/admin/go-eCharger.png",
     "keywords": [ "go-e", "go-eCharger", "wallbox" ],
     "type": "energy",
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
-      "0.0.5": {
+      "0.0.6": {
         "en": "setup done"
       },
       "0.0.1": {
