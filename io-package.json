@@ -1,0 +1,384 @@
+{
+  "common": {
+    "name": "go-eCharger",
+    "version": "0.0.1",
+    "title": "go-eCharger",
+    "titleLang": {
+      "en": "go-eCharger",
+      "de": "go-eCharger",
+      "ru": "gо-eCharger",
+      "pt": "go-eCharger",
+      "nl": "go-eCharger",
+      "fr": "go-eCharger",
+      "it": "go-eCharger",
+      "es": "go-eCharger",
+      "pl": "go-eCharger",
+      "zh-cn": "电子充电器"
+    },
+    "desc": {
+      "en": "Adapter for reading go-eCharger data",
+      "de": "Adapter zum Lesen von go-eCharger-Daten",
+      "ru": "Адаптер для чтения данных go-eCharger",
+      "pt": "Adaptador para leitura de dados do go-eCharger",
+      "nl": "Adapter voor het lezen van go-eCharger-gegevens",
+      "fr": "Adaptateur pour lire les données de go-eCharger",
+      "it": "Adattatore per la lettura di dati go-eCharger",
+      "es": "Adaptador para leer datos de go-eCharger",
+      "pl": "Adapter do odczytu danych go-eCharger",
+      "zh-cn": "用于读取go-eCharger数据的适配器"
+    },
+    "authors": [
+      "Christian Hombach"
+    ],
+    "platform": "Javascript/Node.js",
+    "mode": "daemon",
+    "enabled": true,
+    "license": "MIT",
+    "loglevel": "info",
+    "readme": "https://github.com/hombach/ioBroker.go-eCharger/blob/master/README.md",
+    "icon": "go-eCharger.png",
+    "extIcon": "https://github.com/hombach/ioBroker.go-eCharger/blob/master/admin/picoba.png",
+    "keywords": [ "go-e", "go-eCharger", "wallbox" ],
+    "type": "energy",
+    "connectionType": "local",
+    "dataSource": "poll",
+    "news": {
+      "0.0.1": {
+        "en": "initial release"
+      }
+    },
+    "main": "main.js",
+    "compact": true,
+    "materialize": true,
+    "materializeTab": true,
+    "supportCustoms": false,
+    "dependencies": [
+      {
+        "js-controller": ">=3.0.0",
+        "admin": ">=3.0.0"
+      }
+    ]
+  },
+
+  "native": {
+    "ipaddress": "",
+    "polltimelive": 10000
+  },
+
+  "objects": [],
+
+  "instanceObjects": [
+    {
+      "_id": "State",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Inverter state; 0:off; 3:feed grid(MPP)",
+        "type": "number",
+        "unit": "",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "GridLimitation",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Power limit of inverter by grid parameters",
+        "type": "number",
+        "unit": "%",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+
+
+    {
+      "_id": "Power",
+      "type": "channel",
+      "common": { "name": "current inverter power data" },
+      "native": {}
+    },
+    {
+      "_id": "Power.GridAC",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Grid output power without battery charging",
+        "type": "number",
+        "unit": "W",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Power.SolarDC",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Total solar input power",
+        "type": "number",
+        "unit": "W",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Power.SelfConsumption",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Selfconsumption Power",
+        "type": "number",
+        "unit": "W",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Power.HouseConsumption",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Powerconsumption of house",
+        "type": "number",
+        "unit": "W",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Power.Surplus",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Power surplus of system",
+        "type": "number",
+        "unit": "W",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+
+
+    {
+      "_id": "Statistics_Daily",
+      "type": "channel",
+      "common": { "name": "statistical data daily" },
+      "native": {}
+    },
+    {
+      "_id": "Statistics_Daily.Yield",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Total yield today",
+        "type": "number",
+        "unit": "kWh",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Statistics_Daily.HouseConsumption",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Total consumption house today",
+        "type": "number",
+        "unit": "kWh",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Statistics_Daily.SelfConsumption",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Total selfconsumption today",
+        "type": "number",
+        "unit": "kWh",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Statistics_Daily.SelfConsumptionRate",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Rate of selfconsumption today",
+        "type": "number",
+        "unit": "%",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Statistics_Daily.Autarky",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Degree of autarky today",
+        "type": "number",
+        "unit": "%",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+
+
+    {
+      "_id": "Statistics_Total",
+      "type": "channel",
+      "common": { "name": "statistical data total lifetime" },
+      "native": {}
+    },
+    {
+      "_id": "Statistics_Total.OperatingTime",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Total time of inverter operation",
+        "type": "number",
+        "unit": "h",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Statistics_Total.Yield",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Total yield of inverter lifetime",
+        "type": "number",
+        "unit": "kWh",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Statistics_Total.HouseConsumption",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Total consumption of house in inverter lifetime",
+        "type": "number",
+        "unit": "kWh",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Statistics_Total.SelfConsumption",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Total selfconsumption in inverter lifetime",
+        "type": "number",
+        "unit": "kWh",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Statistics_Total.SelfConsumptionRate",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Rate of selfconsumption in inverter lifetime",
+        "type": "number",
+        "unit": "%",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Statistics_Total.Autarky",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Degree of autarky in inverter lifetime",
+        "type": "number",
+        "unit": "%",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+
+    {
+      "_id": "Battery",
+      "type": "channel",
+      "common": { "name": "Battery data" },
+      "native": {}
+    },
+    {
+      "_id": "Battery.SoC",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Battery State of Charge",
+        "type": "number",
+        "unit": "%",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Battery.Current",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Battery current; >0 => charge; <0 => discharge",
+        "type": "number",
+        "unit": "A",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    }
+
+  ]
+}

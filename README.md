@@ -1,0 +1,48 @@
+![Logo](admin/go-eCharger.png)
+# ioBroker.go-eCharger
+
+[![NPM version](http://img.shields.io/npm/v/iobroker.go-eCharger.svg)](https://www.npmjs.com/package/iobroker.go-eCharger)
+[![Downloads](https://img.shields.io/npm/dm/iobroker.go-eCharger.svg)](https://www.npmjs.com/package/iobroker.go-eCharger)
+![Number of Installations (latest)](http://ioBroker.live/badges/template-installed.svg)
+![Number of Installations (stable)](http://ioBroker.live/badges/template-stable.svg)
+[![Dependency Status](https://img.shields.io/david/hombach/ioBroker.go-eCharger.svg)](https://david-dm.org/hombach/ioBroker.go-eCharger)
+[![Known Vulnerabilities](https://snyk.io/test/github/hombach/ioBroker.go-eCharger/badge.svg)](https://snyk.io/test/github/hombach/ioBroker.go-eCharger)
+![Node.js CI](https://github.com/hombach/ioBroker.go-eCharger/workflows/Node.js%20CI/badge.svg)
+
+[![NPM](https://nodei.co/npm/iobroker.go-eCharger.png?downloads=true)](https://nodei.co/npm/iobroker.go-eCharger/)
+
+**Tests:**: [![Travis-CI](http://img.shields.io/travis/hombach/ioBroker.go-eCharger/master.svg)](https://travis-ci.org/hombach/ioBroker.go-eCharger)
+
+## Adapter for reading go-eCharger data for iOBroker
+Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially.
+
+### Settings
+To connect to the go-eCharger type in its IP-address in the config.
+
+## Changelog
+
+### 0.0.1 (27.06.2020)
+* (HombachC) initial release
+
+## License
+MIT License
+
+Copyright (c) 2020 HombachC
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
