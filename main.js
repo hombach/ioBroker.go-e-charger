@@ -65,7 +65,7 @@ const ID_BatStateOfCharge = 33556229;             // in %
 const ID_BatCurrentDir = 33556230;                // 1 = discharge; 0 = charge
 const ID_BatCurrent = 33556238;                   // in A
 
-var KostalRequest = '';      // IP request-string for PicoBA complete data
+var ChargerRequest = '';     // IP request-string for go-eCharger complete data
 var KostalRequestDay = '';   // IP request-string for PicoBA daily statistics
 var KostalRequestTotal = ''; // IP request-string for PicoBA total statistics
 
@@ -118,7 +118,7 @@ class go_eCharger extends utils.Adapter {
 
         if (this.config.ipaddress) {
 
-            KostalRequest = 'http://' + this.config.ipaddress + '/api/dxs.json' +
+            ChargerRequest = 'http://' + this.config.ipaddress + '/api/dxs.json' +
                 '?dxsEntries=' + ID_Power_SolarDC + '&dxsEntries=' + ID_Power_GridAC +
                 '&dxsEntries=' + ID_Power_SelfConsumption + '&dxsEntries=' + ID_StatDay_SelfConsumption +
                 '&dxsEntries=' + ID_StatTot_SelfConsumption + '&dxsEntries=' + ID_StatDay_SelfConsumptionRate +

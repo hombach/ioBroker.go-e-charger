@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,7 +43,7 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
-      "0.0.6": {
+      "0.0.7": {
         "en": "setup done"
       },
       "0.0.1": {
@@ -113,20 +113,6 @@
       "common": {
         "role": "value",
         "name": "Grid output power without battery charging",
-        "type": "number",
-        "unit": "W",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Power.SolarDC",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Total solar input power",
         "type": "number",
         "unit": "W",
         "read": true,
