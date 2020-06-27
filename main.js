@@ -69,7 +69,7 @@ var ChargerRequest = '';     // IP request-string for go-eCharger complete data
 var KostalRequestDay = '';   // IP request-string for PicoBA daily statistics
 var KostalRequestTotal = ''; // IP request-string for PicoBA total statistics
 
-class go_eCharger extends utils.Adapter {
+class go_e_charger extends utils.Adapter {
 
     /****************************************************************************************
     * @param {Partial<utils.AdapterOptions>} [options={}]
@@ -77,7 +77,7 @@ class go_eCharger extends utils.Adapter {
     constructor(options) {
         super({
             ...options,
-            name: 'go-eCharger'
+            name: 'go-e-charger'
         });
         this.on('ready', this.onReady.bind(this));
         // this.on('objectChange', this.onObjectChange.bind(this));
@@ -283,7 +283,7 @@ if (module.parent) {
     /**
     * @param {Partial<utils.AdapterOptions>} [options={}]
     */
-    module.exports = (options) => new go_eCharger(options);
+    module.exports = (options) => new go_e_charger(options);
 } else { // otherwise start the instance directly
-    new go_eCharger();
+    new go_e_charger();
 }
