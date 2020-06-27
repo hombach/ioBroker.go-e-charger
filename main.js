@@ -7,6 +7,36 @@ const utils = require('@iobroker/adapter-core');
 // const schedule = require('node-schedule');
 const adapterIntervals = {};
 
+
+// Adapter for EV-Charger go-E with firmware >V033
+
+//Konstanten
+    const readlink  = 'http://192.168.100.139/status';        // IP of charger
+    const writelink = 'http://192.168.100.139/mqtt?payload='; // IP of charger
+
+//Variablen
+    var logging         = false;
+    var biglogging      = false;
+    var request         = require('request');
+    var ZielAmpere      = 5;
+    var OptAmpere       = 6;
+    var MinHomeBatVal   = 87;
+    var OffVerzoegerung = 0;
+
+/*
+"createState('EVCharger.Messwerte.Momentan.Ampere'",
+    "0);", // "amp" in A - Ampere Wert Vorgabe
+    "createState('EVCharger.Messwerte.Momentan.Phasen'",
+    "0);", // "pha" binary flags - Phasen vor und nach dem Schütz
+    "createState('EVCharger.Messwerte.Gesamt.Energy'",
+    "0);", // "eto" in 0.1kWh - Gesamt geladene Energiemenge 
+    "createState('EVCharger.Messwerte.Momentan.Allow'",
+    "0);", // "alw" - allow charging
+    "createState('EVCharger.Messwerte.Momentan.GesamtLeistung'",
+    "0);", // "nrg[11]" in 0.01kW - Gesamtleistung
+*/
+
+
 // Leistungswerte
 const ID_Power_SolarDC = 33556736;                // in W  -  DC Power PV
 const ID_Power_GridAC = 67109120;                 // in W  -  GridOutputPower without battery charging

@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,7 +43,7 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
-      "0.0.7": {
+      "0.0.8": {
         "en": "setup done"
       },
       "0.0.1": {
@@ -72,33 +72,45 @@
 
   "instanceObjects": [
     {
-      "_id": "State",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Inverter state; 0:off; 3:feed grid(MPP)",
-        "type": "number",
-        "unit": "",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
- 
-
-    {
       "_id": "Power",
       "type": "channel",
-      "common": { "name": "current inverter power data" },
+      "common": { "name": "current charger power data" },
       "native": {}
     },
     {
-      "_id": "Power.GridAC",
+      "_id": "Power.ChargeCurrent",
       "type": "state",
       "common": {
         "role": "value",
-        "name": "Grid output power without battery charging",
+        "name": "Charge current output",
+        "type": "number",
+        "unit": "A",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Power.GridPhases",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Flags for primary and secondary grid phases",
+        "type": "number",
+        "unit": "Flags",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Power.Charge",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "actual charging-power",
         "type": "number",
         "unit": "W",
         "read": true,
@@ -108,119 +120,13 @@
       "native": {}
     },
     {
-      "_id": "Power.SelfConsumption",
+      "_id": "Power.ChargeingAllowed",
       "type": "state",
       "common": {
         "role": "value",
-        "name": "Selfconsumption Power",
+        "name": "Charging allowed",
         "type": "number",
-        "unit": "W",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Power.HouseConsumption",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Powerconsumption of house",
-        "type": "number",
-        "unit": "W",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Power.Surplus",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Power surplus of system",
-        "type": "number",
-        "unit": "W",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-
-
-    {
-      "_id": "Statistics_Daily",
-      "type": "channel",
-      "common": { "name": "statistical data daily" },
-      "native": {}
-    },
-    {
-      "_id": "Statistics_Daily.Yield",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Total yield today",
-        "type": "number",
-        "unit": "kWh",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Statistics_Daily.HouseConsumption",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Total consumption house today",
-        "type": "number",
-        "unit": "kWh",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Statistics_Daily.SelfConsumption",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Total selfconsumption today",
-        "type": "number",
-        "unit": "kWh",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Statistics_Daily.SelfConsumptionRate",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Rate of selfconsumption today",
-        "type": "number",
-        "unit": "%",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Statistics_Daily.Autarky",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Degree of autarky today",
-        "type": "number",
-        "unit": "%",
+        "unit": "",
         "read": true,
         "write": false,
         "def": 0
@@ -236,27 +142,13 @@
       "native": {}
     },
     {
-      "_id": "Statistics_Total.OperatingTime",
+      "_id": "Statistics_Total.Charged",
       "type": "state",
       "common": {
         "role": "value",
-        "name": "Total time of inverter operation",
+        "name": "Totally charged in go-e lifetime",
         "type": "number",
-        "unit": "h",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Statistics_Total.Autarky",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Degree of autarky in inverter lifetime",
-        "type": "number",
-        "unit": "%",
+        "unit": "kWh",
         "read": true,
         "write": false,
         "def": 0
