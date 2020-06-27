@@ -1,7 +1,7 @@
 {
   "common": {
-    "name": "go-echarger",
-    "version": "0.0.1",
+    "name": "go-e-charger",
+    "version": "0.0.4",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.0.4": {
+        "en": "setup done"
+      },
       "0.0.1": {
         "en": "initial release"
       }
