@@ -1,17 +1,17 @@
 ![Logo](admin/go-eCharger.png)
 # ioBroker.go-eCharger
 
-[![NPM version](http://img.shields.io/npm/v/iobroker.go-eCharger.svg)](https://www.npmjs.com/package/iobroker.go-eCharger)
-[![Downloads](https://img.shields.io/npm/dm/iobroker.go-eCharger.svg)](https://www.npmjs.com/package/iobroker.go-eCharger)
+[![NPM version](http://img.shields.io/npm/v/iobroker.go-e-charger.svg)](https://www.npmjs.com/package/iobroker.go-e-charger)
+[![Downloads](https://img.shields.io/npm/dm/iobroker.go-e-charger.svg)](https://www.npmjs.com/package/iobroker.go-e-charger)
 ![Number of Installations (latest)](http://ioBroker.live/badges/template-installed.svg)
 ![Number of Installations (stable)](http://ioBroker.live/badges/template-stable.svg)
-[![Dependency Status](https://img.shields.io/david/hombach/ioBroker.go-eCharger.svg)](https://david-dm.org/hombach/ioBroker.go-eCharger)
-[![Known Vulnerabilities](https://snyk.io/test/github/hombach/ioBroker.go-eCharger/badge.svg)](https://snyk.io/test/github/hombach/ioBroker.go-eCharger)
-![Node.js CI](https://github.com/hombach/ioBroker.go-eCharger/workflows/Node.js%20CI/badge.svg)
+[![Dependency Status](https://img.shields.io/david/hombach/ioBroker.go-e-charger.svg)](https://david-dm.org/hombach/ioBroker.go-e-charger)
+[![Known Vulnerabilities](https://snyk.io/test/github/hombach/ioBroker.go-e-charger/badge.svg)](https://snyk.io/test/github/hombach/ioBroker.go-e-charger)
+![Node.js CI](https://github.com/hombach/ioBroker.go-e-charger/workflows/Node.js%20CI/badge.svg)
 
-[![NPM](https://nodei.co/npm/iobroker.go-eCharger.png?downloads=true)](https://nodei.co/npm/iobroker.go-eCharger/)
+[![NPM](https://nodei.co/npm/iobroker.go-e-charger.png?downloads=true)](https://nodei.co/npm/iobroker.go-e-charger/)
 
-**Tests:**: [![Travis-CI](http://img.shields.io/travis/hombach/ioBroker.go-eCharger/master.svg)](https://travis-ci.org/hombach/ioBroker.go-eCharger)
+**Tests:**: [![Travis-CI](http://img.shields.io/travis/hombach/ioBroker.go-e-charger/master.svg)](https://travis-ci.org/hombach/ioBroker.go-e-charger)
 
 ## Adapter for reading go-eCharger data for iOBroker
 Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially.

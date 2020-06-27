@@ -35,9 +35,9 @@
     "enabled": true,
     "license": "MIT",
     "loglevel": "info",
-    "readme": "https://github.com/hombach/ioBroker.go-eCharger/blob/master/README.md",
+    "readme": "https://github.com/hombach/ioBroker.go-e-charger/blob/master/README.md",
     "icon": "go-eCharger.png",
-    "extIcon": "https://github.com/hombach/ioBroker.go-eCharger/blob/master/admin/picoba.png",
+    "extIcon": "https://github.com/hombach/ioBroker.go-e-charger/blob/master/admin/picoba.png",
     "keywords": [ "go-e", "go-eCharger", "wallbox" ],
     "type": "energy",
     "connectionType": "local",
@@ -338,41 +338,6 @@
         "name": "Degree of autarky in inverter lifetime",
         "type": "number",
         "unit": "%",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-
-    {
-      "_id": "Battery",
-      "type": "channel",
-      "common": { "name": "Battery data" },
-      "native": {}
-    },
-    {
-      "_id": "Battery.SoC",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Battery State of Charge",
-        "type": "number",
-        "unit": "%",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Battery.Current",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Battery current; >0 => charge; <0 => discharge",
-        "type": "number",
-        "unit": "A",
         "read": true,
         "write": false,
         "def": 0

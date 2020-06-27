@@ -3,7 +3,7 @@
   "version": "0.5.4",
   "description": "Adapter for reading go-eCharger data",
   "author": "hombach <NPM@Homba.ch>",
-  "homepage": "https://github.com/hombach/ioBroker.go-eCharger",
+  "homepage": "https://github.com/hombach/ioBroker.go-e-charger",
   "license": "MIT",
   "keywords": [
     "go-eCharger",
@@ -13,7 +13,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hombach/ioBroker.go-eCharger.git"
+    "url": "git+https://github.com/hombach/ioBroker.go-e-charger.git"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -52,7 +52,7 @@
     "lint": "eslint"
   },
   "bugs": {
-    "url": "https://github.com/hombach/ioBroker.go-eCharger/issues"
+    "url": "https://github.com/hombach/ioBroker.go-e-charger/issues"
   },
   "directories": {
     "lib": "lib",
