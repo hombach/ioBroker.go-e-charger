@@ -104,7 +104,7 @@ class go_e_charger extends utils.Adapter {
             this.log.debug("OnReady done");
             await this.Read_Charger_Power();
             this.log.debug("Initial ReadCharger done, launching state machine");
-            this.StateMachine;
+            this.StateMachine();
         } else {
             this.stop;
         }
