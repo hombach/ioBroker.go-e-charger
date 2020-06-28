@@ -157,6 +157,28 @@
         "def": 0
       },
       "native": {}
+    },
+
+
+    {
+      "_id": "Settings",
+      "type": "channel",
+      "common": { "name": "states to dynamically adjust go-eCharger settings" },
+      "native": {}
+    },
+    {
+      "_id": "Settings.Setpoint_HomeBatSoC",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Setpoint for home battery state of charge",
+        "type": "number",
+        "unit": "%",
+        "read": true,
+        "write": true,
+        "def": 50
+      },
+      "native": {}
     }
 
   ]

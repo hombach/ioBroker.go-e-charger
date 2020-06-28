@@ -62,7 +62,7 @@ class go_e_charger extends utils.Adapter {
         });
         this.on('ready', this.onReady.bind(this));
         // this.on('objectChange', this.onObjectChange.bind(this));
-        // this.on('stateChange', this.onStateChange.bind(this));
+        this.on('stateChange', this.onStateChange.bind(this));
         // this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
     }
@@ -106,11 +106,53 @@ class go_e_charger extends utils.Adapter {
                 */
             this.log.debug("OnReady done");
             await this.Read_Charger_Power();
-            this.log.debug("Initial ReadCharger done");
+            this.log.debug("Initial ReadCharger done, launching state machine");
+            this.StateMachine;
         } else {
             this.stop;
         }
     }
+
+
+    /****************************************************************************************
+    * Is called if a subscribed state changes
+    * @param { string } id
+    * @param { ioBroker.State | null | undefined } state */
+    onStateChange(id, state) {
+        try {
+            if (state) { // The state was changed
+                this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+            } else {     // The state was deleted
+                this.log.warn(`state ${id} deleted`);
+            }
+        } catch (e) {
+            this.log.error("Unhandled exception processing stateChange: " + e);
+        }
+    }
+/*    if(adapter.config.publicHolidays === true) {
+    if (id === adapter.config.publicHolInstance + '.heute.boolean') {
+        publicHolidayStr = state.val;
+        shutterDriveCalc();
+
+adapter.getForeignState(result[i].name, (err, state) => {
+                            adapter.log.debug('Shutter state changed: ' + result[i].shutterName + ' old value = ' + result[i].oldHeight + ' new value = ' + state.val);
+                            //shutterState();
+
+adapter.getState('shutters.autoUp.' + nameDevice, (err, state) => {
+                    if (state && state === true || state && state.val === true) {
+                        let currentValue = '';
+                        /**
+                         * @param {any} err
+                         * @param {{ val: string; }} state
+
+    adapter.getState('control.Holiday', (err, state) => {
+        if ((state && state === null) || (state && state.val === null)) {
+            adapter.setState('control.Holiday', { val: false, ack: true });
+        }
+
+
+
+        */
 
     /****************************************************************************************
     * Is called when adapter shuts down - callback has to be called under any circumstances!
@@ -132,7 +174,17 @@ class go_e_charger extends utils.Adapter {
     /****************************************************************************************
     */
     StateMachine() {
-//        MinHomeBatVal = getState('EVCharger.Vorgaben.DesBYDState').val; // Get Desired Battery SoC
+//        MinHomeBatVal = getState('Settings.Setpoint_HomeBatSoC').val; // Get Desired Battery SoC   "_id": "Settings.Setpoint_HomeBatSoC",
+        MinHomeBatVal = this.getState('Settings.Setpoint_HomeBatSoC'); // Get Desired Battery SoC
+        this.log.info("MinHomeBatVal" + MinHomeBatVal);
+        //adapter.getState('control.Holiday', (err, state) => {
+        //    if ((state && state === null) || (state && state.val === null)) {
+        //        adapter.setState('control.Holiday', { val: false, ack: true });
+        //    }
+
+
+
+        this.oStates
         this.Read_Charger_Power();
 
         // Charge-NOW is enabled
