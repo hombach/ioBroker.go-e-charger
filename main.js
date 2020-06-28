@@ -15,8 +15,7 @@ const adapterIntervals = {};
     const writelink = 'http://192.168.100.139/mqtt?payload='; // IP of charger
 
 //Variablen
-    var biglogging      = false;
-    var request         = require('request');
+//    var request         = require('request');
     var ZielAmpere      = 5;
     var OptAmpere       = 6;
     var MinHomeBatVal   = 87;
@@ -175,7 +174,7 @@ adapter.getState('shutters.autoUp.' + nameDevice, (err, state) => {
     */
     StateMachine() {
 //        MinHomeBatVal = getState('Settings.Setpoint_HomeBatSoC').val; // Get Desired Battery SoC   "_id": "Settings.Setpoint_HomeBatSoC",
-        MinHomeBatVal = this.getState('Settings.Setpoint_HomeBatSoC'); // Get Desired Battery SoC
+        MinHomeBatVal = this.getState('Settings.Setpoint_HomeBatSoC').val; // Get Desired Battery SoC
         this.log.info("MinHomeBatVal" + MinHomeBatVal);
         //adapter.getState('control.Holiday', (err, state) => {
         //    if ((state && state === null) || (state && state.val === null)) {
