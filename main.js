@@ -30,38 +30,9 @@ const adapterIntervals = {};
     "createState('EVCharger.Messwerte.Momentan.GesamtLeistung'","0);", // "nrg[11]" in 0.01kW - Gesamtleistung
 */
 
-    StateMachine() {
-        MinHomeBatVal = getState('EVCharger.Vorgaben.DesBYDState').val; // Get Desired Battery SoC
-        Read_Charger_Power();
+    
 
-        /* Charge-NOW is enabled */
-        if (getState('EVCharger.Vorgaben.ChargeNOW').val) {
-            //    Read_Charger_Power();
-            // Charge_Config('1', '16', "go-eCharger für Schnellladung aktivieren"); // HIER EIGENTLICH MAX. STROM WEGEN SPONTANANFORDERUNG!!
-            Charge_Config('1', getState('EVCharger.Messwerte.Momentan.Ampere').val, "go-eCharger für Schnellladung aktivieren");  // HIER STROM von GUI verwenden!!
-        }
-
-        /* Charge-Manager is enabled */
-        else if (getState('EVCharger.Vorgaben.ChargeManager').val) {
-            if (getState('kostal-piko-ba.0.Battery.SoC').val >= MinHomeBatVal) { // Hausbatterie voll genug?
-                Charge_Manager(); // launch Charge Manager
-            }
-            else { // ZUKÜNFTIG: Uhrzeit fordert Leeren der Batterie
-                ZielAmpere = 6;
-                Charge_Config('0', ZielAmpere, "Hausbatterie laden bis " + MinHomeBatVal + "%");
-            }
-        }
-
-        /* OFF -> min. current */
-        else {
-            if (getState('EVCharger.Messwerte.Momentan.Allow').val == true) { // Nur false setzen wenn Allow Charge true
-                ZielAmpere = 6;
-                Charge_Config('0', ZielAmpere, "go-eCharger abschalten");
-            }
-        }
-    }
-
-schedule("*/10 * 0-23 * * *", Main);
+//schedule("*/10 * 0-23 * * *", Main);
 
 
 // Leistungswerte
@@ -158,6 +129,40 @@ class go_e_charger extends utils.Adapter {
     }
 
     
+    /****************************************************************************************
+    */
+    StateMachine() {
+        MinHomeBatVal = getState('EVCharger.Vorgaben.DesBYDState').val; // Get Desired Battery SoC
+        await Read_Charger_Power();
+
+        // Charge-NOW is enabled
+        if (getState('EVCharger.Vorgaben.ChargeNOW').val) {
+            //    Read_Charger_Power();
+            // Charge_Config('1', '16', "go-eCharger für Schnellladung aktivieren"); // HIER EIGENTLICH MAX. STROM WEGEN SPONTANANFORDERUNG!!
+            Charge_Config('1', getState('EVCharger.Messwerte.Momentan.Ampere').val, "go-eCharger für Schnellladung aktivieren");  // HIER STROM von GUI verwenden!!
+        }
+
+        // Charge-Manager is enabled
+        else if (getState('EVCharger.Vorgaben.ChargeManager').val) {
+            if (getState('kostal-piko-ba.0.Battery.SoC').val >= MinHomeBatVal) { // Hausbatterie voll genug?
+                await Charge_Manager();
+            }
+            else { // ZUKÜNFTIG: Uhrzeit fordert Leeren der Batterie
+                ZielAmpere = 6;
+                await Charge_Config('0', ZielAmpere, "Hausbatterie laden bis " + MinHomeBatVal + "%");
+            }
+        }
+
+        // OFF -> min. current
+        else {
+            if (getState('EVCharger.Messwerte.Momentan.Allow').val == true) { // Nur false setzen wenn Allow Charge true
+                ZielAmpere = 6;
+                Charge_Config('0', ZielAmpere, "go-eCharger abschalten");
+            }
+        }
+    }
+
+
     /****************************************************************************************
     */
     ReadCharger() {

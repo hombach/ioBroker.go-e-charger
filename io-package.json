@@ -123,7 +123,7 @@
       "native": {}
     },
     {
-      "_id": "Power.ChargeingAllowed",
+      "_id": "Power.ChargingAllowed",
       "type": "state",
       "common": {
         "role": "value",
