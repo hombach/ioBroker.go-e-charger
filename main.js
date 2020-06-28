@@ -29,8 +29,6 @@ const adapterIntervals = {};
     "createState('EVCharger.Messwerte.Momentan.GesamtLeistung'","0);", // "nrg[11]" in 0.01kW - Gesamtleistung
 */
 
-    
-
 //schedule("*/10 * 0-23 * * *", Main);
 
 
@@ -159,7 +157,7 @@ adapter.getState('shutters.autoUp.' + nameDevice, (err, state) => {
     onUnload(callback) {
         try {
             clearTimeout(adapterIntervals.live);
-            clearTimeout(adapterIntervals.daily);
+            clearTimeout(adapterIntervals.stateMachine);
             clearTimeout(adapterIntervals.total);
             Object.keys(adapterIntervals).forEach(interval => clearInterval(adapterIntervals[interval]));
             this.log.info('Adaptor go-eCharger cleaned up everything...');
@@ -174,6 +172,7 @@ adapter.getState('shutters.autoUp.' + nameDevice, (err, state) => {
     */
     StateMachine() {
 //        MinHomeBatVal = getState('Settings.Setpoint_HomeBatSoC').val; // Get Desired Battery SoC   "_id": "Settings.Setpoint_HomeBatSoC",
+        this.log.info("state machine running");
         MinHomeBatVal = this.getState('Settings.Setpoint_HomeBatSoC').val; // Get Desired Battery SoC
         this.log.info("MinHomeBatVal" + MinHomeBatVal);
         //adapter.getState('control.Holiday', (err, state) => {
@@ -211,6 +210,8 @@ adapter.getState('shutters.autoUp.' + nameDevice, (err, state) => {
                 this.Charge_Config('0', ZielAmpere, "go-eCharger abschalten");
 //            }
 //        }
+        adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), 2 * this.config.polltimelive);
+
     }
 
 
