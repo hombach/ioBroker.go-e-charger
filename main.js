@@ -149,7 +149,6 @@ adapter.getState('myState', function (err, state) {
     * @param {() => void} callback */
     onUnload(callback) {
         try {
-            clearTimeout(adapterIntervals.live);
             clearTimeout(adapterIntervals.stateMachine);
             clearTimeout(adapterIntervals.total);
             Object.keys(adapterIntervals).forEach(interval => clearInterval(adapterIntervals[interval]));
@@ -167,7 +166,10 @@ adapter.getState('myState', function (err, state) {
         this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { MinHomeBatVal = state.val }); // Get Desired Battery SoC
         this.Read_Charger_Power();
 
-        if (this.getState('Settings.ChargeNOW', (_err, state) => { return true })) { // Charge-NOW is enabled
+        if (this.getState('Settings.ChargeNOW', (_err, state) => {
+            this.log.info("CHARGE NOW?");
+            return true;
+        })) { // Charge-NOW is enabled
             this.log.info("CHARGE NOW!")
         }
      
@@ -180,7 +182,7 @@ adapter.getState('myState', function (err, state) {
 //        }
 
         // Charge-Manager is enabled
-//        else if (getState('EVCharger.Vorgaben.ChargeManager').val) {
+//        else if (getState('Settings.ChargeManager').val) {
 //            if (getState('kostal-piko-ba.0.Battery.SoC').val >= MinHomeBatVal) { // Hausbatterie voll genug?
                 this.Charge_Manager();
 //            }
@@ -197,7 +199,7 @@ adapter.getState('myState', function (err, state) {
                 this.Charge_Config('0', ZielAmpere, "go-eCharger abschalten");
 //            }
 //        }
-        adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), 2 * this.config.polltimelive);
+        adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
 
     }
 
@@ -213,7 +215,6 @@ adapter.getState('myState', function (err, state) {
                 if (!response.error && response.statusCode == 200) {
                     var result = await JSON.parse(response.body);
                     this.setStateAsync('Power.Charge', (result.nrg[11] * 10), true); // Umrechnung in Watt
-                    adapterIntervals.live = setTimeout(this.Read_Charger_Power.bind(this), this.config.polltimelive);
                     this.log.debug('got go-eCharger charging power');
                 }
                 else {
@@ -222,7 +223,6 @@ adapter.getState('myState', function (err, state) {
             } catch (e) {
                 this.log.error('Error in calling go-eCharger API: ' + e);
                 this.log.error('Please verify IP address: ' + this.config.ipaddress + ' !!!');
-                adapterIntervals.live = setTimeout(this.Read_Charger_Power.bind(this), 10000); // 600000
             } // END catch
         })();
     } // END Read_Charger_Power

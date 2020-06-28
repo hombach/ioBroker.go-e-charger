@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.0.9",
+    "version": "0.1.0",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.1.0": {
+        "en": "setup state machine"
+      },
       "0.0.9": {
         "en": "read charger power"
       },
@@ -182,6 +185,20 @@
     },
     {
       "_id": "Settings.ChargeNOW",
+      "type": "state",
+      "common": {
+        "role": "switch",
+        "name": "ChargeNOW enabled",
+        "type": "boolean",
+        "unit": "",
+        "read": true,
+        "write": true,
+        "def": false
+      },
+      "native": {}
+    },
+    {
+      "_id": "Settings.ChargeManager",
       "type": "state",
       "common": {
         "role": "switch",

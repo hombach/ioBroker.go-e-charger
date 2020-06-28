@@ -21,6 +21,9 @@ To connect to the go-eCharger type in its IP-address in the config.
 
 ## Changelog
 
+### 0.1.0 (28.06.2020)
+* (HombachC) setup state machine
+
 ### 0.0.9 (28.06.2020)
 * (HombachC) read charger power
 
