@@ -212,7 +212,8 @@ adapter.getState('myState', function (err, state) {
  //       (async () => {
             try {
                 // @ts-ignore got is valid
-                var response = await got(readlink);
+                var response = got(readlink);
+//                var response = await got(readlink);
                 if (!response.error && response.statusCode == 200) {
  //                   var result = await JSON.parse(response.body);
                     var result = JSON.parse(response.body);
@@ -239,7 +240,8 @@ adapter.getState('myState', function (err, state) {
 //        (async () => {
             try {
                 // @ts-ignore got is valid
-                var response = await got(`${writelink}alw=${Allow}`); // activate charging
+                var response = got(`${writelink}alw=${Allow}`); // activate charging
+//                var response = await got(`${writelink}alw=${Allow}`); // activate charging
                 if (!response.error && response.statusCode == 200) {
                     this.log.debug(response.body);
                 }
@@ -255,7 +257,8 @@ adapter.getState('myState', function (err, state) {
 //        (async () => {
         try {
             // @ts-ignore got is valid
-            var response = await got(`${writelink}amp=${Ampere}`); // set charging current
+            var response = got(`${writelink}amp=${Ampere}`); // set charging current
+//            var response = await got(`${writelink}amp=${Ampere}`); // set charging current
             if (!response.error && response.statusCode == 200) {
                 this.log.debug(response.body);
                 var result = JSON.parse(response.body);
