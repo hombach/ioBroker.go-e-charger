@@ -173,9 +173,9 @@ adapter.getState('myState', function (err, state) {
         this.getState('Power.ChargeCurrent', (_err, state) => { ChargeCurrent = state.val });
 
         if (ChargeNOW) { // Charge-NOW is enabled
-            this.Charge_Config('1', ChargeCurrent, "go-eCharger für Schnellladung aktivieren");  // keep active charging current!!
+            this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
         }
-        else if (ChargeManager) { // Charge-Manager is enabled
+//        else if (ChargeManager) { // Charge-Manager is enabled
 
 //            if (getState('kostal-piko-ba.0.Battery.SoC').val >= MinHomeBatVal) { // Hausbatterie voll genug?
                 this.Charge_Manager();
@@ -183,9 +183,9 @@ adapter.getState('myState', function (err, state) {
 //            else { // ZUKÜNFTIG: Uhrzeit fordert Leeren der Batterie
                 ZielAmpere = 6;
                 this.Charge_Config('0', ZielAmpere, "Hausbatterie laden bis " + MinHomeBatVal + "%");
-                this.Charge_Config('0', ZielAmpere, 'NEW: Hausbatterie laden bis ${MinHomeBatVal} %');
+                this.Charge_Config('0', ZielAmpere, `NEW: Hausbatterie laden bis ${MinHomeBatVal} %`);
 //            }
-        }
+//        }
 
         // OFF -> min. current
 //        else {
@@ -227,7 +227,7 @@ adapter.getState('myState', function (err, state) {
     */
     Charge_Config(Allow, Ampere, LogMessage) {
         this.log.debug(LogMessage + '  -  ' + Ampere + " Ampere");
-        this.log.debug('NEW: ${LogMessage}  -  ${Ampere} Ampere');
+        this.log.debug(`NEW: ${LogMessage}  -  ${Ampere} Ampere`);
 //        request(writelink + 'alw=' + Allow, // activate charging
 //            function (error, response, body) {
 //                if (!error) this.log.debug(body);
