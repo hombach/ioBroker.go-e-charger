@@ -142,12 +142,16 @@ adapter.getState('shutters.autoUp.' + nameDevice, (err, state) => {
                          * @param {any} err
                          * @param {{ val: string; }} state
 
-    adapter.getState('control.Holiday', (err, state) => {
-        if ((state && state === null) || (state && state.val === null)) {
-            adapter.setState('control.Holiday', { val: false, ack: true });
-        }
 
-
+adapter.getState('myState', function (err, state) {
+  adapter.log.info(
+      'State ' + adapter.namespace + '.myState -' +
+      '  Value: '    + state.val +
+      ', ack: '      + state.ack +
+      ', time stamp: '   + state.ts  +
+      ', last changed: ' + state.lc
+  );
+});
 
         */
 
@@ -173,15 +177,18 @@ adapter.getState('shutters.autoUp.' + nameDevice, (err, state) => {
     StateMachine() {
 //        MinHomeBatVal = getState('Settings.Setpoint_HomeBatSoC').val; // Get Desired Battery SoC   "_id": "Settings.Setpoint_HomeBatSoC",
         this.log.info("Vorher: MinHomeBatVal: " + MinHomeBatVal);
-        var err;
-      this.getState('Settings.Setpoint_HomeBatSoC', (err, MinHomeBatVal)); // Get Desired Battery SoC
+        this.getState('Settings.Setpoint_HomeBatSoC', (err, state) => { // Get Desired Battery SoC
+            this.log.info(
+                'State ' + this.namespace + '.myState -' +
+                '  Value: ' + state.val +
+                ', ack: ' + state.ack +
+                ', time stamp: ' + state.ts +
+                ', last changed: ' + state.lc
+            );
+            MinHomeBatVal = state.val;
+            this.log.info("MinHomeBatVal: " + MinHomeBatVal + " error " + err);
+        });
 
-
-        this.log.info("MinHomeBatVal: " + MinHomeBatVal + err);
-        //adapter.getState('control.Holiday', (err, state) => {
-        //    if ((state && state === null) || (state && state.val === null)) {
-        //        adapter.setState('control.Holiday', { val: false, ack: true });
-        //    }
 
         this.Read_Charger_Power();
 
