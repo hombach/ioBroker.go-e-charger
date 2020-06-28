@@ -172,17 +172,14 @@ adapter.getState('shutters.autoUp.' + nameDevice, (err, state) => {
     */
     StateMachine() {
 //        MinHomeBatVal = getState('Settings.Setpoint_HomeBatSoC').val; // Get Desired Battery SoC   "_id": "Settings.Setpoint_HomeBatSoC",
-        this.log.info("state machine running");
-        MinHomeBatVal = this.getState('Settings.Setpoint_HomeBatSoC').val; // Get Desired Battery SoC
+        this.log.info("Vorher: MinHomeBatVal" + MinHomeBatVal);
+        this.getState('Settings.Setpoint_HomeBatSoC', (err, MinHomeBatVal)); // Get Desired Battery SoC
         this.log.info("MinHomeBatVal" + MinHomeBatVal);
         //adapter.getState('control.Holiday', (err, state) => {
         //    if ((state && state === null) || (state && state.val === null)) {
         //        adapter.setState('control.Holiday', { val: false, ack: true });
         //    }
 
-
-
-        this.oStates
         this.Read_Charger_Power();
 
         // Charge-NOW is enabled

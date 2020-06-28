@@ -128,11 +128,11 @@
       "common": {
         "role": "value",
         "name": "Charging allowed",
-        "type": "number",
+        "type": "boolean",
         "unit": "",
         "read": true,
         "write": false,
-        "def": 0
+        "def": false
       },
       "native": {}
     },
@@ -179,7 +179,20 @@
         "def": 50
       },
       "native": {}
+    },
+    {
+      "_id": "Settings.ChargeNOW",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "ChargeNOW enabled",
+        "type": "boolean",
+        "unit": "",
+        "read": true,
+        "write": true,
+        "def": false
+      },
+      "native": {}
     }
-
   ]
 }
