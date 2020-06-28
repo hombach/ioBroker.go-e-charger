@@ -184,7 +184,7 @@
       "_id": "Settings.ChargeNOW",
       "type": "state",
       "common": {
-        "role": "value",
+        "role": "switch",
         "name": "ChargeNOW enabled",
         "type": "boolean",
         "unit": "",
