@@ -32,19 +32,6 @@ const adapterIntervals = {};
 //schedule("*/10 * 0-23 * * *", Main);
 
 
-// Leistungswerte
-const ID_Power_SolarDC = 33556736;                // in W  -  DC Power PV
-const ID_Power_GridAC = 67109120;                 // in W  -  GridOutputPower without battery charging
-// Statistics - Daily
-const ID_StatDay_SelfConsumption = 251659266;     // in Wh
-// Momentanwerte Haus
-const ID_Power_HouseConsumption = 83887872;       // in W  -  ActHomeConsumption
-const ID_Power_SelfConsumption = 83888128;        // in W  -  ownConsumption
-// Netzparameter
-const ID_GridLimitation = 67110144;               // in %   -  GridLimitation
-// Battery
-const ID_BatCurrentDir = 33556230;                // 1 = discharge; 0 = charge
-
 var ChargerRequest = '';     // IP request-string for go-eCharger complete data
 
 class go_e_charger extends utils.Adapter {
@@ -126,6 +113,8 @@ class go_e_charger extends utils.Adapter {
             this.log.error("Unhandled exception processing stateChange: " + e);
         }
     }
+
+
 /*    if(adapter.config.publicHolidays === true) {
     if (id === adapter.config.publicHolInstance + '.heute.boolean') {
         publicHolidayStr = state.val;
@@ -175,25 +164,16 @@ adapter.getState('myState', function (err, state) {
     /****************************************************************************************
     */
     StateMachine() {
-//        MinHomeBatVal = getState('Settings.Setpoint_HomeBatSoC').val; // Get Desired Battery SoC   "_id": "Settings.Setpoint_HomeBatSoC",
-        this.log.info("Vorher: MinHomeBatVal: " + MinHomeBatVal);
-        this.getState('Settings.Setpoint_HomeBatSoC', (err, state) => { // Get Desired Battery SoC
-            this.log.info(
-                'State ' + this.namespace + '.myState -' +
-                '  Value: ' + state.val +
-                ', ack: ' + state.ack +
-                ', time stamp: ' + state.ts +
-                ', last changed: ' + state.lc
-            );
-            MinHomeBatVal = state.val;
-            this.log.info("MinHomeBatVal: " + MinHomeBatVal + " error " + err);
-        });
-
-
+        this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { MinHomeBatVal = state.val }); // Get Desired Battery SoC
         this.Read_Charger_Power();
 
+        if (this.getState('Settings.ChargeNOW', (_err, state) => { return true })) { // Charge-NOW is enabled
+            this.log.info("CHARGE NOW!")
+        }
+     
+
         // Charge-NOW is enabled
-//        if (getState('EVCharger.Vorgaben.ChargeNOW').val) {
+//        if (getState('Settings.ChargeNOW').val) {
             // Read_Charger_Power();
             // Charge_Config('1', '16', "go-eCharger für Schnellladung aktivieren"); // HIER EIGENTLICH MAX. STROM WEGEN SPONTANANFORDERUNG!!
 //            this.Charge_Config('1', getState('EVCharger.Messwerte.Momentan.Ampere').val, "go-eCharger für Schnellladung aktivieren");  // HIER STROM von GUI verwenden!!
