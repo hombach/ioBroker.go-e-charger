@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 // The adapter-core module gives you access to the core ioBroker functions, you need to create an adapter
 const utils = require('@iobroker/adapter-core');
@@ -15,7 +15,6 @@ const adapterIntervals = {};
     const writelink = 'http://192.168.100.139/mqtt?payload='; // IP of charger
 
 //Variablen
-    var logging         = false;
     var biglogging      = false;
     var request         = require('request');
     var ZielAmpere      = 5;
@@ -24,80 +23,61 @@ const adapterIntervals = {};
     var OffVerzoegerung = 0;
 
 /*
-"createState('EVCharger.Messwerte.Momentan.Ampere'",
-    "0);", // "amp" in A - Ampere Wert Vorgabe
-    "createState('EVCharger.Messwerte.Momentan.Phasen'",
-    "0);", // "pha" binary flags - Phasen vor und nach dem Sch�tz
-    "createState('EVCharger.Messwerte.Gesamt.Energy'",
-    "0);", // "eto" in 0.1kWh - Gesamt geladene Energiemenge 
-    "createState('EVCharger.Messwerte.Momentan.Allow'",
-    "0);", // "alw" - allow charging
-    "createState('EVCharger.Messwerte.Momentan.GesamtLeistung'",
-    "0);", // "nrg[11]" in 0.01kW - Gesamtleistung
+    "createState('EVCharger.Messwerte.Momentan.Ampere'","0);", // "amp" in A - Ampere Wert Vorgabe
+    "createState('EVCharger.Messwerte.Momentan.Phasen'","0);", // "pha" binary flags - Phasen vor und nach dem Schütz
+    "createState('EVCharger.Messwerte.Gesamt.Energy'","0);", // "eto" in 0.1kWh - Gesamt geladene Energiemenge 
+    "createState('EVCharger.Messwerte.Momentan.Allow'","0);", // "alw" - allow charging
+    "createState('EVCharger.Messwerte.Momentan.GesamtLeistung'","0);", // "nrg[11]" in 0.01kW - Gesamtleistung
 */
+
+    StateMachine() {
+        MinHomeBatVal = getState('EVCharger.Vorgaben.DesBYDState').val; // Get Desired Battery SoC
+        Read_Charger_Power();
+
+        /* Charge-NOW is enabled */
+        if (getState('EVCharger.Vorgaben.ChargeNOW').val) {
+            //    Read_Charger_Power();
+            // Charge_Config('1', '16', "go-eCharger für Schnellladung aktivieren"); // HIER EIGENTLICH MAX. STROM WEGEN SPONTANANFORDERUNG!!
+            Charge_Config('1', getState('EVCharger.Messwerte.Momentan.Ampere').val, "go-eCharger für Schnellladung aktivieren");  // HIER STROM von GUI verwenden!!
+        }
+
+        /* Charge-Manager is enabled */
+        else if (getState('EVCharger.Vorgaben.ChargeManager').val) {
+            if (getState('kostal-piko-ba.0.Battery.SoC').val >= MinHomeBatVal) { // Hausbatterie voll genug?
+                Charge_Manager(); // launch Charge Manager
+            }
+            else { // ZUKÜNFTIG: Uhrzeit fordert Leeren der Batterie
+                ZielAmpere = 6;
+                Charge_Config('0', ZielAmpere, "Hausbatterie laden bis " + MinHomeBatVal + "%");
+            }
+        }
+
+        /* OFF -> min. current */
+        else {
+            if (getState('EVCharger.Messwerte.Momentan.Allow').val == true) { // Nur false setzen wenn Allow Charge true
+                ZielAmpere = 6;
+                Charge_Config('0', ZielAmpere, "go-eCharger abschalten");
+            }
+        }
+    }
+
+schedule("*/10 * 0-23 * * *", Main);
 
 
 // Leistungswerte
 const ID_Power_SolarDC = 33556736;                // in W  -  DC Power PV
 const ID_Power_GridAC = 67109120;                 // in W  -  GridOutputPower without battery charging
-// State
-const ID_OperatingState = 16780032;               // 0:Off; 3:Einspeissen(MPP)
 // Statistics - Daily
-const ID_StatDay_Yield = 251658754;               // in Wh
-const ID_StatDay_HouseConsumption = 251659010;    // in Wh
 const ID_StatDay_SelfConsumption = 251659266;     // in Wh
-const ID_StatDay_SelfConsumptionRate = 251659278; // in %
-const ID_StatDay_Autarky = 251659279;             // in %
-// Statistics - Total
-const ID_StatTot_OperatingTime = 251658496;       // in h
-const ID_StatTot_Yield = 251658753;               // in kWh
-const ID_StatTot_HouseConsumption = 251659009;    // in kWh
-const ID_StatTot_SelfConsumption = 251659265;     // in kWh
-const ID_StatTot_SelfConsumptionRate = 251659280; // in %
-const ID_StatTot_Autarky = 251659281;             // in %
-// Momentanwerte - PV Generator
-const ID_DC1Strom = 33555201;                     // in A  -  not implemented
-const ID_DC1Spannung = 33555202;                  // in V  -  not implemented
-const ID_DC1Leistung = 33555203;                  // in W  -  not implemented
-const ID_DC2Strom = 33555457;                     // in A  -  not implemented
-const ID_DC2Spannung = 33555458;                  // in V  -  not implemented
-const ID_DC2Leistung = 33555459;                  // in W  -  not implemented
 // Momentanwerte Haus
-const ID_HausverbrauchSolar = 83886336;           // in W  -  ActHomeConsumptionSolar
-const ID_HausverbrauchBatterie = 83886592;        // in W  -  ActHomeConsumptionBat
-const ID_HausverbrauchNetz = 83886848;            // in W  -  ActHomeConsumptionGrid
-const ID_HausverbrauchPhase1 = 83887106;          // in W  -  not implemented
-const ID_HausverbrauchPhase2 = 83887362;          // in W  -  not implemented
-const ID_HausverbrauchPhase3 = 83887618;          // in W  -  not implemented
 const ID_Power_HouseConsumption = 83887872;       // in W  -  ActHomeConsumption
 const ID_Power_SelfConsumption = 83888128;        // in W  -  ownConsumption
 // Netzparameter
 const ID_GridLimitation = 67110144;               // in %   -  GridLimitation
-const ID_GridFrequency = 67110400;                // in Hz  -  not implemented
-const ID_NetzCosPhi = 67110656;                   //        -  not implemented
-// Netz Phase 1
-const ID_P1Strom = 67109377;                      // in A  -  not implemented
-const ID_P1Spannung = 67109378;                   // in V  -  not implemented
-const ID_P1Leistung = 67109379;                   // in W  -  GridPowerL1, not implemented
-// Netz Phase 2
-const ID_P2Strom = 67109633;                      // in A  -  not implemented
-const ID_P2Spannung = 67109634;                   // in V  -  not implemented
-const ID_P2Leistung = 67109635;                   // in W  -  GridPowerL2, not implemented
-// Netz Phase 3
-const ID_P3Strom = 67109889;                      // in A  -  not implemented
-const ID_P3Spannung = 67109890;                   // in V  -  not implemented
-const ID_P3Leistung = 67109891;                   // in W  -  GridPowerL3, not implemented
 // Battery
-const ID_BatVoltage = 33556226;                   // in V  -  not implemented
-const ID_BatTemperature = 33556227;               // in ?  -  not implemented
-const ID_BatChargeCycles = 33556228;              // in 1  -  not implemented
-const ID_BatStateOfCharge = 33556229;             // in %
 const ID_BatCurrentDir = 33556230;                // 1 = discharge; 0 = charge
-const ID_BatCurrent = 33556238;                   // in A
 
 var ChargerRequest = '';     // IP request-string for go-eCharger complete data
-var KostalRequestDay = '';   // IP request-string for PicoBA daily statistics
-var KostalRequestTotal = ''; // IP request-string for PicoBA total statistics
 
 class go_e_charger extends utils.Adapter {
 
@@ -148,32 +128,14 @@ class go_e_charger extends utils.Adapter {
 
         if (this.config.ipaddress) {
 
-            ChargerRequest = 'http://' + this.config.ipaddress + '/api/dxs.json' +
+ /*           ChargerRequest = 'http://' + this.config.ipaddress + '/api/dxs.json' +
                 '?dxsEntries=' + ID_Power_SolarDC + '&dxsEntries=' + ID_Power_GridAC +
                 '&dxsEntries=' + ID_Power_SelfConsumption + '&dxsEntries=' + ID_StatDay_SelfConsumption +
-                '&dxsEntries=' + ID_StatTot_SelfConsumption + '&dxsEntries=' + ID_StatDay_SelfConsumptionRate +
-                '&dxsEntries=' + ID_StatTot_SelfConsumptionRate + '&dxsEntries=' + ID_StatDay_Yield +
-                '&dxsEntries=' + ID_StatTot_Yield + '&dxsEntries=' + ID_StatDay_HouseConsumption +
-                '&dxsEntries=' + ID_StatTot_HouseConsumption + '&dxsEntries=' + ID_Power_HouseConsumption +
-                '&dxsEntries=' + ID_StatTot_Autarky + '&dxsEntries=' + ID_StatDay_Autarky +
-                '&dxsEntries=' + ID_StatTot_OperatingTime + '&dxsEntries=' + ID_OperatingState +
-                '&dxsEntries=' + ID_BatStateOfCharge + '&dxsEntries=' + ID_BatCurrent +
                 '&dxsEntries=' + ID_BatCurrentDir + '&dxsEntries=' + ID_GridLimitation;
-
-            KostalRequestDay = 'http://' + this.config.ipaddress + '/api/dxs.json' +
-                '?dxsEntries=' + ID_StatDay_SelfConsumption + '&dxsEntries=' + ID_StatDay_SelfConsumptionRate +
-                '&dxsEntries=' + ID_StatDay_Yield + '&dxsEntries=' + ID_StatDay_HouseConsumption +
-                '&dxsEntries=' + ID_StatDay_Autarky;
-
-            KostalRequestTotal = 'http://' + this.config.ipaddress + '/api/dxs.json' +
-                '?dxsEntries=' + ID_StatTot_SelfConsumption + '&dxsEntries=' + ID_StatTot_SelfConsumptionRate +
-                '&dxsEntries=' + ID_StatTot_Yield + '&dxsEntries=' + ID_StatTot_HouseConsumption +
-                '&dxsEntries=' + ID_StatTot_Autarky + '&dxsEntries=' + ID_StatTot_OperatingTime;
- 
+                */
             this.log.debug("OnReady done");
-            await this.ReadCharger();
+            await this.Read_Charger_Power();
             this.log.debug("Initial ReadCharger done");
-//            adapterIntervals.sec10 = setInterval(this.ReadCharger.bind(this), this.config.polltime);
         } else {
             this.stop;
         }
@@ -184,7 +146,6 @@ class go_e_charger extends utils.Adapter {
     * @param {() => void} callback */
     onUnload(callback) {
         try {
-//            clearInterval(adapterIntervals.live);
             clearTimeout(adapterIntervals.live);
             clearTimeout(adapterIntervals.daily);
             clearTimeout(adapterIntervals.total);
@@ -210,18 +171,7 @@ class go_e_charger extends utils.Adapter {
                     this.setStateAsync('Power.SolarDC', { val: Math.round(result[0].value), ack: true });
                     this.setStateAsync('Power.GridAC', { val: Math.round(result[1].value), ack: true });
                     this.setStateAsync('Power.SelfConsumption', { val: Math.round(result[2].value), ack: true });
-                    this.setStateAsync('Statistics_Daily.SelfConsumption', { val: Math.round(result[3].value)/1000, ack: true });
-                    this.setStateAsync('Statistics_Total.SelfConsumption', { val: Math.round(result[4].value), ack: true });
-                    this.setStateAsync('Statistics_Daily.SelfConsumptionRate', { val: Math.round(result[5].value), ack: true });
-                    this.setStateAsync('Statistics_Total.SelfConsumptionRate', { val: Math.round(result[6].value), ack: true });
-                    this.setStateAsync('Statistics_Daily.Yield', { val: Math.round(result[7].value)/1000, ack: true });
-                    this.setStateAsync('Statistics_Total.Yield', { val: Math.round(result[8].value), ack: true });
-                    this.setStateAsync('Statistics_Daily.HouseConsumption', { val: Math.round(result[9].value)/1000, ack: true });
-                    this.setStateAsync('Statistics_Total.HouseConsumption', { val: Math.round(result[10].value), ack: true });
                     this.setStateAsync('Power.HouseConsumption', { val: Math.floor(result[11].value), ack: true });
-                    this.setStateAsync('Statistics_Total.Autarky', { val: Math.round(result[12].value), ack: true });
-                    this.setStateAsync('Statistics_Daily.Autarky', { val: Math.round(result[13].value), ack: true });
-                    this.setStateAsync('Statistics_Total.OperatingTime', { val: result[14].value, ack: true });
                     this.setStateAsync('State', { val: result[15].value, ack: true });
                     this.setStateAsync('Battery.SoC', { val: result[16].value, ack: true });
                     if (result[18].value) { // result[18] = 'Battery current direction; 1=Load; 0=Unload'
@@ -246,65 +196,104 @@ class go_e_charger extends utils.Adapter {
         })();
     } // END ReadPiko
 
-    /****************************************************************************************
-    */
-    ReadPikoDaily() {
-        var got = require('got');
-        (async () => {
-            try {
-                // @ts-ignore got is valid
-                var response = await got(KostalRequestDay);
-                if (!response.error && response.statusCode == 200) {
-                    var result = await JSON.parse(response.body).dxsEntries;
-                    this.setStateAsync('Statistics_Daily.SelfConsumption', { val: Math.round(result[0].value) / 1000, ack: true });
-                    this.setStateAsync('Statistics_Daily.SelfConsumptionRate', { val: Math.round(result[1].value), ack: true });
-                    this.setStateAsync('Statistics_Daily.Yield', { val: Math.round(result[2].value) / 1000, ack: true });
-                    this.setStateAsync('Statistics_Daily.HouseConsumption', { val: Math.round(result[3].value) / 1000, ack: true });
-                    this.setStateAsync('Statistics_Daily.Autarky', { val: Math.round(result[4].value), ack: true });
-                    adapterIntervals.daily = setTimeout(this.ReadPikoDaily.bind(this), this.config.polltimelive);
-                    this.log.debug('Piko-BA ausgelesen');
-                }
-                else {
-                    this.log.error('Error: ' + response.error + ' by polling go-eCharger: ' + KostalRequest);
-                }
-            } catch (e) {
-                this.log.error('Error in calling go-eCharger: ' + e);
-                this.log.error('Please verify IP address: ' + this.config.ipaddress + ' !!!');
-                adapterIntervals.daily = setTimeout(this.ReadPikoDaily.bind(this), 600000);
-            } // END catch
-        })();
-    } // END ReadPikoDaily
 
     /****************************************************************************************
     */
-    ReadPikoTotal() {
+    Read_Charger_Power() {
         var got = require('got');
         (async () => {
             try {
                 // @ts-ignore got is valid
-                var response = await got(KostalRequestTotal);
+                var response = await got(readlink);
                 if (!response.error && response.statusCode == 200) {
                     var result = await JSON.parse(response.body).dxsEntries;
-                    this.setStateAsync('Statistics_Total.SelfConsumption', { val: Math.round(result[0].value), ack: true });
-                    this.setStateAsync('Statistics_Total.SelfConsumptionRate', { val: Math.round(result[1].value), ack: true });
-                    this.setStateAsync('Statistics_Total.Yield', { val: Math.round(result[2].value), ack: true });
-                    this.setStateAsync('Statistics_Total.HouseConsumption', { val: Math.round(result[3].value), ack: true });
-                    this.setStateAsync('Statistics_Total.Autarky', { val: Math.round(result[4].value), ack: true });
-                    this.setStateAsync('Statistics_Total.OperatingTime', { val: result[5].value, ack: true });
-                    adapterIntervals.total = setTimeout(this.ReadPikoTotal.bind(this), this.config.polltimelive);
-                    this.log.debug('Piko-BA ausgelesen');
+                    this.setStateAsync('Power.ChargeCurrent', (result.nrg[11] * 10), true); // Umrechnung in Watt
+                    adapterIntervals.live = setTimeout(this.Read_Charger_Power.bind(this), this.config.polltimelive);
+                    this.log.debug('got go-eCharger charging power');
                 }
                 else {
-                    this.log.error('Error: ' + response.error + ' by polling go-eCharger: ' + KostalRequest);
+                    this.log.error('Error: ' + response.error + ' by polling go-eCharger ' + readlink);
                 }
             } catch (e) {
                 this.log.error('Error in calling go-eCharger API: ' + e);
                 this.log.error('Please verify IP address: ' + this.config.ipaddress + ' !!!');
-                adapterIntervals.total = setTimeout(this.ReadPikoTotal.bind(this), 600000);
+                adapterIntervals.live = setTimeout(this.Read_Charger_Power.bind(this), 600000);
             } // END catch
         })();
-    } // END ReadPikoTotal
+    } // END Read_Charger_Power
 
+    /****************************************************************************************
+    */
+    Read_Charger_PowerOLD() {
+        this.log.debug('Read Charger Power');
+        request(readlink, function (error, response, body) {
+            if (!error) {
+                var result = JSON.parse(body);
+                this.setStateAsync('EVCharger.Messwerte.Momentan.GesamtLeistung', (result.nrg[11] * 10), true); // Umrechnung in Watt
+            }
+            else {
+                this.log.error("ERROR: " + error + " bei Abfrage von: " + readlink, "warn");
+            }
+        });
+    } // END Read_Charger_Power
+
+
+    /****************************************************************************************
+    */
+    Charge_Config(Allow, Ampere, LogMessage) {
+        this.log.debug(LogMessage + "  -  " + Ampere + " Ampere");
+        request(writelink + 'alw=' + Allow, // activate charging
+            function (error, response, body) {
+                if (!error && biglogging) this.log.debug(body);
+                else if (error) this.log.error("ERROR: " + error + " bei Setzen von: " + writelink + "alw=" + Allow, "warn");
+            });
+        request(writelink + 'amp=' + Ampere, // set charging current
+            function (error, response, body) {
+                if (!error) {
+                    if (biglogging) log(body);
+                    var result = JSON.parse(body);
+                    this.setStateAsync('EVCharger.Messwerte.Momentan.Ampere', result.amp, true);
+                    this.setStateAsync('EVCharger.Messwerte.Momentan.Phasen', result.pha, true);
+                    this.setStateAsync('EVCharger.Messwerte.Gesamt.Energy', (result.eto / 10), true);
+                    this.setStateAsync('EVCharger.Messwerte.Momentan.Allow', result.alw, true);
+                }
+                else this.log.error("ERROR: " + error + " bei Setzen von: " + writelink + "amp=" + Ampere, "warn");
+            });
+    } // END Charge_Config
+
+    /****************************************************************************************
+    */
+    Charge_Manager() {
+        Read_Charger_Power();
+        OptAmpere = (Math.floor(
+            (getState('kostal-piko-ba.0.Power.SolarDC').val
+                - getState('kostal-piko-ba.0.Power.HouseConsumption').val
+                + getState('EVCharger.Messwerte.Momentan.GesamtLeistung').val
+                - 100
+                + ((2000 / (100 - MinHomeBatVal)) * (getState('kostal-piko-ba.0.Battery.SoC').val - MinHomeBatVal))) / 230)); // -100 W Reserve + max. 2000 fÜr Batterieleerung
+
+        this.log.debug("OptAmpere: " + OptAmpere + "Ampere");
+        if (OptAmpere > 16) OptAmpere = 16;
+
+        if (ZielAmpere < OptAmpere) {
+            ZielAmpere++;
+        } else if (ZielAmpere > OptAmpere) ZielAmpere--;
+
+        this.log.debug("ZielAmpere: " + ZielAmpere + "Ampere;  Leistung DC: " + getState('kostal-piko-ba.0.Power.SolarDC').val
+            + "W;  Hausverbrauch: " + getState('kostal-piko-ba.0.Power.HouseConsumption').val
+            + "W;  Gesamtleistung Charger: " + getState('EVCharger.Messwerte.Momentan.GesamtLeistung').val + "W");
+        
+        if (ZielAmpere > (5 + 4)) {
+            await Charge_Config('1', ZielAmpere, "Ladestrom: " + ZielAmpere + "Ampere"); // An und Zielstrom da größer 5 + Hysterese
+        } else if (ZielAmpere < 6) {
+            OffVerzoegerung++;
+            if (OffVerzoegerung > 12) {
+                await Charge_Config('0', ZielAmpere, "zu wenig Überschuss"); // Aus und Zielstrom
+                OffVerzoegerung = 0;
+            }
+        }
+    } // END Charge_Manager
+        
 } // END Class
 
 // @ts-ignore parent is a valid property on module
@@ -317,3 +306,109 @@ if (module.parent) {
 } else { // otherwise start the instance directly
     new go_e_charger();
 }
+
+/*
+Erklärung Format​: alle Parameter werden im JSON Objekt als String gesendet (in Anführungszeichen). Die meisten
+dieser Parameter können in ein integer Format konvertiert werden. Der bei Format angegebene Datentyp zeigt die
+zu erwartende Größe. Sollte der String nicht in den angegebenen Datentyp konvertiert werden, soll ein
+Kommunikationsfehler angezeigt werden.
+Parameter  -  Format  -  Erklärung
+version  -  String(1)  -  JSON Format; "B": Normalfall; "C": Wenn Ende-zu-Ende Verschlüsselung aktiviert
+rbc  -  uint32_t  -  reboot_counter​; Zählt die Anzahl der Bootvorgänge.
+rbt  -  uint32_t  -  reboot_timer​; Zählt die Millisekunden seit dem letzten Bootvorgang.
+car  -  uint8_t   -  Status PWM Signalisierung
+        1: Ladestation bereit, kein Fahrzeug        2: Fahrzeug lädt
+        3: Warte auf Fahrzeug                       4: Ladung beendet, Fahrzeug noch verbunden
+amp  -  uint8_t   -  Ampere Wert für die PWM Signalisierung in ganzen Ampere von 6-32A
+err  -  uint8_t   -  error
+        1: RCCB (Fehlerstromschutzschalter)         3: PHASE (Phasenstörung)
+        8: NO_GROUND (Erdungserkennung)             10, default: INTERNAL (sonstiges)
+ast  -  uint8_t   -  access_state​: Zugangskontrolle
+        0: Offen                                    1: RFID / App benötigt
+        2: Strompreis / automatisch
+alw  -  uint8_t   -  allow_charging: ​PWM Signal darf anliegen; 0: nein; 1: ja
+stp  -  uint8_t   -  stop_state: ​Automatische Abschaltung; 0: deaktiviert; 2: nach kWh abschalten
+cbl  -  uint8_t   -  Typ2 ​Kabel Ampere codierung; 13-32: Ampere Codierung; 0: kein Kabel
+pha  -  uint8_t   -  Phasen ​vor und nach dem Schütz; binary flags: ​0b00ABCDEF
+        A... phase 3, vor dem Schütz                B... phase 2 vor dem Schütz
+        C... phase 1 vor dem Schütz                 D... phase 3 nach dem Schütz
+        E... phase 2 nach dem Schütz                F... phase 1 nach dem Schütz
+tmp  -  uint8_t   -  Temperatur​ des Controllers in °C
+dws  -  uint32_t  -  Geladene Energiemenge​ in Deka-Watt-Sekunden
+dwo  -  uint16_t  -  Abschaltwert ​in 0.1kWh wenn ​stp==2​, für dws Parameter
+adi  -  uint8_t   -  adapter_in​: Ladebox ist mit Adapter angesteckt; 0: NO_ADAPTER; 1: 16A_ADAPTER
+uby  -  uint8_t   -  unlocked_by​: Nummer der RFID Karte, die den jetzigen Ladevorgang freigeschalten hat
+eto  -  uint32_t  -  energy_total​: Gesamt geladene Energiemenge in 0.1kWh
+wst  -  uint8_t   -  wifi_state​: WLAN Verbindungsstatus; 3: verbunden; default: nicht verbunden
+nrg  -  array[15] -  Array mit Werten des Strom- und Spannungssensors
+        nrg[0]​: Spannung auf L1 in Volt            nrg[1]​: Spannung auf L2 in Volt
+        nrg[2]​: Spannung auf L3 in Volt            nrg[3]​: Spannung auf N in Volt
+        nrg[4]​: Ampere auf L1 in 0.1A              nrg[5]​: Ampere auf L2 in 0.1A
+        nrg[6]​: Ampere auf L3 in 0.1A              nrg[7]​: Leistung auf L1 in 0.1kW
+        nrg[8]​: Leistung auf L2 in 0.1kW           nrg[9]​: Leistung auf L3 in 0.1kW
+        nrg[10]​: Leistung auf N in 0.1kW           nrg[11]​: Leistung gesamt in 0.01kW
+        nrg[12]​: Leistungsfaktor auf L1 in %       nrg[13]​: Leistungsfaktor auf L2 in %
+        nrg[14]​: Leistungsfaktor auf L3 in %       nrg[15]​: Leistungsfaktor auf N in %
+fwv  -  String   -  Firmware Version
+sse  -  String   -  Seriennummer ​als %06d formatierte Zahl
+wss  -  String   -  WLAN ​SSID
+wke  -  String   -  WLAN ​Key
+wen  -  uint8_t  -  wifi_enabled​: WLAN aktiviert; 0: deaktiviert; 1: aktiviert
+tof  -  uint8_t  -  time_offset​: Zeitzone in Stunden für interne batteriegestützte Uhr +100; Beispiel: 101 entspricht GMT+1
+tds  -  uint8_t  -  Daylight saving time offset​ (Sommerzeit) in Stunden
+lbr  -  uint8_t  -  LED Helligkeit​ von 0-255; 0: LED aus; 255: LED Helligkeit maximal
+aho  -  uint8_t  -  Minimale ​Anzahl ​von Stunden in der mit "Strompreis-automatisch" geladen werden muss
+afi  -  uint8_t  -  Stunde (​Uhrzeit​) in der mit "Strompreis - automatisch" die Ladung mindestens ​aho ​Stunden gedauert haben muss.
+azo  -  uint8_t  -  Awattar Preiszone; 0: Österreich; 1: Deutschland
+ama  -  uint8_t  -  Absolute max. Ampere: Maximalwert für Ampere Einstellung
+al1  -  uint8_t  -  Ampere Level 1 für Druckknopf am Gerät.
+        6-32: Ampere Stufe aktiviert                0: Stufe deaktivert (wird übersprungen)
+al2  -  uint8_t  -  Ampere Level 2 für Druckknopf am Gerät; muss entweder 0 oder ​> al1​ sein
+al3  -  uint8_t  -  Ampere Level 3 für Druckknopf am Gerät; muss entweder 0 oder ​> al2​ sein
+al4  -  uint8_t  -  Ampere Level 4 für Druckknopf am Gerät; muss entweder 0 oder ​> al3​ sein
+al5  -  uint8_t  -  Ampere Level 5 für Druckknopf am Gerät; muss entweder 0 oder ​> al4​ sein
+cid  -  uint24_t -  Color idle:​ Farbwert für Standby​ (kein Auto angesteckt) als Zahl
+cch  -  uint24_t -  Color charging:​ Farbwert für Ladevorgang aktiv​, als Zahl
+cfi  -  uint24_t -  Color idle:​ Farbwert für Ladevorgang abgeschlossen​, als Zahl
+lse  -  uint8_t  -  led_save_energy​: LED automatisch nach 10 Sekunden abschalten
+        0: Energiesparfunktion deaktiviert          1: Energiesparfunktion aktiviert
+ust  -  uint8_t  -  unlock_state​: Kabelverriegelung Einstellung
+        0: Verriegeln solange Auto angesteckt       1: Nach Ladevorgang automatisch entriegeln
+        2: Kabel immer verriegelt lassen
+wak  -  String   -  WLAN ​Hotspot Password; Beispiel: "abdef0123456"
+r1x  -  uint8_t  -  Flags
+        0b1: HTTP Api im WLAN Netzwerk aktiviert (0: nein, 1:ja)
+        0b10: Ende-zu-Ende Verschlüsselung aktiviert (0: nein, 1:ja)
+dto  -  uint8_t  -  Restzeit​ in Millisekunden verbleibend auf Aktivierung durch Strompreise
+nmo  -  uint8_t  -  Norwegen-Modus​ aktiviert
+        0: deaktiviert (Erdungserkennung aktiviert); 1: aktiviert (keine Erdungserkennung, nur für IT-Netze gedacht)
+eca; ecr; ecd; ec4; ec5; ec6; ec7; ec8; ec9; ec1
+     -  uint32_t -  Geladene ​Energiemenge pro RFID Karte​ von 1-10
+rca; rcr; rcd; rc4; rc5; rc6; rc7; rc8; rc9; rc1
+     -  String   -  RFID Karte ID​ von 1-10 als String Format und Länge: variabel, je nach Version
+rna; rnm; rne; rn4; rn5; rn6; rn7; rn8; rn9; rn1
+     -  String   -  RFID Karte Name​ von 1-10; Maximallänge: 10 Zeichen
+tme  -  String   -  Aktuelle Uhrzeit​, formatiert als ddmmyyhhmm
+sch  -  String   -  Scheduler einstellungen ​(base64 encodiert)
+sdp  -  uint8_t  -  Scheduler double press: ​Aktiviert Ladung nach doppeltem Drücken des Button, wenn die Ladung gerade durch den Scheduler unterbrochen wurde
+        0: Funktion deaktiviert                     1: Ladung sofort erlauben
+upd  -  uint8_t  -  Update available​ (nur verfügbar bei Verbindung über go-e Server)
+        0: kein Update verfügbar                    1: Update verfügbar
+cdi  -  uint8_t  -  Cloud disabled; 0: cloud enabled; 1: cloud disabled
+loe  -  uint8_t  -  Lastmanagement enabled; 0: Lastmanagement deaktiviert; 1: Lastmanagement über Cloud aktiviert
+lot  -  uint8_t  -  Lastmanagement Gruppe Total Ampere
+lom  -  uint8_t  -  Lastmanagement minimale Amperezahl
+lop  -  uint8_t  -  Lastmanagement Priorität
+log  -  String   -  Lastmanagement Gruppen ID
+lon  -  uint8_t  -  Lastmanagement erwartete Anzahl von Ladestationen ​(derzeit nicht unterstützt)
+lof  -  uint8_t  -  Lastmanagement Fallback Amperezahl
+loa  -  uint8_t  -  Lastmanagement Ampere​ (derzeitiger erlaubter Ladestrom); wird vom Lastmanagement automatisch gesteuert
+lch  -  uint32_t -  Lastmanagement Sekunden seit letzten Stromfluss bei noch angestecktem Auto
+mce  -  uint8_t  -  MQTT custom enabled; Verbindung mit eigenen MQTT Server herstellen
+        0: Funktion deaktiviert                     1: Funktion aktiviert
+mcs  -  String(63) -MQTT custom Server; Hostname ohne Protokollangabe (z.B. test.mosquitto.org)
+mcp  -  uint16_t -  MQTT custom Port; z.B. 1883
+mcu  -  String(16) -MQTT custom Username
+mck  -  String(16) -MQTT custom key
+mcc  -  uint8_t  -  MQTT custom connected; 0: nicht verbunden; 1: verbunden
+*/

@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.0.9": {
+        "en": "read charger power"
+      },
       "0.0.8": {
         "en": "setup done"
       },
