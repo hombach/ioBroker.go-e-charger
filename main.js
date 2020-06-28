@@ -208,8 +208,10 @@ class go_e_charger extends utils.Adapter {
             try {
                 // @ts-ignore got is valid
                 var response = await got(readlink);
+   this.log.info("RESPONSE: " + response);
                 if (!response.error && response.statusCode == 200) {
-                    var result = await JSON.parse(response.body).dxsEntries;
+                    var result = await JSON.parse(response.body);
+   this.log.info("result: " + result);
                     this.setStateAsync('Power.ChargeCurrent', (result.nrg[11] * 10), true); // Umrechnung in Watt
                     adapterIntervals.live = setTimeout(this.Read_Charger_Power.bind(this), this.config.polltimelive);
                     this.log.debug('got go-eCharger charging power');
@@ -220,7 +222,7 @@ class go_e_charger extends utils.Adapter {
             } catch (e) {
                 this.log.error('Error in calling go-eCharger API: ' + e);
                 this.log.error('Please verify IP address: ' + this.config.ipaddress + ' !!!');
-                adapterIntervals.live = setTimeout(this.Read_Charger_Power.bind(this), 600000);
+                adapterIntervals.live = setTimeout(this.Read_Charger_Power.bind(this), 10000); // 600000
             } // END catch
         })();
     } // END Read_Charger_Power
