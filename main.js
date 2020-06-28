@@ -131,25 +131,25 @@ class go_e_charger extends utils.Adapter {
     
     /****************************************************************************************
     */
-    StateMachine() {
+/*    StateMachine() {
         MinHomeBatVal = getState('EVCharger.Vorgaben.DesBYDState').val; // Get Desired Battery SoC
-        await Read_Charger_Power();
+        this.Read_Charger_Power();
 
         // Charge-NOW is enabled
         if (getState('EVCharger.Vorgaben.ChargeNOW').val) {
-            //    Read_Charger_Power();
+            // Read_Charger_Power();
             // Charge_Config('1', '16', "go-eCharger für Schnellladung aktivieren"); // HIER EIGENTLICH MAX. STROM WEGEN SPONTANANFORDERUNG!!
-            Charge_Config('1', getState('EVCharger.Messwerte.Momentan.Ampere').val, "go-eCharger für Schnellladung aktivieren");  // HIER STROM von GUI verwenden!!
+            this.Charge_Config('1', getState('EVCharger.Messwerte.Momentan.Ampere').val, "go-eCharger für Schnellladung aktivieren");  // HIER STROM von GUI verwenden!!
         }
 
         // Charge-Manager is enabled
         else if (getState('EVCharger.Vorgaben.ChargeManager').val) {
             if (getState('kostal-piko-ba.0.Battery.SoC').val >= MinHomeBatVal) { // Hausbatterie voll genug?
-                await Charge_Manager();
+                this.Charge_Manager();
             }
             else { // ZUKÜNFTIG: Uhrzeit fordert Leeren der Batterie
                 ZielAmpere = 6;
-                await Charge_Config('0', ZielAmpere, "Hausbatterie laden bis " + MinHomeBatVal + "%");
+                this.Charge_Config('0', ZielAmpere, "Hausbatterie laden bis " + MinHomeBatVal + "%");
             }
         }
 
@@ -157,7 +157,7 @@ class go_e_charger extends utils.Adapter {
         else {
             if (getState('EVCharger.Messwerte.Momentan.Allow').val == true) { // Nur false setzen wenn Allow Charge true
                 ZielAmpere = 6;
-                Charge_Config('0', ZielAmpere, "go-eCharger abschalten");
+                this.Charge_Config('0', ZielAmpere, "go-eCharger abschalten");
             }
         }
     }
@@ -175,8 +175,6 @@ class go_e_charger extends utils.Adapter {
                     var result = await JSON.parse(response.body).dxsEntries;
                     this.setStateAsync('Power.SolarDC', { val: Math.round(result[0].value), ack: true });
                     this.setStateAsync('Power.GridAC', { val: Math.round(result[1].value), ack: true });
-                    this.setStateAsync('Power.SelfConsumption', { val: Math.round(result[2].value), ack: true });
-                    this.setStateAsync('Power.HouseConsumption', { val: Math.floor(result[11].value), ack: true });
                     this.setStateAsync('State', { val: result[15].value, ack: true });
                     this.setStateAsync('Battery.SoC', { val: result[16].value, ack: true });
                     if (result[18].value) { // result[18] = 'Battery current direction; 1=Load; 0=Unload'
@@ -229,7 +227,7 @@ class go_e_charger extends utils.Adapter {
 
     /****************************************************************************************
     */
-    Read_Charger_PowerOLD() {
+/*    Read_Charger_PowerOLD() {
         this.log.debug('Read Charger Power');
         request(readlink, function (error, response, body) {
             if (!error) {
@@ -245,7 +243,7 @@ class go_e_charger extends utils.Adapter {
 
     /****************************************************************************************
     */
-    Charge_Config(Allow, Ampere, LogMessage) {
+/*    Charge_Config(Allow, Ampere, LogMessage) {
         this.log.debug(LogMessage + "  -  " + Ampere + " Ampere");
         request(writelink + 'alw=' + Allow, // activate charging
             function (error, response, body) {
@@ -266,10 +264,11 @@ class go_e_charger extends utils.Adapter {
             });
     } // END Charge_Config
 
+
     /****************************************************************************************
     */
-    Charge_Manager() {
-        Read_Charger_Power();
+/*    Charge_Manager() {
+        this.Read_Charger_Power();
         OptAmpere = (Math.floor(
             (getState('kostal-piko-ba.0.Power.SolarDC').val
                 - getState('kostal-piko-ba.0.Power.HouseConsumption').val
@@ -289,18 +288,21 @@ class go_e_charger extends utils.Adapter {
             + "W;  Gesamtleistung Charger: " + getState('EVCharger.Messwerte.Momentan.GesamtLeistung').val + "W");
         
         if (ZielAmpere > (5 + 4)) {
-            await Charge_Config('1', ZielAmpere, "Ladestrom: " + ZielAmpere + "Ampere"); // An und Zielstrom da größer 5 + Hysterese
+            this.Charge_Config('1', ZielAmpere, "Ladestrom: " + ZielAmpere + "Ampere"); // An und Zielstrom da größer 5 + Hysterese
         } else if (ZielAmpere < 6) {
             OffVerzoegerung++;
             if (OffVerzoegerung > 12) {
-                await Charge_Config('0', ZielAmpere, "zu wenig Überschuss"); // Aus und Zielstrom
+                this.Charge_Config('0', ZielAmpere, "zu wenig Überschuss"); // Aus und Zielstrom
                 OffVerzoegerung = 0;
             }
         }
     } // END Charge_Manager
-        
+*/        
 } // END Class
 
+
+/****************************************************************************************
+*/
 // @ts-ignore parent is a valid property on module
 if (module.parent) {
     // Export the constructor in compact mode
