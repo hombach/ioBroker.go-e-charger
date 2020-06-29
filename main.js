@@ -209,14 +209,14 @@ adapter.getState('myState', function (err, state) {
     */
     Read_Charger() {
         var got = require('got');
- //       (async () => {
+        (async () => {
             try {
                 // @ts-ignore got is valid
-                var response = got(readlink);
-//                var response = await got(readlink);
+//                var response = got(readlink);
+                var response = await got(readlink);
                 if (!response.error && response.statusCode == 200) {
- //                   var result = await JSON.parse(response.body);
-                    var result = JSON.parse(response.body);
+                    var result = await JSON.parse(response.body);
+ //                   var result = JSON.parse(response.body);
                     this.setStateAsync('Power.ChargeCurrent', result.amp, true);
                     this.setStateAsync('Power.ChargingAllowed', result.alw, true);
                     this.setStateAsync('Power.Charge', (result.nrg[11] * 10), true); // trim to Watt
@@ -229,7 +229,7 @@ adapter.getState('myState', function (err, state) {
                 this.log.error(`Error in calling go-eCharger API: ${e}`);
                 this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
             } // END catch
-//        })();
+        })();
     } // END Read_Charger
 
     /****************************************************************************************
