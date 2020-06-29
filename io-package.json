@@ -78,6 +78,42 @@
 
   "instanceObjects": [
     {
+      "_id": "Info",
+      "type": "channel",
+      "common": { "name": "Informations about go-eCharger" },
+      "native": {}
+    },
+    {
+      "_id": "Info.RebootTimer",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Time since last reboot",
+        "type": "number",
+        "unit": "h",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Info.CarState",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "State of connected car",
+        "type": "number",
+        "unit": "",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+
+
+    {
       "_id": "Power",
       "type": "channel",
       "common": { "name": "current charger power data" },

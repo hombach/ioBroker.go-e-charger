@@ -212,13 +212,21 @@ adapter.getState('myState', function (err, state) {
         (async () => {
             try {
                 // @ts-ignore got is valid
-//                var response = got(readlink);
                 var response = await got(readlink);
                 if (!response.error && response.statusCode == 200) {
                     var result = await JSON.parse(response.body);
- //                   var result = JSON.parse(response.body);
+                    // version; rbc
+                    this.setStateAsync('Info.RebootTimer', (result.rbt / 1000 / 3600), true); // trim to hours
+                    // car - uint8_t - Status PWM Signalisierung
+                    this.setStateAsync('Info.CarState', result.car, true);
                     this.setStateAsync('Power.ChargeCurrent', result.amp, true);
+                    // err; ast
                     this.setStateAsync('Power.ChargingAllowed', result.alw, true);
+                    // stp; cbl
+                    this.setStateAsync('Power.GridPhases', result.pha, true);
+                    // tmp; dws; dwo; adi; uby
+                    this.setStateAsync('Statistics_Total.Charged', (result.eto / 10), true);
+                    // wst
                     this.setStateAsync('Power.Charge', (result.nrg[11] * 10), true); // trim to Watt
                     this.log.debug('got go-eCharger data');
                 }
@@ -237,11 +245,10 @@ adapter.getState('myState', function (err, state) {
     Charge_Config(Allow, Ampere, LogMessage) {
         var got = require('got');
         this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
-//        (async () => {
+        (async () => {
             try {
                 // @ts-ignore got is valid
-                var response = got(`${writelink}alw=${Allow}`); // activate charging
-//                var response = await got(`${writelink}alw=${Allow}`); // activate charging
+                var response = await got(`${writelink}alw=${Allow}`); // activate charging
                 if (!response.error && response.statusCode == 200) {
                     this.log.debug(response.body);
                 }
@@ -252,19 +259,16 @@ adapter.getState('myState', function (err, state) {
                 this.log.error(`Error in calling go-eCharger API: ${e}`);
                 this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
             } // END catch
-//        })();
+        })();
 
-//        (async () => {
+        (async () => {
         try {
             // @ts-ignore got is valid
-            var response = got(`${writelink}amp=${Ampere}`); // set charging current
-//            var response = await got(`${writelink}amp=${Ampere}`); // set charging current
+            var response = await got(`${writelink}amp=${Ampere}`); // set charging current
             if (!response.error && response.statusCode == 200) {
                 this.log.debug(response.body);
-                var result = JSON.parse(response.body);
+                var result = await JSON.parse(response.body);
                 this.setStateAsync('Power.ChargeCurrent', result.amp, true); // in readcharger integriert
-                this.setStateAsync('Power.GridPhases', result.pha, true);
-                this.setStateAsync('Statistics_Total.Charged', (result.eto / 10), true);
                 this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
             }
             else if (response.error) {
@@ -274,7 +278,7 @@ adapter.getState('myState', function (err, state) {
             this.log.error(`Error in calling go-eCharger API: ${e}`);
             this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
         } // END catch
-//        })();
+        })();
     } // END Charge_Config
 
 //ORIGINAL Charge_Config
@@ -305,7 +309,7 @@ adapter.getState('myState', function (err, state) {
     /****************************************************************************************
     */
     Charge_Manager() {
-        this.Read_Charger_Power();
+        this.Read_Charger();
 
         this.getForeignState('kostal-piko-ba.0.Power.SolarDC', (_err, state) => { SolarPower = state.val });
         this.getForeignState('kostal-piko-ba.0.Power.HouseConsumption', (_err, state) => { HouseConsumption = state.val });
