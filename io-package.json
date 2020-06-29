@@ -84,6 +84,20 @@
       "native": {}
     },
     {
+      "_id": "Info.RebootCounter",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Counter for system reboot events",
+        "type": "number",
+        "unit": "",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
       "_id": "Info.RebootTimer",
       "type": "state",
       "common": {

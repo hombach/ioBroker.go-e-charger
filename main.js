@@ -215,9 +215,9 @@ adapter.getState('myState', function (err, state) {
                 var response = await got(readlink);
                 if (!response.error && response.statusCode == 200) {
                     var result = await JSON.parse(response.body);
-                    // version; rbc
-                    this.setStateAsync('Info.RebootTimer', (result.rbt / 1000 / 3600), true); // trim to hours
-                    // car - uint8_t - Status PWM Signalisierung
+                    // version
+                    this.setStateAsync('Info.RebootCounter', result.rbc, true);
+                    this.setStateAsync('Info.RebootTimer', Math.floor(result.rbt / 1000 / 3600), true); // trim to hours
                     this.setStateAsync('Info.CarState', result.car, true);
                     this.setStateAsync('Power.ChargeCurrent', result.amp, true);
                     // err; ast
