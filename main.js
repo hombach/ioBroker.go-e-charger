@@ -23,6 +23,7 @@ var OffVerzoegerung = 0;
 var ChargeNOW = false;
 var ChargeManager = false;
 var ChargeCurrent = 0;
+var ChargePower = 0;
 var SolarPower = 0;
 var HouseConsumption = 0;
 var BatSoC = 0;
@@ -314,9 +315,10 @@ adapter.getState('myState', function (err, state) {
         this.getForeignState('kostal-piko-ba.0.Power.SolarDC', (_err, state) => { SolarPower = state.val });
         this.getForeignState('kostal-piko-ba.0.Power.HouseConsumption', (_err, state) => { HouseConsumption = state.val });
         this.getForeignState('kostal-piko-ba.0.Battery.SoC', (_err, state) => { BatSoC = state.val });
+        this.getState('Power.Charge', (_err, state) => { ChargePower = state.val });
 
         OptAmpere = (Math.floor(
-            (SolarPower - HouseConsumption + ChargeCurrent - 100
+            (SolarPower - HouseConsumption + ChargePower - 100
                 + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal))) / 230)); // -100 W Reserve + max. 2000 fÜr Batterieleerung
 
         this.log.debug(`OptAmpere: ${OptAmpere} Ampere`);
@@ -327,7 +329,7 @@ adapter.getState('myState', function (err, state) {
         } else if (ZielAmpere > OptAmpere) ZielAmpere--;
 
         this.log.debug(`ZielAmpere: ${ZielAmpere} Ampere; Leistung DC: ${SolarPower} W; `
-                     + `Hausverbrauch: ${HouseConsumption} W; Gesamtleistung Charger: ${ChargeCurrent} W`);
+            + `Hausverbrauch: ${HouseConsumption} W; Gesamtleistung Charger: ${ChargePower} W`);
         
         if (ZielAmpere > (5 + 4)) {
             this.Charge_Config('1', ZielAmpere, `Ladestrom: ${ZielAmpere} Ampere`); // An und Zielstrom da größer 5 + Hysterese
