@@ -9,34 +9,19 @@ const adapterIntervals = {};
 
 // Adapter for EV-Charger go-E with firmware >V033
 
-// Konstanten
-const goe_IP = '192.168.100.139' // IP of charger
-
 // Variablen
 var ZielAmpere      = 5;
 var OptAmpere       = 6;
 var MinHomeBatVal   = 87;
 var OffVerzoegerung = 0;
-var ChargeNOW = false;
-var ChargeManager = false;
-var ChargeCurrent = 0;
-var ChargePower = 0;
-var SolarPower = 0;
+var ChargeNOW       = false;
+var ChargeManager   = false;
+var ChargeCurrent   = 0;
+var ChargePower     = 0;
+var SolarPower      = 0;
 var HouseConsumption = 0;
-var BatSoC = 0;
+var BatSoC          = 0;
 
-/*
-    "createState('EVCharger.Messwerte.Momentan.Ampere'","0);", // "amp" in A - Ampere Wert Vorgabe
-    "createState('EVCharger.Messwerte.Momentan.Phasen'","0);", // "pha" binary flags - Phasen vor und nach dem Schütz
-    "createState('EVCharger.Messwerte.Gesamt.Energy'","0);", // "eto" in 0.1kWh - Gesamt geladene Energiemenge 
-    "createState('EVCharger.Messwerte.Momentan.Allow'","0);", // "alw" - allow charging
-    "createState('EVCharger.Messwerte.Momentan.GesamtLeistung'","0);", // "nrg[11]" in 0.01kW - Gesamtleistung
-*/
-
-//schedule("*/10 * 0-23 * * *", Main);
-
-
-var ChargerRequest = '';     // IP request-string for go-eCharger complete data
 
 class go_e_charger extends utils.Adapter {
 
@@ -213,9 +198,10 @@ adapter.getState('myState', function (err, state) {
                 var response = await got(`http://${this.config.ipaddress}/status`);
                 if (!response.error && response.statusCode == 200) {
                     var result = await JSON.parse(response.body);
+                    await this.ParseStatus(result);
                     // version
                     this.setStateAsync('Info.RebootCounter', result.rbc, true);
-                    this.setStateAsync('Info.RebootTimer', Math.floor(result.rbt / 1000 / 3600), true); // trim to hours
+              //      this.setStateAsync('Info.RebootTimer', Math.floor(result.rbt / 1000 / 3600), true); // trim to hours
                     this.setStateAsync('Info.CarState', result.car, true);
                     this.setStateAsync('Power.ChargeCurrent', result.amp, true);
                     // err; ast
@@ -237,6 +223,14 @@ adapter.getState('myState', function (err, state) {
             } // END catch
         })();
     } // END Read_Charger
+
+
+    /****************************************************************************************
+    */
+    ParseStatus(status) {
+        this.setStateAsync('Info.RebootTimer', Math.floor(status.rbt / 1000 / 3600), true); // trim to hours
+    }
+
 
     /****************************************************************************************
     */
