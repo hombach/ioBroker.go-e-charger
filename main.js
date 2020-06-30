@@ -7,15 +7,12 @@ const utils = require('@iobroker/adapter-core');
 // const schedule = require('node-schedule');
 const adapterIntervals = {};
 
-
 // Adapter for EV-Charger go-E with firmware >V033
 
-//Konstanten
-    const readlink  = 'http://192.168.100.139/status';        // IP of charger
-    const writelink = 'http://192.168.100.139/mqtt?payload='; // IP of charger
+// Konstanten
+const goe_IP = '192.168.100.139' // IP of charger
 
-//Variablen
-//    var request         = require('request');
+// Variablen
 var ZielAmpere      = 5;
 var OptAmpere       = 6;
 var MinHomeBatVal   = 87;
@@ -213,7 +210,7 @@ adapter.getState('myState', function (err, state) {
         (async () => {
             try {
                 // @ts-ignore got is valid
-                var response = await got(readlink);
+                var response = await got(`http://${this.config.ipaddress}/status`);
                 if (!response.error && response.statusCode == 200) {
                     var result = await JSON.parse(response.body);
                     // version
@@ -232,7 +229,7 @@ adapter.getState('myState', function (err, state) {
                     this.log.debug('got go-eCharger data');
                 }
                 else {
-                    this.log.error(`Error: ${response.error} by polling go-eCharger ${readlink}`);
+                    this.log.error(`Error: ${response.error} by polling go-eCharger @ ${this.config.ipaddress}`);
                 }
             } catch (e) {
                 this.log.error(`Error in calling go-eCharger API: ${e}`);
@@ -249,12 +246,10 @@ adapter.getState('myState', function (err, state) {
         (async () => {
             try {
                 // @ts-ignore got is valid
-                var response = await got(`${writelink}alw=${Allow}`); // activate charging
-                if (!response.error && response.statusCode == 200) {
-                    this.log.debug(response.body);
-                }
+                var response = await got(`http://${this.config.ipaddress}/mqtt?payload=alw=${Allow}`); // activate charging
+                if (!response.error && response.statusCode == 200) { this.log.debug(response.body) }
                 else if (response.error) {
-                    this.log.warn(`Error: ${response.error} by writing ${writelink}alw=${Allow}`);
+                    this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} alw=${Allow}`);
                 }
             } catch (e) {
                 this.log.error(`Error in calling go-eCharger API: ${e}`);
@@ -265,7 +260,7 @@ adapter.getState('myState', function (err, state) {
         (async () => {
         try {
             // @ts-ignore got is valid
-            var response = await got(`${writelink}amp=${Ampere}`); // set charging current
+            var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
             if (!response.error && response.statusCode == 200) {
                 this.log.debug(response.body);
                 var result = await JSON.parse(response.body);
@@ -273,7 +268,7 @@ adapter.getState('myState', function (err, state) {
                 this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
             }
             else if (response.error) {
-                this.log.warn(`Error: ${response.error} by writing ${writelink}amp=${Allow}`);
+                this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amp=${Allow}`);
             }
         } catch (e) {
             this.log.error(`Error in calling go-eCharger API: ${e}`);
@@ -282,30 +277,6 @@ adapter.getState('myState', function (err, state) {
         })();
     } // END Charge_Config
 
-//ORIGINAL Charge_Config
-/*
-    Charge_Config(Allow, Ampere, LogMessage) {
-        this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
-//        request(writelink + 'alw=' + Allow, // activate charging
-//            function (error, response, body) {
-//                if (!error) this.log.debug(body);
-//                else if (error) this.log.error("ERROR: " + error + " bei Setzen von: " + writelink + "alw=" + Allow, "warn");
-//            });
-//        request(writelink + 'amp=' + Ampere, // set charging current
-//            function (error, response, body) {
-//                if (!error) {
-//                    this.log.debug(body);
-//                    var result = JSON.parse(body);
-//                    this.setStateAsync('EVCharger.Messwerte.Momentan.Ampere', result.amp, true); // in readcharger integriert
-//                    this.setStateAsync('EVCharger.Messwerte.Momentan.Phasen', result.pha, true);
-//                    this.setStateAsync('EVCharger.Messwerte.Gesamt.Energy', (result.eto / 10), true);
-//                    this.setStateAsync('EVCharger.Messwerte.Momentan.Allow', result.alw, true); // in readcharger integriert
-//                }
-//                else this.log.error("ERROR: " + error + " bei Setzen von: " + writelink + "amp=" + Ampere, "warn");
-//            });
-    } // END Charge_Config
-
-*/
 
     /****************************************************************************************
     */

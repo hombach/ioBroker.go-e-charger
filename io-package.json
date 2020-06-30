@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.1.1": {
+        "en": "configurable IP"
+      },
       "0.1.0": {
         "en": "setup state machine"
       },
