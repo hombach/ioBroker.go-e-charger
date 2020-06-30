@@ -230,13 +230,17 @@ adapter.getState('myState', function (err, state) {
         this.setStateAsync('Info.CarState', status.car, true);
         switch (status.car) {
             case 1:
-                this.setStateAsync('Info.CarStateString', 'Wallbox ready, no car', true);  break;
+                this.setStateAsync('Info.CarStateString', 'Wallbox ready, no car', true);
+                break;
             case 2:
-                this.setStateAsync('Info.CarStateString', 'Charging...', true);  break;
+                this.setStateAsync('Info.CarStateString', 'Charging...', true);
+                break;
             case 3:
-                this.setStateAsync('Info.CarStateString', 'Wait for car', true);  break;
+                this.setStateAsync('Info.CarStateString', 'Wait for car', true);
+                break;
             case 4:
-                this.setStateAsync('Info.CarStateString', 'Charge finished, car still connected', true);  break;
+                this.setStateAsync('Info.CarStateString', 'Charge finished, car still connected', true);
+                break;
             default:
                 this.setStateAsync('Info.CarStateString', 'Error', true);
         }
