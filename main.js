@@ -199,20 +199,6 @@ adapter.getState('myState', function (err, state) {
                 if (!response.error && response.statusCode == 200) {
                     var result = await JSON.parse(response.body);
                     await this.ParseStatus(result);
-                    // version
-              //      this.setStateAsync('Info.RebootCounter', result.rbc, true);
-              //      this.setStateAsync('Info.RebootTimer', Math.floor(result.rbt / 1000 / 3600), true); // trim to hours
-              //      this.setStateAsync('Info.CarState', result.car, true);
-              //      this.setStateAsync('Power.ChargeCurrent', result.amp, true);
-                    // err; ast
-              //      this.setStateAsync('Power.ChargingAllowed', result.alw, true);
-                    // stp; cbl
-              //      this.setStateAsync('Power.GridPhases', result.pha, true);
-                    // tmp; dws; dwo; adi; uby
-              //      this.setStateAsync('Statistics_Total.Charged', (result.eto / 10), true);
-                    // wst
-              //      this.setStateAsync('Power.Charge', (result.nrg[11] * 10), true); // trim to Watt
-              //      this.log.debug('got go-eCharger data');
                 }
                 else {
                     this.log.error(`Error: ${response.error} by polling go-eCharger @ ${this.config.ipaddress}`);
@@ -242,6 +228,18 @@ adapter.getState('myState', function (err, state) {
         //     1: Ladestation bereit, kein Fahrzeug        2: Fahrzeug lädt
         //     3: Warte auf Fahrzeug                       4: Ladung beendet, Fahrzeug noch verbunden
         this.setStateAsync('Info.CarState', status.car, true);
+        switch (status.car) {
+            case 1:
+                this.setStateAsync('Info.CarStateString', 'Wallbox ready, no car', true);  break;
+            case 2:
+                this.setStateAsync('Info.CarStateString', 'Charging...', true);  break;
+            case 3:
+                this.setStateAsync('Info.CarStateString', 'Wait for car', true);  break;
+            case 4:
+                this.setStateAsync('Info.CarStateString', 'Charge finished, car still connected', true);  break;
+            default:
+                this.setStateAsync('Info.CarStateString', 'Error', true);
+        }
         // amp - uint8_t - Ampere Wert für die PWM Signalisierung in ganzen Ampere von 6-32A
         this.setStateAsync('Power.ChargeCurrent', status.amp, true);
         // err - uint8_t - error
@@ -289,7 +287,7 @@ adapter.getState('myState', function (err, state) {
         // afi - uint8_t - Stunde (​Uhrzeit​) in der mit "Strompreis - automatisch" die Ladung mindestens ​aho ​Stunden gedauert haben muss.
         // azo - uint8_t - Awattar Preiszone; 0: Österreich; 1: Deutschland
         // ama - uint8_t - Absolute max. Ampere: Maximalwert für Ampere Einstellung
-        //al1 - uint8_t - Ampere Level 1 für Druckknopf am Gerät.
+        // al1 - uint8_t - Ampere Level 1 für Druckknopf am Gerät.
         //     6-32: Ampere Stufe aktiviert                0: Stufe deaktivert (wird übersprungen)
         // al2 - uint8_t - Ampere Level 2 für Druckknopf am Gerät; muss entweder 0 oder ​> al1​ sein
         // al3 - uint8_t - Ampere Level 3 für Druckknopf am Gerät; muss entweder 0 oder ​> al2​ sein
@@ -336,7 +334,7 @@ adapter.getState('myState', function (err, state) {
         // mcu - String(16) - MQTT custom Username
         // mck - String(16) - MQTT custom key
         // mcc - uint8_t - MQTT custom connected; 0: nicht verbunden; 1: verbunden
-        this.log.debug('got go-eCharger data');
+        this.log.debug('got and parsed go-eCharger data');
     }
 
 

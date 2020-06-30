@@ -128,6 +128,20 @@
       },
       "native": {}
     },
+    {
+      "_id": "Info.CarStateString",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "State of connected car",
+        "type": "string",
+        "unit": "",
+        "read": true,
+        "write": false,
+        "def": ""
+      },
+      "native": {}
+    },
 
 
     {
