@@ -21,6 +21,9 @@ To connect to the go-eCharger type in its IP-address in the config.
 
 ## Changelog
 
+### 0.1.2 (11.09.2020)
+* (HombachC) bumped dependencies
+
 ### 0.1.1 (30.06.2020)
 * (HombachC) configurable IP
 
