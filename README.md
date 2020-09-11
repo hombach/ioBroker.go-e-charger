@@ -20,6 +20,8 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 To connect to the go-eCharger type in its IP-address in the config.
 
 ## Changelog
+### 0.2.0 (11.09.2020)
+* (HombachC) changed type to vehicle
 
 ### 0.1.2 (11.09.2020)
 * (HombachC) bumped dependencies
