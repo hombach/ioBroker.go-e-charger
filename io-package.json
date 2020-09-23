@@ -202,7 +202,7 @@
       "_id": "Power.ChargingAllowed",
       "type": "state",
       "common": {
-        "role": "value",
+        "role": "switch.mode.manual",
         "name": "Charging allowed",
         "type": "boolean",
         "unit": "",
@@ -246,7 +246,7 @@
       "_id": "Settings.Setpoint_HomeBatSoC",
       "type": "state",
       "common": {
-        "role": "value",
+        "role": "level",
         "name": "Setpoint for home battery state of charge",
         "type": "number",
         "unit": "%",
@@ -274,7 +274,7 @@
       "_id": "Settings.ChargeManager",
       "type": "state",
       "common": {
-        "role": "switch",
+        "role": "switch.mode.auto",
         "name": "Charge Manager enabled",
         "type": "boolean",
         "unit": "",
