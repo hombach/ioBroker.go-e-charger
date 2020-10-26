@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.3.1": {
+        "en": "bumped dependencies"
+      },
       "0.3.0": {
         "en": "global code cleanup"
       },
