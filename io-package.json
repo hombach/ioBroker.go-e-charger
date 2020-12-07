@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.3.2": {
+        "en": "bumped dependencies, added poll of firmware version"
+      },
       "0.3.1": {
         "en": "bumped dependencies"
       },
@@ -96,6 +99,20 @@
       "_id": "Info",
       "type": "channel",
       "common": { "name": "Informations about go-eCharger" },
+      "native": {}
+    },
+    {
+      "_id": "Info.FirmwareVersion",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Firmware version of charger",
+        "type": "string",
+        "unit": "",
+        "read": true,
+        "write": false,
+        "def": ""
+      },
       "native": {}
     },
     {
@@ -166,7 +183,7 @@
       "_id": "Power.ChargeCurrent",
       "type": "state",
       "common": {
-        "role": "value",
+        "role": "value.current",
         "name": "Charge current output",
         "type": "number",
         "unit": "A",
@@ -194,7 +211,7 @@
       "_id": "Power.Charge",
       "type": "state",
       "common": {
-        "role": "value",
+        "role": "value.power",
         "name": "actual charging-power",
         "type": "number",
         "unit": "W",
