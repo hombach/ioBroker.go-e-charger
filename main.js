@@ -250,8 +250,8 @@ adapter.getState('myState', function (err, state) {
         this.setStateAsync('Power.GridPhases', status.pha, true);
         this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
         this.setStateAsync('Power.Charge', (status.nrg[11] * 10), true); // trim to Watt
-        this.setStateAsync('Info.FirmwareVersion', status.fwv, true);
         Firmware = status.fwv;
+        this.setStateAsync('Info.FirmwareVersion', Firmware, true);
         this.log.debug('got and parsed go-eCharger data');
     }
 
