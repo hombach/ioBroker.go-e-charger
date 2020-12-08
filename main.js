@@ -80,15 +80,15 @@ class go_e_charger extends utils.Adapter {
             this.log.debug(`OnReady done`);
             await this.Read_Charger();
             this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
-            switch (Firmware) {
-                case '033' || '040':
+ //           switch (Firmware) {
+ //               case '033' || '040':
                     this.log.debug(`Init done, launching state machine`);
                     this.StateMachine();
-                    break;
-                default:
-                    this.log.error(`Not supported firmware found!!! Shutting down adapter.`);
-                    this.stop;
-            } 
+ //                   break;
+ //               default:
+ //                   this.log.error(`Not supported firmware found!!! Shutting down adapter.`);
+ //                   this.stop;
+ //           } 
         } else {
             this.stop;
         }
@@ -251,7 +251,6 @@ adapter.getState('myState', function (err, state) {
         this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
         this.setStateAsync('Power.Charge', (status.nrg[11] * 10), true); // trim to Watt
         Firmware = status.fwv;
-        this.log.error(Firmware);
         this.setStateAsync('Info.FirmwareVersion', Firmware, true);
         this.log.debug('got and parsed go-eCharger data');
     }
