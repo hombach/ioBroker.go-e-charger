@@ -171,7 +171,7 @@ adapter.getState('myState', function (err, state) {
 
         else if (ChargeManager) { // Charge-Manager is enabled
             this.getForeignState('kostal-piko-ba.0.Battery.SoC', (_err, BattSoC) => {
-                if (BattSoC.val >= MinHomeBatVal) { // SoC of homebatterie sufficient?
+                if (BattSoC.val >= MinHomeBatVal) { // SoC of homebattery sufficient?
 
                     this.Charge_Manager();
 
