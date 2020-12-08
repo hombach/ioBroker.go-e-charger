@@ -77,7 +77,7 @@ class go_e_charger extends utils.Adapter {
                 '&dxsEntries=' + ID_Power_SelfConsumption + '&dxsEntries=' + ID_StatDay_SelfConsumption +
                 '&dxsEntries=' + ID_BatCurrentDir + '&dxsEntries=' + ID_GridLimitation;
                 */
-            var promise = await this.Read_Charger();
+            await this.Read_Charger();
             this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
  //           switch (Firmware) {
  //               case '033' || '040':
@@ -299,7 +299,7 @@ adapter.getState('myState', function (err, state) {
     /****************************************************************************************
     */
     Charge_Manager() {
-        this.Read_Charger();
+ //       this.Read_Charger();
 
         this.getForeignState('kostal-piko-ba.0.Power.SolarDC', (_err, state) => { SolarPower = state.val });
         this.getForeignState('kostal-piko-ba.0.Power.HouseConsumption', (_err, state) => { HouseConsumption = state.val });
