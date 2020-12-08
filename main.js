@@ -21,7 +21,7 @@ var ChargePower      = 0;
 var SolarPower       = 0;
 var HouseConsumption = 0;
 var BatSoC           = 0;
-
+var Firmware         = 0;
 
 class go_e_charger extends utils.Adapter {
 
@@ -77,10 +77,18 @@ class go_e_charger extends utils.Adapter {
                 '&dxsEntries=' + ID_Power_SelfConsumption + '&dxsEntries=' + ID_StatDay_SelfConsumption +
                 '&dxsEntries=' + ID_BatCurrentDir + '&dxsEntries=' + ID_GridLimitation;
                 */
-            this.log.debug("OnReady done");
+            this.log.debug(`OnReady done`);
             await this.Read_Charger();
-            this.log.debug("Initial ReadCharger done, launching state machine");
-            this.StateMachine();
+            this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
+            switch (Firmware) {
+                case 33 || 40:
+                    this.log.debug(`Init done, launching state machine`);
+                    this.StateMachine();
+                    break;
+                default:
+                    this.log.error(`Not supported firmware found!!! Shutting down adapter.`);
+                    this.stop;
+            } 
         } else {
             this.stop;
         }
@@ -243,6 +251,7 @@ adapter.getState('myState', function (err, state) {
         this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
         this.setStateAsync('Power.Charge', (status.nrg[11] * 10), true); // trim to Watt
         this.setStateAsync('Info.FirmwareVersion', status.fwv, true);
+        Firmware = status.fwv;
         this.log.debug('got and parsed go-eCharger data');
     }
 
