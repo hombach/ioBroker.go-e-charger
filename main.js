@@ -217,7 +217,8 @@ adapter.getState('myState', function (err, state) {
         this.setStateAsync('Info.RebootCounter', status.rbc, true);
         this.setStateAsync('Info.RebootTimer', Math.floor(status.rbt / 1000 / 3600), true); // trim to hours
         this.setStateAsync('Info.CarState', status.car, true);
-        switch (status.car) {
+        var bla = status.car
+        switch (bla) {
             case 1:
                 this.setStateAsync('Info.CarStateString', 'Wallbox ready, no car', true);
                 break;
@@ -233,8 +234,6 @@ adapter.getState('myState', function (err, state) {
             default:
                 this.setStateAsync('Info.CarStateString', 'Error', true);
         }
-        if (status.car = 4) { this.setStateAsync('Info.CarStateString', 'Charge finished, car still connected', true)}
-
         this.setStateAsync('Power.ChargeCurrent', status.amp, true);
         // amx - uint8_t - Ampere Wert für die PWM Signalisierung in ganzen Ampere von 6-32A.
         //     Wird nicht auf dem Flash persistiert, verhält sich sonst aber gleich wie amp.
