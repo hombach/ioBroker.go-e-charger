@@ -217,8 +217,7 @@ adapter.getState('myState', function (err, state) {
         this.setStateAsync('Info.RebootCounter', status.rbc, true);
         this.setStateAsync('Info.RebootTimer', Math.floor(status.rbt / 1000 / 3600), true); // trim to hours
         this.setStateAsync('Info.CarState', status.car, true);
-        var bla = status.car
-        switch (bla) {
+        switch (status.car) {
             case 1:
                 this.setStateAsync('Info.CarStateString', 'Wallbox ready, no car', true);
                 break;
@@ -228,7 +227,7 @@ adapter.getState('myState', function (err, state) {
             case 3:
                 this.setStateAsync('Info.CarStateString', 'Wait for car', true);
                 break;
-            case 4:
+            case "4":
                 this.setStateAsync('Info.CarStateString', 'Charge finished, car still connected', true);
                 break;
             default:
