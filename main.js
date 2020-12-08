@@ -79,7 +79,7 @@ class go_e_charger extends utils.Adapter {
                 */
             this.log.debug(`OnReady done`);
             await this.Read_Charger();
-            this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware} ` & Firmware);
+            this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware} ` + Firmware);
             switch (Firmware) {
                 case '033' || '040':
                     this.log.debug(`Init done, launching state machine`);
