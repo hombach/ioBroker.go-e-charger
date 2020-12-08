@@ -77,8 +77,7 @@ class go_e_charger extends utils.Adapter {
                 '&dxsEntries=' + ID_Power_SelfConsumption + '&dxsEntries=' + ID_StatDay_SelfConsumption +
                 '&dxsEntries=' + ID_BatCurrentDir + '&dxsEntries=' + ID_GridLimitation;
                 */
-            this.log.debug(`OnReady done`);
-            await this.Read_Charger();
+            var promise = await this.Read_Charger();
             this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
  //           switch (Firmware) {
  //               case '033' || '040':
@@ -90,6 +89,7 @@ class go_e_charger extends utils.Adapter {
  //                   this.stop;
  //           } 
         } else {
+            this.log.error(`No IP Address configured!!`)
             this.stop;
         }
     }
