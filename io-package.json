@@ -44,7 +44,7 @@
     "dataSource": "poll",
     "news": {
       "0.3.2": {
-        "en": "bumped dependencies, added poll of firmware version"
+        "en": "bumped dependencies, added poll of firmware version, fixed error in CarStateString"
       },
       "0.3.1": {
         "en": "bumped dependencies"
