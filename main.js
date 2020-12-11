@@ -159,11 +159,11 @@ adapter.getState('myState', function (err, state) {
     /*****************************************************************************************/
     StateMachine() {
         this.log.debug('StateMachine start');
-        this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { MinHomeBatVal = state.val }); // Get Desired Battery SoC
-        this.getState('Settings.ChargeNOW', (_err, state) => { ChargeNOW = state.val });
-        this.getState('Settings.ChargeManager', (_err, state) => { ChargeManager = state.val });
         this.Read_Charger();
-        this.getState('Settings.ChargeCurrent', (_err, state) => { ChargeCurrent = state.val });
+        this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { this.MinHomeBatVal = state.val }); // Get Desired Battery SoC
+        this.getState('Settings.ChargeNOW', (_err, state) => { this.ChargeNOW = state.val });
+        this.getState('Settings.ChargeManager', (_err, state) => { this.ChargeManager = state.val });
+        this.getState('Settings.ChargeCurrent', (_err, state) => { this.ChargeCurrent = state.val });
 
         if (ChargeNOW) { // Charge-NOW is enabled
             this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
@@ -183,7 +183,7 @@ adapter.getState('myState', function (err, state) {
 
         else { // OFF -> min. current  Power.ChargingAllowed
             this.getState('Power.ChargingAllowed', (_err, ChargingAllowed) => {
-                if (ChargingAllowed.val == true) { // Set to false only if still true
+                if (this.ChargingAllowed.val == true) { // Set to false only if still true
                     ZielAmpere = 6;
                     this.Charge_Config('0', ZielAmpere, 'go-eCharger abschalten');
                 }
@@ -257,7 +257,9 @@ adapter.getState('myState', function (err, state) {
             try {
                 // @ts-ignore got is valid
                 var response = await got(`http://${this.config.ipaddress}/mqtt?payload=alw=${Allow}`); // activate charging
-                if (!response.error && response.statusCode == 200) { this.log.debug(response.body) }
+                if (!response.error && response.statusCode == 200) {
+                    this.log.debug(`Sent: ${response.body}`)
+                }
                 else if (response.error) {
                     this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} alw=${Allow}`);
                 }
@@ -275,7 +277,7 @@ adapter.getState('myState', function (err, state) {
                         // @ts-ignore got is valid
                         var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
                         if (!response.error && response.statusCode == 200) {
-                            this.log.debug(response.body);
+                            this.log.debug(`Sent to firmware 030: ${response.body}`);
                             var result = await JSON.parse(response.body);
                             this.setStateAsync('Power.ChargeCurrent', result.amp, true); // in readcharger integriert
                             this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
@@ -293,9 +295,10 @@ adapter.getState('myState', function (err, state) {
                         // @ts-ignore got is valid
                         var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
                         if (!response.error && response.statusCode == 200) {
-                            this.log.debug(response.body);
+                            this.log.debug(`Sent to firmware 040.0: ${response.body}`);
                             var result = await JSON.parse(response.body);
                             this.setStateAsync('Power.ChargeCurrent', result.amx, true); // in readcharger integriert
+                            this.setStateAsync('Power.ChargeCurrent', result.amp, true); // in readcharger integriert
                             this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
                         }
                         else if (response.error) {
