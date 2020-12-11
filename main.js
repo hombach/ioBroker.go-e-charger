@@ -294,7 +294,7 @@ adapter.getState('myState', function (err, state) {
                 case '040.0':
                     try {
                         // @ts-ignore got is valid
-                        var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
+                        var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
                         if (!response.error && response.statusCode == 200) {
                             this.log.debug(`Sent to firmware 040.0: ${response.body}`);
                             var result = await JSON.parse(response.body);
@@ -303,7 +303,7 @@ adapter.getState('myState', function (err, state) {
                             this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
                         }
                         else if (response.error) {
-                            this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amp=${Ampere}`);
+                            this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amx=${Ampere}`);
                         }
                     } catch (e) {
                         this.log.error(`Error in calling go-eCharger API: ${e}`);
