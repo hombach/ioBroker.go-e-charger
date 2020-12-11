@@ -294,16 +294,16 @@ adapter.getState('myState', function (err, state) {
                 case '040.0':
                     try {
                         // @ts-ignore got is valid
-                        var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
+                        var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
                         if (!response.error && response.statusCode == 200) {
                             this.log.debug(`Sent to firmware 040.0: ${response.body}`);
                             var result = await JSON.parse(response.body);
-                            this.setStateAsync('Power.ChargeCurrent', result.amx, true); // in readcharger integriert
+                            // this.setStateAsync('Power.ChargeCurrent', result.amx, true); // in readcharger integriert
                             this.setStateAsync('Power.ChargeCurrent', result.amp, true); // in readcharger integriert
                             this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
                         }
                         else if (response.error) {
-                            this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amx=${Ampere}`);
+                            this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amp=${Ampere}`);
                         }
                     } catch (e) {
                         this.log.error(`Error in calling go-eCharger API: ${e}`);
@@ -311,7 +311,7 @@ adapter.getState('myState', function (err, state) {
                     } // END catch
                     break;
                 default:
-                    this.log.error(`Not supported firmware found!!!`);
+                    this.log.error(`No supported firmware found!!!`);
             } 
         })();
     } // END Charge_Config
@@ -399,6 +399,8 @@ pha     - uint8_t   - Phasen ​vor und nach dem Schütz; binary flags: ​0b00A
                       C... phase 1 vor dem Schütz            D... phase 3 nach dem Schütz
                       E... phase 2 nach dem Schütz           F... phase 1 nach dem Schütz
 tmp     - uint8_t   - Temperatur​ des Controllers in °C
+tma     -           - internal temperature sensor 0-3
+amt     -           - max ampere limited through temperature sensors (32 = no limit)
 dws     - uint32_t  - Geladene Energiemenge​ in Deka-Watt-Sekunden
 dwo     - uint16_t  - Abschaltwert ​in 0.1kWh wenn ​stp==2​, für dws Parameter
 adi     - uint8_t   - adapter_in​: Ladebox ist mit Adapter angesteckt; 0: NO_ADAPTER; 1: 16A_ADAPTER
