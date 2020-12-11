@@ -160,10 +160,10 @@ adapter.getState('myState', function (err, state) {
     StateMachine() {
         this.log.debug('StateMachine start');
         this.Read_Charger();
-        this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { this.MinHomeBatVal = state.val }); // Get Desired Battery SoC
-        this.getState('Settings.ChargeNOW', (_err, state) => { this.ChargeNOW = state.val });
-        this.getState('Settings.ChargeManager', (_err, state) => { this.ChargeManager = state.val });
-        this.getState('Settings.ChargeCurrent', (_err, state) => { this.ChargeCurrent = state.val });
+        this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { MinHomeBatVal = state.val }); // Get Desired Battery SoC
+        this.getState('Settings.ChargeNOW', (_err, state) => { ChargeNOW = state.val });
+        this.getState('Settings.ChargeManager', (_err, state) => { ChargeManager = state.val });
+        this.getState('Settings.ChargeCurrent', (_err, state) => { ChargeCurrent = state.val });
 
         if (ChargeNOW) { // Charge-NOW is enabled
             this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
@@ -183,7 +183,7 @@ adapter.getState('myState', function (err, state) {
 
         else { // OFF -> min. current  Power.ChargingAllowed
             this.getState('Power.ChargingAllowed', (_err, ChargingAllowed) => {
-                if (this.ChargingAllowed.val == true) { // Set to false only if still true
+                if (ChargingAllowed.val == true) { // Set to false only if still true
                     ZielAmpere = 6;
                     this.Charge_Config('0', ZielAmpere, 'go-eCharger abschalten');
                 }
