@@ -314,6 +314,20 @@
       "native": {}
     },
     {
+      "_id": "Settings.ChargeCurrent",
+      "type": "state",
+      "common": {
+        "role": "value.current",
+        "name": "Setting charge current output",
+        "type": "number",
+        "unit": "A",
+        "read": true,
+        "write": true,
+        "def": 6
+      },
+      "native": {}
+    },
+    {
       "_id": "Settings.ChargeManager",
       "type": "state",
       "common": {

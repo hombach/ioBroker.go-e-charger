@@ -156,14 +156,13 @@ adapter.getState('myState', function (err, state) {
     }
 
     
-    /****************************************************************************************
-    */
+    /*****************************************************************************************/
     StateMachine() {
         this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { MinHomeBatVal = state.val }); // Get Desired Battery SoC
         this.getState('Settings.ChargeNOW', (_err, state) => { ChargeNOW = state.val });
         this.getState('Settings.ChargeManager', (_err, state) => { ChargeManager = state.val });
         this.Read_Charger();
-        this.getState('Power.ChargeCurrent', (_err, state) => { ChargeCurrent = state.val });
+        this.getState('Settings.ChargeCurrent', (_err, state) => { ChargeCurrent = state.val });
 
         if (ChargeNOW) { // Charge-NOW is enabled
             this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
@@ -172,9 +171,7 @@ adapter.getState('myState', function (err, state) {
         else if (ChargeManager) { // Charge-Manager is enabled
             this.getForeignState('kostal-piko-ba.0.Battery.SoC', (_err, BattSoC) => {
                 if (BattSoC.val >= MinHomeBatVal) { // SoC of homebattery sufficient?
-
                     this.Charge_Manager();
-
                 }
                 else { // FUTURE: time of day forces emptying of housebattery
                     ZielAmpere = 6;
@@ -196,8 +193,7 @@ adapter.getState('myState', function (err, state) {
     }
 
 
-    /****************************************************************************************
-    */
+    /*****************************************************************************************/
     Read_Charger() {
         var got = require('got');
         (async () => {
@@ -219,8 +215,7 @@ adapter.getState('myState', function (err, state) {
     } // END Read_Charger
 
 
-    /****************************************************************************************
-    */
+    /*****************************************************************************************/
     ParseStatus(status) {
         this.setStateAsync('Info.RebootCounter', status.rbc, true);
         this.setStateAsync('Info.RebootTimer', Math.floor(status.rbt / 1000 / 3600), true); // trim to hours
@@ -260,8 +255,7 @@ adapter.getState('myState', function (err, state) {
     }
 
 
-    /****************************************************************************************
-    */
+    /*****************************************************************************************/
     Charge_Config(Allow, Ampere, LogMessage) {
         var got = require('got');
         this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
@@ -325,8 +319,7 @@ adapter.getState('myState', function (err, state) {
     } // END Charge_Config
 
 
-    /****************************************************************************************
-    */
+    /*****************************************************************************************/
     Charge_Manager() {
  //       this.Read_Charger();
 
@@ -363,8 +356,7 @@ adapter.getState('myState', function (err, state) {
 } // END Class
 
 
-/****************************************************************************************
-*/
+/*****************************************************************************************/
 // @ts-ignore parent is a valid property on module
 if (module.parent) {
     // Export the constructor in compact mode
