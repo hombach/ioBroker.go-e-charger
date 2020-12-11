@@ -20,6 +20,9 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 To connect to the go-eCharger type in its IP-address in the config.
 
 ## Changelog
+### 0.4.0 (11.12.2020)
+* (HombachC) added use of amx (non persistent set of charge current) to protect hardware (firmware 040 only)
+
 ### 0.3.3 (08.12.2020)
 * (HombachC) added check of firmware version
 

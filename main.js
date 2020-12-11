@@ -242,10 +242,14 @@ adapter.getState('myState', function (err, state) {
                 this.setStateAsync('Info.CarStateString', 'Error', true);
         }
         this.setStateAsync('Power.ChargeCurrent', status.amp, true);
-        // amx - uint8_t - Ampere Wert für die PWM Signalisierung in ganzen Ampere von 6-32A.
-        //     Wird nicht auf dem Flash persistiert, verhält sich sonst aber gleich wie amp.
-        //     Nach dem reboot wird amp auf den letzten Wert zurückgesetzt, der mit amp gesetzt wurde.
-        //     Für PV Regelung empfohlen. 
+        this.setStateAsync('Power.ChargeCurrentVolatile', status.amx, true);
+        //           switch (Firmware) {
+        //               case '033' || '040':
+        //                   break;
+        //               default:
+        //                   this.log.error(`Not supported firmware found!!! Shutting down adapter.`);
+        //                   this.stop;
+        //           } 
         this.setStateAsync('Power.ChargingAllowed', status.alw, true);
         this.setStateAsync('Power.GridPhases', status.pha, true);
         this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
@@ -275,23 +279,48 @@ adapter.getState('myState', function (err, state) {
             } // END catch
         })();
 
+
         (async () => {
-        try {
-            // @ts-ignore got is valid
-            var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
-            if (!response.error && response.statusCode == 200) {
-                this.log.debug(response.body);
-                var result = await JSON.parse(response.body);
-                this.setStateAsync('Power.ChargeCurrent', result.amp, true); // in readcharger integriert
-                this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
-            }
-            else if (response.error) {
-                this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amp=${Allow}`);
-            }
-        } catch (e) {
-            this.log.error(`Error in calling go-eCharger API: ${e}`);
-            this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
-        } // END catch
+            switch (Firmware) {
+                case '033':
+                    try {
+                        // @ts-ignore got is valid
+                        var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
+                        if (!response.error && response.statusCode == 200) {
+                            this.log.debug(response.body);
+                            var result = await JSON.parse(response.body);
+                            this.setStateAsync('Power.ChargeCurrent', result.amp, true); // in readcharger integriert
+                            this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
+                        }
+                        else if (response.error) {
+                            this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amp=${Ampere}`);
+                        }
+                    } catch (e) {
+                        this.log.error(`Error in calling go-eCharger API: ${e}`);
+                        this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
+                    } // END catch
+                    break;
+                case '040':
+                    try {
+                        // @ts-ignore got is valid
+                        var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
+                        if (!response.error && response.statusCode == 200) {
+                            this.log.debug(response.body);
+                            var result = await JSON.parse(response.body);
+                            this.setStateAsync('Power.ChargeCurrent', result.amx, true); // in readcharger integriert
+                            this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
+                        }
+                        else if (response.error) {
+                            this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amx=${Ampere}`);
+                        }
+                    } catch (e) {
+                        this.log.error(`Error in calling go-eCharger API: ${e}`);
+                        this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
+                    } // END catch
+                    break;
+                default:
+                    this.log.error(`Not supported firmware found!!!`);
+            } 
         })();
     } // END Charge_Config
 

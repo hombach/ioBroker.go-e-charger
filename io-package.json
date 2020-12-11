@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.3.3",
+    "version": "0.4.0",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.4.0": {
+        "en": "added use of amx with firmware version 040"
+      },
       "0.3.3": {
         "en": "added check of firmware version"
       },
@@ -188,6 +191,20 @@
       "common": {
         "role": "value.current",
         "name": "Charge current output",
+        "type": "number",
+        "unit": "A",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Power.ChargeCurrentVolatile",
+      "type": "state",
+      "common": {
+        "role": "value.current",
+        "name": "Charge current output volatile",
         "type": "number",
         "unit": "A",
         "read": true,
