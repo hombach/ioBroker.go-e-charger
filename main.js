@@ -158,6 +158,7 @@ adapter.getState('myState', function (err, state) {
     
     /*****************************************************************************************/
     StateMachine() {
+        this.log.debug('StateMachine start');
         this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { MinHomeBatVal = state.val }); // Get Desired Battery SoC
         this.getState('Settings.ChargeNOW', (_err, state) => { ChargeNOW = state.val });
         this.getState('Settings.ChargeManager', (_err, state) => { ChargeManager = state.val });
