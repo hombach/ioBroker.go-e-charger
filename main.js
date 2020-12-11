@@ -238,13 +238,6 @@ adapter.getState('myState', function (err, state) {
         }
         this.setStateAsync('Power.ChargeCurrent', status.amp, true);
         this.setStateAsync('Power.ChargeCurrentVolatile', status.amx, true);
-        //           switch (Firmware) {
-        //               case '033' || '040':
-        //                   break;
-        //               default:
-        //                   this.log.error(`Not supported firmware found!!! Shutting down adapter.`);
-        //                   this.stop;
-        //           } 
         this.setStateAsync('Power.ChargingAllowed', status.alw, true);
         this.setStateAsync('Power.GridPhases', status.pha, true);
         this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
@@ -294,7 +287,7 @@ adapter.getState('myState', function (err, state) {
                         this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
                     } // END catch
                     break;
-                case '040':
+                case '040.0':
                     try {
                         // @ts-ignore got is valid
                         var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
