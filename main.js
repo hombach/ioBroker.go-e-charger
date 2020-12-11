@@ -203,6 +203,7 @@ adapter.getState('myState', function (err, state) {
                 var response = await got(`http://${this.config.ipaddress}/status`);
                 if (!response.error && response.statusCode == 200) {
                     var result = await JSON.parse(response.body);
+                    this.log.debug(`Read charger: ${response.body}`);
                     await this.ParseStatus(result);
                 }
                 else {
