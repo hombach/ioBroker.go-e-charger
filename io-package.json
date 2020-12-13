@@ -221,7 +221,7 @@
       "type": "state",
       "common": {
         "role": "value",
-        "name": "Flags for primary and secondary grid phases",
+        "name": "No of available grid phases",
         "type": "number",
         "unit": "phase",
         "read": true,
