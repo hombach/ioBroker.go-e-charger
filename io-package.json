@@ -223,7 +223,7 @@
         "role": "value",
         "name": "Flags for primary and secondary grid phases",
         "type": "number",
-        "unit": "Flags",
+        "unit": "phase",
         "read": true,
         "write": false,
         "def": 0

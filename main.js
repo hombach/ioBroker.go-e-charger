@@ -241,7 +241,7 @@ adapter.getState('myState', function (err, state) {
         this.setStateAsync('Power.ChargeCurrent', status.amp, true);
         this.setStateAsync('Power.ChargeCurrentVolatile', status.amx, true);
         this.setStateAsync('Power.ChargingAllowed', status.alw, true);
-        this.setStateAsync('Power.GridPhases', (32 & status.pha) + (16 & status.pha) + (8 & status.pha), true);
+        this.setStateAsync('Power.GridPhases', ((32 & status.pha)>>5) + ((16 & status.pha)>>4) + ((8 & status.pha)>>3), true);
         this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
         this.setStateAsync('Power.Charge', (status.nrg[11] * 10), true); // trim to Watt
         Firmware = status.fwv;
