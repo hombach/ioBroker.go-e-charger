@@ -241,7 +241,7 @@ adapter.getState('myState', function (err, state) {
         this.setStateAsync('Power.ChargeCurrent', status.amp, true);
         this.setStateAsync('Power.ChargeCurrentVolatile', status.amx, true);
         this.setStateAsync('Power.ChargingAllowed', status.alw, true);
-        this.setStateAsync('Power.GridPhases', status.pha, true);
+        this.setStateAsync('Power.GridPhases', (32 & status.pha) + (16 & status.pha) + (8 & status.pha), true);
         this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
         this.setStateAsync('Power.Charge', (status.nrg[11] * 10), true); // trim to Watt
         Firmware = status.fwv;
@@ -395,7 +395,7 @@ alw     - uint8_t   - allow_charging: ​PWM Signal darf anliegen; 0: nein; 1: j
 stp     - uint8_t   - stop_state: ​Automatische Abschaltung; 0: deaktiviert; 2: nach kWh abschalten
 cbl     - uint8_t   - Typ2 ​Kabel Ampere codierung; 13-32: Ampere Codierung; 0: kein Kabel
 pha     - uint8_t   - Phasen ​vor und nach dem Schütz; binary flags: ​0b00ABCDEF
-                      A... phase 3, vor dem Schütz           B... phase 2 vor dem Schütz
+                      A... phase 3 vor dem Schütz            B... phase 2 vor dem Schütz
                       C... phase 1 vor dem Schütz            D... phase 3 nach dem Schütz
                       E... phase 2 nach dem Schütz           F... phase 1 nach dem Schütz
 tmp     - uint8_t   - Temperatur​ des Controllers in °C

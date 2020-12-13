@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.4.1": {
+        "en": "fixed error in poll of pha to get available phases"
+      },
       "0.4.0": {
         "en": "added use of amx with firmware version 040"
       },
