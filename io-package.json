@@ -101,7 +101,8 @@
 
   "native": {
     "ipaddress": "",
-    "polltimelive": 10000
+    "polltimelive": 10000,
+    "HomeBatSocState": ""
   },
 
   "objects": [],

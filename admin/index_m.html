@@ -40,11 +40,11 @@
             });
 
 // NEW
-            $('#triggerIDPopUp').on('click', function () {
+            $('#HomeBatSocStatePopUp').on('click', function () {
                 initSelectId(function (sid) {
-                    sid.selectId('show', $('#triggerID').val(), function (newId) {
+                    sid.selectId('show', $('#HomeBatSocState').val(), function (newId) {
                         if (newId) {
-                            $('#triggerID').val(newId).trigger('change');
+                            $('#HomeBatSocState').val(newId).trigger('change');
                         }
                     });
                 });
@@ -140,12 +140,12 @@
         <!-- NEW -->
         <div class="row">
             <div class="col s6 l4 input-field">
-                <input type="text" class="value" id="triggerID" />  <!-- id=HomeBatSoc -->
-                <label for="triggerID" class="translate"></label>
-                <span class="translate">Trigger ID</span>
+                <input type="text" class="value" id="HomeBatSocState" />  <!-- id=triggerID -->
+                <label for="triggerID" class="translate">HomeBatSocState</label>
+                <!-- <span class="translate">Trigger ID</!-span> -->
             </div>
             <div class="col s1 m2 l1">
-                <a id="triggerIDPopUp" class="btn"><i class="material-icons">add_circle_outline</i><span></span></a>
+                <a id="HomeBatSocStatePopUp" class="btn"><i class="material-icons">add_circle_outline</i><span></span></a>
             </div>
         </div>
         <!-- END NEW -->

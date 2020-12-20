@@ -37,5 +37,17 @@ systemDictionary = {
         "es": "Tiempo entre encuestas de datos del cargador [ms]",
         "pl": "Czas między sondażami danych z ładowarki [ms]",
         "zh-cn": "充电器进行数据轮询之间的时间[ms]"
+    },
+    'HomeBatSocState': {
+        "en": "HomeBatSocState",
+        "de": "HomeBatSocState",
+        "ru": "HomeBatSocState",
+        "pt": "HomeBatSocState",
+        "nl": "HomeBatSocState",
+        "fr": "HomeBatSocState",
+        "it": "HomeBatSocState",
+        "es": "HomeBatSocState",
+        "pl": "HomeBatSocState",
+        "zh-cn": "HomeBatSocState"
     }
 };
