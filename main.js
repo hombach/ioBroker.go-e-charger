@@ -169,8 +169,8 @@ adapter.getState('myState', function (err, state) {
             this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
         }
 
-        else if (ChargeManager) { // Charge-Manager is enabled
-            this.getForeignState('kostal-piko-ba.0.Battery.SoC', (_err, BattSoC) => {
+        else if (ChargeManager) { // Charge-Manager is enabled  'kostal-piko-ba.0.Battery.SoC'
+            this.getForeignState(this.config.HomeBatSocState, (_err, BattSoC) => {
                 if (BattSoC.val >= MinHomeBatVal) { // SoC of homebattery sufficient?
                     this.Charge_Manager();
                 }
