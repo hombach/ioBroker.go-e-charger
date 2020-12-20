@@ -40,7 +40,7 @@ systemDictionary = {
     },
     'HomeBatSocState': {
         "en": "HomeBatSocState",
-        "de": "HomeBatSocState",
+        "de": "Status des Ladezustands der Hausbatterie [%]",
         "ru": "HomeBatSocState",
         "pt": "HomeBatSocState",
         "nl": "HomeBatSocState",
