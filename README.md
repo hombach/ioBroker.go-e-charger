@@ -20,6 +20,9 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 To connect to the go-eCharger type in its IP-address in the config.
 
 ## Changelog
+### 0.5.0 (20.12.2020)
+* (HombachC) introduces selectable external states for charge control
+
 ### 0.4.1 (13.12.2020)
 * (HombachC) fixed error in poll of pha to get available phases
 

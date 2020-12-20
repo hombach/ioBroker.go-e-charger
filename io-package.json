@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.4.1",
+    "version": "0.5.0",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.5.0": {
+        "en": "introduces selectable external states for charge control"
+      },
       "0.4.1": {
         "en": "fixed error in poll of pha to get available phases"
       },
