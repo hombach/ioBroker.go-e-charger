@@ -109,7 +109,7 @@
                         unselectAll: _('Deselect all'),
                         invertSelection: _('Invert selection')
                     },
-                    columns: ['image', 'name', 'role', 'room']
+                    columns: ['image', 'name', 'role', 'room', 'value']
                 });
                 callback(selectId);
             });
@@ -144,7 +144,12 @@
         </div>
 
         <!-- NEW -->
-        <div class="row">hello2
+        <div class="row">
+            hello2
+
+            <div id="dialog-select-member" style="display: none"></div>
+
+
             <div class="col s6 l4 input-field">
                 <input type="text" class="value" id="HomeBatSocState" />  <!-- id=triggerID -->
                 <label for="triggerID" class="translate"></label>
