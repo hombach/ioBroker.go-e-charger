@@ -1,9 +1,9 @@
 <html>
 <head>
     <!-- Load go-eCharger scripts and styles-->
-    <link rel="stylesheet" type="text/css" href="../../lib/css/fancytree/ui.fancytree.min.css"/>
-    <link rel="stylesheet" type="text/css" href="../../css/adapter.css"/>
-    <link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css"/>
+    <link rel="stylesheet" type="text/css" href="../../lib/css/fancytree/ui.fancytree.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/adapter.css" />
+    <link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css" />
 
     <script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
@@ -11,17 +11,18 @@
     <script type="text/javascript" src="../../lib/js/materialize.js"></script>
     <script type="text/javascript" src="../../lib/js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="../../lib/js/jquery.fancytree-all.min.js"></script>
+    <script type="text/javascript" src="../../lib/js/jquery.fancytree-all.js"></script>
     <script type="text/javascript" src="../../lib/js/selectID.js"></script>
     <script type="text/javascript" src="../../js/adapter-settings.js"></script>
 
     <!-- Load our own files -->
-    <link rel="stylesheet" type="text/css" href="style.css"/>
+    <link rel="stylesheet" type="text/css" href="style.css" />
     <script type="text/javascript" src="words.js"></script>
-    
+
     <style>
-    </style >
-    
-    <script type="text/javascript" >
+    </style>
+
+    <script type="text/javascript">
         // This will be called by the admin adapter when the settings page loads
         function load(settings, onChange) {
             // example: select elements with id=key and class=value and insert value
@@ -43,7 +44,7 @@
                 }
             });
 
-// NEW, NOT WORKING
+            // NEW, NOT WORKING
             $('#StateHomeSolarPowerPopUp').on('click', function () {
                 window.alert("StateHomeSolarPowerPopUp!" + $('#StateHomeSolarPower').val());
                 initSelectId(function (sid) {
@@ -79,14 +80,14 @@
                     });
                 });
             });
-// END NEW  */
+            // END NEW  */
 
             onChange(false);
             // reinitialize all the Materialize labels on the page if you are dynamically adding inputs:
             if (M) M.updateTextFields();
         }
-        
-        
+
+
         // This will be called by the admin adapter when the user presses the save button
         function save(callback) {
             // example: select elements with class=value and build settings object
@@ -103,7 +104,7 @@
         }
 
 
-// NEW from BlueFox, Not Working       
+        // NEW from BlueFox, Not Working
         var selectId;
         function initSelectId(cb) {
             if (selectId) return cb(selectId);
