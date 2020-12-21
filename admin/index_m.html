@@ -46,8 +46,9 @@
                         ;
                 }
             });
-            /* // NEW
-            $('#HomeBatSocStatePopUp').on('click', function () {
+            // NEW
+            $('#StateHomeBatSocPopUp').on('click', function () {
+                window.alert("StateHomeBatSocPopUp!");
                 initSelectId(function (sid) {
                     sid.selectId('show', $('#StateHomeBatSoc').val(), function (newId) {
                         if (newId) {
@@ -55,9 +56,6 @@
                         }
                     });
                 });
-            });  */
-            $('#HomeBatSocStatePopUp').on('click', function () {
-                window.alert("I am an alert box!");
             });
             // END NEW  */
             onChange(false);
@@ -85,6 +83,7 @@
         // NEW
         var selectId;
         function initSelectId(callback) {
+            window.alert("initSelectId!");
             if (selectId) {
                 return callback(selectId);
             }
@@ -162,9 +161,9 @@
                 <input type="text" class="value" id="StateHomeBatSoc" />
                 <label for="StateHomeBatSoc" class="translate">StateHomeBatSoc</label>
             </div>
-            <div class="col s6 m1 l1">
-                <a id="HomeBatSocStatePopUp" class="btn"> LINK <span> </span> </a>
-                <a id="HomeBatSocStatePopUp" class="btn"> <i class="material-icons">add_circle_outline</i> <span> </span> </a>
+            <div class="col s6 m1 l2">
+                <a id="StateHomeBatSocPopUp" class="btn">SEARCH<span> </span> </a>
+                <a id="StateHomeBatSocPopUp" class="btn"> <i class="material-icons">add_circle_outline</i> <span> </span> </a>
             </div>
         </div>
 
