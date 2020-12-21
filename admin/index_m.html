@@ -53,6 +53,7 @@
                 initSelectId(function (sid) {
                     sid.selectId('show', $('#StateHomeBatSoc').val(), function (newId) {
                         if (newId) {
+                            window.alert("NewID!!");
                             $('#StateHomeBatSoc').val(newId).trigger('change');
                         }
                     });
@@ -94,7 +95,7 @@
         }
 
 
-        // NEW, Not Working       
+        // NEW from BlueFox, Not Working       
         var selectId;
         function initSelectId(cb) {
             if (selectId) return cb(selectId);
@@ -130,8 +131,6 @@
                     });
                     window.alert("Error: " + err);
                     window.alert(res);
-                    window.alert("NEW!!");
-                    window.alert(selectId.val);
                     cb && cb(selectId);
                 }
             });
@@ -174,7 +173,7 @@
                 <input type="text" class="value" id="StateHomeBatSoc" />
                 <label for="StateHomeBatSoc" class="translate">StateHomeBatSoc</label>
             </div>
-            <div class="col s1 l10">
+            <div class="col s1 l1">
                 <a id="StateHomeBatSocPopUp" class="btn">NOT_WORKING<span> </span> </a>
                 <!--  <a id="StateHomeBatSocPopUp" class="btn"><i class="material-icons">add_circle_outline</i><span> </span> </a>  -->
             </div>
