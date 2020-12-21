@@ -81,7 +81,7 @@
         }
 
 
-        // NEW
+        // NEW         filter: { type: 'state' },
         var selectId;
         function initSelectId(callback) {
             if (selectId) {
@@ -96,7 +96,6 @@
                         noMultiselect: true,
                         objects: res,
                         imgPath: '../../lib/css/fancytree/',
-                        filter: { type: 'state' },
                         name: 'adapter-select-state',
                         texts: {
                             select: _('Select'),
