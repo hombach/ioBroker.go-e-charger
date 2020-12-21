@@ -325,8 +325,11 @@ adapter.getState('myState', function (err, state) {
  //       this.getForeignState('kostal-piko-ba.0.Battery.SoC', (_err, state) => { BatSoC = state.val });
 
         this.getForeignState(this.config.HomeSolarPower, (_err, state) => { SolarPower = state.val });
+        this.log.debug(`Got external state of solar power: ${SolarPower} W`);
         this.getForeignState(this.config.HomePowerConsumption, (_err, state) => { HouseConsumption = state.val });
+        this.log.debug(`Got external state of house power consumption: ${HouseConsumption} W`);
         this.getForeignState(this.config.HomeBatSocState, (_err, state) => { BatSoC = state.val });
+        this.log.debug(`Got external state of battery SoC: ${BatSoC} W`);
         this.getState('Power.Charge', (_err, state) => { ChargePower = state.val });
 
         OptAmpere = (Math.floor(
