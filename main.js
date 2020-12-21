@@ -186,8 +186,8 @@ adapter.getState('myState', function (err, state) {
 
         else { // OFF -> min. current  only if Power.ChargingAllowed is still set
             this.getState('Power.ChargingAllowed', (_err, state) => {
-                ChargingAllowed = state.val;
-                if (ChargingAllowed == true) { // Set to false only if still true
+                //ChargingAllowed = state.val;
+                if (state.val == true) { // Set to false only if still true
                     ZielAmpere = 6;
                     this.Charge_Config('0', ZielAmpere, 'go-eCharger abschalten');
                 }
