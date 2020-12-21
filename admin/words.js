@@ -38,7 +38,7 @@ systemDictionary = {
         "pl": "Czas między sondażami danych z ładowarki [ms]",
         "zh-cn": "充电器进行数据轮询之间的时间[ms]"
     },
-    'blaHomeBatSocState': {
+    'HomeBatSocState': {
         "en": "HomeBatSocState",
         "de": "Status des Ladezustands der Hausbatterie [%]",
         "ru": "HomeBatSocState",
