@@ -170,9 +170,9 @@ adapter.getState('myState', function (err, state) {
         }
 
         else if (ChargeManager) { // Charge-Manager is enabled  'kostal-piko-ba.0.Battery.SoC'
-            this.getForeignState(this.config.HomeBatSocState, (_err, BattSoC) => {
-            this.log.debug(`Got external state of battery SoC: ${BatSoC} W`);
-                if (BattSoC.val >= MinHomeBatVal) { // SoC of home battery sufficient?
+            this.getForeignState(this.config.HomeBatSocState, (_err, BatSoC) => {
+            this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
+                if (BatSoC.val >= MinHomeBatVal) { // SoC of home battery sufficient?
                     this.Charge_Manager();
                 }
                 else { // FUTURE: time of day forces emptying of home battery
@@ -330,7 +330,7 @@ adapter.getState('myState', function (err, state) {
         this.getForeignState(this.config.HomePowerConsumption, (_err, state) => { HouseConsumption = state.val });
         this.log.debug(`Got external state of house power consumption: ${HouseConsumption} W`);
         this.getForeignState(this.config.HomeBatSocState, (_err, state) => { BatSoC = state.val });
-        this.log.debug(`Got external state of battery SoC: ${BatSoC} W`);
+        this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
         this.getState('Power.Charge', (_err, state) => { ChargePower = state.val });
 
         OptAmpere = (Math.floor(
