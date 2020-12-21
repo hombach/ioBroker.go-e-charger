@@ -46,7 +46,7 @@
                         ;
                 }
             });
-            // NEW
+            // NEW, NOT WORKING
             $('#StateHomeBatSocPopUp').on('click', function () {
                 window.alert("StateHomeBatSocPopUp!");
                 window.alert( $('#StateHomeBatSoc').val() );
@@ -59,8 +59,6 @@
                 });
             });
 
-
-
             $('#select2').click(function () {
                 initSelectId(function (sid) {
                     sid.selectId('show', $('#object2').val(), function (newId) {
@@ -72,9 +70,8 @@
                 });
             });
 
-
-
             // END NEW  */
+
             onChange(false);
             // reinitialize all the Materialize labels on the page if you are dynamically adding inputs:
             if (M) M.updateTextFields();
@@ -97,7 +94,7 @@
         }
 
 
-        // NEW         
+        // NEW, Not Working       
         var selectId;
         function initSelectId(cb) {
             if (selectId) return cb(selectId);
@@ -132,7 +129,7 @@
                         columns: ['image', 'name', 'role', 'room']
                     });
                     window.alert("NEW!!");
-                    window.alert(selectId.texts.id);
+                    window.alert(selectId.val);
                     cb && cb(selectId);
                 }
             });
@@ -176,17 +173,11 @@
                 <label for="StateHomeBatSoc" class="translate">StateHomeBatSoc</label>
             </div>
             <div class="col s2 m2 l1">
-                <a id="StateHomeBatSocPopUp" class="btn">NO_WORKING<span> </span> </a>
+                <a id="StateHomeBatSocPopUp" class="btn">NOT_WORKING<span> </span> </a>
                 <!--  <a id="StateHomeBatSocPopUp" class="btn"><i class="material-icons">add_circle_outline</i><span> </span> </a>  -->
             </div>
         </div>
-        <div class="row">
-            <div class="col s2 m2 l1">
-                <input class="value" id="StateHomeBatSoc" />
-                <button id="StateHomeBatSocPopUp">NEW BUTTON</button>
-            </div>
-        </div>
-
+        
         <div class="row">
             <div class="col s6 input-field">
                 <input type="text" class="value" id="StateHomePowerConsumption" />
