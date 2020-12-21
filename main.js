@@ -51,7 +51,7 @@ class go_e_charger extends utils.Adapter {
         }
 
         if (!this.config.polltimelive) {
-            this.log.warn('Polltime not set or zero - will be set to 10 seconds');
+            this.log.warn('Polltime not configured or zero - will be set to 10 seconds');
             this.config.polltimelive = 10000;
         } 
         this.log.info('Polltime set to: ' + (this.config.polltimelive / 1000) + ' seconds');
@@ -95,7 +95,7 @@ class go_e_charger extends utils.Adapter {
                 this.log.warn(`state ${id} deleted`);
             }
         } catch (e) {
-            this.log.error("Unhandled exception processing stateChange: " + e);
+            this.log.error(`Unhandled exception processing stateChange: ${e}`);
         }
     }
 
@@ -109,7 +109,7 @@ class go_e_charger extends utils.Adapter {
             clearTimeout(adapterIntervals.stateMachine);
             clearTimeout(adapterIntervals.total);
             Object.keys(adapterIntervals).forEach(interval => clearInterval(adapterIntervals[interval]));
-            this.log.info('Adaptor go-eCharger cleaned up everything...');
+            this.log.info(`Adaptor go-eCharger cleaned up everything...`);
             callback();
         } catch (e) {
             callback();
@@ -119,7 +119,7 @@ class go_e_charger extends utils.Adapter {
     
     /*****************************************************************************************/
     StateMachine() {
-        this.log.debug('StateMachine start');
+        this.log.debug(`StateMachine start`);
         this.Read_Charger();
         this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { MinHomeBatVal = state.val }); // Get Desired Battery SoC
         this.getState('Settings.ChargeNOW', (_err, state) => { ChargeNOW = state.val });
@@ -131,7 +131,6 @@ class go_e_charger extends utils.Adapter {
         }
 
         else if (ChargeManager) { // Charge-Manager is enabled  'kostal-piko-ba.0.Battery.SoC'
-            var state;
             this.getForeignState(this.config.StateHomeBatSoc, (_err, state) => {
                 BatSoC = state.val;
                 this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
@@ -140,7 +139,7 @@ class go_e_charger extends utils.Adapter {
                 }
                 else { // FUTURE: time of day forces emptying of home battery
                     ZielAmpere = 6;
-                    this.Charge_Config('0', ZielAmpere, `Hausbatterie laden bis ${MinHomeBatVal} %`);
+                    this.Charge_Config('0', ZielAmpere, `Hausbatterie laden bis ${MinHomeBatVal}%`);
                 }
             });
         }
@@ -149,7 +148,7 @@ class go_e_charger extends utils.Adapter {
             this.getState('Power.ChargingAllowed', (_err, state) => {
                 if (state.val == true) { // Set to false only if still true
                     ZielAmpere = 6;
-                    this.Charge_Config('0', ZielAmpere, 'go-eCharger abschalten');
+                    this.Charge_Config('0', ZielAmpere, `go-eCharger abschalten`);
                 }
             });
         }
@@ -262,7 +261,6 @@ class go_e_charger extends utils.Adapter {
                         if (!response.error && response.statusCode == 200) {
                             this.log.debug(`Sent to firmware 040.0: ${response.body}`);
                             var result = await JSON.parse(response.body);
-                            // this.setStateAsync('Power.ChargeCurrent', result.amx, true); // in readcharger integriert
                             this.setStateAsync('Power.ChargeCurrent', result.amp, true); // in readcharger integriert
                             this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
                         }
@@ -296,7 +294,7 @@ class go_e_charger extends utils.Adapter {
             (SolarPower - HouseConsumption + ChargePower - 100
                 + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal))) / 230)); // -100 W Reserve + max. 2000 fÜr Batterieleerung
 
-        this.log.debug(`Optimal charging current would be: ${OptAmpere} Ampere`);
+        this.log.debug(`Optimal charging current would be: ${OptAmpere} A`);
         if (OptAmpere > 16) OptAmpere = 16;
 
         if (ZielAmpere < OptAmpere) {
@@ -307,11 +305,11 @@ class go_e_charger extends utils.Adapter {
             + `Hausverbrauch: ${HouseConsumption} W; Gesamtleistung Charger: ${ChargePower} W`);
         
         if (ZielAmpere > (5 + 4)) {
-            this.Charge_Config('1', ZielAmpere, `Ladestrom: ${ZielAmpere} Ampere`); // An und Zielstrom da größer 5 + Hysterese
+            this.Charge_Config('1', ZielAmpere, `Charging current: ${ZielAmpere} A`); // An und Zielstrom da größer 5 + Hysterese
         } else if (ZielAmpere < 6) {
             OffVerzoegerung++;
             if (OffVerzoegerung > 12) {
-                this.Charge_Config('0', ZielAmpere, 'zu wenig Überschuss'); // Aus und Zielstrom
+                this.Charge_Config('0', ZielAmpere, `zu wenig Überschuss`); // Aus und Zielstrom
                 OffVerzoegerung = 0;
             }
         }
