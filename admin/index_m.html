@@ -49,7 +49,7 @@
             // NEW
             $('#StateHomeBatSocPopUp').on('click', function () {
                 window.alert("StateHomeBatSocPopUp!");
-                window.alert($('#StateHomeBatSoc').val);
+                window.alert($('#StateHomeBatSoc').sid);
                 initSelectId(function (sid) {
                     sid.selectId('show', $('#StateHomeBatSoc').val(), function (newId) {
                         if (newId) {
@@ -120,7 +120,7 @@
                         columns: ['image', 'name', 'role', 'room', 'value']
                     });
                     window.alert("NEW!!");
-                    window.alert(selectId.value);
+                    window.alert(selectId.texts.id);
                     callback(selectId);
                 }
             });
@@ -168,7 +168,7 @@
             </div>
             <div class="col s2 m1 l1">
                 <a id="StateHomeBatSocPopUp" class="btn">SEARCH<span> </span> </a>
-                <a id="StateHomeBatSocPopUp" class="btn"><i class="material-icons">add_circle_outline</i><span> </span> </a>
+                <!--  <a id="StateHomeBatSocPopUp" class="btn"><i class="material-icons">add_circle_outline</i><span> </span> </a>  -->
             </div>
         </div>
 
