@@ -49,6 +49,7 @@
             // NEW
             $('#StateHomeBatSocPopUp').on('click', function () {
                 window.alert("StateHomeBatSocPopUp!");
+                window.alert($('#StateHomeBatSoc').val);
                 initSelectId(function (sid) {
                     sid.selectId('show', $('#StateHomeBatSoc').val(), function (newId) {
                         if (newId) {
@@ -83,12 +84,12 @@
         // NEW
         var selectId;
         function initSelectId(callback) {
-            window.alert("initSelectId!");
             if (selectId) {
                 window.alert("OLD!!");
                 window.alert(selectId.value);
                 return callback(selectId);
             }
+            window.alert("TRY??");
             socket.emit('getObjects', function (err, objs) {
                 selectId = $('#dialog-select-member').selectId('init', {
                     noMultiselect: true,
@@ -163,9 +164,9 @@
                 <input type="text" class="value" id="StateHomeBatSoc" />
                 <label for="StateHomeBatSoc" class="translate">StateHomeBatSoc</label>
             </div>
-            <div class="col s2 m1 l2">
+            <div class="col s2 m1 l1">
                 <a id="StateHomeBatSocPopUp" class="btn">SEARCH<span> </span> </a>
-                <a id="StateHomeBatSocPopUp" class="btn"> <i class="material-icons">add_circle_outline</i> <span> </span> </a>
+                <a id="StateHomeBatSocPopUp" class="btn"> .<i class="material-icons">add_circle_outline</i> <span> </span> </a>
             </div>
         </div>
 
