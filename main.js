@@ -20,7 +20,7 @@ var ChargeCurrent    = 0;
 var ChargePower      = 0;
 var SolarPower       = 0;
 var HouseConsumption = 0;
-var BatSoC           = 0;
+var BatSoC           = 1;
 var Firmware         = "0";
 
 class go_e_charger extends utils.Adapter {
@@ -171,10 +171,11 @@ adapter.getState('myState', function (err, state) {
 
         else if (ChargeManager) { // Charge-Manager is enabled  'kostal-piko-ba.0.Battery.SoC'
             this.getForeignState(this.config.HomeBatSocState, (_err, BattSoC) => {
-                if (BattSoC.val >= MinHomeBatVal) { // SoC of homebattery sufficient?
+            this.log.debug(`Got external state of battery SoC: ${BatSoC} W`);
+                if (BattSoC.val >= MinHomeBatVal) { // SoC of home battery sufficient?
                     this.Charge_Manager();
                 }
-                else { // FUTURE: time of day forces emptying of housebattery
+                else { // FUTURE: time of day forces emptying of home battery
                     ZielAmpere = 6;
                     this.Charge_Config('0', ZielAmpere, `Hausbatterie laden bis ${MinHomeBatVal} %`);
                 }
