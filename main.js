@@ -57,19 +57,7 @@ class go_e_charger extends utils.Adapter {
         this.log.info('Polltime set to: ' + (this.config.polltimelive / 1000) + ' seconds');
  
         // this.subscribeStates('*'); // all states changes inside the adapters namespace are subscribed
-
-        /*
-        setState examples
-        you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-        try {
-            await this.setStateAsync('state', { val: 10 })
-            await this.setStateAsync('state', true); // the variable state is set to true as command (ack=false)
-            await this.setStateAsync('state', { val: true, ack: true }); // ack should be always set to true if the value is received from or acknowledged from the target system
-        } catch (e) {
-            this.log.error("Unhandled exception processing setStateAsync: " + e);
-        }
-        */
-
+                
         if (this.config.ipaddress) {
 
  /*           ChargerRequest = 'http://' + this.config.ipaddress + '/api/dxs.json' +
@@ -111,34 +99,7 @@ class go_e_charger extends utils.Adapter {
         }
     }
 
-/*    if(adapter.config.publicHolidays === true) {
-    if (id === adapter.config.publicHolInstance + '.heute.boolean') {
-        publicHolidayStr = state.val;
-        shutterDriveCalc();
 
-adapter.getForeignState(result[i].name, (err, state) => {
-                            adapter.log.debug('Shutter state changed: ' + result[i].shutterName + ' old value = ' + result[i].oldHeight + ' new value = ' + state.val);
-                            //shutterState();
-
-adapter.getState('shutters.autoUp.' + nameDevice, (err, state) => {
-                    if (state && state === true || state && state.val === true) {
-                        let currentValue = '';
-                        /**
-                         * @param {any} err
-                         * @param {{ val: string; }} state
-
-
-adapter.getState('myState', function (err, state) {
-  adapter.log.info(
-      'State ' + adapter.namespace + '.myState -' +
-      '  Value: '    + state.val +
-      ', ack: '      + state.ack +
-      ', time stamp: '   + state.ts  +
-      ', last changed: ' + state.lc
-  );
-});
-
-        */
 
     /****************************************************************************************
     * Is called when adapter shuts down - callback has to be called under any circumstances!
