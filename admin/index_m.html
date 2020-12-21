@@ -46,7 +46,7 @@
                         ;
                 }
             });
-            // NEW
+            /* // NEW
             $('#HomeBatSocStatePopUp').on('click', function () {
                 initSelectId(function (sid) {
                     sid.selectId('show', $('#StateHomeBatSoc').val(), function (newId) {
@@ -55,6 +55,9 @@
                         }
                     });
                 });
+            });  */
+            $('#HomeBatSocStatePopUp').on('click', function () {
+                window.alert("I am an alert box!");
             });
             // END NEW  */
             onChange(false);
@@ -62,7 +65,7 @@
             if (M) M.updateTextFields();
         }
         
-
+        
         // This will be called by the admin adapter when the user presses the save button
         function save(callback) {
             // example: select elements with class=value and build settings object
