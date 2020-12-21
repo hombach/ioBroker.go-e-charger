@@ -170,9 +170,11 @@ adapter.getState('myState', function (err, state) {
         }
 
         else if (ChargeManager) { // Charge-Manager is enabled  'kostal-piko-ba.0.Battery.SoC'
-            this.getForeignState(this.config.HomeBatSocState, (_err, BatSoC) => {
-            this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
-                if (BatSoC.val >= MinHomeBatVal) { // SoC of home battery sufficient?
+            var state;
+            this.getForeignState(this.config.HomeBatSocState, (_err, state) => {
+                BatSoC = state.val;
+                this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
+                if (BatSoC >= MinHomeBatVal) { // SoC of home battery sufficient?
                     this.Charge_Manager();
                 }
                 else { // FUTURE: time of day forces emptying of home battery
@@ -182,9 +184,10 @@ adapter.getState('myState', function (err, state) {
             });
         }
 
-        else { // OFF -> min. current  Power.ChargingAllowed
-            this.getState('Power.ChargingAllowed', (_err, ChargingAllowed) => {
-                if (ChargingAllowed.val == true) { // Set to false only if still true
+        else { // OFF -> min. current  only if Power.ChargingAllowed is still set
+            this.getState('Power.ChargingAllowed', (_err, state) => {
+                ChargingAllowed = state.val;
+                if (ChargingAllowed == true) { // Set to false only if still true
                     ZielAmpere = 6;
                     this.Charge_Config('0', ZielAmpere, 'go-eCharger abschalten');
                 }
