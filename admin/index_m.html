@@ -78,17 +78,13 @@
         }
 
 
-
         // NEW
         var selectId;
         function initSelectId(callback) {
-            if (selectId)
-
-        {
-            return callback(selectId);
-        }
-
-        socket.emit('getObjects', function (err, objs) {
+            if (selectId) {
+                return callback(selectId);
+            }
+            socket.emit('getObjects', function (err, objs) {
                 selectId = $('#dialog-select-member').selectId('init', {
                     noMultiselect: true,
                     objects: objs,
@@ -151,22 +147,28 @@
     <!-- NEW -->
         <div class="row">
             A-hello4
-            <div id="dialog-select-member" style="display: none"> </div>
-       
+            <!-- NEW   <div id="dialog-select-member" style="display: none"> </div>
+             NEW -->
+            <div class="col s6 l4 input-field">
+                id="dialog-select-member" style="display: none">
+                <input type="text" class="value" id="HomeBatSocState" /> <!-- id=triggerID -->
+                <label for="triggerID" class="translate"> </label>
+                <span class="translate"> HomeBatSocState</span>
+            </div>
         </div>
 
-        <div class="row" >
+        <div class="row">
             B-hello4
             <div class="col s6 l4 input-field" >
                 <input type="text" class="value" id="HomeBatSocState" / > <!-- id=triggerID -->
-                <label for="triggerID" class="translate" > </label >
-                <span class="translate" > HomeBatSocState</span >
+                <label for="triggerID" class="translate"> </label>
+                <span class="translate"> HomeBatSocState</span>
             </div >
-            <div class="col s1 m2 l1" >
-                <a id="HomeBatSocStatePopUp" class="btn" > <i class="material-icons" > add_circle_outline</i > <span > </span > </a >
+            <div class="col s1 m2 l1">
+                <a id="HomeBatSocStatePopUp" class="btn"> <i class="material-icons">add_circle_outline</i> <span> </span> </a>
             </div >
         </div >
     <!-- END NEW -->
-    </div >
-</body >
-</html >
+    </div>
+</body>
+</html>
