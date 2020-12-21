@@ -42,15 +42,39 @@
                         ;
                 }
             });
+
 // NEW, NOT WORKING
+            $('#StateHomeSolarPowerPopUp').on('click', function () {
+                window.alert("StateHomeSolarPowerPopUp!" + $('#StateHomeSolarPower').val());
+                initSelectId(function (sid) {
+                    sid.selectId('show', $('#StateHomeSolarPower').val(), function (newId) {
+                        if (newId) {
+                            window.alert("NewID!!");
+                            $('#StateHomeSolarPower').val(newId).trigger('change');
+                        }
+                    });
+                });
+            });
+
             $('#StateHomeBatSocPopUp').on('click', function () {
-                window.alert("StateHomeBatSocPopUp!");
-                window.alert( $('#StateHomeBatSoc').val() );
+                window.alert("StateHomeBatSocPopUp!" + $('#StateHomeBatSoc').val());
                 initSelectId(function (sid) {
                     sid.selectId('show', $('#StateHomeBatSoc').val(), function (newId) {
                         if (newId) {
                             window.alert("NewID!!");
                             $('#StateHomeBatSoc').val(newId).trigger('change');
+                        }
+                    });
+                });
+            });
+
+            $('#StateHomePowerConsumptionPopUp').on('click', function () {
+                window.alert("StateHomePowerConsumptionPopUp!" + $('#StateHomePowerConsumption').val());
+                initSelectId(function (sid) {
+                    sid.selectId('show', $('#StateHomePowerConsumption').val(), function (newId) {
+                        if (newId) {
+                            window.alert("NewID!!");
+                            $('#StateHomePowerConsumption').val(newId).trigger('change');
                         }
                     });
                 });
@@ -149,6 +173,9 @@
                 <input type="text" class="value" id="StateHomeSolarPower" />
                 <label for="StateHomeSolarPower" class="translate">StateHomeSolarPower</label>
             </div>
+            <div class="col s1 m1 l1">
+                <a id="StateHomeSolarPowerPopUp" class="btn"><i class="material-icons">settings</i><span></span></a>
+            </div>
         </div>
 
         <div class="row">
@@ -157,16 +184,17 @@
                 <label for="StateHomeBatSoc" class="translate">StateHomeBatSoc</label>
             </div>
             <div class="col s1 m1 l1">
-                <!--<a id="StateHomeBatSocPopUp" class="btn">NOT_WORKING<span> </span> </a>
-      <a id="StateHomeBatSocPopUp" class="btn"><i class="material-icons">add_circle_outline</i><span> </span> </a>  -->
                 <a id="StateHomeBatSocPopUp" class="btn"><i class="material-icons">settings</i><span></span></a>
             </div>
         </div>
         
         <div class="row">
-            <div class="col s6 m6 l6 input-field">
+            <div class="col s5 m5 l5 input-field">
                 <input type="text" class="value" id="StateHomePowerConsumption" />
                 <label for="StateHomePowerConsumption" class="translate">StateHomePowerConsumption</label>
+            </div>
+            <div class="col s1 m1 l1">
+                <a id="StateHomePowerConsumptionPopUp" class="btn"><i class="material-icons">settings</i><span></span></a>
             </div>
         </div>
 
