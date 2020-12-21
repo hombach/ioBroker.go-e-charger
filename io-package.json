@@ -96,9 +96,9 @@
   "native": {
     "ipaddress": "",
     "polltimelive": 10000,
-    "HomeBatSocState": "",
-    "HomeSolarPower": "",
-    "HomePowerConsumption": ""
+    "StateHomeBatSoc": "",
+    "StateHomeSolarPower": "",
+    "StateHomePowerConsumption": ""
   },
 
   "objects": [],

@@ -49,9 +49,9 @@
             // NEW
             $('#HomeBatSocStatePopUp').on('click', function () {
                 initSelectId(function (sid) {
-                    sid.selectId('show', $('#HomeBatSocState').val(), function (newId) {
+                    sid.selectId('show', $('#StateHomeBatSoc').val(), function (newId) {
                         if (newId) {
-                            $('#HomeBatSocState').val(newId).trigger('change');
+                            $('#StateHomeBatSoc').val(newId).trigger('change');
                         }
                     });
                 });
@@ -148,16 +148,16 @@
 
         <div class="row">
             <div class="col s6 input-field">
-                <input type="text" class="value" id="HomeSolarPower" />
-                <label for="HomeSolarPower" class="translate">HomeSolarPower</label>
+                <input type="text" class="value" id="StateHomeSolarPower" />
+                <label for="StateHomeSolarPower" class="translate">StateHomeSolarPower</label>
             </div>
         </div>
 
 
         <div class="row">
             <div class="col s6 input-field">
-                <input type="text" class="value" id="HomeBatSocState" />
-                <label for="HomeBatSocState" class="translate">HomeBatSocState</label>
+                <input type="text" class="value" id="StateHomeBatSoc" />
+                <label for="StateHomeBatSoc" class="translate">StateHomeBatSoc</label>
             </div>
             <div class="col s6 m1 l1">
                 <a id="HomeBatSocStatePopUp" class="btn"> <i class="material-icons">add_circle_outline</i> <span> </span> </a>
@@ -166,8 +166,8 @@
 
         <div class="row">
             <div class="col s6 input-field">
-                <input type="text" class="value" id="HomePowerConsumption" />
-                <label for="HomePowerConsumption" class="translate">HomePowerConsumption</label>
+                <input type="text" class="value" id="StateHomePowerConsumption" />
+                <label for="StateHomePowerConsumption" class="translate">StateHomePowerConsumption</label>
             </div>
         </div>
 

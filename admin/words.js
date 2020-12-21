@@ -38,40 +38,40 @@ systemDictionary = {
         "pl": "Czas między sondażami danych z ładowarki [ms]",
         "zh-cn": "充电器进行数据轮询之间的时间[ms]"
     },
-    'HomeSolarPower': {
-        "en": "HomeSolarPower",
-        "de": "Status für die momentan vorhandene Solarleistung [W]",
-        "ru": "HomeSolarPower",
-        "pt": "HomeSolarPower",
-        "nl": "HomeSolarPower",
-        "fr": "HomeSolarPower",
-        "it": "HomeSolarPower",
-        "es": "HomeSolarPower",
-        "pl": "HomeSolarPower",
-        "zh-cn": "HomeSolarPower"
+    'StateHomeSolarPower': {
+        "en": "object-id for currently available solar power [W]",
+        "de": "Objekt-ID für derzeit verfügbare Solarenergie [W]",
+        "ru": "идентификатор объекта для доступной в настоящее время солнечной энергии [Вт]",
+        "pt": "object-id para energia solar atualmente disponível [W]",
+        "nl": "object-id voor momenteel beschikbare zonne-energie [W]",
+        "fr": "object-id pour l'énergie solaire actuellement disponible [W]",
+        "it": "ID oggetto per l'energia solare attualmente disponibile [W]",
+        "es": "ID de objeto para la energía solar disponible actualmente [W]",
+        "pl": "id obiektu dla aktualnie dostępnej energii słonecznej [W]",
+        "zh-cn": "当前可用太阳能的对象ID [W]"
     },
-    'HomeBatSocState': {
-        "en": "HomeBatSocState",
-        "de": "Status des Ladezustands der Hausbatterie [%]",
-        "ru": "HomeBatSocState",
-        "pt": "HomeBatSocState",
-        "nl": "HomeBatSocState",
-        "fr": "HomeBatSocState",
-        "it": "HomeBatSocState",
-        "es": "HomeBatSocState",
-        "pl": "HomeBatSocState",
-        "zh-cn": "HomeBatSocState"
+    'StateHomeBatSoc': {
+        "en": "object-id for current home battery state of charge [%]",
+        "de": "Objekt-ID für den aktuellen Ladezustand der Heimbatterie [%]",
+        "ru": "идентификатор объекта для текущего состояния заряда домашнего аккумулятора [%]",
+        "pt": "object-id para o estado atual de carga da bateria doméstica [%]",
+        "nl": "object-ID voor de huidige laadtoestand van de thuisbatterij [%]",
+        "fr": "object-id pour l'état de charge actuel de la batterie domestique [%]",
+        "it": "object-id per l'attuale stato di carica della batteria domestica [%]",
+        "es": "ID de objeto para el estado de carga actual de la batería doméstica [%]",
+        "pl": "id obiektu dla aktualnego stanu naładowania akumulatora w domu [%]",
+        "zh-cn": "当前家用电池充电状态的对象ID [％]"
     },
-    'HomePowerConsumption': {
-        "en": "HomePowerConsumption",
-        "de": "Status für den momentanen Hausverbrauch [W]",
-        "ru": "HomePowerConsumption",
-        "pt": "HomePowerConsumption",
-        "nl": "HomePowerConsumption",
-        "fr": "HomePowerConsumption",
-        "it": "HomePowerConsumption",
-        "es": "HomePowerConsumption",
-        "pl": "HomePowerConsumption",
-        "zh-cn": "HomePowerConsumption"
+    'StateHomePowerConsumption': {
+        "en": "object-id for current home power consumption [W]",
+        "de": "Objekt-ID für den aktuellen Stromverbrauch zu Hause [W]",
+        "ru": "идентификатор объекта для текущего потребления электроэнергии в доме [Вт]",
+        "pt": "object-id para o consumo atual de energia em casa [W]",
+        "nl": "object-id voor huidig energieverbruik thuis [W]",
+        "fr": "object-id pour la consommation électrique actuelle du domicile [W]",
+        "it": "object-id per il consumo energetico domestico corrente [W]",
+        "es": "ID de objeto para el consumo actual de energía en el hogar [W]",
+        "pl": "id obiektu dla bieżącego zużycia energii w domu [W]",
+        "zh-cn": "当前家庭功耗的对象ID [W]"
     }
 };

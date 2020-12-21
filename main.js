@@ -10,18 +10,18 @@ const adapterIntervals = {};
 // Adapter for EV-Charger go-E with firmware >V033; Support for firmware V040 in preparation
 
 // Variablen
-var ZielAmpere       = 5;
-var OptAmpere        = 6;
-var MinHomeBatVal    = 87;
-var OffVerzoegerung  = 0;
-var ChargeNOW        = false;
-var ChargeManager    = false;
-var ChargeCurrent    = 0;
-var ChargePower      = 0;
-var SolarPower       = 0;
-var HouseConsumption = 0;
-var BatSoC           = 1;
-var Firmware         = "0";
+let ZielAmpere       = 5;
+let OptAmpere        = 6;
+let MinHomeBatVal    = 87;
+let OffVerzoegerung  = 0;
+let ChargeNOW        = false;
+let ChargeManager    = false;
+let ChargeCurrent    = 0;
+let ChargePower      = 0;
+let SolarPower       = 0;
+let HouseConsumption = 0;
+let BatSoC           = 0;
+let Firmware         = "0";
 
 class go_e_charger extends utils.Adapter {
 
@@ -171,7 +171,7 @@ adapter.getState('myState', function (err, state) {
 
         else if (ChargeManager) { // Charge-Manager is enabled  'kostal-piko-ba.0.Battery.SoC'
             var state;
-            this.getForeignState(this.config.HomeBatSocState, (_err, state) => {
+            this.getForeignState(this.config.StateHomeBatSoc, (_err, state) => {
                 BatSoC = state.val;
                 this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
                 if (BatSoC >= MinHomeBatVal) { // SoC of home battery sufficient?
@@ -184,9 +184,8 @@ adapter.getState('myState', function (err, state) {
             });
         }
 
-        else { // OFF -> min. current  only if Power.ChargingAllowed is still set
+        else { // only if Power.ChargingAllowed is still set: switch OFF; set to min. current; 
             this.getState('Power.ChargingAllowed', (_err, state) => {
-                //ChargingAllowed = state.val;
                 if (state.val == true) { // Set to false only if still true
                     ZielAmpere = 6;
                     this.Charge_Config('0', ZielAmpere, 'go-eCharger abschalten');
@@ -324,15 +323,11 @@ adapter.getState('myState', function (err, state) {
     /*****************************************************************************************/
     Charge_Manager() {
  //       this.Read_Charger();
- //       this.getForeignState('kostal-piko-ba.0.Power.SolarDC', (_err, state) => { SolarPower = state.val });
- //       this.getForeignState('kostal-piko-ba.0.Power.HouseConsumption', (_err, state) => { HouseConsumption = state.val });
- //       this.getForeignState('kostal-piko-ba.0.Battery.SoC', (_err, state) => { BatSoC = state.val });
-
-        this.getForeignState(this.config.HomeSolarPower, (_err, state) => { SolarPower = state.val });
+        this.getForeignState(this.config.StateHomeSolarPower, (_err, state) => { SolarPower = state.val });
         this.log.debug(`Got external state of solar power: ${SolarPower} W`);
-        this.getForeignState(this.config.HomePowerConsumption, (_err, state) => { HouseConsumption = state.val });
+        this.getForeignState(this.config.StateHomePowerConsumption, (_err, state) => { HouseConsumption = state.val });
         this.log.debug(`Got external state of house power consumption: ${HouseConsumption} W`);
-        this.getForeignState(this.config.HomeBatSocState, (_err, state) => { BatSoC = state.val });
+        this.getForeignState(this.config.StateHomeBatSoc, (_err, state) => { BatSoC = state.val });
         this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
         this.getState('Power.Charge', (_err, state) => { ChargePower = state.val });
 
@@ -340,7 +335,7 @@ adapter.getState('myState', function (err, state) {
             (SolarPower - HouseConsumption + ChargePower - 100
                 + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal))) / 230)); // -100 W Reserve + max. 2000 fÜr Batterieleerung
 
-        this.log.debug(`OptAmpere: ${OptAmpere} Ampere`);
+        this.log.debug(`Optimal charging current would be: ${OptAmpere} Ampere`);
         if (OptAmpere > 16) OptAmpere = 16;
 
         if (ZielAmpere < OptAmpere) {
