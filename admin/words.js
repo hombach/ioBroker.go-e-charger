@@ -49,5 +49,17 @@ systemDictionary = {
         "es": "HomeBatSocState",
         "pl": "HomeBatSocState",
         "zh-cn": "HomeBatSocState"
+    },
+    'HomeSolarPower': {
+        "en": "HomeSolarPower",
+        "de": "Momentan vorhandene Solarleistung [W]",
+        "ru": "HomeSolarPower",
+        "pt": "HomeSolarPower",
+        "nl": "HomeSolarPower",
+        "fr": "HomeSolarPower",
+        "it": "HomeSolarPower",
+        "es": "HomeSolarPower",
+        "pl": "HomeSolarPower",
+        "zh-cn": "HomeSolarPower"
     }
 };
