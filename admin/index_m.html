@@ -85,6 +85,7 @@
         function initSelectId(callback) {
             window.alert("initSelectId!");
             if (selectId) {
+                window.alert(selectId);
                 return callback(selectId);
             }
             socket.emit('getObjects', function (err, objs) {
@@ -115,6 +116,8 @@
                     },
                     columns: ['image', 'name', 'role', 'room', 'value']
                 });
+                window.alert("NEW!!");
+                window.alert(selectId);
                 callback(selectId);
             });
         }
