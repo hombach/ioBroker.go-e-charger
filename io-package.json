@@ -103,7 +103,8 @@
     "ipaddress": "",
     "polltimelive": 10000,
     "HomeBatSocState": "",
-    "HomeSolarPower":  ""
+    "HomeSolarPower": "",
+    "HomePowerConsumption": ""
   },
 
   "objects": [],

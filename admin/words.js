@@ -38,6 +38,18 @@ systemDictionary = {
         "pl": "Czas między sondażami danych z ładowarki [ms]",
         "zh-cn": "充电器进行数据轮询之间的时间[ms]"
     },
+    'HomeSolarPower': {
+        "en": "HomeSolarPower",
+        "de": "Status für die momentan vorhandene Solarleistung [W]",
+        "ru": "HomeSolarPower",
+        "pt": "HomeSolarPower",
+        "nl": "HomeSolarPower",
+        "fr": "HomeSolarPower",
+        "it": "HomeSolarPower",
+        "es": "HomeSolarPower",
+        "pl": "HomeSolarPower",
+        "zh-cn": "HomeSolarPower"
+    },
     'HomeBatSocState': {
         "en": "HomeBatSocState",
         "de": "Status des Ladezustands der Hausbatterie [%]",
@@ -50,16 +62,16 @@ systemDictionary = {
         "pl": "HomeBatSocState",
         "zh-cn": "HomeBatSocState"
     },
-    'HomeSolarPower': {
-        "en": "HomeSolarPower",
-        "de": "Momentan vorhandene Solarleistung [W]",
-        "ru": "HomeSolarPower",
-        "pt": "HomeSolarPower",
-        "nl": "HomeSolarPower",
-        "fr": "HomeSolarPower",
-        "it": "HomeSolarPower",
-        "es": "HomeSolarPower",
-        "pl": "HomeSolarPower",
-        "zh-cn": "HomeSolarPower"
+    'HomePowerConsumption': {
+        "en": "HomePowerConsumption",
+        "de": "Status für den momentanen Hausverbrauch [W]",
+        "ru": "HomePowerConsumption",
+        "pt": "HomePowerConsumption",
+        "nl": "HomePowerConsumption",
+        "fr": "HomePowerConsumption",
+        "it": "HomePowerConsumption",
+        "es": "HomePowerConsumption",
+        "pl": "HomePowerConsumption",
+        "zh-cn": "HomePowerConsumption"
     }
 };
