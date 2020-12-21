@@ -46,11 +46,9 @@
 
             // NEW, NOT WORKING
             $('#StateHomeSolarPowerPopUp').on('click', function () {
-                window.alert("StateHomeSolarPowerPopUp!   " + $('#StateHomeSolarPower').val());
                 initSelectId(function (sid) {
                     sid.selectId('show', $('#StateHomeSolarPower').val(), function (newId) {
                         if (newId) {
-                            window.alert("NewID!!");
                             $('#StateHomeSolarPower').val(newId).trigger('change');
                         }
                     });
@@ -106,19 +104,19 @@
 
         // NEW from BlueFox, Not Working
         var selectId;
-        function initSelectId(cb) {
-            if (selectId) return cb(selectId);
+        function initSelectId(callback) {
+            if (selectId) return callback(selectId);
             window.alert("initSelectId");
-            socket.emit('getObjects', function (err, res) {
+            socket.emit('getObjects', function (err, objs) {
                 selectId = $('#dialog-select-member').selectId('init', {
                     noMultiselect: true,
-                    objects: res,
+                    objects: objs,
                     imgPath: '../../lib/css/fancytree/',
                     name: 'select-foreign-state',
                 });
                 window.alert("Error: " + err);
                 window.alert(res);
-                cb && cb(selectId);
+                callback(selectId);
             });
         }
 
