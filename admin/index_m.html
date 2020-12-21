@@ -49,7 +49,7 @@
             // NEW
             $('#StateHomeBatSocPopUp').on('click', function () {
                 window.alert("StateHomeBatSocPopUp!");
-                window.alert($('#StateHomeBatSoc').sid);
+                window.alert( $('#StateHomeBatSoc').val() );
                 initSelectId(function (sid) {
                     sid.selectId('show', $('#StateHomeBatSoc').val(), function (newId) {
                         if (newId) {
@@ -58,6 +58,22 @@
                     });
                 });
             });
+
+
+
+            $('#select2').click(function () {
+                initSelectId(function (sid) {
+                    sid.selectId('show', $('#object2').val(), function (newId) {
+                        if (newId != $('#object2').val()) {
+                            $('#object2').val(newId);
+                            onChange();
+                        }
+                    });
+                });
+            });
+
+
+
             // END NEW  */
             onChange(false);
             // reinitialize all the Materialize labels on the page if you are dynamically adding inputs:
@@ -81,22 +97,19 @@
         }
 
 
-        // NEW         filter: { type: 'state' },
+        // NEW         
         var selectId;
-        function initSelectId(callback) {
-            if (selectId) {
-                window.alert("OLD!!");
-                window.alert(selectId.value);
-                return callback(selectId);
-            }
-            window.alert("TRY??");
+        function initSelectId(cb) {
+            if (selectId) return cb(selectId);
+            window.alert("initSelectId");
             socket.emit('getObjects', function (err, res) {
                 if (!err && res) {
                     selectId = $('#dialog-select-member').selectId('init', {
                         noMultiselect: true,
                         objects: res,
                         imgPath: '../../lib/css/fancytree/',
-                        name: 'adapter-select-state',
+                        filter: { type: 'state' },
+                        name: 'vcard-select-state',
                         texts: {
                             select: _('Select'),
                             cancel: _('Cancel'),
@@ -116,11 +129,11 @@
                             unselectAll: _('Deselect all'),
                             invertSelection: _('Invert selection')
                         },
-                        columns: ['image', 'name', 'role', 'room', 'value']
+                        columns: ['image', 'name', 'role', 'room']
                     });
                     window.alert("NEW!!");
                     window.alert(selectId.texts.id);
-                    callback(selectId);
+                    cb && cb(selectId);
                 }
             });
         }
@@ -169,6 +182,10 @@
                 <a id="StateHomeBatSocPopUp" class="btn">SEARCH<span> </span> </a>
                 <!--  <a id="StateHomeBatSocPopUp" class="btn"><i class="material-icons">add_circle_outline</i><span> </span> </a>  -->
             </div>
+            <div class="col s2 m1 l1">
+                <input class="value" id="StateHomeBatSoc" />
+                <button id="StateHomeBatSocPopUp">NEW BUTTON</button>
+            </div>
         </div>
 
 
@@ -177,14 +194,13 @@
                 <input type="text" class="value" id="StateHomePowerConsumption" />
                 <label for="StateHomePowerConsumption" class="translate">StateHomePowerConsumption</label>
             </div>
+            <!-- Somewhere in HTML -->
+            <div id="dialog-select-member" style="display: none"></div>
         </div>
-        
-    <!-- Somewhere in HTML -->
-        <div id="dialog-select-member" style="display: none"></div>
+
 
 
         <!-- END NEW -->
-
     </div>
 </body>
 </html>
