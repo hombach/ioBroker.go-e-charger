@@ -1,21 +1,26 @@
 <html>
-
 <head>
-
     <!-- Load go-eCharger scripts and styles-->
+    <link rel="stylesheet" type="text/css" href="../../lib/css/fancytree/ui.fancytree.min.css" />
     <link rel="stylesheet" type="text/css" href="../../css/adapter.css" />
-    <link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css">
+    <link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css" />
 
     <script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
-
     <script type="text/javascript" src="../../js/translate.js"></script>
     <script type="text/javascript" src="../../lib/js/materialize.js"></script>
+    <script type="text/javascript" src="../../lib/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="../../lib/js/jquery.fancytree-all.min.js"></script>
+    <script type="text/javascript" src="../../lib/js/jquery.fancytree-all.js"></script>
+    <script type="text/javascript" src="../../lib/js/selectID.js"></script>
     <script type="text/javascript" src="../../js/adapter-settings.js"></script>
 
     <!-- Load our own files -->
     <link rel="stylesheet" type="text/css" href="style.css" />
     <script type="text/javascript" src="words.js"></script>
+
+    <style>
+    </style>
 
     <script type="text/javascript">
         // This will be called by the admin adapter when the settings page loads
@@ -38,10 +43,48 @@
                         ;
                 }
             });
+
+            // NEW, NOT WORKING
+            $('#StateHomeSolarPowerPopUp').on('click', function () {
+                initSelectId(function (sid) {
+                    sid.selectId('show', $('#StateHomeSolarPower').val(), function (newId) {
+                        if (newId) {
+                            $('#StateHomeSolarPower').val(newId).trigger('change');
+                        }
+                    });
+                });
+            });
+
+            $('#StateHomeBatSocPopUp').on('click', function () {
+                window.alert("StateHomeBatSocPopUp!   " + $('#StateHomeBatSoc').val());
+                initSelectId(function (sid) {
+                    sid.selectId('show', $('#StateHomeBatSoc').val(), function (newId) {
+                        if (newId) {
+                            window.alert("NewID!!");
+                            $('#StateHomeBatSoc').val(newId).trigger('change');
+                        }
+                    });
+                });
+            });
+
+            $('#StateHomePowerConsumptionPopUp').on('click', function () {
+                window.alert("StateHomePowerConsumptionPopUp!   " + $('#StateHomePowerConsumption').val());
+                initSelectId(function (sid) {
+                    sid.selectId('show', $('#StateHomePowerConsumption').val(), function (newId) {
+                        if (newId) {
+                            window.alert("NewID!!");
+                            $('#StateHomePowerConsumption').val(newId).trigger('change');
+                        }
+                    });
+                });
+            });
+            // END NEW  */
+
             onChange(false);
             // reinitialize all the Materialize labels on the page if you are dynamically adding inputs:
             if (M) M.updateTextFields();
         }
+
 
         // This will be called by the admin adapter when the user presses the save button
         function save(callback) {
@@ -57,6 +100,67 @@
             });
             callback(obj);
         }
+
+
+        // NEW from BlueFox, Not Working
+        var selectId;
+        function initSelectId(callback) {
+            if (selectId) return callback(selectId);
+            window.alert("initSelectId");
+            socket.emit('getObjects', function (err, objs) {
+                selectId = $('#dialog-select-member').selectId('init', {
+                    noMultiselect: true,
+                    objects: objs,
+                    imgPath: '../../lib/css/fancytree/',
+                    name: 'select-foreign-state',
+                });
+                window.alert("Error: " + err);
+                window.alert(res);
+                callback(selectId);
+            });
+        }
+
+        /*
+        function initSelectId(cb) {
+            if (selectId) return cb(selectId);
+            window.alert("initSelectId");
+            socket.emit('getObjects', function (err, res) {
+                if (!err && res) {
+                    selectId = $('#dialog-select-member').selectId('init', {
+                        noMultiselect: true,
+                        objects: res,
+                        imgPath: '../../lib/css/fancytree/',
+                        filter: { type: 'state' },
+                        name: 'vcard-select-state',
+                        texts: {
+                            select: _('Select'),
+                            cancel: _('Cancel'),
+                            all: _('All'),
+                            id: _('ID'),
+                            name: _('Name'),
+                            role: _('Role'),
+                            room: _('Room'),
+                            value: _('Value'),
+                            selectid: _('Select ID'),
+                            from: _('From'),
+                            lc: _('Last changed'),
+                            ts: _('Time stamp'),
+                            wait: _('Processing...'),
+                            ack: _('Acknowledged'),
+                            selectAll: _('Select all'),
+                            unselectAll: _('Deselect all'),
+                            invertSelection: _('Invert selection')
+                        },
+                        columns: ['image', 'name', 'role', 'room']
+                    });
+                    window.alert("Error: " + err);
+                    window.alert(res);
+                    cb && cb(selectId);
+                }
+            });
+        }
+// END NEW */
+
     </script>
 </head>
 
@@ -68,22 +172,48 @@
                 <img src="go-eCharger.png" class="logo">
             </div>
         </div>
-
         <!-- Put your content here -->
         <div class="row">
-            <div class="col s6 input-field">
+            <div class="col s6 m6 l6 input-field">
                 <input type="text" class="value" id="ipaddress" />
                 <label for="ipaddress" class="translate">ipaddress</label>
             </div>
-        </div>
-        <div class="row">
-            <div class="col s6 input-field">
+            <div class="col s6 m6 l6 input-field">
                 <input type="number" class="value" id="polltimelive" />
                 <label for="polltimelive" class="translate">polltimelive</label>
             </div>
         </div>
 
+        <div class="row">
+            <div class="col s5 m5 l5 input-field">
+                <input type="text" class="value" id="StateHomeSolarPower" />
+                <label for="StateHomeSolarPower" class="translate">StateHomeSolarPower</label>
+            </div>
+            <div class="col s1 m1 l1">
+                <a id="StateHomeSolarPowerPopUp" class="btn"><i class="material-icons">settings</i><span></span></a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col s5 m5 l5 input-field">
+                <input type="text" class="value" id="StateHomeBatSoc" />
+                <label for="StateHomeBatSoc" class="translate">StateHomeBatSoc</label>
+            </div>
+            <div class="col s1 m1 l1">
+                <a id="StateHomeBatSocPopUp" class="btn"><i class="material-icons">settings</i><span></span></a>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s5 m5 l5 input-field">
+                <input type="text" class="value" id="StateHomePowerConsumption" />
+                <label for="StateHomePowerConsumption" class="translate">StateHomePowerConsumption</label>
+            </div>
+            <div class="col s1 m1 l1">
+                <a id="StateHomePowerConsumptionPopUp" class="btn"><i class="material-icons">settings</i><span></span></a>
+            </div>
+        </div>
+
     </div>
 </body>
-
 </html>

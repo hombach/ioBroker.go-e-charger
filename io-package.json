@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.4.1",
+    "version": "0.5.0",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.5.0": {
+        "en": "introduces selectable external states for charge control"
+      },
       "0.4.1": {
         "en": "fixed error in poll of pha to get available phases"
       },
@@ -54,9 +57,6 @@
       },
       "0.3.2": {
         "en": "bumped dependencies, added poll of firmware version, fixed error in CarStateString"
-      },
-      "0.3.1": {
-        "en": "bumped dependencies"
       },
       "0.3.0": {
         "en": "global code cleanup"
@@ -75,9 +75,6 @@
       },
       "0.0.9": {
         "en": "read charger power"
-      },
-      "0.0.8": {
-        "en": "setup done"
       },
       "0.0.1": {
         "en": "initial release"
@@ -98,7 +95,10 @@
 
   "native": {
     "ipaddress": "",
-    "polltimelive": 10000
+    "polltimelive": 10000,
+    "StateHomeBatSoc": "",
+    "StateHomeSolarPower": "",
+    "StateHomePowerConsumption": ""
   },
 
   "objects": [],

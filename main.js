@@ -10,18 +10,18 @@ const adapterIntervals = {};
 // Adapter for EV-Charger go-E with firmware >V033; Support for firmware V040 in preparation
 
 // Variablen
-var ZielAmpere       = 5;
-var OptAmpere        = 6;
-var MinHomeBatVal    = 87;
-var OffVerzoegerung  = 0;
-var ChargeNOW        = false;
-var ChargeManager    = false;
-var ChargeCurrent    = 0;
-var ChargePower      = 0;
-var SolarPower       = 0;
-var HouseConsumption = 0;
-var BatSoC           = 0;
-var Firmware         = "0";
+let ZielAmpere       = 5;
+let OptAmpere        = 6;
+let MinHomeBatVal    = 87;
+let OffVerzoegerung  = 0;
+let ChargeNOW        = false;
+let ChargeManager    = false;
+let ChargeCurrent    = 0;
+let ChargePower      = 0;
+let SolarPower       = 0;
+let HouseConsumption = 0;
+let BatSoC           = 0;
+let Firmware         = "0";
 
 class go_e_charger extends utils.Adapter {
 
@@ -51,25 +51,13 @@ class go_e_charger extends utils.Adapter {
         }
 
         if (!this.config.polltimelive) {
-            this.log.warn('Polltime not set or zero - will be set to 10 seconds');
+            this.log.warn('Polltime not configured or zero - will be set to 10 seconds');
             this.config.polltimelive = 10000;
         } 
         this.log.info('Polltime set to: ' + (this.config.polltimelive / 1000) + ' seconds');
  
         // this.subscribeStates('*'); // all states changes inside the adapters namespace are subscribed
-
-        /*
-        setState examples
-        you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-        try {
-            await this.setStateAsync('state', { val: 10 })
-            await this.setStateAsync('state', true); // the variable state is set to true as command (ack=false)
-            await this.setStateAsync('state', { val: true, ack: true }); // ack should be always set to true if the value is received from or acknowledged from the target system
-        } catch (e) {
-            this.log.error("Unhandled exception processing setStateAsync: " + e);
-        }
-        */
-
+                
         if (this.config.ipaddress) {
 
  /*           ChargerRequest = 'http://' + this.config.ipaddress + '/api/dxs.json' +
@@ -107,38 +95,11 @@ class go_e_charger extends utils.Adapter {
                 this.log.warn(`state ${id} deleted`);
             }
         } catch (e) {
-            this.log.error("Unhandled exception processing stateChange: " + e);
+            this.log.error(`Unhandled exception processing stateChange: ${e}`);
         }
     }
 
-/*    if(adapter.config.publicHolidays === true) {
-    if (id === adapter.config.publicHolInstance + '.heute.boolean') {
-        publicHolidayStr = state.val;
-        shutterDriveCalc();
 
-adapter.getForeignState(result[i].name, (err, state) => {
-                            adapter.log.debug('Shutter state changed: ' + result[i].shutterName + ' old value = ' + result[i].oldHeight + ' new value = ' + state.val);
-                            //shutterState();
-
-adapter.getState('shutters.autoUp.' + nameDevice, (err, state) => {
-                    if (state && state === true || state && state.val === true) {
-                        let currentValue = '';
-                        /**
-                         * @param {any} err
-                         * @param {{ val: string; }} state
-
-
-adapter.getState('myState', function (err, state) {
-  adapter.log.info(
-      'State ' + adapter.namespace + '.myState -' +
-      '  Value: '    + state.val +
-      ', ack: '      + state.ack +
-      ', time stamp: '   + state.ts  +
-      ', last changed: ' + state.lc
-  );
-});
-
-        */
 
     /****************************************************************************************
     * Is called when adapter shuts down - callback has to be called under any circumstances!
@@ -148,7 +109,7 @@ adapter.getState('myState', function (err, state) {
             clearTimeout(adapterIntervals.stateMachine);
             clearTimeout(adapterIntervals.total);
             Object.keys(adapterIntervals).forEach(interval => clearInterval(adapterIntervals[interval]));
-            this.log.info('Adaptor go-eCharger cleaned up everything...');
+            this.log.info(`Adaptor go-eCharger cleaned up everything...`);
             callback();
         } catch (e) {
             callback();
@@ -158,7 +119,7 @@ adapter.getState('myState', function (err, state) {
     
     /*****************************************************************************************/
     StateMachine() {
-        this.log.debug('StateMachine start');
+        this.log.debug(`StateMachine start`);
         this.Read_Charger();
         this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { MinHomeBatVal = state.val }); // Get Desired Battery SoC
         this.getState('Settings.ChargeNOW', (_err, state) => { ChargeNOW = state.val });
@@ -169,23 +130,25 @@ adapter.getState('myState', function (err, state) {
             this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
         }
 
-        else if (ChargeManager) { // Charge-Manager is enabled
-            this.getForeignState('kostal-piko-ba.0.Battery.SoC', (_err, BattSoC) => {
-                if (BattSoC.val >= MinHomeBatVal) { // SoC of homebattery sufficient?
+        else if (ChargeManager) { // Charge-Manager is enabled  'kostal-piko-ba.0.Battery.SoC'
+            this.getForeignState(this.config.StateHomeBatSoc, (_err, state) => {
+                BatSoC = state.val;
+                this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
+                if (BatSoC >= MinHomeBatVal) { // SoC of home battery sufficient?
                     this.Charge_Manager();
                 }
-                else { // FUTURE: time of day forces emptying of housebattery
+                else { // FUTURE: time of day forces emptying of home battery
                     ZielAmpere = 6;
-                    this.Charge_Config('0', ZielAmpere, `Hausbatterie laden bis ${MinHomeBatVal} %`);
+                    this.Charge_Config('0', ZielAmpere, `Hausbatterie laden bis ${MinHomeBatVal}%`);
                 }
             });
         }
 
-        else { // OFF -> min. current  Power.ChargingAllowed
-            this.getState('Power.ChargingAllowed', (_err, ChargingAllowed) => {
-                if (ChargingAllowed.val == true) { // Set to false only if still true
+        else { // only if Power.ChargingAllowed is still set: switch OFF; set to min. current; 
+            this.getState('Power.ChargingAllowed', (_err, state) => {
+                if (state.val == true) { // Set to false only if still true
                     ZielAmpere = 6;
-                    this.Charge_Config('0', ZielAmpere, 'go-eCharger abschalten');
+                    this.Charge_Config('0', ZielAmpere, `go-eCharger abschalten`);
                 }
             });
         }
@@ -298,7 +261,6 @@ adapter.getState('myState', function (err, state) {
                         if (!response.error && response.statusCode == 200) {
                             this.log.debug(`Sent to firmware 040.0: ${response.body}`);
                             var result = await JSON.parse(response.body);
-                            // this.setStateAsync('Power.ChargeCurrent', result.amx, true); // in readcharger integriert
                             this.setStateAsync('Power.ChargeCurrent', result.amp, true); // in readcharger integriert
                             this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
                         }
@@ -320,17 +282,19 @@ adapter.getState('myState', function (err, state) {
     /*****************************************************************************************/
     Charge_Manager() {
  //       this.Read_Charger();
-
-        this.getForeignState('kostal-piko-ba.0.Power.SolarDC', (_err, state) => { SolarPower = state.val });
-        this.getForeignState('kostal-piko-ba.0.Power.HouseConsumption', (_err, state) => { HouseConsumption = state.val });
-        this.getForeignState('kostal-piko-ba.0.Battery.SoC', (_err, state) => { BatSoC = state.val });
+        this.getForeignState(this.config.StateHomeSolarPower, (_err, state) => { SolarPower = state.val });
+        this.log.debug(`Got external state of solar power: ${SolarPower} W`);
+        this.getForeignState(this.config.StateHomePowerConsumption, (_err, state) => { HouseConsumption = state.val });
+        this.log.debug(`Got external state of house power consumption: ${HouseConsumption} W`);
+        this.getForeignState(this.config.StateHomeBatSoc, (_err, state) => { BatSoC = state.val });
+        this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
         this.getState('Power.Charge', (_err, state) => { ChargePower = state.val });
 
         OptAmpere = (Math.floor(
             (SolarPower - HouseConsumption + ChargePower - 100
                 + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal))) / 230)); // -100 W Reserve + max. 2000 fÜr Batterieleerung
 
-        this.log.debug(`OptAmpere: ${OptAmpere} Ampere`);
+        this.log.debug(`Optimal charging current would be: ${OptAmpere} A`);
         if (OptAmpere > 16) OptAmpere = 16;
 
         if (ZielAmpere < OptAmpere) {
@@ -341,11 +305,11 @@ adapter.getState('myState', function (err, state) {
             + `Hausverbrauch: ${HouseConsumption} W; Gesamtleistung Charger: ${ChargePower} W`);
         
         if (ZielAmpere > (5 + 4)) {
-            this.Charge_Config('1', ZielAmpere, `Ladestrom: ${ZielAmpere} Ampere`); // An und Zielstrom da größer 5 + Hysterese
+            this.Charge_Config('1', ZielAmpere, `Charging current: ${ZielAmpere} A`); // An und Zielstrom da größer 5 + Hysterese
         } else if (ZielAmpere < 6) {
             OffVerzoegerung++;
             if (OffVerzoegerung > 12) {
-                this.Charge_Config('0', ZielAmpere, 'zu wenig Überschuss'); // Aus und Zielstrom
+                this.Charge_Config('0', ZielAmpere, `zu wenig Überschuss`); // Aus und Zielstrom
                 OffVerzoegerung = 0;
             }
         }
