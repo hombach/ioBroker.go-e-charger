@@ -68,11 +68,9 @@
             });
 
             $('#StateHomePowerConsumptionPopUp').on('click', function () {
-                window.alert("StateHomePowerConsumptionPopUp!   " + $('#StateHomePowerConsumption').val());
                 initSelectId(function (sid) {
                     sid.selectId('show', $('#StateHomePowerConsumption').val(), function (newId) {
                         if (newId) {
-                            window.alert("NewID!!");
                             $('#StateHomePowerConsumption').val(newId).trigger('change');
                         }
                     });
@@ -131,7 +129,7 @@
                         objects: res,
                         imgPath: '../../lib/css/fancytree/',
                         filter: { type: 'state' },
-                        name: 'vcard-select-state',
+                        name: 'select-foreign-state',
                         texts: {
                             select: _('Select'),
                             cancel: _('Cancel'),
