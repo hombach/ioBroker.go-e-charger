@@ -130,7 +130,7 @@ class go_e_charger extends utils.Adapter {
             this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
         }
 
-        else if (ChargeManager) { // Charge-Manager is enabled  'kostal-piko-ba.0.Battery.SoC'
+        else if (ChargeManager) { // Charge-Manager is enabled
             this.getForeignState(this.config.StateHomeBatSoc, (_err, state) => {
                 BatSoC = state.val;
                 this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
