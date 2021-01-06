@@ -20,39 +20,30 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 To connect to the go-eCharger type in its IP-address in the config.
 
 ## Changelog
+### 0.5.1 (06.01.2021)
+* (HombachC) new year; bumped dependencies
 ### 0.5.0 (20.12.2020)
 * (HombachC) introduces selectable external states for charge control
-
 ### 0.4.1 (13.12.2020)
 * (HombachC) fixed error in poll of pha to get available phases
-
 ### 0.4.0 (11.12.2020)
 * (HombachC) added use of amx (non persistent set of charge current) to protect hardware (firmware 040 only)
-
 ### 0.3.3 (08.12.2020)
 * (HombachC) added check of firmware version
-
 ### 0.3.2 (08.12.2020)
 * (HombachC) bumped dependencies, added poll of firmware version, fixed error in CarStateString
-
 ### 0.3.0 (26.09.2020)
 * (HombachC) global code cleanup
-
 ### 0.2.0 (11.09.2020)
 * (HombachC) changed type to vehicle
-
 ### 0.1.2 (11.09.2020)
 * (HombachC) bumped dependencies
-
 ### 0.1.1 (30.06.2020)
 * (HombachC) configurable IP
-
 ### 0.1.0 (28.06.2020)
 * (HombachC) setup state machine - first working internal version
-
 ### 0.0.9 (28.06.2020)
 * (HombachC) read charger power
-
 ### 0.0.1 (27.06.2020)
 * (HombachC) initial release
 
