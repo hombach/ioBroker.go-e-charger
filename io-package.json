@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.5.1": {
+        "en": "new year; bumped dependencies"
+      },
       "0.5.0": {
         "en": "introduces selectable external states for charge control"
       },
