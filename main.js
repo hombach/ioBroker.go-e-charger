@@ -41,8 +41,7 @@ class go_e_charger extends utils.Adapter {
     }
     
     /****************************************************************************************
-    * Is called when databases are connected and adapter received configuration.
-    */
+    * Is called when databases are connected and adapter received configuration. ***********/
     async onReady() {
         if (!this.config.ipaddress) {
             this.log.warn('go-eCharger IP address not set');

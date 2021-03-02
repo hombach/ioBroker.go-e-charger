@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.5.1",
+    "version": "0.5.2",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.5.2": {
+        "en": "bumped dependencies"
+      },
       "0.5.1": {
         "en": "new year; bumped dependencies"
       },
@@ -60,9 +63,6 @@
       },
       "0.3.2": {
         "en": "bumped dependencies, added poll of firmware version, fixed error in CarStateString"
-      },
-      "0.3.0": {
-        "en": "global code cleanup"
       },
       "0.2.0": {
         "en": "changed type to vehicle"
