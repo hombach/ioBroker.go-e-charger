@@ -1,0 +1,47 @@
+We are using selectID.js (iobroker/node_modules/iobroker.admin/www/lib/js/selectID.js).
+
+
+/**********initSelectId ## How to use
+ <!-- Somewhere in HTML -->
+    <div id="dialog-select-member" style="display: none"></div>
+ 
+ // In Javascript
+ // Name "dialog-select-member" is important, because for that exist the CSS classes
+ // Important to have "admin/img/info-big.png" in too, because this icon will be loaded if no icon found, elsewise we have endless loop
+ let selectId;
+ function initSelectId (cb) {
+    if (selectId) return cb ? cb(selectId) : selectId;
+    socket.emit('getObjects', function (err, res) {
+        if (!err && res) {
+            selectId = $('#dialog-select-member').selectId('init',  {
+                noMultiselect: true,
+                objects: res,
+                imgPath:       '../../lib/css/fancytree/',
+                filter:        {type: 'state'},
+                name:          'adapter-select-state',
+                texts: {
+                    select:          _('Select'),
+                    cancel:          _('Cancel'),
+                    all:             _('All'),
+                    id:              _('ID'),
+                    name:            _('Name'),
+                    role:            _('Role'),
+                    room:            _('Room'),
+                    value:           _('Value'),
+                    selectid:        _('Select ID'),
+                    from:            _('From'),
+                    lc:              _('Last changed'),
+                    ts:              _('Time stamp'),
+                    wait:            _('Processing...'),
+                    ack:             _('Acknowledged'),
+                    selectAll:       _('Select all'),
+                    unselectAll:     _('Deselect all'),
+                    invertSelection: _('Invert selection')
+                },
+                columns: ['image', 'name', 'role', 'room', 'value']
+            });
+            cb && cb(selectId);
+        }
+    });
+}
+*/

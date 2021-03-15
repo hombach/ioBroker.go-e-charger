@@ -18,152 +18,27 @@
     <!-- Load our own files -->
     <link rel="stylesheet" type="text/css" href="style.css" />
     <script type="text/javascript" src="words.js"></script>
+    <script type="text/javascript" src="index_m.js"></script>
 
-    <style>
-    </style>
-
-    <script type="text/javascript">
-        // This will be called by the admin adapter when the settings page loads
-        function load(settings, onChange) {
-            // example: select elements with id=key and class=value and insert value
-            if (!settings) return;
-            $('.value').each(function () {
-                var $key = $(this);
-                var id = $key.attr('id');
-                if ($key.attr('type') === 'checkbox') {
-                    // do not call onChange direct, because onChange could expect some arguments
-                    $key.prop('checked', settings[id])
-                        .on('change', () => onChange())
-                        ;
-                } else {
-                    // do not call onChange direct, because onChange could expect some arguments
-                    $key.val(settings[id])
-                        .on('change', () => onChange())
-                        .on('keyup', () => onChange())
-                        ;
-                }
-            });
-
-            // NEW, NOT WORKING
-            $('#StateHomeSolarPowerPopUp').on('click', function () {
-                initSelectId(function (sid) {
-                    sid.selectId('show', $('#StateHomeSolarPower').val(), function (newId) {
-                        if (newId) {
-                            $('#StateHomeSolarPower').val(newId).trigger('change');
-                        }
-                    });
-                });
-            });
-
-            $('#StateHomeBatSocPopUp').on('click', function () {
-                window.alert("StateHomeBatSocPopUp!   " + $('#StateHomeBatSoc').val());
-                initSelectId(function (sid) {
-                    sid.selectId('show', $('#StateHomeBatSoc').val(), function (newId) {
-                        if (newId) {
-                            window.alert("NewID!!");
-                            $('#StateHomeBatSoc').val(newId).trigger('change');
-                        }
-                    });
-                });
-            });
-
-            $('#StateHomePowerConsumptionPopUp').on('click', function () {
-                initSelectId(function (sid) {
-                    sid.selectId('show', $('#StateHomePowerConsumption').val(), function (newId) {
-                        if (newId) {
-                            $('#StateHomePowerConsumption').val(newId).trigger('change');
-                        }
-                    });
-                });
-            });
-            // END NEW  */
-
-            onChange(false);
-            // reinitialize all the Materialize labels on the page if you are dynamically adding inputs:
-            if (M) M.updateTextFields();
-        }
-
-
-        // This will be called by the admin adapter when the user presses the save button
-        function save(callback) {
-            // example: select elements with class=value and build settings object
-            var obj = {};
-            $('.value').each(function () {
-                var $this = $(this);
-                if ($this.attr('type') === 'checkbox') {
-                    obj[$this.attr('id')] = $this.prop('checked');
-                } else {
-                    obj[$this.attr('id')] = $this.val();
-                }
-            });
-            callback(obj);
-        }
-
-
-        // NEW from BlueFox, Not Working
-        var selectId;
-        function initSelectId(callback) {
-            if (selectId) return callback(selectId);
-            window.alert("initSelectId");
-            socket.emit('getObjects', function (err, objs) {
-                selectId = $('#dialog-select-member').selectId('init', {
-                    noMultiselect: true,
-                    objects: objs,
-                    imgPath: '../../lib/css/fancytree/',
-                    name: 'select-foreign-state',
-                });
-                window.alert("Error: " + err);
-                window.alert(res);
-                callback(selectId);
-            });
-        }
-
-        /*
-        function initSelectId(cb) {
-            if (selectId) return cb(selectId);
-            window.alert("initSelectId");
-            socket.emit('getObjects', function (err, res) {
-                if (!err && res) {
-                    selectId = $('#dialog-select-member').selectId('init', {
-                        noMultiselect: true,
-                        objects: res,
-                        imgPath: '../../lib/css/fancytree/',
-                        filter: { type: 'state' },
-                        name: 'select-foreign-state',
-                        texts: {
-                            select: _('Select'),
-                            cancel: _('Cancel'),
-                            all: _('All'),
-                            id: _('ID'),
-                            name: _('Name'),
-                            role: _('Role'),
-                            room: _('Room'),
-                            value: _('Value'),
-                            selectid: _('Select ID'),
-                            from: _('From'),
-                            lc: _('Last changed'),
-                            ts: _('Time stamp'),
-                            wait: _('Processing...'),
-                            ack: _('Acknowledged'),
-                            selectAll: _('Select all'),
-                            unselectAll: _('Deselect all'),
-                            invertSelection: _('Invert selection')
-                        },
-                        columns: ['image', 'name', 'role', 'room']
-                    });
-                    window.alert("Error: " + err);
-                    window.alert(res);
-                    cb && cb(selectId);
-                }
-            });
-        }
-// END NEW */
-
-    </script>
 </head>
 
 <body>
     <div class="m adapter-container">
+        <div id="dialog-select-member" class="modal modal-fixed-footer">
+            <div class="modal-content">
+                <div class="row">
+                    <div class="col s12 title"></div>
+                </div>
+                <div class="row">
+                    <div class="col s12 dialog-content">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a class="modal-action modal-close waves-effect waves-green btn btn-set"><i class="large material-icons left">check_circle</i><span class="translate">Select</span></a>
+                <a class="modal-action modal-close waves-effect waves-green btn btn-close"><i class="large material-icons left">cancel</i><span class="translate">Cancel</span></a>
+            </div>
+        </div>
 
         <div class="row">
             <div class="col s12 m4 l2">
@@ -201,7 +76,7 @@
                 <a id="StateHomeBatSocPopUp" class="btn"><i class="material-icons">settings</i><span></span></a>
             </div>
         </div>
-        
+
         <div class="row">
             <div class="col s5 m5 l5 input-field">
                 <input type="text" class="value" id="StateHomePowerConsumption" />

@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.5.2",
+    "version": "0.6.0",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.6.0": {
+        "en": "fix error in forreign state popup"
+      },
       "0.5.2": {
         "en": "bumped dependencies"
       },

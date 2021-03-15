@@ -8,3 +8,7 @@
 }
 
 /* Add your styles here */
+
+#dialog-select-member {
+    z-index: 9999 !important;
+}
