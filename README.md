@@ -21,7 +21,7 @@ To connect to the go-eCharger type in its IP-address in the config.
 
 ## Changelog
 ### 0.6.0 (15.03.2021)
-* (HombachC) fix error in forreign state popup
+* (HombachC) fix error in foreign state popup
 ### 0.5.2 (02.03.2021)
 * (HombachC) bumped dependencies
 ### 0.5.1 (06.01.2021)
