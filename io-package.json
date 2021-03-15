@@ -44,7 +44,7 @@
     "dataSource": "poll",
     "news": {
       "0.6.0": {
-        "en": "fix error in forreign state popup"
+        "en": "fix error in foreign state popup"
       },
       "0.5.2": {
         "en": "bumped dependencies"
