@@ -280,7 +280,6 @@ class go_e_charger extends utils.Adapter {
 
     /*****************************************************************************************/
     Charge_Manager() {
- //       this.Read_Charger();
         this.getForeignState(this.config.StateHomeSolarPower, (_err, state) => { this.SolarPower = state.val });
         this.log.debug(`Got external state of solar power: ${SolarPower} W`);
         this.getForeignState(this.config.StateHomePowerConsumption, (_err, state) => { this.HouseConsumption = state.val });
