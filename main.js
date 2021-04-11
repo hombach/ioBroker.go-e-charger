@@ -206,6 +206,7 @@ class go_e_charger extends utils.Adapter {
         this.setStateAsync('Power.GridPhases', ((32 & status.pha)>>5) + ((16 & status.pha)>>4) + ((8 & status.pha)>>3), true);
         this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
         this.setStateAsync('Power.Charge', (status.nrg[11] * 10), true); // trim to Watt
+        this.setStateAsync('Power.MeasuredMaxPhaseCurrent', (Math.max(status.nrg[4], status.nrg[5], status.nrg[6]) / 10), true);
         Firmware = status.fwv;
         this.setStateAsync('Info.FirmwareVersion', Firmware, true);
         this.log.debug('got and parsed go-eCharger data');

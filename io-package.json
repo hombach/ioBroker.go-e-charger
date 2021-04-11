@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.6.1",
+    "version": "0.7.0",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.7.0": {
+        "en": "added measured maximum current"
+      },
       "0.6.1": {
         "en": "bumped dependencies, clean-up"
       },
@@ -230,6 +233,20 @@
         "name": "No of available grid phases",
         "type": "number",
         "unit": "phase",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Power.MeasuredMaxPhaseCurrent",
+      "type": "state",
+      "common": {
+        "role": "value.current",
+        "name": "Measured max. current of grid phases",
+        "type": "number",
+        "unit": "A",
         "read": true,
         "write": false,
         "def": 0
