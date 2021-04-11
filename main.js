@@ -120,10 +120,10 @@ class go_e_charger extends utils.Adapter {
     StateMachine() {
         this.log.debug(`StateMachine start`);
         this.Read_Charger();
-        this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { this.MinHomeBatVal = state.val }); // Get Desired Battery SoC
-        this.getState('Settings.ChargeNOW', (_err, state) => { this.ChargeNOW = state.val });
-        this.getState('Settings.ChargeManager', (_err, state) => { this.ChargeManager = state.val });
-        this.getState('Settings.ChargeCurrent', (_err, state) => { this.ChargeCurrent = state.val });
+        this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { MinHomeBatVal = state.val }); // Get Desired Battery SoC
+        this.getState('Settings.ChargeNOW', (_err, state) => { ChargeNOW = state.val });
+        this.getState('Settings.ChargeManager', (_err, state) => { ChargeManager = state.val });
+        this.getState('Settings.ChargeCurrent', (_err, state) => { ChargeCurrent = state.val });
 
         if (ChargeNOW) { // Charge-NOW is enabled
             this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
@@ -131,7 +131,7 @@ class go_e_charger extends utils.Adapter {
 
         else if (ChargeManager) { // Charge-Manager is enabled
             this.getForeignState(this.config.StateHomeBatSoc, (_err, state) => {
-                this.BatSoC = state.val;
+                BatSoC = state.val;
                 this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
                 if (BatSoC >= MinHomeBatVal) { // SoC of home battery sufficient?
                     this.Charge_Manager();
@@ -281,13 +281,13 @@ class go_e_charger extends utils.Adapter {
 
     /*****************************************************************************************/
     Charge_Manager() {
-        this.getForeignState(this.config.StateHomeSolarPower, (_err, state) => { this.SolarPower = state.val });
+        this.getForeignState(this.config.StateHomeSolarPower, (_err, state) => { SolarPower = state.val });
         this.log.debug(`Got external state of solar power: ${SolarPower} W`);
-        this.getForeignState(this.config.StateHomePowerConsumption, (_err, state) => { this.HouseConsumption = state.val });
+        this.getForeignState(this.config.StateHomePowerConsumption, (_err, state) => { HouseConsumption = state.val });
         this.log.debug(`Got external state of house power consumption: ${HouseConsumption} W`);
-        this.getForeignState(this.config.StateHomeBatSoc, (_err, state) => { this.BatSoC = state.val });
+        this.getForeignState(this.config.StateHomeBatSoc, (_err, state) => { BatSoC = state.val });
         this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
-        this.getState('Power.Charge', (_err, state) => { this.ChargePower = state.val });
+        this.getState('Power.Charge', (_err, state) => { ChargePower = state.val });
 
         OptAmpere = (Math.floor(
             (SolarPower - HouseConsumption + ChargePower - 100
