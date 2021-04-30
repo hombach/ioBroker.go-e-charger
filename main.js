@@ -181,7 +181,7 @@ class go_e_charger extends utils.Adapter {
 
     /*****************************************************************************************/
     ParseStatus(status) {
-        this.setStateAsync('Info.RebootCounter', status.rbc, true);
+        this.setStateAsync('Info.RebootCounter', Number(status.rbc), true);
         this.setStateAsync('Info.RebootTimer', Math.floor(status.rbt / 1000 / 3600), true); // trim to hours
         this.setStateAsync('Info.CarState', Number(status.car), true);
         switch (status.car) {
@@ -200,9 +200,9 @@ class go_e_charger extends utils.Adapter {
             default:
                 this.setStateAsync('Info.CarStateString', 'Error', true);
         }
-        this.setStateAsync('Power.ChargeCurrent', status.amp, true);
-        this.setStateAsync('Power.ChargeCurrentVolatile', status.amx, true);
-        this.setStateAsync('Power.ChargingAllowed', status.alw, true);
+        this.setStateAsync('Power.ChargeCurrent', Number(status.amp), true);
+        this.setStateAsync('Power.ChargeCurrentVolatile', Number(status.amx), true);
+        this.setStateAsync('Power.ChargingAllowed', Boolean(status.alw), true);
         this.setStateAsync('Power.GridPhases', ((32 & status.pha)>>5) + ((16 & status.pha)>>4) + ((8 & status.pha)>>3), true);
         this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
         this.setStateAsync('Power.Charge', (status.nrg[11] * 10), true); // trim to Watt
