@@ -183,7 +183,7 @@ class go_e_charger extends utils.Adapter {
     ParseStatus(status) {
         this.setStateAsync('Info.RebootCounter', status.rbc, true);
         this.setStateAsync('Info.RebootTimer', Math.floor(status.rbt / 1000 / 3600), true); // trim to hours
-        this.setStateAsync('Info.CarState', status.car, true);
+        this.setStateAsync('Info.CarState', Number(status.car), true);
         switch (status.car) {
             case "1":
                 this.setStateAsync('Info.CarStateString', 'Wallbox ready, no car', true);

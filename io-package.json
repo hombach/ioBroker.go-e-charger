@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.7.1",
+    "version": "0.7.2",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.7.2": {
+        "en": "fixed errors with js-controller 3.3.x, bumped dependencies"
+      },
       "0.7.1": {
         "en": "bug fix"
       },
