@@ -243,8 +243,8 @@ class go_e_charger extends utils.Adapter {
                         if (!response.error && response.statusCode == 200) {
                             this.log.debug(`Sent to firmware 030: ${response.body}`);
                             var result = await JSON.parse(response.body);
-                            this.setStateAsync('Power.ChargeCurrent', result.amp, true); // in readcharger integriert
-                            this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
+                            this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
+                            this.setStateAsync('Power.ChargingAllowed', Boolean(result.alw), true); // in readcharger integriert
                         }
                         else if (response.error) {
                             this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amp=${Ampere}`);
@@ -261,8 +261,8 @@ class go_e_charger extends utils.Adapter {
                         if (!response.error && response.statusCode == 200) {
                             this.log.debug(`Sent to firmware 040.0: ${response.body}`);
                             var result = await JSON.parse(response.body);
-                            this.setStateAsync('Power.ChargeCurrent', result.amp, true); // in readcharger integriert
-                            this.setStateAsync('Power.ChargingAllowed', result.alw, true); // in readcharger integriert
+                            this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
+                            this.setStateAsync('Power.ChargingAllowed', Boolean(result.alw), true); // in readcharger integriert
                         }
                         else if (response.error) {
                             this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amx=${Ampere}`);
