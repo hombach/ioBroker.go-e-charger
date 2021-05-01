@@ -117,39 +117,34 @@ class go_e_charger extends utils.Adapter {
 
     
     /*****************************************************************************************/
-    StateMachine() {
+    async StateMachine() {
         this.log.debug(`StateMachine start`);
-        this.Read_Charger();
-        this.getState('Settings.Setpoint_HomeBatSoC', (_err, state) => { MinHomeBatVal = Number(state.val) }); // Get Desired Battery SoC
-        this.getState('Settings.ChargeNOW', (_err, state) => { ChargeNOW = Boolean(state.val) });
-        this.getState('Settings.ChargeManager', (_err, state) => { ChargeManager = Boolean(state.val) });
-        this.getState('Settings.ChargeCurrent', (_err, state) => { ChargeCurrent = Number(state.val) });
+        await this.Read_Charger();
+        MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get Desired Battery SoC
+        ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW');
+        ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager');
+        ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent');
 
         if (ChargeNOW) { // Charge-NOW is enabled
             this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
         }
 
         else if (ChargeManager) { // Charge-Manager is enabled
-            this.getForeignState(this.config.StateHomeBatSoc, (_err, state) => {
-                BatSoC = Number(state.val);
-                this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
-                if (BatSoC >= MinHomeBatVal) { // SoC of home battery sufficient?
-                    this.Charge_Manager();
-                }
-                else { // FUTURE: time of day forces emptying of home battery
-                    ZielAmpere = 6;
-                    this.Charge_Config('0', ZielAmpere, `Hausbatterie laden bis ${MinHomeBatVal}%`);
-                }
-            });
+            BatSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
+            this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
+            if (BatSoC >= MinHomeBatVal) { // SoC of home battery sufficient?
+                this.Charge_Manager();
+            } else { // FUTURE: time of day forces emptying of home battery
+                ZielAmpere = 6;
+                this.Charge_Config('0', ZielAmpere, `Hausbatterie laden bis ${MinHomeBatVal}%`);
+            }
         }
 
         else { // only if Power.ChargingAllowed is still set: switch OFF; set to min. current; 
-            this.getState('Power.ChargingAllowed', (_err, state) => {
-                if (state.val == true) { // Set to false only if still true
+            if (this.asyncGetStateVal('Power.ChargingAllowed')) { // Set to false only if still true
                     ZielAmpere = 6;
                     this.Charge_Config('0', ZielAmpere, `go-eCharger abschalten`);
                 }
-            });
         }
 
         adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
@@ -280,21 +275,20 @@ class go_e_charger extends utils.Adapter {
 
 
     /*****************************************************************************************/
-    Charge_Manager() {
-        this.getForeignState(this.config.StateHomeSolarPower, (_err, state) => { SolarPower = Number(state.val) });
+    async Charge_Manager() {
+        SolarPower = await this.asyncGetForeignStateVal(this.config.StateHomeSolarPower);
         this.log.debug(`Got external state of solar power: ${SolarPower} W`);
-        this.getForeignState(this.config.StateHomePowerConsumption, (_err, state) => { HouseConsumption = Number(state.val) });
+        HouseConsumption = await this.asyncGetForeignStateVal(this.config.StateHomePowerConsumption);
         this.log.debug(`Got external state of house power consumption: ${HouseConsumption} W`);
-        this.getForeignState(this.config.StateHomeBatSoc, (_err, state) => { BatSoC = Number(state.val) });
+        BatSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
         this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
-        this.getState('Power.Charge', (_err, state) => { ChargePower = Number(state.val) });
+        ChargePower = await this.asyncGetStateVal('Power.Charge');
 
-        OptAmpere = (Math.floor(
+        OptAmpere = await (Math.floor(
             (SolarPower - HouseConsumption + ChargePower - 100
                 + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal))) / 230)); // -100 W Reserve + max. 2000 fÜr Batterieleerung
-
-        this.log.debug(`Optimal charging current would be: ${OptAmpere} A`);
         if (OptAmpere > 16) OptAmpere = 16;
+        this.log.debug(`Optimal charging current would be: ${OptAmpere} A`);
 
         if (ZielAmpere < OptAmpere) {
             ZielAmpere++;
@@ -313,7 +307,110 @@ class go_e_charger extends utils.Adapter {
             }
         }
     } // END Charge_Manager
-       
+
+
+    /**
+       * Get foreign state value
+       * @param {string}      statePath  - Full path to state, like 0_userdata.0.other.isSummer
+       * @return {Promise<*>}            - State value, or null if error
+       */
+    async asyncGetForeignStateVal(statePath) {
+        try {
+            let stateObject = await this.asyncGetForeignState(statePath);
+            if (stateObject == null) return null; // errors thrown already in asyncGetForeignState()
+            return stateObject.val;
+        } catch (e) {
+            this.log.error(`[asyncGetForeignStateValue](${statePath}): ${e}`);
+            return null;
+        }
+    }
+
+    /**
+    * Get foreign state
+    * 
+    * @param {string}      statePath  - Full path to state, like 0_userdata.0.other.isSummer
+    * @return {Promise<object>}       - State object: {val: false, ack: true, ts: 1591117034451, …}, or null if error
+    */
+    async asyncGetForeignState(statePath) {
+        try {
+            let stateObject = await this.getForeignObjectAsync(statePath); // Check state existence
+            if (!stateObject) {
+                throw (`State '${statePath}' does not exist.`);
+            } else { // Get state value, so like: {val: false, ack: true, ts: 1591117034451, …}
+                const stateValueObject = await this.getForeignStateAsync(statePath);
+                if (!this.isLikeEmpty(stateValueObject)) {
+                    return stateValueObject;
+                } else {
+                    throw (`Unable to retrieve info from state '${statePath}'.`);
+                }
+            }
+        } catch (e) {
+            this.log.error(`[asyncGetForeignState](${statePath}): ${e}`);
+            return null;
+        }
+    }
+
+    /**
+    * Get state value
+    * @param {string}      statePath  - Path to state, like other.isSummer
+    * @return {Promise<*>}            - State value, or null if error
+    */
+    async asyncGetStateVal(statePath) {
+        try {
+            let stateObject = await this.asyncGetState(statePath);
+            if (stateObject == null) return null; // errors thrown already in asyncGetState()
+            return stateObject.val;
+        } catch (e) {
+            this.log.error(`[asyncGetStateValue](${statePath}): ${e}`);
+            return null;
+        }
+    }
+
+    /**
+    * Get state
+    * 
+    * @param {string}      statePath  - Path to state, like other.isSummer
+    * @return {Promise<object>}       - State object: {val: false, ack: true, ts: 1591117034451, …}, or null if error
+    */
+    async asyncGetState(statePath) {
+        try {
+            let stateObject = await this.getObjectAsync(statePath); // Check state existence
+            if (!stateObject) {
+                throw (`State '${statePath}' does not exist.`);
+            } else { // Get state value, so like: {val: false, ack: true, ts: 1591117034451, …}
+                const stateValueObject = await this.getStateAsync(statePath);
+                if (!this.isLikeEmpty(stateValueObject)) {
+                    return stateValueObject;
+                } else {
+                    throw (`Unable to retrieve info from state '${statePath}'.`);
+                }
+            }
+        } catch (e) {
+            this.log.error(`[asyncGetState](${statePath}): ${e}`);
+            return null;
+        }
+    }
+
+    isLikeEmpty(inputVar) {
+        if (typeof inputVar !== 'undefined' && inputVar !== null) {
+            let sTemp = JSON.stringify(inputVar);
+            sTemp = sTemp.replace(/\s+/g, ''); // remove all white spaces
+            sTemp = sTemp.replace(/"+/g, ''); // remove all >"<
+            sTemp = sTemp.replace(/'+/g, ''); // remove all >'<
+            sTemp = sTemp.replace(/\[+/g, ''); // remove all >[<
+            sTemp = sTemp.replace(/\]+/g, ''); // remove all >]<
+            sTemp = sTemp.replace(/\{+/g, ''); // remove all >{<
+            sTemp = sTemp.replace(/\}+/g, ''); // remove all >}<
+            if (sTemp !== '') {
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+    
 } // END Class
 
 
