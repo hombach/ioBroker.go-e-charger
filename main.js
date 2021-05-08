@@ -18,6 +18,7 @@ let ChargeNOW        = false;
 let ChargeManager    = false;
 let ChargeCurrent    = 0;
 let ChargePower      = 0;
+let GridPhases       = 0;
 let SolarPower       = 0;
 let HouseConsumption = 0;
 let BatSoC           = 0;
@@ -283,6 +284,7 @@ class go_e_charger extends utils.Adapter {
         BatSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
         this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
         ChargePower = await this.asyncGetStateVal('Power.Charge');
+        GridPhases = await this.asyncGetStateVal('Power.GridPhases');
 
         OptAmpere = await (Math.floor(
             (SolarPower - HouseConsumption + ChargePower - 100
