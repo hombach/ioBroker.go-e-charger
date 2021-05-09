@@ -288,7 +288,7 @@ class go_e_charger extends utils.Adapter {
 
         OptAmpere = await (Math.floor(
             (SolarPower - HouseConsumption + ChargePower - 100
-                + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal))) / 230)); // -100 W Reserve + max. 2000 fÜr Batterieleerung
+                + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal))) / 230 / GridPhases)); // -100 W Reserve + max. 2000 fÜr Batterieleerung
         if (OptAmpere > 16) OptAmpere = 16;
         this.log.debug(`Optimal charging current would be: ${OptAmpere} A`);
 
