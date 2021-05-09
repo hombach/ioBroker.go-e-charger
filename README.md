@@ -26,8 +26,6 @@ To connect to the go-eCharger type in its IP-address in the config.
 * (HombachC) added tests for node.js 16
 ### 0.7.4 (09.05.2021)
 * (HombachC) fixed vulnerability 
-### 0.7.3 (02.05.2021)
-* (HombachC) code optimization 
 ### 0.7.2 (30.04.2021)
 * (HombachC) fixed errors with js-controller 3.3.x, bumbed dependencies 
 ### 0.7.1 (11.04.2021)
@@ -38,8 +36,6 @@ To connect to the go-eCharger type in its IP-address in the config.
 * (HombachC) bumped dependencies, clean-up
 ### 0.6.0 (15.03.2021)
 * (HombachC) fix error in foreign state popup
-### 0.5.1 (06.01.2021)
-* (HombachC) new year; bumped dependencies
 ### 0.5.0 (20.12.2020)
 * (HombachC) introduces selectable external states for charge control
 ### 0.4.1 (13.12.2020)
@@ -52,8 +48,6 @@ To connect to the go-eCharger type in its IP-address in the config.
 * (HombachC) bumped dependencies, added poll of firmware version, fixed error in CarStateString
 ### 0.2.0 (11.09.2020)
 * (HombachC) changed type to vehicle
-### 0.1.2 (11.09.2020)
-* (HombachC) bumped dependencies
 ### 0.1.1 (30.06.2020)
 * (HombachC) configurable IP
 ### 0.1.0 (28.06.2020)
