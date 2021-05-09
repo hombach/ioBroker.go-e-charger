@@ -20,7 +20,6 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 To connect to the go-eCharger type in its IP-address in the config.
 
 ## Changelog
-added tests for node.js 16
 ### 0.7.5 (09.05.2021)
 * (HombachC) added tests for node.js 16
 ### 0.7.4 (09.05.2021)
