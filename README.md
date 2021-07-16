@@ -20,20 +20,19 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 To connect to the go-eCharger type in its IP-address in the config.
 
 ## Changelog
+! Note that missing version entries are typically dependency updates for security.
+### 0.8.1 (16.07.2021)
+* (HombachC) fixed vulnerability 
 ### 0.8.0 (09.05.2021)
 * (HombachC) added gridphase correction to charge logic
 ### 0.7.5 (09.05.2021)
 * (HombachC) added tests for node.js 16
-### 0.7.4 (09.05.2021)
-* (HombachC) fixed vulnerability 
 ### 0.7.2 (30.04.2021)
 * (HombachC) fixed errors with js-controller 3.3.x, bumbed dependencies 
 ### 0.7.1 (11.04.2021)
 * (HombachC) bug fix 
 ### 0.7.0 (11.04.2021)
 * (HombachC) added measured maximum current 
-### 0.6.1 (21.03.2021)
-* (HombachC) bumped dependencies, clean-up
 ### 0.6.0 (15.03.2021)
 * (HombachC) fix error in foreign state popup
 ### 0.5.0 (20.12.2020)

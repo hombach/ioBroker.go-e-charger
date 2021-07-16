@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,14 +43,14 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.8.1": {
+        "en": "fixed vulnerability"
+      },
       "0.8.0": {
         "en": "added gridphase correction to charge logic"
       },
       "0.7.5": {
         "en": "added tests for node.js 16"
-      },
-      "0.7.4": {
-        "en": "fixed vulnerability"
       },
       "0.7.2": {
         "en": "fixed errors with js-controller 3.3.x, bumped dependencies"
@@ -60,9 +60,6 @@
       },
       "0.7.0": {
         "en": "added measured maximum current"
-      },
-      "0.6.1": {
-        "en": "bumped dependencies, clean-up"
       },
       "0.6.0": {
         "en": "fix error in foreign state popup"
@@ -106,7 +103,7 @@
     "dependencies": [
       {
         "js-controller": ">=3.0.0",
-        "admin": ">=3.0.0"
+        "admin": ">=4.0.0"
       }
     ]
   },
