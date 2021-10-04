@@ -7,7 +7,7 @@ const utils = require('@iobroker/adapter-core');
 // const schedule = require('node-schedule');
 const adapterIntervals = {};
 
-// Adapter for EV-Charger go-E with firmware >V033; Support for firmware V040 in preparation
+// Adapter for EV-Charger go-E with firmware >V033
 
 // Variablen
 let ZielAmpere       = 5;
@@ -251,6 +251,7 @@ class go_e_charger extends utils.Adapter {
                     } // END catch
                     break;
                 case '040.0':
+                case '041.0':
                     try {
                         // @ts-ignore got is valid
                         var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
