@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.9.0",
+    "version": "0.9.1",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.9.1": {
+        "en": "fixed vulnerability"
+      },
       "0.9.0": {
         "en": "support for firmware 041.0"
       },

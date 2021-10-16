@@ -21,6 +21,8 @@ To connect to the go-eCharger type in its IP-address in the config.
 
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
+### 0.9.1 (16.10.2021)
+* (HombachC) fixed vulnerability
 ### 0.9.0 (04.10.2021)
 * (HombachC) support for firmware 041.0 
 ### 0.8.1 (16.07.2021)
