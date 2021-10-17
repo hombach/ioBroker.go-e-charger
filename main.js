@@ -67,15 +67,17 @@ class go_e_charger extends utils.Adapter {
                 */
             await this.Read_Charger();
             this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
- //           switch (Firmware) {
- //               case '033' || '040':
+//            switch (Firmware) {
+//                case '033':
+//                case '040.0':
+//                case '041.0':
                     this.log.debug(`Init done, launching state machine`);
                     this.StateMachine();
- //                   break;
- //               default:
- //                   this.log.error(`Not supported firmware found!!! Shutting down adapter.`);
- //                   this.stop;
- //           } 
+//                    break;
+//                default:
+//                    this.log.error(`Not supported firmware found!!! Shutting down adapter.`);
+//                    this.stop;
+//            } 
         } else {
             this.log.error(`No IP Address configured!!`)
             this.stop;
@@ -198,7 +200,6 @@ class go_e_charger extends utils.Adapter {
         }
         this.setStateAsync('Power.ChargeCurrent', Number(status.amp), true);
         this.setStateAsync('Power.ChargeCurrentVolatile', Number(status.amx), true);
-//        this.setStateAsync('Power.ChargingAllowed', Boolean(status.alw), true);
         switch (status.alw) {
             case "0":
                 this.setStateAsync('Power.ChargingAllowed', false, true);
@@ -248,7 +249,6 @@ class go_e_charger extends utils.Adapter {
                             this.log.debug(`Sent to firmware 030: ${response.body}`);
                             var result = await JSON.parse(response.body);
                             this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
-//                            this.setStateAsync('Power.ChargingAllowed', Boolean(result.alw), true); // in readcharger integriert
                             switch (result.alw) {
                                 case "0":
                                     this.setStateAsync('Power.ChargingAllowed', false, true);
@@ -275,7 +275,6 @@ class go_e_charger extends utils.Adapter {
                             this.log.debug(`Sent to firmware 040.0 / 041.0: ${response.body}`);
                             var result = await JSON.parse(response.body);
                             this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
-//                            this.setStateAsync('Power.ChargingAllowed', Boolean(result.alw), true); // in readcharger integriert
                             switch (result.alw) {
                                 case "0":
                                     this.setStateAsync('Power.ChargingAllowed', false, true);
