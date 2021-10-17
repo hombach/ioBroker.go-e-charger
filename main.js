@@ -199,6 +199,7 @@ class go_e_charger extends utils.Adapter {
         this.setStateAsync('Power.ChargeCurrent', Number(status.amp), true);
         this.setStateAsync('Power.ChargeCurrentVolatile', Number(status.amx), true);
         this.setStateAsync('Power.ChargingAllowed', Boolean(status.alw), true);
+        this.log.debug(`Parsed and set state ChargeAllowed to ${status.alw}`);
         this.setStateAsync('Power.GridPhases', ((32 & status.pha)>>5) + ((16 & status.pha)>>4) + ((8 & status.pha)>>3), true);
         this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
         this.setStateAsync('Power.Charge', (status.nrg[11] * 10), true); // trim to Watt
@@ -240,7 +241,9 @@ class go_e_charger extends utils.Adapter {
                             this.log.debug(`Sent to firmware 030: ${response.body}`);
                             var result = await JSON.parse(response.body);
                             this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
+                            this.log.debug(`Set State ChargeCurrent to ${result.amp}`);
                             this.setStateAsync('Power.ChargingAllowed', Boolean(result.alw), true); // in readcharger integriert
+                            this.log.debug(`Set State ChargeAllowed to ${result.alw}`);
                         }
                         else if (response.error) {
                             this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amp=${Ampere}`);
@@ -256,10 +259,12 @@ class go_e_charger extends utils.Adapter {
                         // @ts-ignore got is valid
                         var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
                         if (!response.error && response.statusCode == 200) {
-                            this.log.debug(`Sent to firmware 040.0: ${response.body}`);
+                            this.log.debug(`Sent to firmware 040.0 / 041.0: ${response.body}`);
                             var result = await JSON.parse(response.body);
                             this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
+                            this.log.debug(`Set State ChargeCurrent to ${result.amp}`);
                             this.setStateAsync('Power.ChargingAllowed', Boolean(result.alw), true); // in readcharger integriert
+                            this.log.debug(`Set State ChargeAllowed to ${result.alw}`);
                         }
                         else if (response.error) {
                             this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amx=${Ampere}`);
