@@ -46,15 +46,7 @@ class go_e_charger extends utils.Adapter {
     async onReady() {
         if (!this.config.ipaddress) {
             this.log.warn('go-eCharger IP address not set');
-        } else {
-            this.log.info('IP address found in config: ' + this.config.ipaddress);
         }
-
-        if (!this.config.polltimelive) {
-            this.log.warn('Polltime not configured or zero - will be set to 10 seconds');
-            this.config.polltimelive = 10000;
-        } 
-        this.log.info('Polltime set to: ' + (this.config.polltimelive / 1000) + ' seconds');
 
         //sentry.io ping
         if (this.supportsFeature && this.supportsFeature('PLUGINS')) {
@@ -72,13 +64,15 @@ class go_e_charger extends utils.Adapter {
         // this.subscribeStates('*'); // all states changes inside the adapters namespace are subscribed
                 
         if (this.config.ipaddress) {
-
- /*           ChargerRequest = 'http://' + this.config.ipaddress + '/api/dxs.json' +
-                '?dxsEntries=' + ID_Power_SolarDC + '&dxsEntries=' + ID_Power_GridAC +
-                '&dxsEntries=' + ID_Power_SelfConsumption + '&dxsEntries=' + ID_StatDay_SelfConsumption +
-                '&dxsEntries=' + ID_BatCurrentDir + '&dxsEntries=' + ID_GridLimitation;
-                */
             await this.Read_Charger();
+            this.log.info('IP address found in config: ' + this.config.ipaddress);
+
+            if (!this.config.polltimelive) {
+                this.log.warn('Polltime not configured or zero - will be set to 10 seconds');
+                this.config.polltimelive = 10000;
+            }
+            this.log.info('Polltime set to: ' + (this.config.polltimelive / 1000) + ' seconds');
+
             this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
 //            switch (Firmware) {
 //                case '033':
@@ -92,7 +86,7 @@ class go_e_charger extends utils.Adapter {
 //                    this.stop;
 //            } 
         } else {
-            this.log.error(`No IP Address configured!!`)
+            this.log.error(`No IP Address configured!! - Shutting down adapter.`)
             this.stop;
         }
     }
@@ -122,7 +116,6 @@ class go_e_charger extends utils.Adapter {
     onUnload(callback) {
         try {
             clearTimeout(adapterIntervals.stateMachine);
-            clearTimeout(adapterIntervals.total);
             Object.keys(adapterIntervals).forEach(interval => clearInterval(adapterIntervals[interval]));
             this.log.info(`Adaptor go-eCharger cleaned up everything...`);
             callback();
@@ -136,10 +129,10 @@ class go_e_charger extends utils.Adapter {
     async StateMachine() {
         this.log.debug(`StateMachine start`);
         await this.Read_Charger();
-        MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get Desired Battery SoC
-        ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW');
-        ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager');
-        ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent');
+        MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get desired battery SoC
+        ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW'); // Get charging override trigger
+        ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager'); // Get enable for charge manager
+        ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent'); // Get current for charging override
 
         if (ChargeNOW) { // Charge-NOW is enabled
             this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
