@@ -259,7 +259,7 @@ class go_e_charger extends utils.Adapter {
                         // @ts-ignore got is valid
                         var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
                         if (!response.error && response.statusCode == 200) {
-                            this.log.debug(`Sent to firmware 030: ${response.body}`);
+                            this.log.debug(`Sent to firmware 033: ${response.body}`);
                             var result = await JSON.parse(response.body);
                             this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
                             switch (result.alw) {
