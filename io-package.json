@@ -44,7 +44,7 @@
     "dataSource": "poll",
     "news": {
       "0.10.1": {
-        "en": "fixing error in adapter start-up"
+        "en": "fixing error in adapter start-up; changed error with unsupported firmware to warn - run adapter also with this firmwares"
       },
       "0.10.0": {
         "en": "added sentry.io support"

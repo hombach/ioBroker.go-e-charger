@@ -128,7 +128,7 @@ class go_e_charger extends utils.Adapter {
                     this.log.debug(`Init done, launching state machine`);
                     break;
                 default:
-                    this.log.warn(`Not supported firmware found!!!`);
+                    this.log.warn(`Not explicitly supported firmware found!!!`);
                     //sentry.io send firmware version
                     if (this.supportsFeature && this.supportsFeature('PLUGINS')) {
                         const sentryInstance = this.getPluginInstance('sentry');
@@ -291,13 +291,14 @@ class go_e_charger extends utils.Adapter {
                         this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
                     } // END catch
                     break;
-                case '040.0':
-                case '041.0':
+                default:
+                // case '040.0':
+                // case '041.0':
                     try {
                         // @ts-ignore got is valid
                         var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
                         if (!response.error && response.statusCode == 200) {
-                            this.log.debug(`Sent to firmware 040.0 / 041.0: ${response.body}`);
+                            this.log.debug(`Sent to firmware > 033: ${response.body}`);
                             var result = await JSON.parse(response.body);
                             this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
                             switch (result.alw) {
@@ -316,9 +317,9 @@ class go_e_charger extends utils.Adapter {
                         this.log.error(`Error in calling go-eCharger API: ${e}`);
                         this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
                     } // END catch
-                    break;
-                default:
-                    this.log.error(`No supported firmware found!!! (V${Firmware})`);
+                    // break;
+                // default:
+                    // this.log.error(`No supported firmware found!!! (V${Firmware})`);
             } 
         })();
     } // END Charge_Config
