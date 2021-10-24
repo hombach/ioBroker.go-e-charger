@@ -65,13 +65,13 @@ class go_e_charger extends utils.Adapter {
                 
         if (this.config.ipaddress) {
             await this.Read_Charger();
-            this.log.info('IP address found in config: ' + this.config.ipaddress);
+            await this.log.info('IP address found in config: ' + this.config.ipaddress);
 
             if (!this.config.polltimelive) {
                 this.log.warn('Polltime not configured or zero - will be set to 10 seconds');
                 this.config.polltimelive = 10000;
             }
-            this.log.info('Polltime set to: ' + (this.config.polltimelive / 1000) + ' seconds');
+            await this.log.info('Polltime set to: ' + (this.config.polltimelive / 1000) + ' seconds');
 
             this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
 //            switch (Firmware) {
