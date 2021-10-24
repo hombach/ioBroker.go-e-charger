@@ -10,6 +10,7 @@ const adapterIntervals = {};
 // Adapter for EV-Charger go-E with firmware >V033
 
 // Variablen
+let FirstStart       = true;
 let ZielAmpere       = 5;
 let OptAmpere        = 6;
 let MinHomeBatVal    = 87;
@@ -65,21 +66,22 @@ class go_e_charger extends utils.Adapter {
                 
         if (this.config.ipaddress) {
             await this.Read_Charger();
-            await this.log.info('IP address found in config: ' + this.config.ipaddress);
+            this.log.info('IP address found in config: ' + this.config.ipaddress);
 
             if (!this.config.polltimelive) {
                 this.log.warn('Polltime not configured or zero - will be set to 10 seconds');
                 this.config.polltimelive = 10000;
             }
-            await this.log.info('Polltime set to: ' + (this.config.polltimelive / 1000) + ' seconds');
+            this.log.info('Polltime set to: ' + (this.config.polltimelive / 1000) + ' seconds');
 
             this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
 //            switch (Firmware) {
 //                case '033':
 //                case '040.0':
 //                case '041.0':
-                    this.log.debug(`Init done, launching state machine`);
-                    this.StateMachine();
+                    this.log.debug(`Pre-init done, launching state machine interval`);
+//                    this.StateMachine();
+                    adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
 //                    break;
 //                default:
 //                    this.log.error(`Not supported firmware found!!! Shutting down adapter.`);
@@ -127,6 +129,24 @@ class go_e_charger extends utils.Adapter {
     
     /*****************************************************************************************/
     async StateMachine() {
+        if (FirstStart) { // First run of state machine after adapter start-up
+            this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
+            //            switch (Firmware) {
+            //                case '033':
+            //                case '040.0':
+            //                case '041.0':
+            this.log.debug(`Init done, launching state machine`);
+//            this.StateMachine();
+//                    break;
+//                default:
+//                    this.log.error(`Not supported firmware found!!! Shutting down adapter.`);
+//                    this.stop;
+//          } 
+            FirstStart = false;
+        }
+
+
+
         this.log.debug(`StateMachine start`);
         await this.Read_Charger();
         MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get desired battery SoC
