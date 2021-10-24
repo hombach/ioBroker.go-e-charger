@@ -74,19 +74,9 @@ class go_e_charger extends utils.Adapter {
             }
             this.log.info('Polltime set to: ' + (this.config.polltimelive / 1000) + ' seconds');
 
-            this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
-//            switch (Firmware) {
-//                case '033':
-//                case '040.0':
-//                case '041.0':
-                    this.log.debug(`Pre-init done, launching state machine interval`);
-//                    this.StateMachine();
-                    adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
-//                    break;
-//                default:
-//                    this.log.error(`Not supported firmware found!!! Shutting down adapter.`);
-//                    this.stop;
-//            } 
+            this.log.debug(`Pre-init done, launching state machine interval`);
+            adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
+
         } else {
             this.log.error(`No IP Address configured!! - Shutting down adapter.`)
             this.stop;
@@ -131,21 +121,30 @@ class go_e_charger extends utils.Adapter {
     async StateMachine() {
         if (FirstStart) { // First run of state machine after adapter start-up
             this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
-            //            switch (Firmware) {
-            //                case '033':
-            //                case '040.0':
-            //                case '041.0':
-            this.log.debug(`Init done, launching state machine`);
-//            this.StateMachine();
-//                    break;
-//                default:
-//                    this.log.error(`Not supported firmware found!!! Shutting down adapter.`);
-//                    this.stop;
-//          } 
+            switch (Firmware) {
+                case '033':
+                case '040.0':
+                case '041.0':
+                    this.log.debug(`Init done, launching state machine`);
+                    break;
+                default:
+                    this.log.warn(`Not supported firmware found!!!`);
+                    //sentry.io send firmware version
+                    if (this.supportsFeature && this.supportsFeature('PLUGINS')) {
+                        const sentryInstance = this.getPluginInstance('sentry');
+                        if (sentryInstance) {
+                            const Sentry = sentryInstance.getSentryObject();
+                            Sentry && Sentry.withScope(scope => {
+                                scope.setLevel('warn');
+                                scope.setExtra('Firmware', Firmware);
+                                Sentry.captureMessage('Adapter go-e-Charger found unknown firmware', 'warn'); // Level "warn"
+                            });
+                        }
+                    }
+                    // this.stop;
+            } 
             FirstStart = false;
         }
-
-
 
         this.log.debug(`StateMachine start`);
         await this.Read_Charger();
