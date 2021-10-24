@@ -38,18 +38,12 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 * (HombachC) added gridphase correction to charge logic
 ### 0.7.5 (09.05.2021)
 * (HombachC) added tests for node.js 16
-### 0.7.2 (30.04.2021)
-* (HombachC) fixed errors with js-controller 3.3.x, bumbed dependencies 
-### 0.7.1 (11.04.2021)
-* (HombachC) bug fix 
 ### 0.7.0 (11.04.2021)
 * (HombachC) added measured maximum current 
 ### 0.6.0 (15.03.2021)
 * (HombachC) fix error in foreign state popup
 ### 0.5.0 (20.12.2020)
 * (HombachC) introduces selectable external states for charge control
-### 0.4.1 (13.12.2020)
-* (HombachC) fixed error in poll of pha to get available phases
 ### 0.4.0 (11.12.2020)
 * (HombachC) added use of amx (non persistent set of charge current) to protect hardware (firmware 040 only)
 ### 0.3.3 (08.12.2020)

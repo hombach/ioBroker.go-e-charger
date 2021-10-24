@@ -64,12 +64,6 @@
       "0.7.5": {
         "en": "added tests for node.js 16"
       },
-      "0.7.2": {
-        "en": "fixed errors with js-controller 3.3.x, bumped dependencies"
-      },
-      "0.7.1": {
-        "en": "bug fix"
-      },
       "0.7.0": {
         "en": "added measured maximum current"
       },
@@ -78,9 +72,6 @@
       },
       "0.5.0": {
         "en": "introduces selectable external states for charge control"
-      },
-      "0.4.1": {
-        "en": "fixed error in poll of pha to get available phases"
       },
       "0.4.0": {
         "en": "added use of amx with firmware version 040"
