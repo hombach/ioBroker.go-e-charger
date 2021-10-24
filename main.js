@@ -55,7 +55,20 @@ class go_e_charger extends utils.Adapter {
             this.config.polltimelive = 10000;
         } 
         this.log.info('Polltime set to: ' + (this.config.polltimelive / 1000) + ' seconds');
- 
+
+        //sentry.io ping
+        if (this.supportsFeature && this.supportsFeature('PLUGINS')) {
+            const sentryInstance = this.getPluginInstance('sentry');
+            if (sentryInstance) {
+                const Sentry = sentryInstance.getSentryObject();
+                Sentry && Sentry.withScope(scope => {
+                    scope.setLevel('info');
+                    scope.setExtra('key', 'value');
+                    Sentry.captureMessage('Adapter go-e-Charger started', 'info'); // Level "info"
+                });
+            }
+        }
+
         // this.subscribeStates('*'); // all states changes inside the adapters namespace are subscribed
                 
         if (this.config.ipaddress) {
@@ -293,7 +306,7 @@ class go_e_charger extends utils.Adapter {
                     } // END catch
                     break;
                 default:
-                    this.log.error(`No supported firmware found!!!`);
+                    this.log.error(`No supported firmware found!!! (V${Firmware})`);
             } 
         })();
     } // END Charge_Config

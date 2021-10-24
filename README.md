@@ -14,13 +14,18 @@
 **Tests:**: [![Travis-CI](http://img.shields.io/travis/hombach/ioBroker.go-e-charger/master.svg)](https://travis-ci.org/hombach/ioBroker.go-e-charger)
 
 ## Adapter for reading go-eCharger data for iOBroker
-Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Working with firmware >V033
+Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Working with firmware V033, V040.0, V041.0
 
 ### Settings
 To connect to the go-eCharger type in its IP-address in the config.
 
+## Notes
+This adapter uses Sentry libraries to automatically report exceptions and code errors to the developers. For more details and for informations on how to disable the error reporting see [Sentry-Plugin Documentation](https://github.com/ioBroker/plugin-sentry#plugin-sentry)! Sentry reporting is used starting with js-controller 3.0.
+
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
+### 0.10.0 (24.10.2021)
+* (HombachC) added sentry.io support
 ### 0.9.2 (17.10.2021)
 * (HombachC) fixed error in charger state feedback
 ### 0.9.1 (16.10.2021)
