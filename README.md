@@ -24,9 +24,11 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
+### 0.10.2 (14.11.2021)
+* (HombachC) sentry finding: added unknown firmware 040; prior only 040.0 included
 ### 0.10.1 (24.10.2021)
 * (HombachC) fixing error in adapter start-up
-* (HombachC) changed error with unsupported firmware to warn - run adapter also with this firmwares
+* (HombachC) changed error with unsupported firmware to warning - run adapter also with this firmwares
 ### 0.10.0 (24.10.2021)
 * (HombachC) added sentry.io support
 ### 0.9.2 (17.10.2021)

@@ -123,6 +123,7 @@ class go_e_charger extends utils.Adapter {
             this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
             switch (Firmware) {
                 case '033':
+                case '040':
                 case '040.0':
                 case '041.0':
                     this.log.debug(`Init done, launching state machine`);
@@ -292,6 +293,7 @@ class go_e_charger extends utils.Adapter {
                     } // END catch
                     break;
                 default:
+                // case '040':
                 // case '040.0':
                 // case '041.0':
                     try {

@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.10.1",
+    "version": "0.10.2",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.10.2": {
+        "en": "sentry finding: added unknown firmware 040; prior only 040.0 included"
+      },
       "0.10.1": {
         "en": "fixing error in adapter start-up; changed error with unsupported firmware to warn - run adapter also with this firmwares"
       },
