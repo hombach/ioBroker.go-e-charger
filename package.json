@@ -1,6 +1,6 @@
 {
   "name": "iobroker.go-e-charger",
-  "version": "0.10.2",
+  "version": "0.11.0",
   "description": "Adapter for reading go-eCharger data",
   "author": "hombach <NPM@Homba.ch>",
   "homepage": "https://github.com/hombach/ioBroker.go-e-charger",
@@ -17,6 +17,9 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
+  },
+  "engines": {
+    "node": ">= 12.0.0"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^2.5.1",

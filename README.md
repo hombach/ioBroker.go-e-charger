@@ -24,6 +24,8 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
+### 0.11.0 (17.12.2021)
+* (HombachC) dropped node.js 10 support, bumped dependencies
 ### 0.10.2 (14.11.2021)
 * (HombachC) sentry finding: added unknown firmware 040; prior only 040.0 included
 ### 0.10.1 (24.10.2021)
@@ -33,8 +35,6 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 * (HombachC) added sentry.io support
 ### 0.9.2 (17.10.2021)
 * (HombachC) fixed error in charger state feedback
-### 0.9.1 (16.10.2021)
-* (HombachC) fixed vulnerability
 ### 0.9.0 (04.10.2021)
 * (HombachC) support for firmware 041.0 
 ### 0.8.1 (16.07.2021)
