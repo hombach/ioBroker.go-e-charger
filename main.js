@@ -56,7 +56,7 @@ class go_e_charger extends utils.Adapter {
                 const Sentry = sentryInstance.getSentryObject();
                 Sentry && Sentry.withScope(scope => {
                     scope.setLevel('info');
-                    scope.setTag('Inverter', this.config.ipaddress);
+                    scope.setTag('Charger', this.config.ipaddress);
                     Sentry.captureMessage('Adapter go-e-Charger started', 'info'); // Level "info"
                 });
             }
