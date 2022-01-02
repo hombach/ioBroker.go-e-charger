@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.11.0",
+    "version": "0.11.1",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.11.1": {
+        "en": "year 2022 changes, bumped dependencies"
+      },
       "0.11.0": {
         "en": "dropped node.js 10 support, bumped dependencies"
       },
@@ -96,9 +99,6 @@
       },
       "0.1.0": {
         "en": "setup state machine"
-      },
-      "0.0.9": {
-        "en": "read charger power"
       },
       "0.0.1": {
         "en": "initial release"

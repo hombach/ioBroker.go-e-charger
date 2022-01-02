@@ -24,6 +24,8 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
+### 0.11.1 (02.11.2022)
+* (HombachC) year 2022 changes, bumped dependencies
 ### 0.11.0 (17.12.2021)
 * (HombachC) dropped node.js 10 support, bumped dependencies
 ### 0.10.2 (14.11.2021)
@@ -61,15 +63,13 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 * (HombachC) configurable IP
 ### 0.1.0 (28.06.2020)
 * (HombachC) setup state machine - first working internal version
-### 0.0.9 (28.06.2020)
-* (HombachC) read charger power
 ### 0.0.1 (27.06.2020)
 * (HombachC) initial release
 
 ## License
 MIT License
 
-Copyright (c) 2020 - 2021 HombachC
+Copyright (c) 2020 - 2022 HombachC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
