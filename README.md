@@ -5,7 +5,6 @@
 [![Downloads](https://img.shields.io/npm/dm/iobroker.go-e-charger.svg)](https://www.npmjs.com/package/iobroker.go-e-charger)
 ![Number of Installations (latest)](http://ioBroker.live/badges/template-installed.svg)
 ![Number of Installations (stable)](http://ioBroker.live/badges/template-stable.svg)
-[![Dependency Status](https://img.shields.io/david/hombach/ioBroker.go-e-charger.svg)](https://david-dm.org/hombach/ioBroker.go-e-charger)
 [![Known Vulnerabilities](https://snyk.io/test/github/hombach/ioBroker.go-e-charger/badge.svg)](https://snyk.io/test/github/hombach/ioBroker.go-e-charger)
 ![Node.js CI](https://github.com/hombach/ioBroker.go-e-charger/workflows/Node.js%20CI/badge.svg)
 
