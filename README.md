@@ -23,7 +23,9 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
-### 0.11.1 (02.11.2022)
+### 0.11.2 (28.01.2022)
+* (HombachC) small docu tweaks, bumped dependencies
+### 0.11.1 (02.01.2022)
 * (HombachC) year 2022 changes, bumped dependencies
 ### 0.11.0 (17.12.2021)
 * (HombachC) dropped node.js 10 support, bumped dependencies
@@ -58,10 +60,6 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 * (HombachC) bumped dependencies, added poll of firmware version, fixed error in CarStateString
 ### 0.2.0 (11.09.2020)
 * (HombachC) changed type to vehicle
-### 0.1.1 (30.06.2020)
-* (HombachC) configurable IP
-### 0.1.0 (28.06.2020)
-* (HombachC) setup state machine - first working internal version
 ### 0.0.1 (27.06.2020)
 * (HombachC) initial release
 

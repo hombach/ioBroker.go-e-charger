@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.11.1",
+    "version": "0.11.2",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -38,11 +38,14 @@
     "readme": "https://raw.githubusercontent.com/hombach/ioBroker.go-e-charger/master/README.md",
     "icon": "go-eCharger.png",
     "extIcon": "https://raw.githubusercontent.com/hombach/ioBroker.go-e-charger/master/admin/go-eCharger.png",
-    "keywords": [ "go-e", "go-eCharger", "wallbox" ],
+    "keywords": [ "go-e", "go-eCharger", "wallbox", "solar-power"],
     "type": "vehicle",
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.11.2": {
+        "en": "small docu tweaks, bumped dependencies"
+      },
       "0.11.1": {
         "en": "year 2022 changes, bumped dependencies"
       },
@@ -93,12 +96,6 @@
       },
       "0.2.0": {
         "en": "changed type to vehicle"
-      },
-      "0.1.1": {
-        "en": "configurable IP"
-      },
-      "0.1.0": {
-        "en": "setup state machine"
       },
       "0.0.1": {
         "en": "initial release"
