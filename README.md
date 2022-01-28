@@ -13,7 +13,7 @@
 **Tests:**: [![Travis-CI](http://img.shields.io/travis/hombach/ioBroker.go-e-charger/master.svg)](https://travis-ci.org/hombach/ioBroker.go-e-charger)
 
 ## Adapter for reading go-eCharger data for iOBroker
-Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Working with firmware V033, V040.0, V041.0
+Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your car. Working with firmware V033, V040.0, V041.0
 
 ### Settings
 To connect to the go-eCharger type in its IP-address in the config.
