@@ -108,7 +108,7 @@
     "supportCustoms": false,
     "dependencies": [
       {
-        "js-controller": ">=3.1.0",
+        "js-controller": ">=3.1.0"
       }
     ],
     "globalDependencies": [
