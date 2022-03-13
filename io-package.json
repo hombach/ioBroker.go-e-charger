@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.11.2",
+    "version": "0.11.3",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.11.3": {
+        "en": "optimize system load, fix sentry error, bumped dependencies"
+      },
       "0.11.2": {
         "en": "small docu tweaks, bumped dependencies"
       },

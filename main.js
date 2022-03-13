@@ -62,7 +62,7 @@ class go_e_charger extends utils.Adapter {
             }
         }
 
-        // this.subscribeStates('*'); // all states changes inside the adapters namespace are subscribed
+        this.subscribeStates('Settings.*'); // all states changes inside the adapters settings namespace are subscribed
                 
         if (this.config.ipaddress) {
             await this.Read_Charger();
@@ -73,6 +73,11 @@ class go_e_charger extends utils.Adapter {
                 this.config.polltimelive = 10000;
             }
             this.log.info('Polltime set to: ' + (this.config.polltimelive / 1000) + ' seconds');
+
+            MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get desired battery SoC
+            ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW'); // Get charging override trigger
+            ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager'); // Get enable for charge manager
+            ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent'); // Get current for charging override
 
             this.log.debug(`Pre-init done, launching state machine interval`);
             adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
@@ -88,10 +93,14 @@ class go_e_charger extends utils.Adapter {
     * Is called if a subscribed state changes
     * @param { string } id
     * @param { ioBroker.State | null | undefined } state */
-    onStateChange(id, state) {
+    async onStateChange(id, state) {
         try {
             if (state) { // The state was changed
                 this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+                MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get desired battery SoC
+                ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW'); // Get charging override trigger
+                ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager'); // Get enable for charge manager
+                ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent'); // Get current for charging override
             } else {     // The state was deleted
                 this.log.warn(`state ${id} deleted`);
             }
@@ -137,7 +146,7 @@ class go_e_charger extends utils.Adapter {
                             const Sentry = sentryInstance.getSentryObject();
                             Sentry && Sentry.withScope(scope => {
                                 scope.setLevel('warn');
-                                scope.setExtra('Firmware', Firmware);
+                                scope.setTag('Firmware', Firmware);
                                 Sentry.captureMessage('Adapter go-e-Charger found unknown firmware', 'warn'); // Level "warn"
                             });
                         }
@@ -148,11 +157,13 @@ class go_e_charger extends utils.Adapter {
         }
 
         this.log.debug(`StateMachine start`);
-        await this.Read_Charger();
-        MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get desired battery SoC
-        ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW'); // Get charging override trigger
-        ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager'); // Get enable for charge manager
-        ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent'); // Get current for charging override
+        if (ChargeNOW || ChargeManager) {
+            await this.Read_Charger();
+        }
+        // MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get desired battery SoC
+        // ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW'); // Get charging override trigger
+        // ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager'); // Get enable for charge manager
+        // ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent'); // Get current for charging override
 
         if (ChargeNOW) { // Charge-NOW is enabled
             this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
