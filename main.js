@@ -101,6 +101,7 @@ class go_e_charger extends utils.Adapter {
                 ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW'); // Get charging override trigger
                 ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager'); // Get enable for charge manager
                 ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent'); // Get current for charging override
+                await this.setStateAsync(id, state.val, true);
             } else {     // The state was deleted
                 this.log.warn(`state ${id} deleted`);
             }
@@ -182,9 +183,10 @@ class go_e_charger extends utils.Adapter {
 
         else { // only if Power.ChargingAllowed is still set: switch OFF; set to min. current; 
             if (this.asyncGetStateVal('Power.ChargingAllowed')) { // Set to false only if still true
-                    ZielAmpere = 6;
-                    this.Charge_Config('0', ZielAmpere, `go-eCharger abschalten`);
-                }
+                await this.Read_Charger();
+                ZielAmpere = 6;
+                this.Charge_Config('0', ZielAmpere, `go-eCharger abschalten`);
+            }
         }
 
         adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
