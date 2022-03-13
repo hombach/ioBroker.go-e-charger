@@ -101,7 +101,6 @@ class go_e_charger extends utils.Adapter {
                 ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW'); // Get charging override trigger
                 ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager'); // Get enable for charge manager
                 ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent'); // Get current for charging override
-                await this.setStateAsync(id, state.val, true);
             } else {     // The state was deleted
                 this.log.warn(`state ${id} deleted`);
             }
