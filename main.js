@@ -171,7 +171,6 @@ class go_e_charger extends utils.Adapter {
                 this.Charge_Manager();
             } else { // FUTURE: time of day forces emptying of home battery
                 if (await this.asyncGetStateVal('Power.ChargingAllowed') == true) { // Set to false only if still true
-                    await this.Read_Charger();
                     ZielAmpere = 6;
                     this.Charge_Config('0', ZielAmpere, `Hausbatterie laden bis ${MinHomeBatVal}%`);
                 }
