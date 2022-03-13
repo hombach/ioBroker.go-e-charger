@@ -156,30 +156,27 @@ class go_e_charger extends utils.Adapter {
             FirstStart = false;
         }
 
-        this.log.debug(`StateMachine start`);
-        if (ChargeNOW || ChargeManager) {
+        this.log.debug(`StateMachine cycle start`);
+        if (ChargeNOW || ChargeManager) { // Charge-NOW or Charge-Manager is enabled
             await this.Read_Charger();
         }
-        // MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get desired battery SoC
-        // ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW'); // Get charging override trigger
-        // ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager'); // Get enable for charge manager
-        // ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent'); // Get current for charging override
 
         if (ChargeNOW) { // Charge-NOW is enabled
             this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
         }
-
         else if (ChargeManager) { // Charge-Manager is enabled
             BatSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
             this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
             if (BatSoC >= MinHomeBatVal) { // SoC of home battery sufficient?
                 this.Charge_Manager();
             } else { // FUTURE: time of day forces emptying of home battery
-                ZielAmpere = 6;
-                this.Charge_Config('0', ZielAmpere, `Hausbatterie laden bis ${MinHomeBatVal}%`);
+                if (await this.asyncGetStateVal('Power.ChargingAllowed') == true) { // Set to false only if still true
+                    await this.Read_Charger();
+                    ZielAmpere = 6;
+                    this.Charge_Config('0', ZielAmpere, `Hausbatterie laden bis ${MinHomeBatVal}%`);
+                }
             }
         }
-
         else { // only if Power.ChargingAllowed is still set: switch OFF; set to min. current; 
             if (await this.asyncGetStateVal('Power.ChargingAllowed') == true) { // Set to false only if still true
                 await this.Read_Charger();
