@@ -181,7 +181,7 @@ class go_e_charger extends utils.Adapter {
         }
 
         else { // only if Power.ChargingAllowed is still set: switch OFF; set to min. current; 
-            if (this.asyncGetStateVal('Power.ChargingAllowed')) { // Set to false only if still true
+            if (await this.asyncGetStateVal('Power.ChargingAllowed') == true) { // Set to false only if still true
                 await this.Read_Charger();
                 ZielAmpere = 6;
                 this.Charge_Config('0', ZielAmpere, `go-eCharger abschalten`);
