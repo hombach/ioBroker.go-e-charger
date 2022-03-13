@@ -73,9 +73,6 @@
       "0.9.0": {
         "en": "support for firmware 041.0"
       },
-      "0.8.1": {
-        "en": "fixed vulnerability"
-      },
       "0.8.0": {
         "en": "added gridphase correction to charge logic"
       },

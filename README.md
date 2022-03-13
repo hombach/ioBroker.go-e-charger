@@ -44,8 +44,6 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 * (HombachC) fixed error in charger state feedback
 ### 0.9.0 (04.10.2021)
 * (HombachC) support for firmware 041.0 
-### 0.8.1 (16.07.2021)
-* (HombachC) fixed vulnerability 
 ### 0.8.0 (09.05.2021)
 * (HombachC) added gridphase correction to charge logic
 ### 0.7.5 (09.05.2021)
