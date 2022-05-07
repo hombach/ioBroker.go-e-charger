@@ -73,5 +73,17 @@ systemDictionary = {
         "es": "ID de objeto para el consumo actual de energía en el hogar [W]",
         "pl": "id obiektu dla bieżącego zużycia energii w domu [W]",
         "zh-cn": "当前家庭功耗的对象ID [W]"
+    },
+    'ReadOnlyMode': {
+        "en": "read only mode - release of charge is not send to charger (to use RFID tags)",
+        "de": "Nur-Lese-Modus - Ladefreigabe wird nicht an das Ladegerät gesendet (um RFID-Tags zu verwenden)",
+        "ru": "режим только для чтения - снятие заряда не отправляется на зарядное устройство (для использования меток RFID)",
+        "pt": "modo somente leitura - a liberação da carga não é enviada ao carregador (para usar etiquetas RFID)",
+        "nl": "alleen-lezen modus - het opladen wordt niet naar de oplader gestuurd (om RFID-tags te gebruiken)",
+        "fr": "mode lecture seule - la libération de la charge n'est pas envoyée au chargeur (pour utiliser des étiquettes RFID)",
+        "it": "modalità di sola lettura - il rilascio della carica non viene inviato al caricabatterie (per utilizzare tag RFID)",
+        "es": "modo de solo lectura: la liberación de la carga no se envía al cargador (para usar etiquetas RFID)",
+        "pl": "tryb tylko do odczytu - zwolnienie ładunku nie jest wysyłane do ładowarki (w celu użycia tagów RFID)",
+        "zh-cn": "只读模式 - 释放电荷不发送到充电器（使用 RFID 标签"
     }
 };

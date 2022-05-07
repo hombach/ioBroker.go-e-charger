@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.12.0",
+    "version": "0.13.0",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.13.0": {
+        "en": "introducing read-only mode, bumbed dependencies"
+      },
       "0.12.0": {
         "en": "optimize system load"
       },
@@ -97,9 +100,6 @@
       "0.3.2": {
         "en": "bumped dependencies, added poll of firmware version, fixed error in CarStateString"
       },
-      "0.2.0": {
-        "en": "changed type to vehicle"
-      },
       "0.0.1": {
         "en": "initial release"
       }
@@ -131,7 +131,8 @@
     "polltimelive": 10000,
     "StateHomeBatSoc": "",
     "StateHomeSolarPower": "",
-    "StateHomePowerConsumption": ""
+    "StateHomePowerConsumption": "",
+    "ReadOnlyMode": false
   },
 
   "objects": [],

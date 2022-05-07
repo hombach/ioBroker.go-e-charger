@@ -256,22 +256,23 @@ class go_e_charger extends utils.Adapter {
     Charge_Config(Allow, Ampere, LogMessage) {
         var got = require('got');
         this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
-        (async () => {
-            try {
-                // @ts-ignore got is valid
-                var response = await got(`http://${this.config.ipaddress}/mqtt?payload=alw=${Allow}`); // activate charging
-                if (!response.error && response.statusCode == 200) {
-                    this.log.debug(`Sent: ${response.body}`)
-                }
-                else if (response.error) {
-                    this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} alw=${Allow}`);
-                }
-            } catch (e) {
-                this.log.error(`Error in calling go-eCharger API: ${e}`);
-                this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
-            } // END catch
-        })();
-
+        if (!this.config.ReadOnlyMode) {
+            (async () => {
+                try {
+                    // @ts-ignore got is valid
+                    var response = await got(`http://${this.config.ipaddress}/mqtt?payload=alw=${Allow}`); // activate charging
+                    if (!response.error && response.statusCode == 200) {
+                        this.log.debug(`Sent: ${response.body}`)
+                    }
+                    else if (response.error) {
+                        this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} alw=${Allow}`);
+                    }
+                } catch (e) {
+                    this.log.error(`Error in calling go-eCharger API: ${e}`);
+                    this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
+                } // END catch
+            })();
+        }
 
         (async () => {
             switch (Firmware) {
@@ -327,9 +328,6 @@ class go_e_charger extends utils.Adapter {
                         this.log.error(`Error in calling go-eCharger API: ${e}`);
                         this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
                     } // END catch
-                    // break;
-                // default:
-                    // this.log.error(`No supported firmware found!!! (V${Firmware})`);
             } 
         })();
     } // END Charge_Config
