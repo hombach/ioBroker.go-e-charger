@@ -64,12 +64,6 @@
       "0.11.3": {
         "en": "fix sentry error, bumped dependencies"
       },
-      "0.11.2": {
-        "en": "small docu tweaks, bumped dependencies"
-      },
-      "0.11.1": {
-        "en": "year 2022 changes, bumped dependencies"
-      },
       "0.11.0": {
         "en": "dropped node.js 10 support, bumped dependencies"
       },
