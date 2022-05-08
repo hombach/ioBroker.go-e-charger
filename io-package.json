@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.13.0",
+    "version": "0.14.0",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,18 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.14.0": {
+        "en": "BREAKING: dropped node.js 12 support, add tests for node.js 18, changed dependencies to non node.js 12 support",
+        "de": "BREAKING: Node.js 12-Unterstützung wurde eingestellt, Tests für node.js 18 hinzugefügt, Abhängigkeiten auf Nicht-Node.js 12-Unterstützung geändert",
+        "ru": "BREAKING: удалена поддержка node.js 12, добавлены тесты для node.js 18, изменены зависимости на поддержку без node.js 12",
+        "pt": "URGENTE: abandonou o suporte ao node.js 12, adicione testes para o node.js 18, alterou as dependências para o suporte não ao node.js 12",
+        "nl": "BREAKING: ondersteuning voor node.js 12 verwijderd, tests voor node.js 18 toegevoegd, afhankelijkheden gewijzigd in niet-node.js 12-ondersteuning",
+        "fr": "BREAKING : suppression de la prise en charge de node.js 12, ajout de tests pour node.js 18, modification des dépendances pour la prise en charge non node.js 12",
+        "it": "ROTTURA: supporto node.js 12 abbandonato, aggiunta test per node.js 18, dipendenze modificate in supporto non node.js 12",
+        "es": "ÚLTIMA HORA: se eliminó la compatibilidad con node.js 12, se agregaron pruebas para node.js 18, se cambiaron las dependencias para que no sean compatibles con node.js 12",
+        "pl": "ZŁAMANIE: zrezygnowano z obsługi node.js 12, dodano testy dla node.js 18, zmieniono zależności na nie obsługujące node.js 12",
+        "zh-cn": "BREAKING：删除 node.js 12 支持，为 node.js 18 添加测试，将依赖项更改为非 node.js 12 支持"
+      },
       "0.13.0": {
         "en": "introducing read-only mode, bumped dependencies"
       },
@@ -111,7 +123,7 @@
     "supportCustoms": false,
     "dependencies": [
       {
-        "js-controller": ">=3.1.0"
+        "js-controller": ">=3.2.16"
       }
     ],
     "globalDependencies": [
