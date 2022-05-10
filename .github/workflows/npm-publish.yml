@@ -15,11 +15,12 @@ on:
 jobs:
   build:
     name: test-build on node.js ${{ matrix.node_version }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         node_version: ['14', '16', '18']
-    steps:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+  steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -28,6 +29,7 @@ jobs:
         run: |
           npm install
           npm run build --if-present
+          npm run test:integration --if-present
           npm test
 
   publish-to-npm:
