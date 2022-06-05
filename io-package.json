@@ -44,7 +44,7 @@
     "dataSource": "poll",
     "news": {
       "0.14.1": {
-        "en": "bumped dependencies, small code tweaks"
+        "en": "bumped dependencies, small code tweaks, removed gulp"
       },
       "0.14.0": {
         "en": "BREAKING: dropped node.js 12 support, add tests for node.js 18, changed dependencies to non node.js 12 support",
