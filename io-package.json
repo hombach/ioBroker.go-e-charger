@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.14.0",
+    "version": "0.14.1",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.14.1": {
+        "en": "bumped dependencies, small code tweaks"
+      },
       "0.14.0": {
         "en": "BREAKING: dropped node.js 12 support, add tests for node.js 18, changed dependencies to non node.js 12 support",
         "de": "BREAKING: Node.js 12-Unterstützung wurde eingestellt, Tests für node.js 18 hinzugefügt, Abhängigkeiten auf Nicht-Node.js 12-Unterstützung geändert",
