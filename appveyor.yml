@@ -9,7 +9,7 @@ platform:
 clone_folder: 'c:\projects\%APPVEYOR_PROJECT_NAME%'
 install:
 - ps: 'Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) $env:platform'
-- ps: npm --version
+- ps: '$NpmVersion = (npm -v).Substring(0,1)'
 - npm install
 test_script:
 - echo %cd%
