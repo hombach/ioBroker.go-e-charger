@@ -108,7 +108,7 @@
       },
       "0.3.2": {
         "en": "bumped dependencies, added poll of firmware version, fixed error in CarStateString"
-      },
+      }
     },
     "main": "main.js",
     "compact": true,
