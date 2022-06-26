@@ -82,9 +82,6 @@
       "0.10.0": {
         "en": "added sentry.io support"
       },
-      "0.9.2": {
-        "en": "fixed error in charger state feedback"
-      },
       "0.9.0": {
         "en": "support for firmware 041.0"
       },
@@ -112,9 +109,6 @@
       "0.3.2": {
         "en": "bumped dependencies, added poll of firmware version, fixed error in CarStateString"
       },
-      "0.0.1": {
-        "en": "initial release"
-      }
     },
     "main": "main.js",
     "compact": true,
