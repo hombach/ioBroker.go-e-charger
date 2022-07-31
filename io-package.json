@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.14.2",
+    "version": "0.15.0",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,9 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.15.0": {
+        "en": "changed to pure esm package; bumped got to 12.x; bumped dependencies"
+      },
       "0.14.2": {
         "en": "bumped dependencies because of security vulnerability"
       },
