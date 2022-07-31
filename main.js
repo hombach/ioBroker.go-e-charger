@@ -1,7 +1,9 @@
-﻿'use strict';
+// 'use strict';
 
 // The adapter-core module gives you access to the core ioBroker functions, you need to create an adapter
-const utils = require('@iobroker/adapter-core');
+// const utils = require('@iobroker/adapter-core');
+const utils = import '@iobroker/adapter-core'
+//Replace all require()/module.export with import/export
 
 // Load your modules here, e.g.:
 // const schedule = require('node-schedule');
