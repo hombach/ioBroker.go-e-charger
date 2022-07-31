@@ -24,6 +24,8 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
 
+### 0.15.0 (31.07.2022)
+* (HombachC) changed to pure ESM package; bumped got to 12.x; bumped dependencies
 ### 0.14.2 (27.06.2022)
 * (HombachC) bumped dependencies because of security vulnerability
 ### 0.14.1 (05.06.2022)
