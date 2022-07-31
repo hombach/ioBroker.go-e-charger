@@ -49,7 +49,7 @@
     "glob-parent": "^6.0.2",
     "set-value": "^4.0.1"
   },
-  "main": "main.js",
+  "exports": "./main.js",
   "scripts": {
     "test:js": "mocha --config test/mocharc.custom.json \"{!(node_modules|test)/**/*.test.js,*.test.js,test/**/test!(PackageFiles|Startup).js}\"",
     "test:package": "mocha test/package --exit",
