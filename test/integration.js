@@ -1,6 +1,6 @@
 //const path = require('path');
 //const { tests } = require('@iobroker/testing');
-import path from './path';
+import path from 'path';
 import { tests } from '@iobroker/testing';
 
 // Run integration tests - See https://github.com/ioBroker/testing for a detailed explanation and further options
