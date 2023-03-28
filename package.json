@@ -25,7 +25,7 @@
     "node": ">= 14.16.0"
   },
   "dependencies": {
-    "@iobroker/adapter-core": "^2.6.7",
+    "@iobroker/adapter-core": "^2.6.8",
     "got": "^11.8.5"
   },
   "devDependencies": {
