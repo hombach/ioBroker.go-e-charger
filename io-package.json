@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.14.4",
+    "version": "0.15.0",
     "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
@@ -43,6 +43,19 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.15.0": {
+        "en": "BREAKING: dropped node.js 14 support, add tests for node.js 20, dropped ioBroker.admin 4 support",
+        "de": "BREAKING: Node.js 14-Unterstützung wurde eingestellt, tests für node.js 20 hinzugefügt, ioBroker.admin 4 Unterstützung entfernt",
+        "ru": "ЗАВТРАК: упала поддержка node.js 14, добавьте тесты для node.js 20, удалили ioBroker. admin 4 поддержка",
+        "pt": "BREAKING: deixou cair node.js 14 suporte, adicionar testes para node.js 20, caiu ioBroker. suporte admin 4",
+        "nl": "Gedroogde node.js 14-steun, voeg testen toe voor node.js 20, drop ioBroker. administratie 4",
+        "fr": "BREAKING: largué node.js 14 support, ajouter des tests pour node.js 20, lâché ioBroker. admin 4 support",
+        "it": "BREAKING: drop node.js 14 supporto, aggiungere test per node.js 20, ioBroker caduto. admin 4 supporto",
+        "es": "BREAKING: drop node.js 14 support, add tests for node.js 20, dropped ioBroker. Apoyo administrativo 4",
+        "pl": "BREAKING: Uruchomiona obsługa węzła.js 14, dodaje testy dla węzła.js 20, zrzucił ioBrokera. Administracja 4",
+        "uk": "BREAKING: скидати node.js 14 підтримка, додати тести для node.js 20, скидати ioBroker. Підтримка адміністратора 4",
+        "zh-cn": "BREAKRE:撤除不de.js 14支持,增加20js,降水箱。 附录4"
+      },
       "0.14.4": {
         "en": "bumped dependencies"
       },
@@ -91,9 +104,6 @@
       "0.8.0": {
         "en": "added gridphase correction to charge logic"
       },
-      "0.7.5": {
-        "en": "added tests for node.js 16"
-      },
       "0.7.0": {
         "en": "added measured maximum current"
       },
@@ -125,7 +135,7 @@
     ],
     "globalDependencies": [
       {
-        "admin": ">=4.0.0"
+        "admin": ">=5.0.0"
       }
     ],
     "plugins": {
