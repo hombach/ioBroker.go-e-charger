@@ -2,7 +2,6 @@
   "common": {
     "name": "go-e-charger",
     "version": "0.15.0",
-    "title": "go-eCharger",
     "titleLang": {
       "en": "go-eCharger",
       "de": "go-eCharger",
