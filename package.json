@@ -22,7 +22,7 @@
     "registry": "https://registry.npmjs.org"
   },
   "engines": {
-    "node": ">= 14.16.0"
+    "node": ">= 16.4.0"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^2.6.8",
