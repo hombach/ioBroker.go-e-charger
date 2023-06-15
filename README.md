@@ -24,6 +24,10 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
 
+### 0.15.0 (15.06.2023)
+* (HombachC) BREAKING: dropped node.js 14 support
+* (HombachC) Add tests for node.js 20, removed for node.js 14, bumped dependencies
+* (HombachC) BREAKING: dropped ioBroker.admin 4 support
 ### 0.14.4 (09.04.2023)
 * (HombachC) bumped dependencies
 ### 0.14.3 (29.12.2022)
