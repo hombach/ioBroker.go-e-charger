@@ -5,14 +5,15 @@
     "titleLang": {
       "en": "go-eCharger",
       "de": "go-eCharger",
-      "ru": "gо-eCharger",
+      "ru": "go-eCharger",
       "pt": "go-eCharger",
       "nl": "go-eCharger",
       "fr": "go-eCharger",
       "it": "go-eCharger",
       "es": "go-eCharger",
       "pl": "go-eCharger",
-      "zh-cn": "电子充电器"
+      "uk": "go-eCharger",
+      "zh-cn": "导 言"
     },
     "desc": {
       "en": "Adapter for reading go-eCharger data",
@@ -24,6 +25,7 @@
       "it": "Adattatore per la lettura di dati go-eCharger",
       "es": "Adaptador para leer datos de go-eCharger",
       "pl": "Adapter do odczytu danych go-eCharger",
+      "uk": "Адаптер для читання даних go-eCharger",
       "zh-cn": "用于读取go-eCharger数据的适配器"
     },
     "authors": [
@@ -55,11 +57,18 @@
         "uk": "BREAKING: скидати node.js 14 підтримка, додати тести для node.js 20, скидати ioBroker. Підтримка адміністратора 4",
         "zh-cn": "BREAKRE:撤除不de.js 14支持,增加20js,降水箱。 附录4"
       },
-      "0.14.4": {
-        "en": "bumped dependencies"
-      },
       "0.14.3": {
-        "en": "bumped dependencies and year 2023 changes"
+        "en": "bumped dependencies and year 2023 changes",
+        "de": "Abhängigkeiten aktualisiert und Jahr 2023 Änderungen",
+        "ru": "сбитые зависимости и год 2023 изменения",
+        "pt": "dependências acidentadas e mudanças de ano 2023",
+        "nl": "quality over quantity (qoq) releases vertaling:",
+        "fr": "dépendances et changements de l'année 2023",
+        "it": "urtato dipendenze e anno 2023 modifiche",
+        "es": "dependencia y cambios del año 2023",
+        "pl": "w zależności od miejsca i roku 2023 zmiany",
+        "uk": "погані залежності і 2023 зміни",
+        "zh-cn": "b 倾销的属地和年 2023个变化"
       },
       "0.14.2": {
         "en": "bumped dependencies because of security vulnerability"
@@ -77,6 +86,7 @@
         "it": "ROTTURA: supporto node.js 12 abbandonato, aggiunta test per node.js 18, dipendenze modificate in supporto non node.js 12",
         "es": "ÚLTIMA HORA: se eliminó la compatibilidad con node.js 12, se agregaron pruebas para node.js 18, se cambiaron las dependencias para que no sean compatibles con node.js 12",
         "pl": "ZŁAMANIE: zrezygnowano z obsługi node.js 12, dodano testy dla node.js 18, zmieniono zależności na nie obsługujące node.js 12",
+        "uk": "BREAKING: скидати node.js 12 підтримка, додати тести для node.js 18, змінені залежності до не node.js 12 підтримка",
         "zh-cn": "BREAKING：删除 node.js 12 支持，为 node.js 18 添加测试，将依赖项更改为非 node.js 12 支持"
       },
       "0.13.0": {
