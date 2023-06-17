@@ -71,14 +71,34 @@
         "zh-cn": "b 倾销的属地和年 2023个变化"
       },
       "0.14.2": {
-        "en": "bumped dependencies because of security vulnerability"
+        "en": "bumped dependencies because of security vulnerability",
+        "de": "Abhängigkeiten aktualisiert wegen Sicherheitslücke",
+        "ru": "сбитые зависимости из-за уязвимости безопасности",
+        "pt": "dependências colhidas por causa da vulnerabilidade de segurança",
+        "nl": "vertaling:",
+        "fr": "dépendances en raison de la vulnérabilité à la sécurité",
+        "it": "urtato dipendenze a causa di vulnerabilità di sicurezza",
+        "es": "por vulnerabilidad a la seguridad",
+        "pl": "zderzenie się ze względu na podatność na bezpieczeństwo",
+        "uk": "відхилені залежності через вразливість безпеки",
+        "zh-cn": "b 由于安全脆弱"
       },
       "0.14.1": {
-        "en": "bumped dependencies, small code tweaks, removed gulp"
+        "en": "bumped dependencies, small code tweaks, removed gulp",
+        "de": "Abhängigkeiten aktualisiert, kleine code-tweaks, gulp entfernt",
+        "ru": "сшитые зависимости, мелкие кодовые твиты, снятые гульп",
+        "pt": "dependências colhidas, pequenos ajustes de código, gulp removido",
+        "nl": "quality over quantity (qoq) releases vertaling:",
+        "fr": "dépendances paressées, petits tweaks de code, gulpe enlevée",
+        "it": "dipendenze urtate, piccole modifiche di codice, gulp rimosso",
+        "es": "dependencias contuídas, pequeños ajustes de código, golpes eliminados",
+        "pl": "w zależności od niewielkich poprawek kodowych usunięto gulp",
+        "uk": "погані залежності, маленькі кодові мішки, видалені гельпи",
+        "zh-cn": "b 倾销的属地,小法典的摩擦"
       },
       "0.14.0": {
         "en": "BREAKING: dropped node.js 12 support, add tests for node.js 18, changed dependencies to non node.js 12 support",
-        "de": "BREAKING: Node.js 12-Unterstützung wurde eingestellt, Tests für node.js 18 hinzugefügt, Abhängigkeiten auf Nicht-Node.js 12-Unterstützung geändert",
+        "de": "BREAKING: Node.js 12 Unterstützung wurde eingestellt, Tests für node.js 18 hinzugefügt, Abhängigkeiten auf Nicht-Node.js 12-Unterstützung geändert",
         "ru": "BREAKING: удалена поддержка node.js 12, добавлены тесты для node.js 18, изменены зависимости на поддержку без node.js 12",
         "pt": "URGENTE: abandonou o suporte ao node.js 12, adicione testes para o node.js 18, alterou as dependências para o suporte não ao node.js 12",
         "nl": "BREAKING: ondersteuning voor node.js 12 verwijderd, tests voor node.js 18 toegevoegd, afhankelijkheden gewijzigd in niet-node.js 12-ondersteuning",
@@ -90,34 +110,85 @@
         "zh-cn": "BREAKING：删除 node.js 12 支持，为 node.js 18 添加测试，将依赖项更改为非 node.js 12 支持"
       },
       "0.13.0": {
-        "en": "introducing read-only mode, bumped dependencies"
+        "en": "introducing read-only mode, bumped dependencies",
+        "de": "Einführung des nur-lese-modus, Abhängigkeiten aktualisiert",
+        "ru": "введение чита-только режима, прыгнувшие зависимости",
+        "pt": "introduzindo o modo somente leitura, dependências colhidas",
+        "nl": "introductie van lees-only mode, botten afhankelijkheid",
+        "fr": "introduction en mode lecture seule, dépendances par bosse",
+        "it": "introducendo la modalità di sola lettura, interrotte dipendenze",
+        "es": "introduciendo el modo de sólo lectura, las dependencias con problemas",
+        "pl": "wprowadzanie trybu odczytu, zderzenie zależności",
+        "uk": "запроваджувати читано-тільки режими, відхилені залежності",
+        "zh-cn": "倾听的依赖"
       },
       "0.12.0": {
-        "en": "optimize system load"
+        "en": "optimizing system load\n",
+        "de": "Optimierung der Systemlast\n",
+        "ru": "оптимизация нагрузки системы\n",
+        "pt": "otimização da carga do sistema\n",
+        "nl": "vertaling:\n",
+        "fr": "optimisation de la charge du système\n",
+        "it": "ottimizzare il carico del sistema\n",
+        "es": "optimización de la carga del sistema\n",
+        "pl": "optymalizacja\n",
+        "uk": "оптимізація навантаження системи\n",
+        "zh-cn": "优化系统载荷\n"
       },
       "0.11.0": {
-        "en": "dropped node.js 10 support, bumped dependencies"
-      },
-      "0.10.2": {
-        "en": "sentry finding: added unknown firmware 040; prior only 040.0 included"
-      },
-      "0.10.1": {
-        "en": "fixing error in adapter start-up; changed error with unsupported firmware to warn - run adapter also with this firmwares"
+        "en": "BREAKING: dropped node.js 10 support, bumped dependencies",
+        "de": "BREAKING: Node.js 10 Unterstützung wurde eingestellt, Abhängigkeiten aktualisiert",
+        "ru": "ЗАВТРАК: упала поддержка node.js 10, прыгнувшие зависимости",
+        "pt": "BREAKING: caiu node.js 10 suporte, dependências colhidas",
+        "nl": "Gedroogde node",
+        "fr": "BREAKING: drop node.js 10 support, bosses",
+        "it": "BREAKING: drop node.js 10 supporto, interrotte dipendenze",
+        "es": "BREAKING: drop node.js 10 support, bulled dependencies",
+        "pl": "BREAKING: Uruchomione węzełki.js 10 support, bumpowane zależności",
+        "uk": "BREAKING: скидати node.js 10 support, bumped залежності",
+        "zh-cn": "BREAKRE:撤除不de.js 10支持,倾弃的依赖"
       },
       "0.10.0": {
-        "en": "added sentry.io support"
+        "en": "added sentry.io support",
+        "de": "Sentry.io Unterstützung hinzugefügt",
+        "ru": "добавлена отправка. io поддержка",
+        "pt": "adicionado sentinela. suporte io",
+        "nl": "toegevoegd sentiment. io ondersteuning",
+        "fr": "ajout d'une sentinelle. io support",
+        "it": "ha aggiunto la sentinella. io sostegno",
+        "es": "añadió centinela. io support",
+        "pl": "sentry. wspieranie io",
+          "uk": "додано відправку. io підтримка",
+        "zh-cn": "增发。 支助"
       },
       "0.9.0": {
-        "en": "support for firmware 041.0"
+        "en": "support for firmware 041.0",
+        "de": "Unterstützung für Firmware 041.0",
+        "ru": "поддержка для прошивки 041.0",
+        "pt": "suporte para firmware 041.0",
+        "nl": "quality over quantity (qoq) releases vertaling:",
+        "fr": "support pour firmware 041.0",
+        "it": "supporto per firmware 041.0",
+        "es": "soporte para firmware 041.0",
+        "pl": "popierać oprogramowanie 041.0",
+        "uk": "підтримка прошивки 041.0",
+        "zh-cn": "a. 对企业知识的支助"
       },
       "0.8.0": {
-        "en": "added gridphase correction to charge logic"
+        "en": "added gridphase correction to charge logic",
+        "de": "Netzphasenkorrektur zur Ladelogik hinzugefügt",
+        "ru": "добавлена коррекция сетки для зарядки логики",
+        "pt": "correção de grades adicionadas para carregar a lógica",
+        "nl": "vertaling:",
+        "fr": "correction de la grille ajoutée pour charger la logique",
+        "it": "correzione grigliata aggiunta per caricare la logica",
+        "es": "corrección de cuadrícula agregada para cargar lógica",
+        "pl": "poprawka dopasowa do funkcji logiki",
+        "uk": "додано виправлення сітчастої фази для заряду логіки",
+        "zh-cn": "加电线管"
       },
       "0.7.0": {
         "en": "added measured maximum current"
-      },
-      "0.6.0": {
-        "en": "fix error in foreign state popup"
       },
       "0.5.0": {
         "en": "introduces selectable external states for charge control"
