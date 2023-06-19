@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.15.0",
+    "version": "0.15.1",
     "titleLang": {
       "en": "go-eCharger",
       "de": "go-eCharger",
@@ -44,6 +44,19 @@
     "connectionType": "local",
     "dataSource": "poll",
     "news": {
+      "0.15.1": {
+        "en": "Removed Travis",
+        "de": "Entfernen von Travis",
+        "ru": "Удаленный Travis",
+        "pt": "Remover Travis",
+        "nl": "Verwijder Travis",
+        "fr": "Enlevé Travis",
+        "it": "Rimuovi Travis",
+        "es": "Travis eliminado",
+        "pl": "Remove Travis",
+        "uk": "Видалити Travis",
+        "zh-cn": "撤职训练"
+      },
       "0.15.0": {
         "en": "BREAKING: dropped node.js 14 support, add tests for node.js 20, dropped ioBroker.admin 4 support",
         "de": "BREAKING: Node.js 14-Unterstützung wurde eingestellt, tests für node.js 20 hinzugefügt, ioBroker.admin 4 Unterstützung entfernt",
@@ -158,7 +171,7 @@
         "it": "ha aggiunto la sentinella. io sostegno",
         "es": "añadió centinela. io support",
         "pl": "sentry. wspieranie io",
-          "uk": "додано відправку. io підтримка",
+        "uk": "додано відправку. io підтримка",
         "zh-cn": "增发。 支助"
       },
       "0.9.0": {
