@@ -1,0 +1,241 @@
+{
+	"i18n": true,
+	"type": "tabs",
+	"items":  {
+	    "_StandardTab": {
+       		"type": "panel",
+		"label": "Standard settings",
+	        "items": {
+			"cycletime": {
+  				"type": "number",
+				"label": "cycletime",
+				"min": 1000,
+				"step": 1,
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
+  			},
+			"MaxAmpTotal": {
+  				"type": "number",
+				"label": "MaxAmpTotal",
+				"min": 1,
+				"step": 1,
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": false
+			},
+
+			"StateHomeSolarPower": {
+  				"type": "objectId",
+				"label": "StateHomeSolarPower",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
+			},
+			"StateHomePowerConsumption": {
+  				"type": "objectId",
+				"label": "StateHomePowerConsumption",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": false
+			},
+
+			"StateHomeBatSoc": {
+  				"type": "objectId",
+				"label": "StateHomeBatSoc",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
+			},
+	
+			"StateWallBox0Headline": {
+				"type": "header",
+				"text": "StateWallBox0Headline",
+				"size": 3
+			},
+
+			"StateWallBox0ChargeCurrent": {
+  				"type": "objectId",
+				"label": "StateWallBox0ChargeCurrent",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
+			},
+			"StateWallBox0ChargeAllowed": {
+  				"type": "objectId",
+				"label": "StateWallBox0ChargeAllowed",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": false
+			},
+
+			"StateWallBox0ChargePower": {
+  				"type": "objectId",
+				"label": "StateWallBox0ChargePower",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
+			},
+			"StateWallBox0MeasuredMaxChargeAmp": {
+  				"type": "objectId",
+				"label": "StateWallBox0MeasuredMaxChargeAmp",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": false
+			},
+
+			"MinAmpWallBox0": {
+  				"type": "number",
+				"label": "MinAmpWallBox0",
+				"min": 1,
+				"step": 1,
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
+  			},
+			"MaxAmpWallBox0": {
+  				"type": "number",
+				"label": "MaxAmpWallBox0",
+				"min": 2,
+				"step": 1,
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": false
+			},
+
+			"StateWallBox1Headline": {
+				"type": "header",
+				"text": "StateWallBox1Headline",
+				"size": 3
+			},
+
+			"StateWallBox1ChargeCurrent": {
+  				"type": "objectId",
+				"label": "StateWallBox1ChargeCurrent",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
+			},
+			"StateWallBox1ChargeAllowed": {
+  				"type": "objectId",
+				"label": "StateWallBox1ChargeAllowed",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": false
+			},
+
+			"StateWallBox1ChargePower": {
+  				"type": "objectId",
+				"label": "StateWallBox1ChargePower",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
+			},
+			"StateWallBox1MeasuredMaxChargeAmp": {
+  				"type": "objectId",
+				"label": "StateWallBox1MeasuredMaxChargeAmp",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": false
+			},
+
+			"MinAmpWallBox1": {
+  				"type": "number",
+				"label": "MinAmpWallBox1",
+				"min": 1,
+				"step": 1,
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
+  			},
+			"MaxAmpWallBox1": {
+  				"type": "number",
+				"label": "MaxAmpWallBox1",
+				"min": 2,
+				"step": 1,
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": false
+			},
+
+			"StateWallBox2Headline": {
+				"type": "header",
+				"text": "StateWallBox2Headline",
+				"size": 3
+			},
+
+			"StateWallBox2ChargeCurrent": {
+  				"type": "objectId",
+				"label": "StateWallBox2ChargeCurrent",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
+			},
+			"StateWallBox2ChargeAllowed": {
+  				"type": "objectId",
+				"label": "StateWallBox2ChargeAllowed",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": false
+			},
+
+			"StateWallBox2ChargePower": {
+  				"type": "objectId",
+				"label": "StateWallBox2ChargePower",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
+			},
+			"StateWallBox2MeasuredMaxChargeAmp": {
+  				"type": "objectId",
+				"label": "StateWallBox2MeasuredMaxChargeAmp",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": false
+			},
+
+			"MinAmpWallBox2": {
+  				"type": "number",
+				"label": "MinAmpWallBox2",
+				"min": 1,
+				"step": 1,
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
+  			},
+			"MaxAmpWallBox2": {
+  				"type": "number",
+				"label": "MaxAmpWallBox2",
+				"min": 2,
+				"step": 1,
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": false
+			}
+		}
+	    }
+	}
+}
