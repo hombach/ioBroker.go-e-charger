@@ -1,6 +1,5 @@
 {
     "ipaddress":
-        "pt": "Endereço IP do go-eCharger",
         "nl": "IP-adres van go-eCharger",
         "fr": "Adresse IP de go-eCharger",
         "it": "Indirizzo IP di go-eCharger",
@@ -8,7 +7,6 @@
         "pl": "Adres IP go-eCharger",
         "zh-cn": "go-eCharger的IP地址",
     "polltimelive":
-        "pt": "Tempo entre pesquisas de dados do carregador [ms]",
         "nl": "Tijd tussen gegevenspolls van oplader [ms]",
         "fr": "Temps entre les interrogations de données du chargeur [ms]",
         "it": "Tempo tra sondaggi di dati dal caricatore [ms]",
@@ -16,7 +14,6 @@
         "pl": "Czas między sondażami danych z ładowarki [ms]",
         "zh-cn": "充电器进行数据轮询之间的时间[ms]",
     "StateHomeSolarPower":
-        "pt": "object-id para energia solar atualmente disponível [W]",
         "nl": "object-id voor momenteel beschikbare zonne-energie [W]",
         "fr": "object-id pour l'énergie solaire actuellement disponible [W]",
         "it": "ID oggetto per l'energia solare attualmente disponibile [W]",
@@ -24,7 +21,6 @@
         "pl": "id obiektu dla aktualnie dostępnej energii słonecznej [W]",
         "zh-cn": "当前可用太阳能的对象ID [W]",
     "StateHomeBatSoc":
-        "pt": "object-id para o estado atual de carga da bateria doméstica [%]",
         "nl": "object-ID voor de huidige laadtoestand van de thuisbatterij [%]",
         "fr": "object-id pour l'état de charge actuel de la batterie domestique [%]",
         "it": "object-id per l'attuale stato di carica della batteria domestica [%]",
@@ -32,7 +28,6 @@
         "pl": "id obiektu dla aktualnego stanu naładowania akumulatora w domu [%]",
         "zh-cn": "当前家用电池充电状态的对象ID [％]",
     "StateHomePowerConsumption":
-        "pt": "object-id para o consumo atual de energia em casa [W]",
         "nl": "object-id voor huidig energieverbruik thuis [W]",
         "fr": "object-id pour la consommation électrique actuelle du domicile [W]",
         "it": "object-id per il consumo energetico domestico corrente [W]",
@@ -40,7 +35,6 @@
         "pl": "id obiektu dla bieżącego zużycia energii w domu [W]",
         "zh-cn": "当前家庭功耗的对象ID [W]",
     "ReadOnlyMode":
-        "pt": "modo somente leitura - a liberação da carga não é enviada ao carregador (para usar etiquetas RFID)"
         "nl": "alleen-lezen modus - het opladen wordt niet naar de oplader gestuurd (om RFID-tags te gebruiken)"
         "fr": "mode lecture seule - la libération de la charge n'est pas envoyée au chargeur (pour utiliser des étiquettes RFID)"
         "it": "modalità di sola lettura - il rilascio della carica non viene inviato al caricabatterie (per utilizzare tag RFID)"
