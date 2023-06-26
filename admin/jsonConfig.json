@@ -18,8 +18,8 @@
 			"polltimelive": {
   				"type": "number",
 				"label": "polltimelive",
-				"min": 1,
-				"step": 1,
+				"min": 3000,
+				"step": 100,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
