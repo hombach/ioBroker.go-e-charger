@@ -2,7 +2,7 @@
   "common": {
     "name": "go-e-charger",
     "version": "0.15.2",
-    "news": {Changed config screen to ioBroker.admin 5 version
+    "news": {
       "0.15.2": {
         "en": "Changed config screen to ioBroker.admin 5 version",
         "de": "Geänderter Bildschirm auf ioBroker. admin 5 version",
