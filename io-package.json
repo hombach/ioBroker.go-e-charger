@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.15.1",
-    "news": {
+    "version": "0.15.2",
+    "news": {Changed config screen to ioBroker.admin 5 version
+      "0.15.2": {
+        "en": "Changed config screen to ioBroker.admin 5 version",
+        "de": "Geänderter Bildschirm auf ioBroker. admin 5 version",
+        "ru": "Измененный экран конфига к ioBroker. admin 5 версия",
+        "pt": "Tela de configuração alterada para ioBroker. versão admin 5",
+        "nl": "Veranderde configcreen naar ioBroker. Admin 5",
+        "fr": "Changed config screen to ioBroker. admin 5 version",
+        "it": "Cambiato schermo di configurazione a ioBroker. admin 5 versione",
+        "es": "Cambiar la pantalla de configuración a ioBroker. Administración 5 versión",
+        "pl": "Zmienił ekran do ioBrokera. Admin 5",
+        "uk": "Змінений екран налаштування до ioBroker. admin 5 версія",
+        "zh-cn": "改装了小型Broker。 附录5"
+      },
       "0.15.1": {
         "en": "Removed Travis",
         "de": "Entfernen von Travis",
