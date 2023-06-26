@@ -2,47 +2,6 @@
   "common": {
     "name": "go-e-charger",
     "version": "0.15.1",
-    "titleLang": {
-      "en": "go-eCharger",
-      "de": "go-eCharger",
-      "ru": "go-eCharger",
-      "pt": "go-eCharger",
-      "nl": "go-eCharger",
-      "fr": "go-eCharger",
-      "it": "go-eCharger",
-      "es": "go-eCharger",
-      "pl": "go-eCharger",
-      "uk": "go-eCharger",
-      "zh-cn": "导 言"
-    },
-    "desc": {
-      "en": "Adapter for reading go-eCharger data",
-      "de": "Adapter zum Lesen von go-eCharger-Daten",
-      "ru": "Адаптер для чтения данных go-eCharger",
-      "pt": "Adaptador para leitura de dados do go-eCharger",
-      "nl": "Adapter voor het lezen van go-eCharger-gegevens",
-      "fr": "Adaptateur pour lire les données de go-eCharger",
-      "it": "Adattatore per la lettura di dati go-eCharger",
-      "es": "Adaptador para leer datos de go-eCharger",
-      "pl": "Adapter do odczytu danych go-eCharger",
-      "uk": "Адаптер для читання даних go-eCharger",
-      "zh-cn": "用于读取go-eCharger数据的适配器"
-    },
-    "authors": [
-      "Christian Hombach"
-    ],
-    "platform": "Javascript/Node.js",
-    "mode": "daemon",
-    "enabled": true,
-    "license": "MIT",
-    "loglevel": "info",
-    "readme": "https://raw.githubusercontent.com/hombach/ioBroker.go-e-charger/master/README.md",
-    "icon": "go-eCharger.png",
-    "extIcon": "https://raw.githubusercontent.com/hombach/ioBroker.go-e-charger/master/admin/go-eCharger.png",
-    "keywords": [ "go-e", "go-eCharger", "wallbox", "solar-power"],
-    "type": "vehicle",
-    "connectionType": "local",
-    "dataSource": "poll",
     "news": {
       "0.15.1": {
         "en": "Removed Travis",
@@ -253,11 +212,53 @@
         "zh-cn": "进一步检查警觉版本"
       }
     },
-    "main": "main.js",
+    "titleLang": {
+      "en": "go-eCharger",
+      "de": "go-eCharger",
+      "ru": "go-eCharger",
+      "pt": "go-eCharger",
+      "nl": "go-eCharger",
+      "fr": "go-eCharger",
+      "it": "go-eCharger",
+      "es": "go-eCharger",
+      "pl": "go-eCharger",
+      "uk": "go-eCharger",
+      "zh-cn": "导 言"
+    },
+    "desc": {
+      "en": "Adapter for reading go-eCharger data",
+      "de": "Adapter zum Lesen von go-eCharger-Daten",
+      "ru": "Адаптер для чтения данных go-eCharger",
+      "pt": "Adaptador para leitura de dados do go-eCharger",
+      "nl": "Adapter voor het lezen van go-eCharger-gegevens",
+      "fr": "Adaptateur pour lire les données de go-eCharger",
+      "it": "Adattatore per la lettura di dati go-eCharger",
+      "es": "Adaptador para leer datos de go-eCharger",
+      "pl": "Adapter do odczytu danych go-eCharger",
+      "uk": "Адаптер для читання даних go-eCharger",
+      "zh-cn": "用于读取go-eCharger数据的适配器"
+    },
+    "authors": [
+      "Christian Hombach <kostal-piko-ba@homba.ch>"
+    ],
+    "keywords": [
+      "go-e", "go-eCharger", "wallbox", "solar-power"
+    ],
+    "license": "MIT",
+    "platform": "Javascript/Node.js",
+    "icon": "go-eCharger.png",
+    "extIcon": "https://raw.githubusercontent.com/hombach/ioBroker.go-e-charger/master/admin/go-eCharger.png",
+    "enabled": true,
+    "readme": "https://raw.githubusercontent.com/hombach/ioBroker.go-e-charger/master/README.md",
+    "loglevel": "info",
+    "mode": "daemon",
+    "type": "vehicle",
     "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "main": "main.js",
     "materialize": true,
     "materializeTab": true,
-    "supportCustoms": false,
     "dependencies": [
       {
         "js-controller": ">=3.2.16"
@@ -272,7 +273,9 @@
       "sentry": {
         "dsn": "https://0e33dc63a0e34165850d97add3cc3684@o415875.ingest.sentry.io/5307610"
       }
-    }
+    },
+        
+    "supportCustoms": false
   },
 
   "native": {
