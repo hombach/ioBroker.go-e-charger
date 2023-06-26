@@ -4,34 +4,11 @@
     "template adapter settings": "Adapter settings for Kostal Piko (BA)",
     "ipaddress": "IP address of your Kostal Piko (like '192.168.100.33' no HTTP-adresses or other texts)",
     "polltimelive": "Time between data polls from inverter [ms] - Minimum 5000",
-    "polltimedaily": "Time between data polls from inverter daily statistics [ms]",
-    "polltimetotal": "Time between data polls from inverter alltime statistics [ms]",
-    "readanalogs": "Read-Out all 4 analog input values in V (0-10V; 10bit)",
-    "normAnalogs": "Normalizing 0V to minimum value and 10V to maximum value",
-    "normAn1Min": "Minimum value for analog input 1 - equals 0V",
-    "normAn1Max": "Maximum value for analog input 1 - equals 10V",
-    "normAn2Min": "Minimum value for analog input 2 - equals 0V",
-    "normAn2Max": "Maximum value for analog input 2 - equals 10V",
-    "normAn3Min": "Minimum value for analog input 3 - equals 0V",
-    "normAn3Max": "Maximum value for analog input 3 - equals 10V",
     "normAn4Min": "Minimum value for analog input 4 - equals 0V",
     "normAn4Max": "Maximum value for analog input 4 - equals 10V"
 }
 
-systemDictionary = {
-    'template adapter settings': {
-        "en": "Adapter settings for go-eCharger",
-        "de": "Adaptereinstellungen für go-eCharger",
-        "ru": "Настройки адаптера для go-eCharger",
-        "pt": "Configurações do adaptador para go-eCharger",
-        "nl": "Adapterinstellingen voor go-eCharger",
-        "fr": "Paramètres de l'adaptateur pour go-eCharger",
-        "it": "Impostazioni dell'adattatore per go-eCharger",
-        "es": "Configuración del adaptador para go-eCharger",
-        "pl": "Ustawienia adaptera dla go-eCharger",
-        "zh-cn": "go-eCharger的适配器设置"
-    },
-    'ipaddress': {
+    "ipaddress":
         "en": "IP address of go-eCharger",
         "de": "IP-Adresse von go-eCharger",
         "ru": "IP-адрес go-eCharger",
@@ -41,9 +18,8 @@ systemDictionary = {
         "it": "Indirizzo IP di go-eCharger",
         "es": "Dirección IP de go-eCharger",
         "pl": "Adres IP go-eCharger",
-        "zh-cn": "go-eCharger的IP地址"
-    },
-    'polltimelive': {
+        "zh-cn": "go-eCharger的IP地址",
+    "polltimelive":
         "en": "Time between data polls from charger [ms]",
         "de": "Zeit zwischen Datenabfragen vom Ladegerät [ms]",
         "ru": "Время между опросами данных от зарядного устройства [мс]",
@@ -53,9 +29,8 @@ systemDictionary = {
         "it": "Tempo tra sondaggi di dati dal caricatore [ms]",
         "es": "Tiempo entre encuestas de datos del cargador [ms]",
         "pl": "Czas między sondażami danych z ładowarki [ms]",
-        "zh-cn": "充电器进行数据轮询之间的时间[ms]"
-    },
-    'StateHomeSolarPower': {
+        "zh-cn": "充电器进行数据轮询之间的时间[ms]",
+    "StateHomeSolarPower":
         "en": "object-id for currently available solar power [W]",
         "de": "Objekt-ID für derzeit verfügbare Solarenergie [W]",
         "ru": "идентификатор объекта для доступной в настоящее время солнечной энергии [Вт]",
@@ -65,9 +40,8 @@ systemDictionary = {
         "it": "ID oggetto per l'energia solare attualmente disponibile [W]",
         "es": "ID de objeto para la energía solar disponible actualmente [W]",
         "pl": "id obiektu dla aktualnie dostępnej energii słonecznej [W]",
-        "zh-cn": "当前可用太阳能的对象ID [W]"
-    },
-    'StateHomeBatSoc': {
+        "zh-cn": "当前可用太阳能的对象ID [W]",
+    "StateHomeBatSoc":
         "en": "object-id for current home battery state of charge [%]",
         "de": "Objekt-ID für den aktuellen Ladezustand der Heimbatterie [%]",
         "ru": "идентификатор объекта для текущего состояния заряда домашнего аккумулятора [%]",
@@ -77,9 +51,8 @@ systemDictionary = {
         "it": "object-id per l'attuale stato di carica della batteria domestica [%]",
         "es": "ID de objeto para el estado de carga actual de la batería doméstica [%]",
         "pl": "id obiektu dla aktualnego stanu naładowania akumulatora w domu [%]",
-        "zh-cn": "当前家用电池充电状态的对象ID [％]"
-    },
-    'StateHomePowerConsumption': {
+        "zh-cn": "当前家用电池充电状态的对象ID [％]",
+    "StateHomePowerConsumption"':
         "en": "object-id for current home power consumption [W]",
         "de": "Objekt-ID für den aktuellen Stromverbrauch zu Hause [W]",
         "ru": "идентификатор объекта для текущего потребления электроэнергии в доме [Вт]",
@@ -89,18 +62,15 @@ systemDictionary = {
         "it": "object-id per il consumo energetico domestico corrente [W]",
         "es": "ID de objeto para el consumo actual de energía en el hogar [W]",
         "pl": "id obiektu dla bieżącego zużycia energii w domu [W]",
-        "zh-cn": "当前家庭功耗的对象ID [W]"
-    },
-    'ReadOnlyMode': {
-        "en": "read only mode - release of charge is not send to charger (to use RFID tags)",
-        "de": "Nur-Lese-Modus - Ladefreigabe wird nicht an das Ladegerät gesendet (um RFID-Tags zu verwenden)",
-        "ru": "режим только для чтения - снятие заряда не отправляется на зарядное устройство (для использования меток RFID)",
-        "pt": "modo somente leitura - a liberação da carga não é enviada ao carregador (para usar etiquetas RFID)",
-        "nl": "alleen-lezen modus - het opladen wordt niet naar de oplader gestuurd (om RFID-tags te gebruiken)",
-        "fr": "mode lecture seule - la libération de la charge n'est pas envoyée au chargeur (pour utiliser des étiquettes RFID)",
-        "it": "modalità di sola lettura - il rilascio della carica non viene inviato al caricabatterie (per utilizzare tag RFID)",
-        "es": "modo de solo lectura: la liberación de la carga no se envía al cargador (para usar etiquetas RFID)",
-        "pl": "tryb tylko do odczytu - zwolnienie ładunku nie jest wysyłane do ładowarki (w celu użycia tagów RFID)",
+        "zh-cn": "当前家庭功耗的对象ID [W]",
+    "ReadOnlyMode":
+        "en": "read only mode - release of charge is not send to charger (to use RFID tags)"
+        "de": "Nur-Lese-Modus - Ladefreigabe wird nicht an das Ladegerät gesendet (um RFID-Tags zu verwenden)"
+        "ru": "режим только для чтения - снятие заряда не отправляется на зарядное устройство (для использования меток RFID)"
+        "pt": "modo somente leitura - a liberação da carga não é enviada ao carregador (para usar etiquetas RFID)"
+        "nl": "alleen-lezen modus - het opladen wordt niet naar de oplader gestuurd (om RFID-tags te gebruiken)"
+        "fr": "mode lecture seule - la libération de la charge n'est pas envoyée au chargeur (pour utiliser des étiquettes RFID)"
+        "it": "modalità di sola lettura - il rilascio della carica non viene inviato al caricabatterie (per utilizzare tag RFID)"
+        "es": "modo de solo lectura: la liberación de la carga no se envía al cargador (para usar etiquetas RFID)"
+        "pl": "tryb tylko do odczytu - zwolnienie ładunku nie jest wysyłane do ładowarki (w celu użycia tagów RFID)"
         "zh-cn": "只读模式 - 释放电荷不发送到充电器（使用 RFID 标签"
-    }
-};
