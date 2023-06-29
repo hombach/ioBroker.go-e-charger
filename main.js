@@ -97,14 +97,16 @@ class go_e_charger extends utils.Adapter {
         try {
             if (state) { // The state was changed
                 this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
-                MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get desired battery SoC
-                //this.setStateAsync('Settings.Setpoint_HomeBatSoC', MinHomeBatVal, true);
-                ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW'); // Get charging override trigger
-                //this.setStateAsync('Settings.ChargeNOW', ChargeNOW, true);
-                ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager'); // Get enable for charge manager
-                //this.setStateAsync('Settings.ChargeManager', ChargeManager, true);
-                ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent'); // Get current for charging override
-                //this.setStateAsync('Settings.ChargeCurrent', ChargeCurrent, true);
+                if (!state.ack) {
+                    MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get desired battery SoC
+                    this.setStateAsync('Settings.Setpoint_HomeBatSoC', MinHomeBatVal, true);
+                    ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW'); // Get charging override trigger
+                    this.setStateAsync('Settings.ChargeNOW', ChargeNOW, true);
+                    ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager'); // Get enable for charge manager
+                    this.setStateAsync('Settings.ChargeManager', ChargeManager, true);
+                    ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent'); // Get current for charging override
+                    this.setStateAsync('Settings.ChargeCurrent', ChargeCurrent, true);
+                }
             } else {     // The state was deleted
                 this.log.warn(`state ${id} deleted`);
             }
@@ -423,7 +425,6 @@ class go_e_charger extends utils.Adapter {
         try {
             let stateObject = await this.asyncGetState(statePath);
             if (stateObject == null) return null; // errors thrown already in asyncGetState()
-            stateObject.ack = true;
             return stateObject.val;
         } catch (e) {
             this.log.error(`[asyncGetStateValue](${statePath}): ${e}`);
