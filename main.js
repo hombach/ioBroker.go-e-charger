@@ -423,6 +423,7 @@ class go_e_charger extends utils.Adapter {
         try {
             let stateObject = await this.asyncGetState(statePath);
             if (stateObject == null) return null; // errors thrown already in asyncGetState()
+            stateObject.ack = true;
             return stateObject.val;
         } catch (e) {
             this.log.error(`[asyncGetStateValue](${statePath}): ${e}`);
