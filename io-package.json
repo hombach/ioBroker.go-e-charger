@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.15.2",
+    "version": "0.15.3",
     "news": {
+      "0.15.3": {
+        "en": "acknowledge settings states after adoption",
+        "de": "Einstellungen werden nach Annahme nun bestätigt",
+        "ru": "признавать состояния настроек после принятия",
+        "pt": "reconhecer configurações estados após adoção",
+        "nl": "erkenning staat na adoptie",
+        "fr": "reconnaître les paramètres déclarés après adoption",
+        "it": "riconoscere gli stati delle impostazioni dopo l'adozione",
+        "es": "reconocer los ajustes estados después de la adopción",
+        "pl": "po przyjęciu adopcji państwa po adopcji",
+        "uk": "визначте параметри стану після прийняття",
+        "zh-cn": "承认收养后的情况"
+      },
       "0.15.2": {
         "en": "Changed config screen to ioBroker.admin 5 version",
         "de": "Geänderter Bildschirm auf ioBroker. admin 5 version",
@@ -106,19 +119,6 @@
         "pl": "wprowadzanie trybu odczytu, zderzenie zależności",
         "uk": "запроваджувати читано-тільки режими, відхилені залежності",
         "zh-cn": "倾听的依赖"
-      },
-      "0.12.0": {
-        "en": "optimizing system load\n",
-        "de": "Optimierung der Systemlast\n",
-        "ru": "оптимизация нагрузки системы\n",
-        "pt": "otimização da carga do sistema\n",
-        "nl": "vertaling:\n",
-        "fr": "optimisation de la charge du système\n",
-        "it": "ottimizzare il carico del sistema\n",
-        "es": "optimización de la carga del sistema\n",
-        "pl": "optymalizacja\n",
-        "uk": "оптимізація навантаження системи\n",
-        "zh-cn": "优化系统载荷\n"
       },
       "0.11.0": {
         "en": "BREAKING: dropped node.js 10 support, bumped dependencies",

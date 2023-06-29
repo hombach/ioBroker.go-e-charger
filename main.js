@@ -98,9 +98,13 @@ class go_e_charger extends utils.Adapter {
             if (state) { // The state was changed
                 this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
                 MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get desired battery SoC
+                this.setStateAsync('Settings.Setpoint_HomeBatSoC', MinHomeBatVal, true);
                 ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW'); // Get charging override trigger
+                this.setStateAsync('Settings.ChargeNOW', ChargeNOW, true);
                 ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager'); // Get enable for charge manager
+                this.setStateAsync('Settings.ChargeManager', ChargeManager, true);
                 ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent'); // Get current for charging override
+                this.setStateAsync('Settings.ChargeCurrent', ChargeCurrent, true);
             } else {     // The state was deleted
                 this.log.warn(`state ${id} deleted`);
             }
