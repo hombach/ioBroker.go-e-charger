@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.15.3",
+    "version": "0.15.4",
     "news": {
+      "0.15.4": {
+        "en": "Several dependency updates",
+        "de": "Mehrere Aktualisierungen von Abhängigkeiten",
+        "ru": "Несколько обновлений зависимостей",
+        "pt": "Várias atualizações de dependências",
+        "nl": "Diverse afhankelijkheidsupdates",
+        "fr": "Plusieurs mises à jour de dépendances",
+        "it": "Diverse aggiornamenti delle dipendenze",
+        "es": "Varias actualizaciones de dependencias",
+        "pl": "Kilka aktualizacji zależności",
+        "uk": "Декілька оновлень залежностей",
+        "zh-cn": "多个依赖项更新"
+      },
       "0.15.3": {
         "en": "acknowledge settings states after adoption",
         "de": "Einstellungen werden nach Annahme nun bestätigt",
@@ -210,19 +223,6 @@
         "pl": "dodano użycie amx z wersją oprogramowania 040",
         "uk": "додано використання amx з версією прошивки 040",
         "zh-cn": "添加用硬软件版本0.40"
-      },
-      "0.3.3": {
-        "en": "added check of firmware version",
-        "de": "Überprüfung der Firmware-Version hinzugefügt",
-        "ru": "добавлена проверка версии прошивки",
-        "pt": "verificação adicionada da versão de firmware",
-        "nl": "vertaling:",
-        "fr": "vérification ajoutée de la version firmware",
-        "it": "controllo aggiunto della versione firmware",
-        "es": "cheque añadido de la versión de firmware",
-        "pl": "dodać",
-        "uk": "додана перевірка версії мікропрограми",
-        "zh-cn": "进一步检查警觉版本"
       }
     },
     "titleLang": {
