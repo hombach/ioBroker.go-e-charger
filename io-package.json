@@ -4,17 +4,17 @@
     "version": "0.15.4",
     "news": {
       "0.15.4": {
-        "en": "Several dependency updates",
-        "de": "Mehrere Aktualisierungen von Abhängigkeiten",
-        "ru": "Несколько обновлений зависимостей",
-        "pt": "Várias atualizações de dependências",
-        "nl": "Diverse afhankelijkheidsupdates",
-        "fr": "Plusieurs mises à jour de dépendances",
-        "it": "Diverse aggiornamenti delle dipendenze",
-        "es": "Varias actualizaciones de dependencias",
-        "pl": "Kilka aktualizacji zależności",
-        "uk": "Декілька оновлень залежностей",
-        "zh-cn": "多个依赖项更新"
+        "en": "Several dependency updates, bump adapter-core to 3.x",
+        "de": "Mehrere Aktualisierungen von Abhängigkeiten, Anhebung von adapter-core auf 3.x",
+        "ru": "Несколько обновлений зависимостей, поднятие версии adapter-core до 3.x",
+        "pt": "Várias atualizações de dependências, aumento do adapter-core para 3.x",
+        "nl": "Diverse afhankelijkheidsupdates, adapter-core opgehoogd naar 3.x",
+        "fr": "Plusieurs mises à jour de dépendances, mise à jour de adapter-core en 3.x",
+        "it": "Diverse aggiornamenti delle dipendenze, incremento di adapter-core a 3.x",
+        "es": "Varias actualizaciones de dependencias, aumento de adapter-core a 3.x",
+        "pl": "Kilka aktualizacji zależności, podniesienie adapter-core do 3.x",
+        "uk": "Декілька оновлень залежностей, підняття версії adapter-core до 3.x",
+        "zh-cn": "多个依赖项更新，提升adapter-core至3.x"
       },
       "0.15.3": {
         "en": "acknowledge settings states after adoption",
