@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.15.4",
+    "version": "0.15.5",
     "news": {
+      "0.15.5": {
+        "en": "Add support for V054.7",
+        "de": "Unterstützung für V054.7 hinzufügen",
+        "ru": "Добавить поддержку V054.7",
+        "pt": "Adicionar suporte para V054.7",
+        "nl": "Ondersteuning toevoegen voor V054.7",
+        "fr": "Ajouter le support de V054.7",
+        "it": "Aggiungi supporto per V054.7",
+        "es": "Agregar soporte para V054.7",
+        "pl": "Dodaj obsługę V054.7",
+        "uk": "Додати підтримку V054.7",
+        "zh-cn": "添加对V054.7的支持"
+      },
       "0.15.4": {
         "en": "Several dependency updates, bump adapter-core to 3.x",
         "de": "Mehrere Aktualisierungen von Abhängigkeiten, Anhebung von adapter-core auf 3.x",

@@ -14,7 +14,8 @@
 
 
 ## Adapter for reading go-eCharger data for iOBroker
-Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your car. Working with firmware V033, V040.0, V041.0
+Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your car. Working with firmware V033, V040.0, V041.0, V054.7.
+For use with Hardware Generation 3 & 4 you have to enable "HTTP API v1"
 
 ### Settings
 To connect to the go-eCharger type in its IP-address in the config.
@@ -25,6 +26,8 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
 
+### 0.15.5 (18.11.2023)
+* (HombachC) Several dependency updates, add support for V054.7
 ### 0.15.4 (01.10.2023)
 * (HombachC) Several dependency updates, bump adapter-core to 3.x
 ### 0.15.3 (29.06.2023)
