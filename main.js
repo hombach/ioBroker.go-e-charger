@@ -88,7 +88,6 @@ class go_e_charger extends utils.Adapter {
         }
     }
 
-
     /****************************************************************************************
     * Is called if a subscribed state changes
     * @param { string } id
@@ -143,7 +142,7 @@ class go_e_charger extends utils.Adapter {
                     break;
                 default:
                     this.log.warn(`Not explicitly supported firmware found!!!`);
-                    //sentry.io send firmware version
+                    // sentry.io send firmware version
                     if (this.supportsFeature && this.supportsFeature('PLUGINS')) {
                         const sentryInstance = this.getPluginInstance('sentry');
                         if (sentryInstance) {
@@ -193,9 +192,24 @@ class go_e_charger extends utils.Adapter {
 
 
     /*****************************************************************************************/
-    Read_Charger() {
+    async Read_Charger() {
         //var got = require('got');
         const axios = require('axios');
+        // @ts-ignore axios.get is valid
+        await axios.get(`http://${this.config.ipaddress}/status`, { transformResponse: (r) => r })
+        //await axios.get(KostalRequestOnce, { transformResponse: (r) => r })
+            .then(response => {   //.status == 200
+                const result = JSON.parse(response.body);
+                this.log.debug(`Read charger: ${response.body}`);
+                this.ParseStatus(result);
+            })
+            .catch(error => {
+                this.log.error(`Error in calling go-eCharger API: ${error}`);
+                this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
+            }); // END catch
+
+
+        /*
         (async () => {
             try {
                 // @ts-ignore axios.get is valid
@@ -213,6 +227,9 @@ class go_e_charger extends utils.Adapter {
                 this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
             } // END catch
         })();
+        */
+
+
         /*
         (async () => {
             try {
