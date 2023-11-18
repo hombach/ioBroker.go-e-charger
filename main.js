@@ -190,7 +190,6 @@ class go_e_charger extends utils.Adapter {
         adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
     }
 
-
     /*****************************************************************************************/
     async Read_Charger() {
         //var got = require('got');
@@ -199,8 +198,8 @@ class go_e_charger extends utils.Adapter {
         await axios.get(`http://${this.config.ipaddress}/status`, { transformResponse: (r) => r })
         //await axios.get(KostalRequestOnce, { transformResponse: (r) => r })
             .then(response => {   //.status == 200
-                const result = JSON.parse(response.body);
-                this.log.debug(`Read charger: ${response.body}`);
+                const result = JSON.parse(response.data);
+                this.log.debug(`Read charger: ${response.data}`);
                 this.ParseStatus(result);
             })
             .catch(error => {
