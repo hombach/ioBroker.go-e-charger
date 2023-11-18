@@ -23,7 +23,7 @@ let GridPhases       = 0;
 let SolarPower       = 0;
 let HouseConsumption = 0;
 let BatSoC           = 0;
-let Firmware         = "0";
+let Firmware         = '0';
 
 class go_e_charger extends utils.Adapter {
 
@@ -41,7 +41,7 @@ class go_e_charger extends utils.Adapter {
         // this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
     }
-    
+
     /****************************************************************************************
     * Is called when databases are connected and adapter received configuration. ***********/
     async onReady() {
@@ -63,7 +63,7 @@ class go_e_charger extends utils.Adapter {
         }
 
         this.subscribeStates('Settings.*'); // all states changes inside the adapters settings namespace are subscribed
-                
+
         if (this.config.ipaddress) {
             await this.Read_Charger();
             this.log.info('IP address found in config: ' + this.config.ipaddress);
@@ -83,7 +83,7 @@ class go_e_charger extends utils.Adapter {
             adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
 
         } else {
-            this.log.error(`No IP Address configured!! - Shutting down adapter.`)
+            this.log.error(`No IP Address configured!! - Shutting down adapter.`);
             this.stop;
         }
     }
@@ -115,8 +115,6 @@ class go_e_charger extends utils.Adapter {
         }
     }
 
-
-
     /****************************************************************************************
     * Is called when adapter shuts down - callback has to be called under any circumstances!
     * @param {() => void} callback */
@@ -131,7 +129,6 @@ class go_e_charger extends utils.Adapter {
         }
     }
 
-    
     /*****************************************************************************************/
     async StateMachine() {
         if (FirstStart) { // First run of state machine after adapter start-up
@@ -159,7 +156,7 @@ class go_e_charger extends utils.Adapter {
                         }
                     }
                     // this.stop;
-            } 
+            }
             FirstStart = false;
         }
 
@@ -183,7 +180,7 @@ class go_e_charger extends utils.Adapter {
                 }
             }
         }
-        else { // only if Power.ChargingAllowed is still set: switch OFF; set to min. current; 
+        else { // only if Power.ChargingAllowed is still set: switch OFF; set to min. current;
             if (await this.asyncGetStateVal('Power.ChargingAllowed') == true) { // Set to false only if still true
                 await this.Read_Charger();
                 ZielAmpere = 6;
@@ -197,7 +194,26 @@ class go_e_charger extends utils.Adapter {
 
     /*****************************************************************************************/
     Read_Charger() {
-        var got = require('got');
+        //var got = require('got');
+        const axios = require('axios');
+        (async () => {
+            try {
+                // @ts-ignore axios.get is valid
+                const response = await axios.get(`http://${this.config.ipaddress}/status`);
+                if (!response.error && response.statusCode == 200) {
+                    const result = await JSON.parse(response.body);
+                    this.log.debug(`Read charger: ${response.body}`);
+                    await this.ParseStatus(result);
+                }
+                else {
+                    this.log.error(`Error: ${response.error} by polling go-eCharger @ ${this.config.ipaddress}`);
+                }
+            } catch (e) {
+                this.log.error(`Error in calling go-eCharger API: ${e}`);
+                this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
+            } // END catch
+        })();
+        /*
         (async () => {
             try {
                 // @ts-ignore got is valid
@@ -215,6 +231,7 @@ class go_e_charger extends utils.Adapter {
                 this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
             } // END catch
         })();
+        */
     } // END Read_Charger
 
 
@@ -224,16 +241,16 @@ class go_e_charger extends utils.Adapter {
         this.setStateAsync('Info.RebootTimer', Math.floor(status.rbt / 1000 / 3600), true); // trim to hours
         this.setStateAsync('Info.CarState', Number(status.car), true);
         switch (status.car) {
-            case "1":
+            case '1':
                 this.setStateAsync('Info.CarStateString', 'Wallbox ready, no car', true);
                 break;
-            case "2":
+            case '2':
                 this.setStateAsync('Info.CarStateString', 'Charging...', true);
                 break;
-            case "3":
+            case '3':
                 this.setStateAsync('Info.CarStateString', 'Wait for car', true);
                 break;
-            case "4":
+            case '4':
                 this.setStateAsync('Info.CarStateString', 'Charge finished, car still connected', true);
                 break;
             default:
@@ -242,10 +259,10 @@ class go_e_charger extends utils.Adapter {
         this.setStateAsync('Power.ChargeCurrent', Number(status.amp), true);
         this.setStateAsync('Power.ChargeCurrentVolatile', Number(status.amx), true);
         switch (status.alw) {
-            case "0":
+            case '0':
                 this.setStateAsync('Power.ChargingAllowed', false, true);
                 break;
-            case "1":
+            case '1':
                 this.setStateAsync('Power.ChargingAllowed', true, true);
                 break;
         }
@@ -261,15 +278,17 @@ class go_e_charger extends utils.Adapter {
 
     /*****************************************************************************************/
     Charge_Config(Allow, Ampere, LogMessage) {
-        var got = require('got');
+        const axios = require('axios');
+        //var got = require('got');
         this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
         if (!this.config.ReadOnlyMode) {
             (async () => {
                 try {
                     // @ts-ignore got is valid
-                    var response = await got(`http://${this.config.ipaddress}/mqtt?payload=alw=${Allow}`); // activate charging
+                    //var response = await got(`http://${this.config.ipaddress}/mqtt?payload=alw=${Allow}`); // activate charging
+                    const response = await axios.get(`http://${this.config.ipaddress}/mqtt?payload=alw=${Allow}`); // activate charging
                     if (!response.error && response.statusCode == 200) {
-                        this.log.debug(`Sent: ${response.body}`)
+                        this.log.debug(`Sent: ${response.body}`);
                     }
                     else if (response.error) {
                         this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} alw=${Allow}`);
@@ -286,16 +305,17 @@ class go_e_charger extends utils.Adapter {
                 case '033':
                     try {
                         // @ts-ignore got is valid
-                        var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
+                        //var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
+                        const response = await axios.get(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
                         if (!response.error && response.statusCode == 200) {
                             this.log.debug(`Sent to firmware 033: ${response.body}`);
-                            var result = await JSON.parse(response.body);
+                            const result = await JSON.parse(response.body);
                             this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
                             switch (result.alw) {
-                                case "0":
+                                case '0':
                                     this.setStateAsync('Power.ChargingAllowed', false, true);
                                     break;
-                                case "1":
+                                case '1':
                                     this.setStateAsync('Power.ChargingAllowed', true, true);
                                     break;
                             }
@@ -315,16 +335,17 @@ class go_e_charger extends utils.Adapter {
                 // case '054.7':
                     try {
                         // @ts-ignore got is valid
-                        var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
+                        //var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
+                        const response = await axios.get(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
                         if (!response.error && response.statusCode == 200) {
                             this.log.debug(`Sent to firmware > 033: ${response.body}`);
-                            var result = await JSON.parse(response.body);
+                            const result = await JSON.parse(response.body);
                             this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
                             switch (result.alw) {
-                                case "0":
+                                case '0':
                                     this.setStateAsync('Power.ChargingAllowed', false, true);
                                     break;
-                                case "1":
+                                case '1':
                                     this.setStateAsync('Power.ChargingAllowed', true, true);
                                     break;
                             }
@@ -336,10 +357,9 @@ class go_e_charger extends utils.Adapter {
                         this.log.error(`Error in calling go-eCharger API: ${e}`);
                         this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
                     } // END catch
-            } 
+            }
         })();
     } // END Charge_Config
-
 
     /*****************************************************************************************/
     async Charge_Manager() {
@@ -364,7 +384,7 @@ class go_e_charger extends utils.Adapter {
 
         this.log.debug(`ZielAmpere: ${ZielAmpere} Ampere; Leistung DC: ${SolarPower} W; `
             + `Hausverbrauch: ${HouseConsumption} W; Gesamtleistung Charger: ${ChargePower} W`);
-        
+
         if (ZielAmpere > (5 + 4)) {
             this.Charge_Config('1', ZielAmpere, `Charging current: ${ZielAmpere} A`); // An und Zielstrom da größer 5 + Hysterese
         } else if (ZielAmpere < 6) {
@@ -376,7 +396,6 @@ class go_e_charger extends utils.Adapter {
         }
     } // END Charge_Manager
 
-
     /**
        * Get foreign state value
        * @param {string}      statePath  - Full path to state, like 0_userdata.0.other.isSummer
@@ -384,7 +403,7 @@ class go_e_charger extends utils.Adapter {
        */
     async asyncGetForeignStateVal(statePath) {
         try {
-            let stateObject = await this.asyncGetForeignState(statePath);
+            const stateObject = await this.asyncGetForeignState(statePath);
             if (stateObject == null) return null; // errors thrown already in asyncGetForeignState()
             return stateObject.val;
         } catch (e) {
@@ -395,13 +414,13 @@ class go_e_charger extends utils.Adapter {
 
     /**
     * Get foreign state
-    * 
+    *
     * @param {string}      statePath  - Full path to state, like 0_userdata.0.other.isSummer
     * @return {Promise<object>}       - State object: {val: false, ack: true, ts: 1591117034451, …}, or null if error
     */
     async asyncGetForeignState(statePath) {
         try {
-            let stateObject = await this.getForeignObjectAsync(statePath); // Check state existence
+            const stateObject = await this.getForeignObjectAsync(statePath); // Check state existence
             if (!stateObject) {
                 throw (`State '${statePath}' does not exist.`);
             } else { // Get state value, so like: {val: false, ack: true, ts: 1591117034451, …}
@@ -425,7 +444,7 @@ class go_e_charger extends utils.Adapter {
     */
     async asyncGetStateVal(statePath) {
         try {
-            let stateObject = await this.asyncGetState(statePath);
+            const stateObject = await this.asyncGetState(statePath);
             if (stateObject == null) return null; // errors thrown already in asyncGetState()
             return stateObject.val;
         } catch (e) {
@@ -436,13 +455,13 @@ class go_e_charger extends utils.Adapter {
 
     /**
     * Get state
-    * 
+    *
     * @param {string}      statePath  - Path to state, like other.isSummer
     * @return {Promise<object>}       - State object: {val: false, ack: true, ts: 1591117034451, …}, or null if error
     */
     async asyncGetState(statePath) {
         try {
-            let stateObject = await this.getObjectAsync(statePath); // Check state existence
+            const stateObject = await this.getObjectAsync(statePath); // Check state existence
             if (!stateObject) {
                 throw (`State '${statePath}' does not exist.`);
             } else { // Get state value, so like: {val: false, ack: true, ts: 1591117034451, …}
@@ -478,7 +497,7 @@ class go_e_charger extends utils.Adapter {
             return true;
         }
     }
-    
+
 } // END Class
 
 
@@ -496,15 +515,15 @@ if (module.parent) {
 
 
 /*
-Erklärung Format​: alle Parameter werden im JSON Objekt als String gesendet (in Anführungszeichen). Die meisten dieser
+Erklärung Format: alle Parameter werden im JSON Objekt als String gesendet (in Anführungszeichen). Die meisten dieser
 Parameter können in ein integer Format konvertiert werden. Der bei Format angegebene Datentyp zeigt die zu erwartende
 Größe. Sollte der String nicht in den angegebenen Datentyp konvertiert werden, soll ein Kommunikationsfehler angezeigt
 werden.
 
 Parameter - Format - Erklärung
 version - String(1) - JSON Format; "B": Normalfall; "C": Wenn Ende-zu-Ende Verschlüsselung aktiviert
-rbc     - uint32_t  - reboot_counter​; Zählt die Anzahl der Bootvorgänge.
-rbt     - uint32_t  - reboot_timer​; Zählt die Millisekunden seit dem letzten Bootvorgang.
+rbc     - uint32_t  - reboot_counter; Zählt die Anzahl der Bootvorgänge.
+rbt     - uint32_t  - reboot_timer; Zählt die Millisekunden seit dem letzten Bootvorgang.
 car     - uint8_t   - Status PWM Signalisierung
                       1: Ladestation bereit, kein Fahrzeug   2: Fahrzeug lädt
                       3: Warte auf Fahrzeug                  4: Ladung beendet, Fahrzeug noch verbunden
@@ -516,79 +535,79 @@ amx     - uint8_t   - Ampere Wert für die PWM Signalisierung in ganzen Ampere v
 err     - uint8_t   - error
                       1: RCCB (Fehlerstromschutzschalter)    3: PHASE (Phasenstörung)
                       8: NO_GROUND (Erdungserkennung)        10, default: INTERNAL (sonstiges)
-ast     - uint8_t   - access_state​: Zugangskontrolle
+ast     - uint8_t   - access_state: Zugangskontrolle
                       0: Offen                               1: RFID / App benötigt
                       2: Strompreis / automatisch
-alw     - uint8_t   - allow_charging: ​PWM Signal darf anliegen; 0: nein; 1: ja
-stp     - uint8_t   - stop_state: ​Automatische Abschaltung; 0: deaktiviert; 2: nach kWh abschalten
-cbl     - uint8_t   - Typ2 ​Kabel Ampere codierung; 13-32: Ampere Codierung; 0: kein Kabel
-pha     - uint8_t   - Phasen ​vor und nach dem Schütz; binary flags: ​0b00ABCDEF
+alw     - uint8_t   - allow_charging: PWM Signal darf anliegen; 0: nein; 1: ja
+stp     - uint8_t   - stop_state: Automatische Abschaltung; 0: deaktiviert; 2: nach kWh abschalten
+cbl     - uint8_t   - Typ2 Kabel Ampere codierung; 13-32: Ampere Codierung; 0: kein Kabel
+pha     - uint8_t   - Phasen vor und nach dem Schütz; binary flags: 0b00ABCDEF
                       A... phase 3 vor dem Schütz            B... phase 2 vor dem Schütz
                       C... phase 1 vor dem Schütz            D... phase 3 nach dem Schütz
                       E... phase 2 nach dem Schütz           F... phase 1 nach dem Schütz
-tmp     - uint8_t   - Temperatur​ des Controllers in °C
+tmp     - uint8_t   - Temperatur des Controllers in °C
 tma     -           - internal temperature sensor 0-3
 amt     -           - max ampere limited through temperature sensors (32 = no limit)
-dws     - uint32_t  - Geladene Energiemenge​ in Deka-Watt-Sekunden
-dwo     - uint16_t  - Abschaltwert ​in 0.1kWh wenn ​stp==2​, für dws Parameter
-adi     - uint8_t   - adapter_in​: Ladebox ist mit Adapter angesteckt; 0: NO_ADAPTER; 1: 16A_ADAPTER
-uby     - uint8_t   - unlocked_by​: Nummer der RFID Karte, die den jetzigen Ladevorgang freigeschalten hat
-eto     - uint32_t  - energy_total​: Gesamt geladene Energiemenge in 0.1kWh
-wst     - uint8_t   - wifi_state​: WLAN Verbindungsstatus; 3: verbunden; default: nicht verbunden
+dws     - uint32_t  - Geladene Energiemenge in Deka-Watt-Sekunden
+dwo     - uint16_t  - Abschaltwert in 0.1kWh wenn stp==2, für dws Parameter
+adi     - uint8_t   - adapter_in: Ladebox ist mit Adapter angesteckt; 0: NO_ADAPTER; 1: 16A_ADAPTER
+uby     - uint8_t   - unlocked_by: Nummer der RFID Karte, die den jetzigen Ladevorgang freigeschalten hat
+eto     - uint32_t  - energy_total: Gesamt geladene Energiemenge in 0.1kWh
+wst     - uint8_t   - wifi_state: WLAN Verbindungsstatus; 3: verbunden; default: nicht verbunden
 nrg     - array[15] - Array mit Werten des Strom- und Spannungssensors
-                      nrg[0]​: Spannung auf L1 in Volt            nrg[1]​: Spannung auf L2 in Volt
-                      nrg[2]​: Spannung auf L3 in Volt            nrg[3]​: Spannung auf N in Volt
-                      nrg[4]​: Ampere auf L1 in 0.1A              nrg[5]​: Ampere auf L2 in 0.1A
-                      nrg[6]​: Ampere auf L3 in 0.1A              nrg[7]​: Leistung auf L1 in 0.1kW
-                      nrg[8]​: Leistung auf L2 in 0.1kW           nrg[9]​: Leistung auf L3 in 0.1kW
-                      nrg[10]​: Leistung auf N in 0.1kW           nrg[11]​: Leistung gesamt in 0.01kW
-                      nrg[12]​: Leistungsfaktor auf L1 in %       nrg[13]​: Leistungsfaktor auf L2 in %
-                      nrg[14]​: Leistungsfaktor auf L3 in %       nrg[15]​: Leistungsfaktor auf N in %
+                      nrg[0]: Spannung auf L1 in Volt            nrg[1]: Spannung auf L2 in Volt
+                      nrg[2]: Spannung auf L3 in Volt            nrg[3]: Spannung auf N in Volt
+                      nrg[4]: Ampere auf L1 in 0.1A              nrg[5]: Ampere auf L2 in 0.1A
+                      nrg[6]: Ampere auf L3 in 0.1A              nrg[7]: Leistung auf L1 in 0.1kW
+                      nrg[8]: Leistung auf L2 in 0.1kW           nrg[9]: Leistung auf L3 in 0.1kW
+                      nrg[10]: Leistung auf N in 0.1kW           nrg[11]: Leistung gesamt in 0.01kW
+                      nrg[12]: Leistungsfaktor auf L1 in %       nrg[13]: Leistungsfaktor auf L2 in %
+                      nrg[14]: Leistungsfaktor auf L3 in %       nrg[15]: Leistungsfaktor auf N in %
 fwv     - String    - Firmware Version
-sse     - String    - Seriennummer ​als %06d formatierte Zahl
-wss     - String    - WLAN ​SSID
-wke     - String    - WLAN ​Key
-wen     - uint8_t   - wifi_enabled​: WLAN aktiviert; 0: deaktiviert; 1: aktiviert
-tof     - uint8_t   - time_offset​: Zeitzone in Stunden für interne batteriegestützte Uhr +100; Beispiel: 101 entspricht GMT+1
-tds     - uint8_t   - Daylight saving time offset​ (Sommerzeit) in Stunden
-lbr     - uint8_t   - LED Helligkeit​ von 0-255; 0: LED aus; 255: LED Helligkeit maximal
-aho     - uint8_t   - Minimale ​Anzahl ​von Stunden in der mit "Strompreis-automatisch" geladen werden muss
-afi     - uint8_t   - Stunde (​Uhrzeit​) in der mit "Strompreis - automatisch" die Ladung mindestens ​aho ​Stunden gedauert haben muss.
+sse     - String    - Seriennummer als %06d formatierte Zahl
+wss     - String    - WLAN SSID
+wke     - String    - WLAN Key
+wen     - uint8_t   - wifi_enabled: WLAN aktiviert; 0: deaktiviert; 1: aktiviert
+tof     - uint8_t   - time_offset: Zeitzone in Stunden für interne batteriegestützte Uhr +100; Beispiel: 101 entspricht GMT+1
+tds     - uint8_t   - Daylight saving time offset (Sommerzeit) in Stunden
+lbr     - uint8_t   - LED Helligkeit von 0-255; 0: LED aus; 255: LED Helligkeit maximal
+aho     - uint8_t   - Minimale Anzahl von Stunden in der mit "Strompreis-automatisch" geladen werden muss
+afi     - uint8_t   - Stunde (Uhrzeit) in der mit "Strompreis - automatisch" die Ladung mindestens aho Stunden gedauert haben muss.
 azo     - uint8_t   - Awattar Preiszone; 0: Österreich; 1: Deutschland
 ama     - uint8_t   - Absolute max. Ampere: Maximalwert für Ampere Einstellung
 al1     - uint8_t   - Ampere Level 1 für Druckknopf am Gerät.
                       6-32: Ampere Stufe aktiviert           0: Stufe deaktivert (wird übersprungen)
-al2     - uint8_t   - Ampere Level 2 für Druckknopf am Gerät; muss entweder 0 oder ​> al1​ sein
-al3     - uint8_t   - Ampere Level 3 für Druckknopf am Gerät; muss entweder 0 oder ​> al2​ sein
-al4     - uint8_t   - Ampere Level 4 für Druckknopf am Gerät; muss entweder 0 oder ​> al3​ sein
-al5     - uint8_t   - Ampere Level 5 für Druckknopf am Gerät; muss entweder 0 oder ​> al4​ sein
-cid     - uint24_t  - Color idle:​ Farbwert für Standby​ (kein Auto angesteckt) als Zahl
-cch     - uint24_t  - Color charging:​ Farbwert für Ladevorgang aktiv​, als Zahl
-cfi     - uint24_t  - Color idle:​ Farbwert für Ladevorgang abgeschlossen​, als Zahl
-lse     - uint8_t   - led_save_energy​: LED automatisch nach 10 Sekunden abschalten
+al2     - uint8_t   - Ampere Level 2 für Druckknopf am Gerät; muss entweder 0 oder > al1 sein
+al3     - uint8_t   - Ampere Level 3 für Druckknopf am Gerät; muss entweder 0 oder > al2 sein
+al4     - uint8_t   - Ampere Level 4 für Druckknopf am Gerät; muss entweder 0 oder > al3 sein
+al5     - uint8_t   - Ampere Level 5 für Druckknopf am Gerät; muss entweder 0 oder > al4 sein
+cid     - uint24_t  - Color idle: Farbwert für Standby (kein Auto angesteckt) als Zahl
+cch     - uint24_t  - Color charging: Farbwert für Ladevorgang aktiv, als Zahl
+cfi     - uint24_t  - Color idle: Farbwert für Ladevorgang abgeschlossen, als Zahl
+lse     - uint8_t   - led_save_energy: LED automatisch nach 10 Sekunden abschalten
                       0: Energiesparfunktion deaktiviert     1: Energiesparfunktion aktiviert
-ust     - uint8_t   - unlock_state​: Kabelverriegelung Einstellung
+ust     - uint8_t   - unlock_state: Kabelverriegelung Einstellung
                       0: Verriegeln solange Auto angesteckt  1: Nach Ladevorgang automatisch entriegeln
                       2: Kabel immer verriegelt lassen
-wak     - String    - WLAN ​Hotspot Password; Beispiel: "abdef0123456"
+wak     - String    - WLAN Hotspot Password; Beispiel: "abdef0123456"
 r1x     - uint8_t   - Flags
                       0b1: HTTP Api im WLAN Netzwerk aktiviert (0: nein, 1:ja)
                       0b10: Ende-zu-Ende Verschlüsselung aktiviert (0: nein, 1:ja)
-dto     - uint8_t   - Restzeit​ in Millisekunden verbleibend auf Aktivierung durch Strompreise
-nmo     - uint8_t   - Norwegen-Modus​ aktiviert
+dto     - uint8_t   - Restzeit in Millisekunden verbleibend auf Aktivierung durch Strompreise
+nmo     - uint8_t   - Norwegen-Modus aktiviert
                       0: deaktiviert (Erdungserkennung aktiviert)
                       1: aktiviert (keine Erdungserkennung, nur für IT-Netze gedacht)
 eca; ecr; ecd; ec4; ec5; ec6; ec7; ec8; ec9; ec1
-        - uint32_t  - Geladene ​Energiemenge pro RFID Karte​ von 1-10
+        - uint32_t  - Geladene Energiemenge pro RFID Karte von 1-10
 rca; rcr; rcd; rc4; rc5; rc6; rc7; rc8; rc9; rc1
-        - String    - RFID Karte ID​ von 1-10 als String Format und Länge: variabel, je nach Version
+        - String    - RFID Karte ID von 1-10 als String Format und Länge: variabel, je nach Version
 rna; rnm; rne; rn4; rn5; rn6; rn7; rn8; rn9; rn1
-        - String    - RFID Karte Name​ von 1-10; Maximallänge: 10 Zeichen
-tme     - String    - Aktuelle Uhrzeit​, formatiert als ddmmyyhhmm
-sch     - String    - Scheduler einstellungen ​(base64 encodiert)
-sdp     - uint8_t   - Scheduler double press: ​Aktiviert Ladung nach doppeltem Drücken des Button, wenn die Ladung gerade durch den Scheduler unterbrochen wurde
+        - String    - RFID Karte Name von 1-10; Maximallänge: 10 Zeichen
+tme     - String    - Aktuelle Uhrzeit, formatiert als ddmmyyhhmm
+sch     - String    - Scheduler einstellungen (base64 encodiert)
+sdp     - uint8_t   - Scheduler double press: Aktiviert Ladung nach doppeltem Drücken des Button, wenn die Ladung gerade durch den Scheduler unterbrochen wurde
                       0: Funktion deaktiviert                1: Ladung sofort erlauben
-upd     - uint8_t   - Update available​ (nur verfügbar bei Verbindung über go-e Server)
+upd     - uint8_t   - Update available (nur verfügbar bei Verbindung über go-e Server)
                       0: kein Update verfügbar               1: Update verfügbar
 cdi     - uint8_t   - Cloud disabled
                       0: cloud enabled                       1: cloud disabled
@@ -598,9 +617,9 @@ lot     - uint8_t   - Lastmanagement Gruppe Total Ampere
 lom     - uint8_t   - Lastmanagement minimale Amperezahl
 lop     - uint8_t   - Lastmanagement Priorität
 log     - String    - Lastmanagement Gruppen ID
-lon     - uint8_t   - Lastmanagement erwartete Anzahl von Ladestationen ​(derzeit nicht unterstützt)
+lon     - uint8_t   - Lastmanagement erwartete Anzahl von Ladestationen (derzeit nicht unterstützt)
 lof     - uint8_t   - Lastmanagement Fallback Amperezahl
-loa     - uint8_t   - Lastmanagement Ampere​ (derzeitiger erlaubter Ladestrom); wird vom Lastmanagement automatisch gesteuert
+loa     - uint8_t   - Lastmanagement Ampere (derzeitiger erlaubter Ladestrom); wird vom Lastmanagement automatisch gesteuert
 lch     - uint32_t  - Lastmanagement Sekunden seit letzten Stromfluss bei noch angestecktem Auto
 mce     - uint8_t   - MQTT custom enabled; Verbindung mit eigenen MQTT Server herstellen
                       0: Funktion deaktiviert                1: Funktion aktiviert

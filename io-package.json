@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.15.5",
+    "version": "0.16.0",
     "news": {
+      "0.16.0": {
+        "en": "Replaced 'got' with 'axios'",
+        "de": "'got' durch 'axios' ersetzt",
+        "ru": "Заменен 'got' на 'axios'",
+        "pt": "Substituído 'got' por 'axios'",
+        "nl": "'got' vervangen door 'axios'",
+        "fr": "Remplacé 'got' par 'axios'",
+        "it": "Sostituito 'got' con 'axios'",
+        "es": "Reemplazado 'got' por 'axios'",
+        "pl": "Zastąpiono 'got' przez 'axios'",
+        "uk": "Замінено 'got' на 'axios'",
+        "zh-cn": "用'axios'替换了'got'"
+      },
       "0.15.5": {
         "en": "Add support for V054.7",
         "de": "Unterstützung für V054.7 hinzufügen",

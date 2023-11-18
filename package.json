@@ -1,6 +1,6 @@
 {
   "name": "iobroker.go-e-charger",
-  "version": "0.15.5",
+  "version": "0.16.0",
   "description": "Adapter for reading go-eCharger data",
   "author": {
     "name": "Hombach",
@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.0.4",
+    "axios": "^1.6.1",
     "got": "^11.8.5"
   },
   "devDependencies": {
