@@ -192,11 +192,9 @@ class go_e_charger extends utils.Adapter {
 
     /*****************************************************************************************/
     async Read_Charger() {
-        //var got = require('got');
         const axios = require('axios');
         // @ts-ignore axios.get is valid
         await axios.get(`http://${this.config.ipaddress}/status`, { transformResponse: (r) => r })
-        //await axios.get(KostalRequestOnce, { transformResponse: (r) => r })
             .then(response => {   //.status == 200
                 const result = JSON.parse(response.data);
                 this.log.debug(`Read charger: ${response.data}`);
@@ -300,17 +298,17 @@ class go_e_charger extends utils.Adapter {
         if (!this.config.ReadOnlyMode) {
             (async () => {
                 try {
-                    // @ts-ignore got is valid
+                    // @ts-ignore axios.get is valid
                     //var response = await got(`http://${this.config.ipaddress}/mqtt?payload=alw=${Allow}`); // activate charging
                     const response = await axios.get(`http://${this.config.ipaddress}/mqtt?payload=alw=${Allow}`); // activate charging
                     if (!response.error && response.statusCode == 200) {
-                        this.log.debug(`Sent: ${response.body}`);
+                        this.log.debug(`Sent: ${response.data}`);
                     }
                     else if (response.error) {
                         this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} alw=${Allow}`);
                     }
-                } catch (e) {
-                    this.log.error(`Error in calling go-eCharger API: ${e}`);
+                } catch (error) {
+                    this.log.error(`Error in calling go-eCharger API: ${error}`);
                     this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
                 } // END catch
             })();
@@ -320,12 +318,12 @@ class go_e_charger extends utils.Adapter {
             switch (Firmware) {
                 case '033':
                     try {
-                        // @ts-ignore got is valid
+                        // @ts-ignore axios.get is valid
                         //var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
                         const response = await axios.get(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
                         if (!response.error && response.statusCode == 200) {
-                            this.log.debug(`Sent to firmware 033: ${response.body}`);
-                            const result = await JSON.parse(response.body);
+                            this.log.debug(`Sent to firmware 033: ${response.data}`);
+                            const result = await JSON.parse(response.data);
                             this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
                             switch (result.alw) {
                                 case '0':
@@ -339,8 +337,8 @@ class go_e_charger extends utils.Adapter {
                         else if (response.error) {
                             this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amp=${Ampere}`);
                         }
-                    } catch (e) {
-                        this.log.error(`Error in calling go-eCharger API: ${e}`);
+                    } catch (error) {
+                        this.log.error(`Error in calling go-eCharger API: ${error}`);
                         this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
                     } // END catch
                     break;
@@ -350,12 +348,12 @@ class go_e_charger extends utils.Adapter {
                 // case '041.0':
                 // case '054.7':
                     try {
-                        // @ts-ignore got is valid
+                        // @ts-ignore axios.get is valid
                         //var response = await got(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
                         const response = await axios.get(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
                         if (!response.error && response.statusCode == 200) {
-                            this.log.debug(`Sent to firmware > 033: ${response.body}`);
-                            const result = await JSON.parse(response.body);
+                            this.log.debug(`Sent to firmware > 033: ${response.data}`);
+                            const result = await JSON.parse(response.data);
                             this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
                             switch (result.alw) {
                                 case '0':
@@ -369,8 +367,8 @@ class go_e_charger extends utils.Adapter {
                         else if (response.error) {
                             this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amx=${Ampere}`);
                         }
-                    } catch (e) {
-                        this.log.error(`Error in calling go-eCharger API: ${e}`);
+                    } catch (error) {
+                        this.log.error(`Error in calling go-eCharger API: ${error}`);
                         this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
                     } // END catch
             }
