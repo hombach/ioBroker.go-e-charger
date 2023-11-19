@@ -9,7 +9,7 @@
 			"ipaddress": {
   				"type": "text",
 				"label": "ipaddress",
-	    			"maxLength": 15,
+	    		"maxLength": 15,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
