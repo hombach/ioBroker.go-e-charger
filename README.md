@@ -29,6 +29,7 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 
 ### 0.16.2 (xx.11.2023) WORK IN PROGRESS
 * (HombachC) Add support for V055.5 & V055.7
+* (HombachC) Change Sentry logging to new project
 ### 0.16.1 (19.11.2023)
 * (HombachC) Add support for V054.11
 ### 0.16.0 (18.11.2023)
