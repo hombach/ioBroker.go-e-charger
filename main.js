@@ -151,9 +151,9 @@ class go_e_charger extends utils.Adapter {
                         if (sentryInstance) {
                             const Sentry = sentryInstance.getSentryObject();
                             Sentry && Sentry.withScope(scope => {
-                                scope.setLevel('warn');
+                                scope.setLevel('warning');
                                 scope.setTag('Firmware', Firmware);
-                                Sentry.captureMessage('Adapter go-e-Charger found unknown firmware', 'warn'); // Level "warn"
+                                Sentry.captureMessage('Adapter go-e-Charger found unknown firmware', 'warning'); // Level "warning"
                             });
                         }
                     }

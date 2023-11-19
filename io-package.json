@@ -146,19 +146,6 @@
         "uk": "відхилені залежності через вразливість безпеки",
         "zh-cn": "b 由于安全脆弱"
       },
-      "0.14.1": {
-        "en": "bumped dependencies, small code tweaks, removed gulp",
-        "de": "Abhängigkeiten aktualisiert, kleine code-tweaks, gulp entfernt",
-        "ru": "сшитые зависимости, мелкие кодовые твиты, снятые гульп",
-        "pt": "dependências colhidas, pequenos ajustes de código, gulp removido",
-        "nl": "quality over quantity (qoq) releases vertaling:",
-        "fr": "dépendances paressées, petits tweaks de code, gulpe enlevée",
-        "it": "dipendenze urtate, piccole modifiche di codice, gulp rimosso",
-        "es": "dependencias contuídas, pequeños ajustes de código, golpes eliminados",
-        "pl": "w zależności od niewielkich poprawek kodowych usunięto gulp",
-        "uk": "погані залежності, маленькі кодові мішки, видалені гельпи",
-        "zh-cn": "b 倾销的属地,小法典的摩擦"
-      },
       "0.14.0": {
         "en": "BREAKING: dropped node.js 12 support, add tests for node.js 18, changed dependencies to non node.js 12 support",
         "de": "BREAKING: Node.js 12 Unterstützung wurde eingestellt, Tests für node.js 18 hinzugefügt, Abhängigkeiten auf Nicht-Node.js 12-Unterstützung geändert",
