@@ -138,10 +138,11 @@ class go_e_charger extends utils.Adapter {
                 case '040.0':
                 case '041.0':
                 case '054.7':
+                case '054.11':
                     this.log.debug(`Init done, launching state machine`);
                     break;
                 default:
-                    this.log.warn(`Not explicitly supported firmware found!!!`);
+                    this.log.warn(`Not explicitly supported firmware ${Firmware} found!!!`);
                     // sentry.io send firmware version
                     if (this.supportsFeature && this.supportsFeature('PLUGINS')) {
                         const sentryInstance = this.getPluginInstance('sentry');
@@ -300,6 +301,7 @@ class go_e_charger extends utils.Adapter {
                 // case '040.0':
                 // case '041.0':
                 // case '054.7':
+                // case '054.11':
                     try {
                         // @ts-ignore axios.get is valid
                         const response = await axios.get(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current

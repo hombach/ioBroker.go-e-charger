@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.16.0",
+    "version": "0.16.1",
     "news": {
+      "0.16.1": {
+        "en": "Add support for V054.11",
+        "de": "Unterstützung für V054.11 hinzufügen",
+        "ru": "Добавить поддержку V054.11",
+        "pt": "Adicionar suporte para V054.11",
+        "nl": "Ondersteuning toevoegen voor V054.11",
+        "fr": "Ajouter le support de V054.11",
+        "it": "Aggiungi supporto per V054.11",
+        "es": "Agregar soporte para V054.11",
+        "pl": "Dodaj obsługę V054.11",
+        "uk": "Додати підтримку V054.11",
+        "zh-cn": "添加对V054.11的支持"
+      },
       "0.16.0": {
         "en": "Replaced 'got' with 'axios'",
         "de": "'got' durch 'axios' ersetzt",
