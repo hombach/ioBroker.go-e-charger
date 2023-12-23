@@ -27,8 +27,11 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
 
+### 0.16.3 (xx.12.2023)
+* (HombachC) add support for V055.8
+* (HombachC) year 2024 changes
 ### 0.16.2 (19.11.2023)
-* (HombachC) Add support for V055.5 & V055.7
+* (HombachC) add support for V055.5 & V055.7
 * (HombachC) Change Sentry logging to new project
 ### 0.16.1 (19.11.2023)
 * (HombachC) Add support for V054.11
@@ -107,7 +110,7 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ## License
 MIT License
 
-Copyright (c) 2020 - 2023 HombachC
+Copyright (c) 2020 - 2024 HombachC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
