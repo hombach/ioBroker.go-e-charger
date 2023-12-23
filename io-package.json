@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.16.2",
+    "version": "0.16.3",
     "news": {
+      "0.16.3": {
+      	"en": "Add support for V055.8",
+      	"de": "Unterstützung für V055.8 hinzufügen",
+      	"ru": "Добавить поддержку V055.8",
+      	"pt": "Adicionar suporte para V055.8",
+      	"nl": "Ondersteuning toevoegen voor V055.8",
+      	"fr": "Ajouter la prise en charge de V055.8",
+      	"it": "Aggiungi supporto per V055.8",
+      	"es": "Agregar soporte para V055.8",
+      	"pl": "Dodaj obsługę dla V055.8",
+      	"uk": "Додати підтримку для V055.8",
+      	"zh-cn": "添加对 V055.8 的支持"
+      },
       "0.16.2": {
         "en": "Add support for V055.5 & V055.7",
         "de": "Unterstützung für V055.5 & V055.7 hinzufügen",
@@ -184,19 +197,6 @@
         "pl": "BREAKING: Uruchomione węzełki.js 10 support, bumpowane zależności",
         "uk": "BREAKING: скидати node.js 10 support, bumped залежності",
         "zh-cn": "BREAKRE:撤除不de.js 10支持,倾弃的依赖"
-      },
-      "0.10.0": {
-        "en": "added sentry.io support",
-        "de": "Sentry.io Unterstützung hinzugefügt",
-        "ru": "добавлена отправка. io поддержка",
-        "pt": "adicionado sentinela. suporte io",
-        "nl": "toegevoegd sentiment. io ondersteuning",
-        "fr": "ajout d'une sentinelle. io support",
-        "it": "ha aggiunto la sentinella. io sostegno",
-        "es": "añadió centinela. io support",
-        "pl": "sentry. wspieranie io",
-        "uk": "додано відправку. io підтримка",
-        "zh-cn": "增发。 支助"
       },
       "0.9.0": {
         "en": "support for firmware 041.0",
