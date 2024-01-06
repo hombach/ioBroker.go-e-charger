@@ -29,7 +29,7 @@
 ## Adapter for reading go-eCharger data for iOBroker
 Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your car. Working with firmware V033, V040.0, V041.0, V054.7.
 
-For use with Hardware Generation 3 & 4 you have to enable "HTTP API v1"
+For use with hardware generation 3 & 4 you have to enable "HTTP API v1" in your go-e api.
 
 ### Settings
 To connect to the go-eCharger type in its IP-address in the config.
@@ -41,33 +41,57 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ! Note that missing version entries are typically dependency updates for security.
 
 ### 0.17.0 (xx.01.2024)
+
 * (HombachC) BREAKING: dropped support for js-controller 3.x
+
 ### 0.16.3 (23.12.2023)
+
 * (HombachC) add support for V055.8
 * (HombachC) year 2024 changes
+
 ### 0.16.2 (19.11.2023)
+
 * (HombachC) add support for V055.5 & V055.7
 * (HombachC) Change Sentry logging to new project
+
 ### 0.16.1 (19.11.2023)
+
 * (HombachC) Add support for V054.11
+
 ### 0.16.0 (18.11.2023)
+
 * (HombachC) replaced got by axios
+
 ### 0.15.5 (18.11.2023)
+
 * (HombachC) Add support for V054.7, Several dependency updates, code cleanup
+
 ### 0.15.4 (01.10.2023)
+
 * (HombachC) Several dependency updates, bump adapter-core to 3.x
+
 ### 0.15.3 (29.06.2023)
+
 * (HombachC) acknowledge settings states after adoption
+
 ### 0.15.2 (26.06.2023)
+
 * (HombachC) Changed config screen to ioBroker.admin 5 version
+
 ### 0.15.1 (19.06.2023)
+
 * (HombachC) removed travis
+
 ### 0.15.0 (15.06.2023)
-* (HombachC) BREAKING: dropped node.js 14 support
-* (HombachC) Add tests for node.js 20, removed for node.js 14, bumped dependencies
-* (HombachC) BREAKING: dropped ioBroker.admin 4 support
+
+- (HombachC) BREAKING: dropped node.js 14 support
+- (HombachC) Add tests for node.js 20, removed for node.js 14, bumped dependencies
+- (HombachC) BREAKING: dropped ioBroker.admin 4 support
+
 ### 0.14.4 (09.04.2023)
-* (HombachC) bumped dependencies
+
+- (HombachC) bumped dependencies
+
 ### 0.14.3 (29.12.2022)
 * (HombachC) bumped dependencies and year 2023 changes
 ### 0.14.2 (27.06.2022)
