@@ -1,14 +1,3 @@
-[![SNYK Known Vulnerabilities](https://snyk.io/test/github/hombach/ioBroker.go-e-charger/badge.svg)](https://snyk.io/test/github/hombach/ioBroker.go-e-charger)
-
-## Versions
-
-![Beta](https://img.shields.io/npm/v/iobroker.tibberlink.svg?color=red&label=beta)
-![Stable](https://iobroker.live/badges/tibberlink-stable.svg)
-![Installed](https://iobroker.live/badges/tibberlink-installed.svg)
-
-[![NPM](https://nodei.co/npm/iobroker.tibberlink.png?downloads=true)](https://nodei.co/npm/iobroker.tibberlink/)
-
-## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ![Logo](admin/go-eCharger.png)
 
 # ioBroker.go-eCharger
@@ -24,13 +13,16 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/hombach/iobroker.go-e-charger?logo=github&style=flat-square)
 ![GitHub issues](https://img.shields.io/github/issues/hombach/iobroker.go-e-charger?logo=github&style=flat-square)
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/hombach/iobroker.go-e-charger/test-and-release.yml?branch=main&logo=github&style=flat-square)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/hombach/iobroker.go-e-charger/node.js.yml?branch=main&logo=github&style=flat-square)
 [![CodeQL](https://github.com/hombach/ioBroker.go-e-charger/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/hombach/ioBroker.go-e-charger/actions/workflows/codeql-analysis.yml)
 [![Appveyor-CI](https://ci.appveyor.com/api/projects/status/github/hombach/ioBroker.go-e-charger?branch=master&svg=true)](https://ci.appveyor.com/project/hombach/iobroker-go-e-charger)
 [![SNYK Known Vulnerabilities](https://snyk.io/test/github/hombach/ioBroker.go-e-charger/badge.svg)](https://snyk.io/test/github/hombach/ioBroker.go-e-charger)
 
-# OLD
-![Node.js CI](https://github.com/hombach/ioBroker.go-e-charger/workflows/Node.js%20CI/badge.svg)
+## Versions
+
+![Beta](https://img.shields.io/npm/v/iobroker.go-e-charger.svg?color=red&label=beta)
+![Stable](https://iobroker.live/badges/go-e-charger-stable.svg)
+![Installed](https://iobroker.live/badges/go-e-charger-installed.svg)
 
 [![NPM](https://nodei.co/npm/iobroker.go-e-charger.png?downloads=true)](https://nodei.co/npm/iobroker.go-e-charger/)
 
