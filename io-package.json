@@ -1,8 +1,11 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.16.3",
+    "version": "0.17.0",
     "news": {
+      "0.17.0": {
+      	"en": "WiP"
+      },
       "0.16.3": {
       	"en": "Add support for V055.8",
       	"de": "Unterstützung für V055.8 hinzufügen",
@@ -249,19 +252,6 @@
         "pl": "wprowadzają wybrane stany zewnętrzne do kontroli ładunku",
         "uk": "вводить вибіркові зовнішні стани для контролю заряду",
         "zh-cn": "引进可选择的外部控制国家"
-      },
-      "0.4.0": {
-        "en": "added use of amx with firmware version 040",
-        "de": "Verwendung von amx ab Firmware Version 040",
-        "ru": "добавлено использование amx с прошивкой версии 040",
-        "pt": "uso adicionado de amx com firmware versão 040",
-        "nl": "vertaling:",
-        "fr": "utilisation supplémentaire d'amx avec le firmware version 040",
-        "it": "uso aggiunto di amx con versione firmware 040",
-        "es": "uso añadido de amx con la versión de firmware 040",
-        "pl": "dodano użycie amx z wersją oprogramowania 040",
-        "uk": "додано використання amx з версією прошивки 040",
-        "zh-cn": "添加用硬软件版本0.40"
       }
     },
     "titleLang": {
@@ -313,7 +303,7 @@
     },
     "dependencies": [
       {
-        "js-controller": ">=3.2.16"
+        "js-controller": ">=4.0.15"
       }
     ],
     "globalDependencies": [

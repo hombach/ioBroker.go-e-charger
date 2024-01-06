@@ -27,6 +27,8 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
 
+### 0.17.0 (xx.01.2024)
+* (HombachC) BREAKING: dropped support for js-controller 3.x
 ### 0.16.3 (23.12.2023)
 * (HombachC) add support for V055.8
 * (HombachC) year 2024 changes
