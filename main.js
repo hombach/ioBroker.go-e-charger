@@ -279,12 +279,12 @@ class go_e_charger extends utils.Adapter {
         //this.setStateAsync('Info.RebootTimer', Math.floor(status.rbt / 1000 / 3600), true); // trim to hours
         //this.setStateAsync('Info.CarState', Number(status.car), true);
         switch (status.psm) {
-            case '1':
+            case 1:
                 this.setStateAsync('Power.EnabledPhases', 1, true);
                 EnabledPhases = 1;
                 this.log.debug(`got enabled phases ${EnabledPhases}`);
                 break;
-            case '2':
+            case 2:
                 this.setStateAsync('Power.EnabledPhases', 3, true);
                 EnabledPhases = 3;
                 this.log.debug(`got enabled phases ${EnabledPhases}`);
