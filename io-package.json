@@ -353,6 +353,20 @@
       "native": {}
     },
     {
+      "_id": "Info.HardwareVersion",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Hardware version of charger",
+        "type": "string",
+        "unit": "",
+        "read": true,
+        "write": false,
+        "def": ""
+      },
+      "native": {}
+    },
+    {
       "_id": "Info.RebootCounter",
       "type": "state",
       "common": {
@@ -450,6 +464,20 @@
       "common": {
         "role": "value",
         "name": "No of available grid phases",
+        "type": "number",
+        "unit": "phase",
+        "read": true,
+        "write": false,
+        "def": 0
+      },
+      "native": {}
+    },
+    {
+      "_id": "Power.EnabledPhases",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "No of enable phases in go-e wallbox",
         "type": "number",
         "unit": "phase",
         "read": true,

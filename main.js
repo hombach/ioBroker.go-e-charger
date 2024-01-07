@@ -12,6 +12,7 @@ const adapterIntervals = {};
 // Variablen
 let FirstStart       = true;
 let ZielAmpere       = 5;
+let EnabledPhases    = 0;
 let OptAmpere        = 6;
 let MinHomeBatVal    = 87;
 let OffVerzoegerung  = 0;
@@ -24,6 +25,7 @@ let SolarPower       = 0;
 let HouseConsumption = 0;
 let BatSoC           = 0;
 let Firmware         = '0';
+let Hardware         = '0';
 
 class go_e_charger extends utils.Adapter {
 
@@ -66,6 +68,7 @@ class go_e_charger extends utils.Adapter {
 
         if (this.config.ipaddress) {
             await this.Read_Charger();
+            await this.Read_ChargerAPIV2();
             this.log.info('IP address found in config: ' + this.config.ipaddress);
 
             if (!this.config.polltimelive) {
@@ -249,6 +252,90 @@ class go_e_charger extends utils.Adapter {
         this.setStateAsync('Info.FirmwareVersion', Firmware, true);
         this.log.debug('got and parsed go-eCharger data');
     }
+
+
+    /*****************************************************************************************/
+    Get_Hardware() {}
+
+    /*****************************************************************************************/
+    async Read_ChargerAPIV2() {
+        const axios = require('axios');
+        // @ts-ignore axios.get is valid
+        await axios.get(`http://${this.config.ipaddress}/api/status`, { transformResponse: (r) => r })
+            .then(response => {   //.status == 200
+                const result = JSON.parse(response.data);
+                this.log.debug(`Read charger API V2: ${response.data}`);
+                this.ParseStatusAPIV2(result);
+            })
+            .catch(error => {
+                this.log.error(`Error in calling go-eCharger API V2: ${error}`);
+                this.log.error(`Please verify IP address or enable API V2: ${this.config.ipaddress} !!!`);
+            }); // END catch
+    } // END Read_ChargerAPIV2
+
+    /*****************************************************************************************/
+    ParseStatusAPIV2(status) {
+        //this.setStateAsync('Info.RebootCounter', Number(status.rbc), true);
+        //this.setStateAsync('Info.RebootTimer', Math.floor(status.rbt / 1000 / 3600), true); // trim to hours
+        //this.setStateAsync('Info.CarState', Number(status.car), true);
+        switch (status.psm) {
+            case '1':
+                this.setStateAsync('Power.EnabledPhases', 1, true);
+                EnabledPhases = 1;
+                break;
+            case '2':
+                this.setStateAsync('Power.EnabledPhases', 3, true);
+                EnabledPhases = 3;
+                break;
+            default:
+                this.setStateAsync('Power.EnabledPhases', 0, true);
+                EnabledPhases = 0;
+        }
+        //this.setStateAsync('Power.ChargeCurrent', Number(status.amp), true);
+        //this.setStateAsync('Power.ChargeCurrentVolatile', Number(status.amx), true);
+        //switch (status.alw) {
+        //case '0':
+        //this.setStateAsync('Power.ChargingAllowed', false, true);
+        //break;
+        //case '1':
+        //this.setStateAsync('Power.ChargingAllowed', true, true);
+        //break;
+        //}
+        //this.setStateAsync('Power.GridPhases', ((32 & status.pha) >> 5) + ((16 & status.pha) >> 4) + ((8 & status.pha) >> 3), true);
+        //this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
+        //this.setStateAsync('Power.Charge', (status.nrg[11] * 10), true); // trim to Watt
+        //this.setStateAsync('Power.MeasuredMaxPhaseCurrent', (Math.max(status.nrg[4], status.nrg[5], status.nrg[6]) / 10), true);
+        Hardware = status.typ;
+        this.setStateAsync('Info.HardwareVersion', Hardware, true);
+        this.log.debug('got and parsed go-eCharger data with API V2');
+    }
+
+    /*****************************************************************************************/
+    Switch_Phases(Phases) {
+        switch (Phases) {
+            case 1:
+                this.log.debug(`try to switch to single phase mode`);
+                break;
+            case 3:
+                this.log.debug(`try to switch to 3-phase mode`);
+        }
+        /*
+        Ab HW3 Phasenumschaltung - per API2
+        Auf 1. Phase schalten: http://192.168.100.188/api/set?psm=1
+        Auf 3. Phasen schalten: http://192.168.100.188/api/set?psm=2
+
+        # Get settings (all or some, see https://github.com/goecharger/go-eCharg ... keys-de.md ):
+        curl "http://192.168.100.188/api/status"
+        curl "http://192.168.100.188/api/status?filter=fwv,typ"
+        {
+            "fwv": "055.8",
+            "typ": "go-eCharger_V4"
+        }
+        */
+    }
+
+
+
 
     /*****************************************************************************************/
     Charge_Config(Allow, Ampere, LogMessage) {
@@ -601,4 +688,15 @@ mcu     - String(16) -MQTT custom Username
 mck     - String(16) -MQTT custom key
 mcc     - uint8_t   - MQTT custom connected
                       0: nicht verbunden                     1: verbunden
+
+
+https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-de.md
+
+Ab HW3 Phasenumschaltung - per API2
+Auf 1. Phase schalten: http://192.168.xx.xx/api/set?psm=1
+Auf 3. Phasen schalten: http://192.168.xx.xx/api/set?psm=2
+
+# Get settings (all or some, see https://github.com/goecharger/go-eCharg ... keys-de.md ):
+curl "http://1.2.3.4/api/status"
+curl "http://1.2.3.4/api/status?filter=amp,psm"
 */
