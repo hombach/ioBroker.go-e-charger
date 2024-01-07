@@ -601,6 +601,20 @@
       "native": {}
     },
     {
+      "_id": "Settings.Charge3Phase",
+      "type": "state",
+      "common": {
+        "role": "value",
+        "name": "Set manual charge to 3 phase mode",
+        "type": "boolean",
+        "unit": "",
+        "read": true,
+        "write": true,
+        "def": true
+      },
+      "native": {}
+    },
+    {
       "_id": "Settings.ChargeManager",
       "type": "state",
       "common": {

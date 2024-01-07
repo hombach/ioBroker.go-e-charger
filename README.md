@@ -44,6 +44,7 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 
 - (HombachC) BREAKING: dropped support for js-controller 3.x
 - (HombachC) Verify for working API V2 and get hardware version and enabled phases
+- (HombachC) optimzed sentry logging
 
 ### 0.16.3 (23.12.2023)
 
