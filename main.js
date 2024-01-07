@@ -282,15 +282,19 @@ class go_e_charger extends utils.Adapter {
             case '1':
                 this.setStateAsync('Power.EnabledPhases', 1, true);
                 EnabledPhases = 1;
+                this.log.debug(`got enabled phases ${EnabledPhases}`);
                 break;
             case '2':
                 this.setStateAsync('Power.EnabledPhases', 3, true);
                 EnabledPhases = 3;
+                this.log.debug(`got enabled phases ${EnabledPhases}`);
                 break;
             default:
                 this.setStateAsync('Power.EnabledPhases', 0, true);
+                this.log.debug(`got enabled phases ${EnabledPhases}`);
                 EnabledPhases = 0;
         }
+        this.log.debug(`got enabled phases result ${EnabledPhases}`);
         //this.setStateAsync('Power.ChargeCurrent', Number(status.amp), true);
         //this.setStateAsync('Power.ChargeCurrentVolatile', Number(status.amx), true);
         //switch (status.alw) {
@@ -307,7 +311,7 @@ class go_e_charger extends utils.Adapter {
         //this.setStateAsync('Power.MeasuredMaxPhaseCurrent', (Math.max(status.nrg[4], status.nrg[5], status.nrg[6]) / 10), true);
         Hardware = status.typ;
         this.setStateAsync('Info.HardwareVersion', Hardware, true);
-        this.log.debug('got and parsed go-eCharger data with API V2');
+        this.log.debug(`got and parsed go-eCharger data with API V2`);
     }
 
     /*****************************************************************************************/

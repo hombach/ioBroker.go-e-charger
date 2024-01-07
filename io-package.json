@@ -477,7 +477,7 @@
       "type": "state",
       "common": {
         "role": "value",
-        "name": "No of enable phases in go-e wallbox",
+        "name": "No of enabled phases in go-e wallbox",
         "type": "number",
         "unit": "phase",
         "read": true,
