@@ -300,8 +300,8 @@ class go_e_charger extends utils.Adapter {
 
     /*****************************************************************************************/
     Switch_3Phases(Charge3Phase) {
-        const axios = require('axios');
         if (HardwareMin3) {
+            const axios = require('axios');
             let psm = 1 ;
             if (Charge3Phase) psm = 2;
             (async () => {
