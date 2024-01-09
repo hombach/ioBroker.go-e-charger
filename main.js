@@ -177,8 +177,9 @@ class go_e_charger extends utils.Adapter {
         }
 
         if (ChargeNOW) { // Charge-NOW is enabled
-            this.Charge_Config('1', ChargeCurrent, 'go-eCharger für Schnellladung aktivieren');  // keep active charging current!!
+            this.Charge_Config('1', ChargeCurrent, 'go-eCharger für erzwungene Schnellladung aktivieren');  // keep active charging current!!
             this.Switch_3Phases(Charge3Phase);
+            await this.Read_ChargerAPIV2();
         }
         else if (ChargeManager) { // Charge-Manager is enabled
             BatSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
@@ -308,7 +309,7 @@ class go_e_charger extends utils.Adapter {
                 // @ts-ignore axios.get is valid
                     const response = await axios.get(`http://${this.config.ipaddress}/api/set?psm=${psm}`);
                     if (!response.error && response.status === 200) {
-                        this.log.debug(`Sent: ${response.data}`);
+                        this.log.debug(`Sent: PSM=${psm}`);
                     }
                     else if (response.error) {
                         this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} 3 phases = ${Charge3Phase}`);
