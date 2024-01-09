@@ -114,7 +114,7 @@ class go_e_charger extends utils.Adapter {
                     Charge3Phase = await this.asyncGetStateVal('Settings.Charge3Phase'); // Get enable of 3 phases for charging override
                     this.setStateAsync('Settings.Charge3Phase', Charge3Phase, true);
                 }
-            } else {     // The state was deleted
+            } else { // The state was deleted
                 this.log.warn(`state ${id} deleted`);
             }
         } catch (e) {
