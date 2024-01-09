@@ -4,7 +4,17 @@
     "version": "0.17.0",
     "news": {
       "0.17.0": {
-      	"en": "WiP"
+        "en": "BREAKING: dropped support for js-controller 3.x\nimplement API V2 to get and switch charging phases\noptimized sentry logging",
+        "de": "WICHTIG: Unterstützung für js-controller 3.x wurde eingestellt\nImplementierung von API V2 zum Abrufen und Wechseln von Ladephasen\noptimiertes Sentry-Protokollierung",
+        "ru": "ВАЖНО: Прекращена поддержка js-controller 3.x\nреализован API V2 для получения и переключения фаз зарядки\nоптимизирована запись в Sentry",
+        "pt": "IMPORTANTE: Suporte interrompido para js-controller 3.x\nimplementar API V2 para obter e alternar fases de carregamento\nregistro Sentry otimizado",
+        "nl": "BELANGRIJK: Ondersteuning voor js-controller 3.x is stopgezet\nimplementeer API V2 om laadfasen op te halen en te schakelen\ngeoptimaliseerde Sentry-logging",
+        "fr": "IMPORTANT : Prise en charge abandonnée pour js-controller 3.x\nimplémenter l'API V2 pour obtenir et basculer les phases de charge\njournalisation Sentry optimisée",
+        "it": "IMPORTANTE: Supporto interrotto per js-controller 3.x\nimplementare API V2 per ottenere e cambiare le fasi di ricarica\nregistrazione Sentry ottimizzata",
+        "es": "¡IMPORTANTE! Soporte discontinuado para js-controller 3.x\nimplementar API V2 para obtener y cambiar las fases de carga\nregistro de Sentry optimizado",
+        "pl": "WAŻNE: Zakończono wsparcie dla js-controller 3.x\nwdrożenie API V2 do pobierania i przełączania faz ładowania\nzoptymalizowane logowanie w Sentry",
+        "uk": "ВАЖЛИВО: Підтримка js-controller 3.x припинена\nвпроваджено API V2 для отримання та перемикання фаз заряду\nоптимізоване ведення журналу в Sentry",
+        "zh-cn": "重大变更：不再支持 js-controller 3.x\n实现 API V2 以获取和切换充电阶段\n优化的 Sentry 记录"
       },
       "0.16.3": {
       	"en": "Add support for V055.8",
