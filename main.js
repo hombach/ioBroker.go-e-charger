@@ -266,7 +266,7 @@ class go_e_charger extends utils.Adapter {
     async Read_ChargerAPIV2() {
         const axios = require('axios');
         // @ts-ignore axios.get is valid
-        await axios.get(`http://${this.config.ipaddress}/api/status?filter=alw,rbc,rbt,car,amp,acu,psm,pha,eto,nrg,fwv`, { transformResponse: (r) => r })
+        await axios.get(`http://${this.config.ipaddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ`, { transformResponse: (r) => r })
             .then(response => {   //.status == 200
                 const result = JSON.parse(response.data);
                 this.log.debug(`Read charger API V2: ${response.data}`);
