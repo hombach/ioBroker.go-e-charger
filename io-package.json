@@ -4,7 +4,17 @@
     "version": "0.17.1",
     "news": {
       "0.17.1": {
-        "en": "WiP"
+        "en": "Fix phases calculation error (#533)",
+        "de": "Fehler in der Phasenberechnung beheben (#533)",
+        "ru": "Исправлена ошибка в расчете фаз (#533)",
+        "pt": "Corrigir erro de cálculo de fases (#533)",
+        "nl": "Fout in fasenberekening oplossen (#533)",
+        "fr": "Corriger l'erreur de calcul des phases (#533)",
+        "it": "Correggi errore di calcolo delle fasi (#533)",
+        "es": "Corregir error en el cálculo de fases (#533)",
+        "pl": "Napraw błąd w obliczeniach faz (#533)",
+        "uk": "Виправлено помилку в обчисленні фаз (#533)",
+        "zh-cn": "修复阶段计算错误 (#533)"
       },
       "0.17.0": {
         "en": "BREAKING: dropped support for js-controller 3.x\nimplement API V2 to get and switch charging phases\noptimized sentry logging",
