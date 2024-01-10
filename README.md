@@ -30,6 +30,7 @@
 Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your car. Working with firmware V033, V040.0, V041.0, V054.7.
 
 For use with hardware generation 3 & 4 you have to enable "HTTP API v1" in your go-e api.
+For use with phase switching you need hardware generation 3 or 4 and additionally you have to enable "HTTP API v2" in your go-e api.
 
 ### Settings
 To connect to the go-eCharger type in its IP-address in the config.
@@ -40,7 +41,7 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
 
-### 0.17.0 (xx.01.2024) WORK in PROGRESS
+### 0.17.0 (10.01.2024)
 
 - (HombachC) BREAKING: dropped support for js-controller 3.x
 - (HombachC) Implement API V2 to get and switch charging phases
