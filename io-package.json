@@ -1,8 +1,11 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.17.0",
+    "version": "0.17.1",
     "news": {
+      "0.17.1": {
+        "en": "WiP"
+      },
       "0.17.0": {
         "en": "BREAKING: dropped support for js-controller 3.x\nimplement API V2 to get and switch charging phases\noptimized sentry logging",
         "de": "WICHTIG: Unterstützung für js-controller 3.x wurde eingestellt\nImplementierung von API V2 zum Abrufen und Wechseln von Ladephasen\noptimiertes Sentry-Protokollierung",
@@ -249,19 +252,6 @@
         "pl": "mierzyć maksymalny",
         "uk": "доданий вимірний максимальний струм",
         "zh-cn": "增 减"
-      },
-      "0.5.0": {
-        "en": "introduces selectable external states for charge control",
-        "de": "Jetzt wählbare externe Zustände zur Ladungssteuerung einstellbar",
-        "ru": "вводит подборные внешние государства для контроля заряда",
-        "pt": "introduz estados externos selecionáveis para controle de carga",
-        "nl": "introduces selectable external states for charge control",
-        "fr": "introduit des états externes sélectables pour le contrôle des charges",
-        "it": "introduce stati esterni selezionabili per il controllo della carica",
-        "es": "introduce estados externos seleccionables para control de carga",
-        "pl": "wprowadzają wybrane stany zewnętrzne do kontroli ładunku",
-        "uk": "вводить вибіркові зовнішні стани для контролю заряду",
-        "zh-cn": "引进可选择的外部控制国家"
       }
     },
     "titleLang": {

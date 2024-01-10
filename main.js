@@ -174,6 +174,7 @@ class go_e_charger extends utils.Adapter {
         this.log.debug(`StateMachine cycle start`);
         if (ChargeNOW || ChargeManager) { // Charge-NOW or Charge-Manager is enabled
             await this.Read_Charger();
+            await this.Read_ChargerAPIV2();
         }
 
         if (ChargeNOW) { // Charge-NOW is enabled
@@ -251,7 +252,8 @@ class go_e_charger extends utils.Adapter {
                 this.setStateAsync('Power.ChargingAllowed', true, true);
                 break;
         }
-        this.setStateAsync('Power.GridPhases', ((32 & status.pha) >> 5) + ((16 & status.pha) >> 4) + ((8 & status.pha) >> 3), true);
+        GridPhases = ((32 & status.pha) >> 5) + ((16 & status.pha) >> 4) + ((8 & status.pha) >> 3);
+        this.setStateAsync('Power.GridPhases', GridPhases, true);
         this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
         this.setStateAsync('Power.Charge', (status.nrg[11] * 10), true); // trim to Watt
         this.setStateAsync('Power.MeasuredMaxPhaseCurrent', (Math.max(status.nrg[4], status.nrg[5], status.nrg[6]) / 10), true);
@@ -416,11 +418,15 @@ class go_e_charger extends utils.Adapter {
         BatSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
         this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
         ChargePower = await this.asyncGetStateVal('Power.Charge');
-        GridPhases = await this.asyncGetStateVal('Power.GridPhases');
-
+        let Phases = 3;
+        if (HardwareMin3 && EnabledPhases){
+            Phases = EnabledPhases;
+        } else {
+            Phases = GridPhases;
+        }
         OptAmpere = await (Math.floor(
             (SolarPower - HouseConsumption + ChargePower - 100
-                + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal))) / 230 / GridPhases)); // -100 W Reserve + max. 2000 für Batterieleerung
+                + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal))) / 230 / Phases)); // -100 W Reserve + max. 2000 für Batterieleerung
         if (OptAmpere > 16) OptAmpere = 16;
         this.log.debug(`Optimal charging current would be: ${OptAmpere} A`);
 
