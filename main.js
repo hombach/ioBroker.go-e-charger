@@ -275,7 +275,7 @@ class go_e_charger extends utils.Adapter {
             })
             .catch(error => {
                 this.log.error(`Error in calling go-eCharger API V2: ${error}`);
-                this.log.warn(`If you have a Charge minumum Hardware Version 3: please enable API V2 for IP: ${this.config.ipaddress}`);
+                this.log.warn(`If you have a charger minimum hardware version 3: please enable API V2 for IP: ${this.config.ipaddress}`);
             }); // END catch
     } // END Read_ChargerAPIV2
 
