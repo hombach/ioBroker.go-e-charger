@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.17.1",
+    "version": "0.17.2",
     "news": {
+      "0.17.2": {
+        "en": "Fix error in calling API V2 on old HW",
+        "de": "Fehler bei Aufruf von API V2 auf älterer Hardware beheben",
+        "ru": "Исправлена ошибка при вызове API V2 на старом оборудовании",
+        "pt": "Corrigir erro na chamada da API V2 em hardware antigo",
+        "nl": "Fout bij het oproepen van API V2 op oude hardware oplossen",
+        "fr": "Corriger l'erreur lors de l'appel à l'API V2 sur du matériel ancien",
+        "it": "Correggi errore nella chiamata API V2 su hardware vecchio",
+        "es": "Corregir error al llamar a la API V2 en hardware antiguo",
+        "pl": "Napraw błąd przy wywoływaniu API V2 na starym sprzęcie",
+        "uk": "Виправлено помилку при виклику API V2 на старому обладнанні",
+        "zh-cn": "修复在旧硬件上调用 API V2 的错误"
+      },
       "0.17.1": {
         "en": "Fix phases calculation error (#533)",
         "de": "Fehler in der Phasenberechnung beheben (#533)",
@@ -249,19 +262,6 @@
         "pl": "poprawka dopasowa do funkcji logiki",
         "uk": "додано виправлення сітчастої фази для заряду логіки",
         "zh-cn": "加电线管"
-      },
-      "0.7.0": {
-        "en": "added measured maximum current",
-        "de": "gemessener Maximalstrom hinzugefügt",
-        "ru": "добавлено измерение максимального тока",
-        "pt": "corrente máxima medida adicionada",
-        "nl": "gemeten maximale stroom",
-        "fr": "débit maximal",
-        "it": "corrente massima misurata",
-        "es": "corriente máxima medida",
-        "pl": "mierzyć maksymalny",
-        "uk": "доданий вимірний максимальний струм",
-        "zh-cn": "增 减"
       }
     },
     "titleLang": {

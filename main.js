@@ -174,13 +174,13 @@ class go_e_charger extends utils.Adapter {
         this.log.debug(`StateMachine cycle start`);
         if (ChargeNOW || ChargeManager) { // Charge-NOW or Charge-Manager is enabled
             await this.Read_Charger();
-            await this.Read_ChargerAPIV2();
+            if (HardwareMin3) await this.Read_ChargerAPIV2();
         }
 
         if (ChargeNOW) { // Charge-NOW is enabled
             this.Charge_Config('1', ChargeCurrent, 'go-eCharger für erzwungene Schnellladung aktivieren');  // keep active charging current!!
             this.Switch_3Phases(Charge3Phase);
-            await this.Read_ChargerAPIV2();
+            if (HardwareMin3) await this.Read_ChargerAPIV2();
         }
         else if (ChargeManager) { // Charge-Manager is enabled
             BatSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
@@ -275,7 +275,7 @@ class go_e_charger extends utils.Adapter {
             })
             .catch(error => {
                 this.log.error(`Error in calling go-eCharger API V2: ${error}`);
-                this.log.error(`Please verify IP address or enable API V2: ${this.config.ipaddress} !!!`);
+                this.log.warn(`If you have a Charge minumum Hardware Version 3: please enable API V2 for IP: ${this.config.ipaddress}`);
             }); // END catch
     } // END Read_ChargerAPIV2
 
