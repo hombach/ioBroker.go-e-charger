@@ -1,24 +1,25 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: Node.js CI
+name: Test and Release
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches:
+      - "*"
+  pull_request: {}
 
 jobs:
   # Performs quick checks before the expensive test runs
-  quick-test:
+  check-and-lint:
     if: contains(github.event.head_commit.message, '[skip ci]') == false
 
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         node-version: [20.x]
-
+  
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
@@ -26,23 +27,33 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install Dependencies
-        run: npm install
+      - name: NPM version
+        run: npm -v
 
-      - name: Build
-        run: npm run build --if-present
-      - name: QuickTest
-        run: npm test
+      - name: Install Dependencies
+        #run: npm install
+        run: npm install --legacy-peer-deps
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+        #run: npm install
+      - run: npm install --legacy-peer-deps
+      - run: npm run build
 
   # Runs adapter tests on all supported new node versions and OSes
   adapter-tests:
     if: contains(github.event.head_commit.message, '[skip ci]') == false
-    needs: [quick-test]
+    needs: [check-and-lint, build]
 
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [16.x, 18.x, 20.x]
+        node-version: [18.x, 20.x, 16.x]
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
@@ -53,10 +64,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install Dependencies
-        run: npm install
+        #run: npm install
+        run: npm install --legacy-peer-deps
 
-      - name: Local Tests
-        run: npm ci
-      - run: npm run build --if-present
-      - run: npm run test:integration --if-present
-      - run: npm test
+      - name: Run local Tests
+        run: npm test

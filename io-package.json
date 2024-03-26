@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.17.2",
+    "version": "0.17.3",
     "news": {
+      "0.17.3": {
+        "en": "Update GitHub workflows",
+        "de": "GitHub-Workflows aktualisieren",
+        "ru": "Обновить рабочие процессы GitHub",
+        "pt": "Atualizar fluxos de trabalho do GitHub",
+        "nl": "GitHub-workflows bijwerken",
+        "fr": "Mise à jour des workflows GitHub",
+        "it": "Aggiornare i workflow di GitHub",
+        "es": "Actualizar flujos de trabajo de GitHub",
+        "pl": "Aktualizacja przepływów pracy na GitHubie",
+        "uk": "Оновити робочі процеси GitHub",
+        "zh-cn": "更新 GitHub 工作流程"
+      },
       "0.17.2": {
         "en": "Fix error in calling API V2 on old HW",
         "de": "Fehler bei Aufruf von API V2 auf älterer Hardware beheben",

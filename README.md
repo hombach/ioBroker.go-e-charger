@@ -41,6 +41,10 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
 
+### 0.17.3 (26.03.2024)
+
+- (HombachC) Update github workflows
+
 ### 0.17.2 (16.01.2024)
 
 - (HombachC) Fix error in calling API V2 on old HW
