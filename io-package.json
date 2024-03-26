@@ -250,19 +250,6 @@
         "uk": "BREAKING: скидати node.js 10 support, bumped залежності",
         "zh-cn": "BREAKRE:撤除不de.js 10支持,倾弃的依赖"
       },
-      "0.9.0": {
-        "en": "support for firmware 041.0",
-        "de": "Unterstützung für Firmware 041.0",
-        "ru": "поддержка для прошивки 041.0",
-        "pt": "suporte para firmware 041.0",
-        "nl": "quality over quantity (qoq) releases vertaling:",
-        "fr": "support pour firmware 041.0",
-        "it": "supporto per firmware 041.0",
-        "es": "soporte para firmware 041.0",
-        "pl": "popierać oprogramowanie 041.0",
-        "uk": "підтримка прошивки 041.0",
-        "zh-cn": "a. 对企业知识的支助"
-      },
       "0.8.0": {
         "en": "added gridphase correction to charge logic",
         "de": "Netzphasenkorrektur zur Ladelogik hinzugefügt",
