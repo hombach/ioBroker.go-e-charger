@@ -41,6 +41,10 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
 
+### 0.17.5 (2x.03.2024)
+
+- (HombachC) smaller logo
+
 ### 0.17.4 (27.03.2024)
 
 - (HombachC) added support for firmware V56.1

@@ -1,8 +1,11 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.17.4",
+    "version": "0.17.5",
     "news": {
+      "0.17.5": {
+        "en": "smaller logo"
+      },
       "0.17.4": {
         "en": "added support for firmware V56.1",
         "de": "Unterstützung für Firmware V56.1 hinzugefügt",
@@ -249,19 +252,6 @@
         "pl": "BREAKING: Uruchomione węzełki.js 10 support, bumpowane zależności",
         "uk": "BREAKING: скидати node.js 10 support, bumped залежності",
         "zh-cn": "BREAKRE:撤除不de.js 10支持,倾弃的依赖"
-      },
-      "0.8.0": {
-        "en": "added gridphase correction to charge logic",
-        "de": "Netzphasenkorrektur zur Ladelogik hinzugefügt",
-        "ru": "добавлена коррекция сетки для зарядки логики",
-        "pt": "correção de grades adicionadas para carregar a lógica",
-        "nl": "vertaling:",
-        "fr": "correction de la grille ajoutée pour charger la logique",
-        "it": "correzione grigliata aggiunta per caricare la logica",
-        "es": "corrección de cuadrícula agregada para cargar lógica",
-        "pl": "poprawka dopasowa do funkcji logiki",
-        "uk": "додано виправлення сітчастої фази для заряду логіки",
-        "zh-cn": "加电线管"
       }
     },
     "titleLang": {
