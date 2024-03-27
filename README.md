@@ -44,6 +44,7 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ### 0.17.5 (2x.03.2024)
 
 - (HombachC) smaller logo
+- (HombachC) corrected io-package.json according to new schema
 
 ### 0.17.4 (27.03.2024)
 

@@ -4,7 +4,17 @@
     "version": "0.17.5",
     "news": {
       "0.17.5": {
-        "en": "smaller logo"
+        "en": "smaller logo\ncorrected io-package.json according to new schema",
+        "de": "kleineres Logo\nio-package.json entsprechend dem neuen Schema korrigiert",
+        "ru": "меньший логотип\nисправлен файл io-package.json в соответствии с новой схемой",
+        "pt": "logotipo menor\ncorrigido io-package.json de acordo com o novo esquema",
+        "nl": "kleiner logo\ncorrectie van io-package.json volgens het nieuwe schema",
+        "fr": "logo plus petit\ncorrigé io-package.json selon le nouveau schéma",
+        "it": "logo più piccolo\ncorretto io-package.json secondo il nuovo schema",
+        "es": "logotipo más pequeño\ncorregido io-package.json según el nuevo esquema",
+        "pl": "mniejsze logo\npoprawiono plik io-package.json zgodnie z nowym schematem",
+        "uk": "менший логотип\nвиправлено файл io-package.json відповідно до нової схеми",
+        "zh-cn": "较小的徽标\n根据新模式更正了 io-package.json"
       },
       "0.17.4": {
         "en": "added support for firmware V56.1",
@@ -284,9 +294,16 @@
       "Christian Hombach <kostal-piko-ba@homba.ch>"
     ],
     "keywords": [
-      "go-e", "go-eCharger", "wallbox", "solar-power"
+      "go-e",
+      "go-eCharger",
+      "wallbox",
+      "solar-power"
     ],
     "license": "MIT",
+    "licenseInformation": {
+      "license": "MIT",
+      "type": "free"
+    },
     "platform": "Javascript/Node.js",
     "icon": "go-eCharger.png",
     "extIcon": "https://raw.githubusercontent.com/hombach/ioBroker.go-e-charger/master/admin/go-eCharger.png",
