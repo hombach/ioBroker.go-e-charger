@@ -299,7 +299,7 @@
       "wallbox",
       "solar-power"
     ],
-    "tier": 2,
+    "tier": 3,
     "licenseInformation": {
       "license": "MIT",
       "type": "free"
