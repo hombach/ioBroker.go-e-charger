@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.17.3",
+    "version": "0.17.4",
     "news": {
+      "0.17.4": {
+        "en": "added support for firmware V56.1",
+        "de": "Unterstützung für Firmware V56.1 hinzugefügt",
+        "ru": "добавлена поддержка прошивки V56.1",
+        "pt": "adicionado suporte para firmware V56.1",
+        "nl": "ondersteuning toegevoegd voor firmware V56.1",
+        "fr": "ajouté le support pour le firmware V56.1",
+        "it": "aggiunto il supporto per il firmware V56.1",
+        "es": "añadido soporte para firmware V56.1",
+        "pl": "dodano obsługę oprogramowania V56.1",
+        "uk": "додано підтримку прошивки V56.1",
+        "zh-cn": "添加了对固件 V56.1 的支持"
+      },
       "0.17.3": {
         "en": "Update GitHub workflows",
         "de": "GitHub-Workflows aktualisieren",
@@ -184,19 +197,6 @@
         "pl": "BREAKING: Uruchomiona obsługa węzła.js 14, dodaje testy dla węzła.js 20, zrzucił ioBrokera. Administracja 4",
         "uk": "BREAKING: скидати node.js 14 підтримка, додати тести для node.js 20, скидати ioBroker. Підтримка адміністратора 4",
         "zh-cn": "BREAKRE:撤除不de.js 14支持,增加20js,降水箱。 附录4"
-      },
-      "0.14.3": {
-        "en": "bumped dependencies and year 2023 changes",
-        "de": "Abhängigkeiten aktualisiert und Jahr 2023 Änderungen",
-        "ru": "сбитые зависимости и год 2023 изменения",
-        "pt": "dependências acidentadas e mudanças de ano 2023",
-        "nl": "quality over quantity (qoq) releases vertaling:",
-        "fr": "dépendances et changements de l'année 2023",
-        "it": "urtato dipendenze e anno 2023 modifiche",
-        "es": "dependencia y cambios del año 2023",
-        "pl": "w zależności od miejsca i roku 2023 zmiany",
-        "uk": "погані залежності і 2023 зміни",
-        "zh-cn": "b 倾销的属地和年 2023个变化"
       },
       "0.14.2": {
         "en": "bumped dependencies because of security vulnerability",
