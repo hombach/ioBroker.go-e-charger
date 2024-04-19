@@ -43,9 +43,9 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 
 ### 0.18.0 (19.04.2024)
 
-(HombachC) BREAKING: dropped support for node.js 16 (#558)
-(HombachC) BREAKING: js-controller >= 5 is required (#559)
-(HombachC) updated adapter-core to 3.1.4
+- (HombachC) BREAKING: dropped support for node.js 16 (#558)
+- (HombachC) BREAKING: js-controller >= 5 is required (#559)
+- (HombachC) updated adapter-core to 3.1.4
 
 ### 0.17.5 (27.03.2024)
 
