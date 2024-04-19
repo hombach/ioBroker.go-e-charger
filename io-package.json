@@ -4,18 +4,18 @@
     "version": "0.18.0",
     "news": {
       "0.18.0": {
-				"en": "BREAKING: dropped support for Node.js 16 (#368)\nBREAKING: js-controller >= 5 is required\nupdate adapter-core to 3.1.4",
-				"de": "WICHTIG: Unterstützung für Node.js 16 wurde eingestellt (#368)\nWICHTIG: js-controller >= 5 ist erforderlich\nadapter-core auf 3.1.4 aktualisiert",
-				"ru": "ВАЖНО: прекращена поддержка Node.js 16 (#368)\nВАЖНО: требуется js-controller >= 5\nобновление adapter-core до 3.1.4",
-				"pt": "IMPORTANTE: suporte para Node.js 16 foi removido (#368)\nIMPORTANTE: js-controller >= 5 é necessário\natualização do adapter-core para 3.1.4",
-				"nl": "BELANGRIJK: ondersteuning voor Node.js 16 is verwijderd (#368)\nBELANGRIJK: js-controller >= 5 is vereist\nupdate adapter-core naar 3.1.4",
-				"fr": "IMPORTANT : prise en charge de Node.js 16 abandonnée (#368)\nIMPORTANT : js-controller >= 5 est requis\nmise à jour de adapter-core vers 3.1.4",
-				"it": "IMPORTANTE: supporto per Node.js 16 eliminato (#368)\nIMPORTANTE: js-controller >= 5 è richiesto\naggiornato adapter-core a 3.1.4",
-				"es": "IMPORTANTE: se eliminó el soporte para Node.js 16 (#368)\nIMPORTANTE: se requiere js-controller >= 5\nactualización de adapter-core a 3.1.4",
-				"pl": "WAŻNE: wsparcie dla Node.js 16 zostało usunięte (#368)\nWAŻNE: wymagane jest js-controller >= 5\naktualizacja adapter-core do wersji 3.1.4",
-				"uk": "ВАЖЛИВО: підтримка Node.js 16 скасована (#368)\nВАЖЛИВО: потрібен js-controller >= 5\nоновлення adapter-core до 3.1.4",
-				"zh-cn": "重要: 放弃对 Node.js 16 的支持 (#368)\n重要: js-controller >= 5 已必需\n将 adapter-core 更新到 3.1.4"
-			},
+        "en": "BREAKING: dropped support for Node.js 16 (#368)\nBREAKING: js-controller >= 5 is required\nupdate adapter-core to 3.1.4",
+        "de": "WICHTIG: Unterstützung für Node.js 16 wurde eingestellt (#368)\nWICHTIG: js-controller >= 5 ist erforderlich\nadapter-core auf 3.1.4 aktualisiert",
+        "ru": "ВАЖНО: прекращена поддержка Node.js 16 (#368)\nВАЖНО: требуется js-controller >= 5\nобновление adapter-core до 3.1.4",
+        "pt": "IMPORTANTE: suporte para Node.js 16 foi removido (#368)\nIMPORTANTE: js-controller >= 5 é necessário\natualização do adapter-core para 3.1.4",
+        "nl": "BELANGRIJK: ondersteuning voor Node.js 16 is verwijderd (#368)\nBELANGRIJK: js-controller >= 5 is vereist\nupdate adapter-core naar 3.1.4",
+        "fr": "IMPORTANT : prise en charge de Node.js 16 abandonnée (#368)\nIMPORTANT : js-controller >= 5 est requis\nmise à jour de adapter-core vers 3.1.4",
+        "it": "IMPORTANTE: supporto per Node.js 16 eliminato (#368)\nIMPORTANTE: js-controller >= 5 è richiesto\naggiornato adapter-core a 3.1.4",
+        "es": "IMPORTANTE: se eliminó el soporte para Node.js 16 (#368)\nIMPORTANTE: se requiere js-controller >= 5\nactualización de adapter-core a 3.1.4",
+        "pl": "WAŻNE: wsparcie dla Node.js 16 zostało usunięte (#368)\nWAŻNE: wymagane jest js-controller >= 5\naktualizacja adapter-core do wersji 3.1.4",
+        "uk": "ВАЖЛИВО: підтримка Node.js 16 скасована (#368)\nВАЖЛИВО: потрібен js-controller >= 5\nоновлення adapter-core до 3.1.4",
+        "zh-cn": "重要: 放弃对 Node.js 16 的支持 (#368)\n重要: js-controller >= 5 已必需\n将 adapter-core 更新到 3.1.4"
+      },
       "0.17.5": {
         "en": "smaller logo\ncorrected io-package.json according to new schema",
         "de": "kleineres Logo\nio-package.json entsprechend dem neuen Schema korrigiert",
