@@ -16,6 +16,7 @@ tests.integration(path.join(__dirname, '..'), {
     // controllerVersion: 'latest', // or a specific version like "4.0.1"
 
     // Define your own tests inside defineAdditionalTests
+    /*
     defineAdditionalTests({ suite }) {
         // All tests (it, describe) must be grouped in one or more suites. Each suite sets up a fresh environment for the adapter tests.
         // At the beginning of each suite, the databases will be reset and the adapter will be started.
@@ -52,4 +53,5 @@ tests.integration(path.join(__dirname, '..'), {
         //  ...
         //});
     },
+    */
 });
