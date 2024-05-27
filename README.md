@@ -46,7 +46,7 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 - (HombachC) revert eslint to 8.57
 - (HombachC) add info.connection state (#564)
 - (HombachC) add node 21 tests
-- (HombachC) stop adapter when no charger found at startup (#563)
+- (HombachC) handle not reachable chargers (#563)
 
 ### 0.18.0 (19.04.2024)
 

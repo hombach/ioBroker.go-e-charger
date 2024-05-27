@@ -4,17 +4,17 @@
     "version": "0.18.1",
     "news": {
       "0.18.1": {
-        "en": "change test procedure to ioBroker standard\nrevert eslint to 8.57\nadd info.connection state (#564)\nadd node 21 tests\nstop adapter when no charger found at startup (#563)",
-        "de": "Testverfahren auf ioBroker-Standard ändern\neslint auf 8.57 zurücksetzen\ninfo.connection-Zustand hinzufügen (#564)\nNode 21-Tests hinzufügen\nAdapter stoppen, wenn beim Start kein Ladegerät gefunden wird (#563)",
-        "ru": "изменить процедуру тестирования на стандарт ioBroker\nвернуть eslint до 8.57\nдобавить состояние info.connection (#564)\nдобавить тесты Node 21\nостановить адаптер, если зарядное устройство не найдено при запуске (#563)",
-        "pt": "alterar o procedimento de teste para o padrão ioBroker\nreverter eslint para 8.57\nadicionar estado info.connection (#564)\nadicionar testes do Node 21\nparar o adaptador quando nenhum carregador for encontrado na inicialização (#563)",
-        "nl": "testprocedure wijzigen naar ioBroker-standaard\neslint terugzetten naar 8.57\ninfo.connection-status toevoegen (#564)\nNode 21-tests toevoegen\nadapter stoppen wanneer geen oplader wordt gevonden bij opstarten (#563)",
-        "fr": "changer la procédure de test en norme ioBroker\nrevenir eslint à 8.57\najouter l'état info.connection (#564)\najouter des tests pour Node 21\narrêter l'adaptateur lorsqu'aucun chargeur n'est trouvé au démarrage (#563)",
-        "it": "cambiare la procedura di test allo standard ioBroker\nrevertire eslint a 8.57\naggiungere lo stato info.connection (#564)\naggiungere i test per Node 21\nfermare l'adattatore quando nessun caricatore viene trovato all'avvio (#563)",
-        "es": "cambiar el procedimiento de prueba al estándar de ioBroker\nrevertir eslint a 8.57\nagregar estado info.connection (#564)\nagregar pruebas para Node 21\ndetener el adaptador cuando no se encuentre ningún cargador al inicio (#563)",
-        "pl": "zmiana procedury testowej na standard ioBroker\nprzywrócenie eslint do 8.57\ndodanie stanu info.connection (#564)\ndodanie testów Node 21\nzatrzymanie adaptera, gdy przy starcie nie znaleziono ładowarki (#563)",
-        "uk": "змінити процедуру тестування на стандарт ioBroker\nповернути eslint до 8.57\nдодати стан info.connection (#564)\nдодати тести для Node 21\nзупинити адаптер, якщо при запуску не знайдено зарядний пристрій (#563)",
-        "zh-cn": "将测试程序更改为 ioBroker 标准\n将 eslint 恢复为 8.57\n添加 info.connection 状态 (#564)\n添加 Node 21 测试\n在启动时未找到充电器时停止适配器 (#563)"
+        "en": "change test procedure to ioBroker standard\nrevert eslint to 8.57\nadd info.connection state (#564)\nadd node 21 tests\nhandle not reachable chargers (#563)",
+        "de": "Testverfahren auf ioBroker-Standard ändern\neslint auf 8.57 zurücksetzen\ninfo.connection-Zustand hinzufügen (#564)\nNode 21-Tests hinzufügen\nUmgang mit nicht erreichbaren Ladegeräten (#563)",
+        "ru": "изменить процедуру тестирования на стандарт ioBroker\nвернуть eslint до 8.57\nдобавить состояние info.connection (#564)\nдобавить тесты Node 21\nобработка недоступных зарядных устройств (#563)",
+        "pt": "alterar o procedimento de teste para o padrão ioBroker\nreverter eslint para 8.57\nadicionar estado info.connection (#564)\nadicionar testes do Node 21\nlidar com carregadores inalcançáveis (#563)",
+        "nl": "testprocedure wijzigen naar ioBroker-standaard\neslint terugzetten naar 8.57\ninfo.connection-status toevoegen (#564)\nNode 21-tests toevoegen\nniet bereikbare opladers afhandelen (#563)",
+        "fr": "changer la procédure de test en norme ioBroker\nrevenir eslint à 8.57\najouter l'état info.connection (#564)\najouter des tests pour Node 21\ngérer les chargeurs inaccessibles (#563)",
+        "it": "cambiare la procedura di test allo standard ioBroker\nrevertire eslint a 8.57\naggiungere lo stato info.connection (#564)\naggiungere i test per Node 21\ngestire i caricabatterie non raggiungibili (#563)",
+        "es": "cambiar el procedimiento de prueba al estándar de ioBroker\nrevertir eslint a 8.57\nagregar estado info.connection (#564)\nagregar pruebas para Node 21\nmanejar cargadores no accesibles (#563)",
+        "pl": "zmiana procedury testowej na standard ioBroker\nprzywrócenie eslint do 8.57\ndodanie stanu info.connection (#564)\ndodanie testów Node 21\nobsługa niedostępnych ładowarek (#563)",
+        "uk": "змінити процедуру тестування на стандарт ioBroker\nповернути eslint до 8.57\nдодати стан info.connection (#564)\nдодати тести для Node 21\nобробка недоступних зарядних пристроїв (#563)",
+        "zh-cn": "将测试程序更改为 ioBroker 标准\n将 eslint 恢复为 8.57\n添加 info.connection 状态 (#564)\n添加 Node 21 测试\n处理不可达的充电器 (#563)"
       },
       "0.18.0": {
         "en": "BREAKING: dropped support for Node.js 16 (#368)\nBREAKING: js-controller >= 5 is required\nupdate adapter-core to 3.1.4",
