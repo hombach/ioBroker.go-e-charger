@@ -39,13 +39,14 @@ To connect to the go-eCharger type in its IP-address in the config.
 This adapter uses Sentry libraries to automatically report exceptions and code errors to the developers. For more details and for informations on how to disable the error reporting see [Sentry-Plugin Documentation](https://github.com/ioBroker/plugin-sentry#plugin-sentry)! Sentry reporting is used starting with js-controller 3.0.
 
 ## Changelog
-! Note that missing version entries are typically dependency updates for security.
 
 ### 0.18.1 (xx.05.2024)
 
 - (HombachC) change test procedure to ioBroker standard
 - (HombachC) revert eslint to 8.57
 - (HombachC) add info.connection state (#564)
+- (HombachC) add node 21 tests
+- (HombachC) stop adapter when no charger found at startup
 
 ### 0.18.0 (19.04.2024)
 
@@ -98,32 +99,6 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ### 0.16.0 (18.11.2023)
 
 - (HombachC) replaced got by axios
-
-### 0.15.5 (18.11.2023)
-
-- (HombachC) Add support for V054.7, Several dependency updates, code cleanup
-
-### 0.15.4 (01.10.2023)
-
-- (HombachC) Several dependency updates, bump adapter-core to 3.x
-
-### 0.15.3 (29.06.2023)
-
-- (HombachC) acknowledge settings states after adoption
-
-### 0.15.2 (26.06.2023)
-
-- (HombachC) Changed config screen to ioBroker.admin 5 version
-
-### 0.15.1 (19.06.2023)
-
-* (HombachC) removed travis
-
-### 0.15.0 (15.06.2023)
-
-- (HombachC) BREAKING: dropped node.js 14 support
-- (HombachC) Add tests for node.js 20, removed for node.js 14, bumped dependencies
-- (HombachC) BREAKING: dropped ioBroker.admin 4 support
 
 ### Old Changes see [CHANGELOG OLD](CHANGELOG_OLD.md)
 

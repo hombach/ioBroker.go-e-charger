@@ -11,9 +11,39 @@
 [![NPM](https://nodei.co/npm/iobroker.go-e-charger.png?downloads=true)](https://nodei.co/npm/iobroker.go-e-charger/)
 
 ## Adapter for reading go-eCharger data for iOBroker
-Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your car. Working with firmware V033, V040.0, V041.0, V054.7.
+Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your car. Working with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1.
 
 ## Changelog - OLD CHANGES
+
+### 0.16.0 (18.11.2023)
+
+- (HombachC) replaced got by axios
+
+### 0.15.5 (18.11.2023)
+
+- (HombachC) Add support for V054.7, Several dependency updates, code cleanup
+
+### 0.15.4 (01.10.2023)
+
+- (HombachC) Several dependency updates, bump adapter-core to 3.x
+
+### 0.15.3 (29.06.2023)
+
+- (HombachC) acknowledge settings states after adoption
+
+### 0.15.2 (26.06.2023)
+
+- (HombachC) Changed config screen to ioBroker.admin 5 version
+
+### 0.15.1 (19.06.2023)
+
+* (HombachC) removed travis
+
+### 0.15.0 (15.06.2023)
+
+- (HombachC) BREAKING: dropped node.js 14 support
+- (HombachC) Add tests for node.js 20, removed for node.js 14, bumped dependencies
+- (HombachC) BREAKING: dropped ioBroker.admin 4 support
 
 ### 0.14.4 (09.04.2023)
 

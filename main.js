@@ -89,7 +89,7 @@ class go_e_charger extends utils.Adapter {
             adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
 
         } else {
-            this.log.error(`No IP Address configured!! - Shutting down adapter.`);
+            this.log.error(`No IP address configured!! - shutting down adapter.`);
             this.stop;
         }
     }
@@ -142,6 +142,11 @@ class go_e_charger extends utils.Adapter {
         if (FirstStart) { // First run of state machine after adapter start-up
             this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
             switch (Firmware) {
+                case '0': // no charger found - stop adapter - only on first run
+                    this.log.error(`No charger detected on given IP address - shutting down adapter.`);
+                    this.setStateAsync('info.connection', { val: false, ack: true });
+                    this.stop;
+                    break;
                 case '033':
                 case '040':
                 case '040.0':
@@ -153,9 +158,11 @@ class go_e_charger extends utils.Adapter {
                 case '055.8':
                 case '56.1':
                     this.log.debug(`Init done, launching state machine`);
+                    this.setStateAsync('info.connection', { val: true, ack: true });
                     break;
                 default:
                     this.log.warn(`Not explicitly supported firmware ${Firmware} found!!!`);
+                    this.setStateAsync('info.connection', { val: true, ack: true });
                     // sentry.io send firmware version
                     if (this.supportsFeature && this.supportsFeature('PLUGINS')) {
                         const sentryInstance = this.getPluginInstance('sentry');
@@ -171,7 +178,6 @@ class go_e_charger extends utils.Adapter {
                     // this.stop;
             }
             FirstStart = false;
-            this.setStateAsync('info.connection', { val: true, ack: true });
         }
 
         this.log.debug(`StateMachine cycle start`);
