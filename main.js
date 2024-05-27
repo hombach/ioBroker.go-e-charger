@@ -90,7 +90,7 @@ class go_e_charger extends utils.Adapter {
 
         } else {
             this.log.error(`No IP address configured!! - shutting down adapter.`);
-            // this.stop;
+            this.stop;
             this.setStateAsync('info.connection', { val: false, ack: true });
             if (typeof this.terminate === 'function') {
                 this.terminate(utils.EXIT_CODES.INVALID_ADAPTER_CONFIG);
@@ -153,7 +153,7 @@ class go_e_charger extends utils.Adapter {
                     // no charger found - stop adapter - only on first run
                     this.log.error(`No charger detected on given IP address - shutting down adapter.`);
                     this.setStateAsync('info.connection', { val: false, ack: true });
-                    // this.stop;
+                    this.stop;
                     if (typeof this.terminate === 'function') {
                         this.terminate(utils.EXIT_CODES.INVALID_ADAPTER_CONFIG);
                     } else {
