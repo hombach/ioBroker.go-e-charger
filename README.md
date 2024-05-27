@@ -41,6 +41,10 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 ## Changelog
 ! Note that missing version entries are typically dependency updates for security.
 
+### 0.18.1 (xx.05.2024)
+
+- (HombachC) revert eslint to 8.57.0  -  WIP
+
 ### 0.18.0 (19.04.2024)
 
 - (HombachC) BREAKING: dropped support for node.js 16 (#558)

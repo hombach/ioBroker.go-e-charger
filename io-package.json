@@ -1,8 +1,11 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.18.0",
+    "version": "0.18.1",
     "news": {
+      "0.18.1": {
+        "en": "WIP"
+      },
       "0.18.0": {
         "en": "BREAKING: dropped support for Node.js 16 (#368)\nBREAKING: js-controller >= 5 is required\nupdate adapter-core to 3.1.4",
         "de": "WICHTIG: Unterstützung für Node.js 16 wurde eingestellt (#368)\nWICHTIG: js-controller >= 5 ist erforderlich\nadapter-core auf 3.1.4 aktualisiert",
@@ -197,19 +200,6 @@
         "pl": "Zmienił ekran do ioBrokera. Admin 5",
         "uk": "Змінений екран налаштування до ioBroker. admin 5 версія",
         "zh-cn": "改装了小型Broker。 附录5"
-      },
-      "0.15.1": {
-        "en": "Removed Travis",
-        "de": "Entfernen von Travis",
-        "ru": "Удаленный Travis",
-        "pt": "Remover Travis",
-        "nl": "Verwijder Travis",
-        "fr": "Enlevé Travis",
-        "it": "Rimuovi Travis",
-        "es": "Travis eliminado",
-        "pl": "Remove Travis",
-        "uk": "Видалити Travis",
-        "zh-cn": "撤职训练"
       },
       "0.15.0": {
         "en": "BREAKING: dropped node.js 14 support, add tests for node.js 20, dropped ioBroker.admin 4 support",
