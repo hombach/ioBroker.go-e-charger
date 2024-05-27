@@ -90,7 +90,13 @@ class go_e_charger extends utils.Adapter {
 
         } else {
             this.log.error(`No IP address configured!! - shutting down adapter.`);
-            this.stop;
+            // this.stop;
+            this.setStateAsync('info.connection', { val: false, ack: true });
+            if (typeof this.terminate === 'function') {
+                this.terminate(utils.EXIT_CODES.INVALID_ADAPTER_CONFIG);
+            } else {
+                process.exit(utils.EXIT_CODES.INVALID_ADAPTER_CONFIG);
+            }
         }
     }
 
