@@ -149,7 +149,7 @@ class go_e_charger extends utils.Adapter {
             this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
             switch (Firmware) {
                 case '0':
-                case 'EHOSTUNREACH':
+                case 'EHostUnreach':
                     // no charger found - stop adapter - only on first run
                     this.log.error(`No charger detected on given IP address - shutting down adapter.`);
                     this.setStateAsync('info.connection', { val: false, ack: true });
