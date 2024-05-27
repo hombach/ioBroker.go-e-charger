@@ -18,7 +18,6 @@ concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
-
 jobs:
     # Performs quick checks before the expensive test runs
     check-and-lint:
@@ -34,65 +33,6 @@ jobs:
             # install-command: 'npm install'
             # type-checking: true
             lint: true
-
-    check-and-lint-old:
-      if: contains(github.event.head_commit.message, '[skip ci]') == false
-
-      runs-on: ubuntu-latest
-
-      strategy:
-        matrix:
-          node-version: [20.x]
-  
-      steps:
-        - uses: actions/checkout@v4
-        - name: Use Node.js ${{ matrix.node-version }}
-          uses: actions/setup-node@v4
-          with:
-            node-version: ${{ matrix.node-version }}
-
-        - name: NPM version
-          run: npm -v
-
-        - name: Install Dependencies
-          #run: npm install
-          run: npm install --legacy-peer-deps
-
-    build-old:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-        - uses: actions/setup-node@v4
-          with:
-            node-version: 20
-          #run: npm install
-        - run: npm install --legacy-peer-deps
-        #- run: npm run build
-
-    # Runs adapter tests on all supported new node versions and OSes
-    adapter-tests-old:
-      if: contains(github.event.head_commit.message, '[skip ci]') == false
-      needs: [check-and-lint-old, build-old]
-
-      runs-on: ${{ matrix.os }}
-      strategy:
-        matrix:
-          node-version: [18.x, 20.x]
-          os: [ubuntu-latest, windows-latest, macos-latest]
-
-      steps:
-        - uses: actions/checkout@v4
-        - name: Use Node.js ${{ matrix.node-version }}
-          uses: actions/setup-node@v4
-          with:
-            node-version: ${{ matrix.node-version }}
-
-        - name: Install Dependencies
-          #run: npm install
-          run: npm install --legacy-peer-deps
-
-        - name: Run local Tests
-          run: npm test
 
     # Runs adapter tests on all supported node versions and OSes
     adapter-tests:
@@ -111,7 +51,6 @@ jobs:
             # Uncomment the following line if your adapter cannot be installed using 'npm ci'
             install-command: 'npm install'
             # build: true
-
           
 # TODO: To enable automatic npm releases, create a token on npmjs.org 
 # Enter this token as a GitHub secret (with name NPM_TOKEN) in the repository options

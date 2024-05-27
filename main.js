@@ -130,6 +130,7 @@ class go_e_charger extends utils.Adapter {
             clearTimeout(adapterIntervals.stateMachine);
             Object.keys(adapterIntervals).forEach(interval => clearInterval(adapterIntervals[interval]));
             this.log.info(`Adaptor go-eCharger cleaned up everything...`);
+            this.setStateAsync('info.connection', { val: false, ack: true });
             callback();
         } catch (e) {
             callback();
@@ -170,6 +171,7 @@ class go_e_charger extends utils.Adapter {
                     // this.stop;
             }
             FirstStart = false;
+            this.setStateAsync('info.connection', { val: true, ack: true });
         }
 
         this.log.debug(`StateMachine cycle start`);
