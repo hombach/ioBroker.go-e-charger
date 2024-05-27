@@ -142,7 +142,9 @@ class go_e_charger extends utils.Adapter {
         if (FirstStart) { // First run of state machine after adapter start-up
             this.log.debug(`Initial ReadCharger done, detected firmware ${Firmware}`);
             switch (Firmware) {
-                case '0': // no charger found - stop adapter - only on first run
+                case '0':
+                case 'EHOSTUNREACH':
+                    // no charger found - stop adapter - only on first run
                     this.log.error(`No charger detected on given IP address - shutting down adapter.`);
                     this.setStateAsync('info.connection', { val: false, ack: true });
                     this.stop;
@@ -225,7 +227,12 @@ class go_e_charger extends utils.Adapter {
                 this.ParseStatus(result);
             })
             .catch(error => {
-                this.log.error(`Error in calling go-eCharger API: ${error}`);
+                if (error.message && error.message.includes('EHOSTUNREACH')) {
+                    this.log.error(`Host unreachable error when calling go-eCharger API: ${error}`);
+                    Firmware=`EHostUnreach`;
+                } else {
+                    this.log.error(`Error in calling go-eCharger API: ${error}`);
+                }
                 this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
             }); // END catch
     } // END Read_Charger
