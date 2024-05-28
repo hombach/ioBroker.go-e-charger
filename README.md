@@ -40,7 +40,7 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 
 ## Changelog
 
-### 0.18.1 (xx.05.2024)
+### 0.18.1 (28.05.2024)
 
 - (HombachC) change test procedure to ioBroker standard
 - (HombachC) revert eslint to 8.57
