@@ -441,10 +441,6 @@ class go_e_charger extends utils.Adapter {
         } else {
             Phases = GridPhases;
         }
-        //OptAmpere = await (Math.floor(
-        // WIP 0.19.0 (SolarPower - HouseConsumption + ChargePower - 100
-        // (SolarPower - HouseConsumption + (this.config.SubtractSelfConsumption * ChargePower) - 100
-        // + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal))) / 230 / Phases)); // -100 W Reserve + max. 2000 für Batterieleerung
         OptAmpere = Math.floor(
             (SolarPower
                 - HouseConsumption
