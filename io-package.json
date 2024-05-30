@@ -1,8 +1,11 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.18.1",
+    "version": "0.19.0",
     "news": {
+      "0.19.0": {
+        "en": "WIP"
+      },
       "0.18.1": {
         "en": "change test procedure to ioBroker standard\nrevert eslint to 8.57\nadd info.connection state (#564)\nadd node 21 tests\nhandle not reachable chargers (#563)",
         "de": "Testverfahren auf ioBroker-Standard ändern\neslint auf 8.57 zurücksetzen\ninfo.connection-Zustand hinzufügen (#564)\nNode 21-Tests hinzufügen\nUmgang mit nicht erreichbaren Ladegeräten (#563)",
@@ -343,6 +346,7 @@
     "StateHomeBatSoc": "",
     "StateHomeSolarPower": "",
     "StateHomePowerConsumption": "",
+    "SubtractSelfConsumption": true,
     "ReadOnlyMode": false
   },
 

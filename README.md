@@ -40,6 +40,10 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 
 ## Changelog
 
+### 0.19.0 (xx.06.2024)
+
+- (HombachC) intruduced possibility to not subtract charger power from homeconsumption
+
 ### 0.18.1 (28.05.2024)
 
 - (HombachC) change test procedure to ioBroker standard

@@ -51,6 +51,10 @@
 				"lg": 6,
 				"newLine": true
 			},
+			"SubtractSelfConsumption": {
+				"type": "checkbox",
+				"label": "SubtractSelfConsumption"
+			},
 			"ReadOnlyMode": {
 				"type": "checkbox",
 				"label": "ReadOnlyMode"

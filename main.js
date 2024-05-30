@@ -441,10 +441,18 @@ class go_e_charger extends utils.Adapter {
         } else {
             Phases = GridPhases;
         }
-        OptAmpere = await (Math.floor(
-            // WIP 0.19.0 (SolarPower - HouseConsumption + ChargePower - 100
-            (SolarPower - HouseConsumption - 100
-                + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal))) / 230 / Phases)); // -100 W Reserve + max. 2000 für Batterieleerung
+        //OptAmpere = await (Math.floor(
+        // WIP 0.19.0 (SolarPower - HouseConsumption + ChargePower - 100
+        // (SolarPower - HouseConsumption + (this.config.SubtractSelfConsumption * ChargePower) - 100
+        // + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal))) / 230 / Phases)); // -100 W Reserve + max. 2000 für Batterieleerung
+        OptAmpere = Math.floor(
+            (SolarPower
+                - HouseConsumption
+                + (this.config.SubtractSelfConsumption ? ChargePower : 0) // Bedingte Einbeziehung von ChargePower
+                - 100 // Reserve
+                + ((2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal)) // Batterieleerung
+            ) / 230 / Phases);
+
         if (OptAmpere > 16) OptAmpere = 16;
         this.log.debug(`Optimal charging current would be: ${OptAmpere} A`);
 
