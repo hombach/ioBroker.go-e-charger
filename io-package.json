@@ -252,19 +252,6 @@
         "pl": "ZŁAMANIE: zrezygnowano z obsługi node.js 12, dodano testy dla node.js 18, zmieniono zależności na nie obsługujące node.js 12",
         "uk": "BREAKING: скидати node.js 12 підтримка, додати тести для node.js 18, змінені залежності до не node.js 12 підтримка",
         "zh-cn": "BREAKING：删除 node.js 12 支持，为 node.js 18 添加测试，将依赖项更改为非 node.js 12 支持"
-      },
-      "0.13.0": {
-        "en": "introducing read-only mode, bumped dependencies",
-        "de": "Einführung des nur-lese-modus, Abhängigkeiten aktualisiert",
-        "ru": "введение чита-только режима, прыгнувшие зависимости",
-        "pt": "introduzindo o modo somente leitura, dependências colhidas",
-        "nl": "introductie van lees-only mode, botten afhankelijkheid",
-        "fr": "introduction en mode lecture seule, dépendances par bosse",
-        "it": "introducendo la modalità di sola lettura, interrotte dipendenze",
-        "es": "introduciendo el modo de sólo lectura, las dependencias con problemas",
-        "pl": "wprowadzanie trybu odczytu, zderzenie zależności",
-        "uk": "запроваджувати читано-тільки режими, відхилені залежності",
-        "zh-cn": "倾听的依赖"
       }
     },
     "titleLang": {

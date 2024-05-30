@@ -4,5 +4,6 @@
     "StateHomeSolarPower": "Objekt-ID für derzeit verfügbare Solarenergie [W]",
     "StateHomeBatSoc": "Objekt-ID für den aktuellen Ladezustand der Heimbatterie [%]",
     "StateHomePowerConsumption": "Objekt-ID für den aktuellen Stromverbrauch zu Hause [W]",
+    "SubtractSelfConsumption": "Charger consumption is included in home power consumption value",
     "ReadOnlyMode": "Nur-Lese-Modus - Ladefreigabe wird nicht an das Ladegerät gesendet (um RFID-Tags zu verwenden)"
 }

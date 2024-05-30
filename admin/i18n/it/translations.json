@@ -4,5 +4,6 @@
     "StateHomeSolarPower": "ID oggetto per l'energia solare attualmente disponibile [W]",
     "StateHomeBatSoc": "object-id per l'attuale stato di carica della batteria domestica [%]",
     "StateHomePowerConsumption": "object-id per il consumo energetico domestico corrente [W]",
+    "SubtractSelfConsumption": "Charger consumption is included in home power consumption value",
     "ReadOnlyMode": "modalità di sola lettura - il rilascio della carica non viene inviato al caricabatterie (per utilizzare tag RFID)"
 }
