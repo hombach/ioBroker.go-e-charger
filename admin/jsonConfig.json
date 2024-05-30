@@ -53,11 +53,20 @@
 			},
 			"SubtractSelfConsumption": {
 				"type": "checkbox",
-				"label": "SubtractSelfConsumption"
+				"label": "SubtractSelfConsumption",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": false
 			},
+
 			"ReadOnlyMode": {
 				"type": "checkbox",
-				"label": "ReadOnlyMode"
+				"label": "ReadOnlyMode",
+				"sm": 6,
+				"md": 6,
+				"lg": 6,
+				"newLine": true
 			}
 		}
 	    }
