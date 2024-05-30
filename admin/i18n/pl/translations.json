@@ -4,6 +4,6 @@
     "StateHomeSolarPower": "id obiektu dla aktualnie dostępnej energii słonecznej [W]",
     "StateHomeBatSoc": "id obiektu dla aktualnego stanu naładowania akumulatora w domu [%]",
     "StateHomePowerConsumption": "id obiektu dla bieżącego zużycia energii w domu [W]",
-    "SubtractSelfConsumption": "Charger consumption is included in home power consumption value",
+    "SubtractSelfConsumption": "Zużycie ładowarki jest uwzględnione w wartości zużycia energii w domu",
     "ReadOnlyMode": "tryb tylko do odczytu - zwolnienie ładunku nie jest wysyłane do ładowarki (w celu użycia tagów RFID)"
 }

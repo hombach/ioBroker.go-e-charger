@@ -4,6 +4,6 @@
     "StateHomeSolarPower": "当前可用太阳能的对象ID [W]",
     "StateHomeBatSoc": "当前家用电池充电状态的对象ID [％]",
     "StateHomePowerConsumption": "当前家庭功耗的对象ID [W]",
-    "SubtractSelfConsumption": "Charger consumption is included in home power consumption value",
+    "SubtractSelfConsumption": "充电器消耗包含在家庭电力消耗值中",
     "ReadOnlyMode": "只读模式 - 释放电荷不发送到充电器（使用 RFID 标签"
 }

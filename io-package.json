@@ -4,7 +4,17 @@
     "version": "0.19.0",
     "news": {
       "0.19.0": {
-        "en": "WIP"
+        "en": "introduced possibility to not subtract charger power from home consumption",
+        "de": "Möglichkeit eingeführt, die Ladeleistung nicht vom Hausverbrauch abzuziehen",
+        "ru": "введена возможность не вычитать мощность зарядного устройства из потребления электроэнергии дома",
+        "pt": "introduzida a possibilidade de não subtrair a energia do carregador do consumo doméstico",
+        "nl": "mogelijkheid geïntroduceerd om het verbruik van de oplader niet van het stroomverbruik van het huis af te trekken",
+        "fr": "possibilité introduite de ne pas soustraire la puissance du chargeur de la consommation domestique",
+        "it": "introdotta la possibilità di non sottrarre la potenza del caricabatterie dal consumo domestico",
+        "es": "introducida la posibilidad de no restar la potencia del cargador del consumo doméstico",
+        "pl": "wprowadzono możliwość nieodejmowania mocy ładowarki od zużycia energii w domu",
+        "uk": "введено можливість не віднімати потужність зарядного пристрою від споживання електроенергії дому",
+        "zh-cn": "引入了不从家庭电力消耗中扣除充电器功率的可能性"
       },
       "0.18.1": {
         "en": "change test procedure to ioBroker standard\nrevert eslint to 8.57\nadd info.connection state (#564)\nadd node 21 tests\nhandle not reachable chargers (#563)",
