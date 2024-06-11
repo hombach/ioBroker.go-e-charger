@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.19.0",
+    "version": "0.19.1",
     "news": {
+      "0.19.1": {
+        "en": "fixed known vulnerability in dependency",
+        "de": "bekannte Schwachstelle in Abhängigkeit behoben",
+        "ru": "устранена известная уязвимость в зависимости",
+        "pt": "corrigida vulnerabilidade conhecida na dependência",
+        "nl": "bekende kwetsbaarheid in afhankelijkheid verholpen",
+        "fr": "corrigée une vulnérabilité connue dans la dépendance",
+        "it": "corretta una vulnerabilità nota in una dipendenza",
+        "es": "corregida una vulnerabilidad conocida en la dependencia",
+        "pl": "naprawiono znaną podatność w zależności",
+        "uk": "виправлено відому вразливість у залежності",
+        "zh-cn": "修复了依赖项中的已知漏洞"
+      },
       "0.19.0": {
         "en": "introduced possibility to not subtract charger power from home consumption",
         "de": "Möglichkeit eingeführt, die Ladeleistung nicht vom Hausverbrauch abzuziehen",
@@ -236,19 +249,6 @@
         "pl": "BREAKING: Uruchomiona obsługa węzła.js 14, dodaje testy dla węzła.js 20, zrzucił ioBrokera. Administracja 4",
         "uk": "BREAKING: скидати node.js 14 підтримка, додати тести для node.js 20, скидати ioBroker. Підтримка адміністратора 4",
         "zh-cn": "BREAKRE:撤除不de.js 14支持,增加20js,降水箱。 附录4"
-      },
-      "0.14.2": {
-        "en": "bumped dependencies because of security vulnerability",
-        "de": "Abhängigkeiten aktualisiert wegen Sicherheitslücke",
-        "ru": "сбитые зависимости из-за уязвимости безопасности",
-        "pt": "dependências colhidas por causa da vulnerabilidade de segurança",
-        "nl": "vertaling:",
-        "fr": "dépendances en raison de la vulnérabilité à la sécurité",
-        "it": "urtato dipendenze a causa di vulnerabilità di sicurezza",
-        "es": "por vulnerabilidad a la seguridad",
-        "pl": "zderzenie się ze względu na podatność na bezpieczeństwo",
-        "uk": "відхилені залежності через вразливість безпеки",
-        "zh-cn": "b 由于安全脆弱"
       },
       "0.14.0": {
         "en": "BREAKING: dropped node.js 12 support, add tests for node.js 18, changed dependencies to non node.js 12 support",

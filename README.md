@@ -40,6 +40,10 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 
 ## Changelog
 
+### 0.19.1 (11.06.2024)
+
+- (HombachC) fixed known vulnerability in dependency
+
 ### 0.19.0 (30.05.2024)
 
 - (HombachC) intruduced possibility to not subtract charger power from homeconsumption
