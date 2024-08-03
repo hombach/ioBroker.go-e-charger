@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.19.2",
+    "version": "0.19.3",
     "news": {
+      "0.19.3": {
+        "en": "added support for firmware V56.",
+        "de": "Unterstützung für Firmware V56.8 hinzugefügt",
+        "ru": "добавлена поддержка прошивки V56.8",
+        "pt": "adicionado suporte para firmware V56.8",
+        "nl": "ondersteuning toegevoegd voor firmware V56.8",
+        "fr": "ajouté le support pour le firmware V56.8",
+        "it": "aggiunto il supporto per il firmware V56.8",
+        "es": "añadido soporte para firmware V56.8",
+        "pl": "dodano obsługę oprogramowania V56.8",
+        "uk": "додано підтримку прошивки V56.8",
+        "zh-cn": "添加了对固件 V56.8 的支持"
+      },
       "0.19.2": {
         "en": "added support for firmware V56.2",
         "de": "Unterstützung für Firmware V56.2 hinzugefügt",
@@ -197,19 +210,6 @@
         "pl": "Zastąpiono 'got' przez 'axios'",
         "uk": "Замінено 'got' на 'axios'",
         "zh-cn": "用'axios'替换了'got'"
-      },
-      "0.15.5": {
-        "en": "Add support for V054.7",
-        "de": "Unterstützung für V054.7 hinzufügen",
-        "ru": "Добавить поддержку V054.7",
-        "pt": "Adicionar suporte para V054.7",
-        "nl": "Ondersteuning toevoegen voor V054.7",
-        "fr": "Ajouter le support de V054.7",
-        "it": "Aggiungi supporto per V054.7",
-        "es": "Agregar soporte para V054.7",
-        "pl": "Dodaj obsługę V054.7",
-        "uk": "Додати підтримку V054.7",
-        "zh-cn": "添加对V054.7的支持"
       },
       "0.15.3": {
         "en": "acknowledge settings states after adoption",
