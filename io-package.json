@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.19.1",
+    "version": "0.19.2",
     "news": {
+      "0.19.2": {
+        "en": "added support for firmware V56.2",
+        "de": "Unterstützung für Firmware V56.2 hinzugefügt",
+        "ru": "добавлена поддержка прошивки V56.2",
+        "pt": "adicionado suporte para firmware V56.2",
+        "nl": "ondersteuning toegevoegd voor firmware V56.2",
+        "fr": "ajouté le support pour le firmware V56.2",
+        "it": "aggiunto il supporto per il firmware V56.2",
+        "es": "añadido soporte para firmware V56.2",
+        "pl": "dodano obsługę oprogramowania V56.2",
+        "uk": "додано підтримку прошивки V56.2",
+        "zh-cn": "添加了对固件 V56.2 的支持"
+      },
       "0.19.1": {
         "en": "fixed known vulnerability in dependency",
         "de": "bekannte Schwachstelle in Abhängigkeit behoben",
@@ -197,19 +210,6 @@
         "pl": "Dodaj obsługę V054.7",
         "uk": "Додати підтримку V054.7",
         "zh-cn": "添加对V054.7的支持"
-      },
-      "0.15.4": {
-        "en": "Several dependency updates, bump adapter-core to 3.x",
-        "de": "Mehrere Aktualisierungen von Abhängigkeiten, Anhebung von adapter-core auf 3.x",
-        "ru": "Несколько обновлений зависимостей, поднятие версии adapter-core до 3.x",
-        "pt": "Várias atualizações de dependências, aumento do adapter-core para 3.x",
-        "nl": "Diverse afhankelijkheidsupdates, adapter-core opgehoogd naar 3.x",
-        "fr": "Plusieurs mises à jour de dépendances, mise à jour de adapter-core en 3.x",
-        "it": "Diverse aggiornamenti delle dipendenze, incremento di adapter-core a 3.x",
-        "es": "Varias actualizaciones de dependencias, aumento de adapter-core a 3.x",
-        "pl": "Kilka aktualizacji zależności, podniesienie adapter-core do 3.x",
-        "uk": "Декілька оновлень залежностей, підняття версії adapter-core до 3.x",
-        "zh-cn": "多个依赖项更新，提升adapter-core至3.x"
       },
       "0.15.3": {
         "en": "acknowledge settings states after adoption",

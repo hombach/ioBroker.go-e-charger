@@ -160,6 +160,7 @@ class go_e_charger extends utils.Adapter {
                 case '055.7':
                 case '055.8':
                 case '56.1':
+                case '56.2':
                     this.log.debug(`Init done, launching state machine`);
                     this.setStateAsync('info.connection', { val: true, ack: true });
                     break;
@@ -399,6 +400,7 @@ class go_e_charger extends utils.Adapter {
                 // case '055.7':
                 // case '055.8':
                 // case '56.1':
+                // case '56.2':
                     try {
                         // @ts-ignore axios.get is valid
                         const response = await axios.get(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current

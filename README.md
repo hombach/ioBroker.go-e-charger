@@ -40,6 +40,10 @@ This adapter uses Sentry libraries to automatically report exceptions and code e
 
 ## Changelog
 
+### 0.19.2 (03.08.2024)
+
+- (HombachC) added support for firmware V56.2
+
 ### 0.19.1 (11.06.2024)
 
 - (HombachC) fixed known vulnerability in dependency
