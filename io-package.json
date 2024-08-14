@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.19.3",
+    "version": "0.19.4",
     "news": {
+      "0.19.4": {
+        "en": "fixed vulnerability in dependency",
+        "de": "Schwachstelle in Abhängigkeit behoben",
+        "ru": "устранена уязвимость в зависимости",
+        "pt": "vulnerabilidade corrigida na dependência",
+        "nl": "kwetsbaarheid in afhankelijkheid opgelost",
+        "fr": "vulnérabilité corrigée dans la dépendance",
+        "it": "corretta vulnerabilità nella dipendenza",
+        "es": "vulnerabilidad solucionada en la dependencia",
+        "pl": "usunięto lukę w zależności",
+        "uk": "виправлено уразливість у залежності",
+        "zh-cn": "修复了依赖项中的漏洞"
+      },
       "0.19.3": {
         "en": "added support for firmware V56.",
         "de": "Unterstützung für Firmware V56.8 hinzugefügt",
@@ -81,19 +94,6 @@
         "uk": "ВАЖЛИВО: підтримка Node.js 16 скасована (#368)\nВАЖЛИВО: потрібен js-controller >= 5\nоновлення adapter-core до 3.1.4",
         "zh-cn": "重要: 放弃对 Node.js 16 的支持 (#368)\n重要: js-controller >= 5 已必需\n将 adapter-core 更新到 3.1.4"
       },
-      "0.17.5": {
-        "en": "smaller logo\ncorrected io-package.json according to new schema",
-        "de": "kleineres Logo\nio-package.json entsprechend dem neuen Schema korrigiert",
-        "ru": "меньший логотип\nисправлен файл io-package.json в соответствии с новой схемой",
-        "pt": "logotipo menor\ncorrigido io-package.json de acordo com o novo esquema",
-        "nl": "kleiner logo\ncorrectie van io-package.json volgens het nieuwe schema",
-        "fr": "logo plus petit\ncorrigé io-package.json selon le nouveau schéma",
-        "it": "logo più piccolo\ncorretto io-package.json secondo il nuovo schema",
-        "es": "logotipo más pequeño\ncorregido io-package.json según el nuevo esquema",
-        "pl": "mniejsze logo\npoprawiono plik io-package.json zgodnie z nowym schematem",
-        "uk": "менший логотип\nвиправлено файл io-package.json відповідно до нової схеми",
-        "zh-cn": "较小的徽标\n根据新模式更正了 io-package.json"
-      },
       "0.17.4": {
         "en": "added support for firmware V56.1",
         "de": "Unterstützung für Firmware V56.1 hinzugefügt",
@@ -106,19 +106,6 @@
         "pl": "dodano obsługę oprogramowania V56.1",
         "uk": "додано підтримку прошивки V56.1",
         "zh-cn": "添加了对固件 V56.1 的支持"
-      },
-      "0.17.3": {
-        "en": "Update GitHub workflows",
-        "de": "GitHub-Workflows aktualisieren",
-        "ru": "Обновить рабочие процессы GitHub",
-        "pt": "Atualizar fluxos de trabalho do GitHub",
-        "nl": "GitHub-workflows bijwerken",
-        "fr": "Mise à jour des workflows GitHub",
-        "it": "Aggiornare i workflow di GitHub",
-        "es": "Actualizar flujos de trabajo de GitHub",
-        "pl": "Aktualizacja przepływów pracy na GitHubie",
-        "uk": "Оновити робочі процеси GitHub",
-        "zh-cn": "更新 GitHub 工作流程"
       },
       "0.17.2": {
         "en": "Fix error in calling API V2 on old HW",
@@ -185,19 +172,6 @@
         "uk": "Додати підтримку для V055.5 і V055.7",
         "zh-cn": "为 V055.5 和 V055.7 添加支持"
       },
-      "0.16.1": {
-        "en": "Add support for V054.11",
-        "de": "Unterstützung für V054.11 hinzufügen",
-        "ru": "Добавить поддержку V054.11",
-        "pt": "Adicionar suporte para V054.11",
-        "nl": "Ondersteuning toevoegen voor V054.11",
-        "fr": "Ajouter le support de V054.11",
-        "it": "Aggiungi supporto per V054.11",
-        "es": "Agregar soporte para V054.11",
-        "pl": "Dodaj obsługę V054.11",
-        "uk": "Додати підтримку V054.11",
-        "zh-cn": "添加对V054.11的支持"
-      },
       "0.16.0": {
         "en": "Replaced 'got' with 'axios'",
         "de": "'got' durch 'axios' ersetzt",
@@ -211,32 +185,6 @@
         "uk": "Замінено 'got' на 'axios'",
         "zh-cn": "用'axios'替换了'got'"
       },
-      "0.15.3": {
-        "en": "acknowledge settings states after adoption",
-        "de": "Einstellungen werden nach Annahme nun bestätigt",
-        "ru": "признавать состояния настроек после принятия",
-        "pt": "reconhecer configurações estados após adoção",
-        "nl": "erkenning staat na adoptie",
-        "fr": "reconnaître les paramètres déclarés après adoption",
-        "it": "riconoscere gli stati delle impostazioni dopo l'adozione",
-        "es": "reconocer los ajustes estados después de la adopción",
-        "pl": "po przyjęciu adopcji państwa po adopcji",
-        "uk": "визначте параметри стану після прийняття",
-        "zh-cn": "承认收养后的情况"
-      },
-      "0.15.2": {
-        "en": "Changed config screen to ioBroker.admin 5 version",
-        "de": "Geänderter Bildschirm auf ioBroker. admin 5 version",
-        "ru": "Измененный экран конфига к ioBroker. admin 5 версия",
-        "pt": "Tela de configuração alterada para ioBroker. versão admin 5",
-        "nl": "Veranderde configcreen naar ioBroker. Admin 5",
-        "fr": "Changed config screen to ioBroker. admin 5 version",
-        "it": "Cambiato schermo di configurazione a ioBroker. admin 5 versione",
-        "es": "Cambiar la pantalla de configuración a ioBroker. Administración 5 versión",
-        "pl": "Zmienił ekran do ioBrokera. Admin 5",
-        "uk": "Змінений екран налаштування до ioBroker. admin 5 версія",
-        "zh-cn": "改装了小型Broker。 附录5"
-      },
       "0.15.0": {
         "en": "BREAKING: dropped node.js 14 support, add tests for node.js 20, dropped ioBroker.admin 4 support",
         "de": "BREAKING: Node.js 14-Unterstützung wurde eingestellt, tests für node.js 20 hinzugefügt, ioBroker.admin 4 Unterstützung entfernt",
@@ -249,19 +197,6 @@
         "pl": "BREAKING: Uruchomiona obsługa węzła.js 14, dodaje testy dla węzła.js 20, zrzucił ioBrokera. Administracja 4",
         "uk": "BREAKING: скидати node.js 14 підтримка, додати тести для node.js 20, скидати ioBroker. Підтримка адміністратора 4",
         "zh-cn": "BREAKRE:撤除不de.js 14支持,增加20js,降水箱。 附录4"
-      },
-      "0.14.0": {
-        "en": "BREAKING: dropped node.js 12 support, add tests for node.js 18, changed dependencies to non node.js 12 support",
-        "de": "BREAKING: Node.js 12 Unterstützung wurde eingestellt, Tests für node.js 18 hinzugefügt, Abhängigkeiten auf Nicht-Node.js 12-Unterstützung geändert",
-        "ru": "BREAKING: удалена поддержка node.js 12, добавлены тесты для node.js 18, изменены зависимости на поддержку без node.js 12",
-        "pt": "URGENTE: abandonou o suporte ao node.js 12, adicione testes para o node.js 18, alterou as dependências para o suporte não ao node.js 12",
-        "nl": "BREAKING: ondersteuning voor node.js 12 verwijderd, tests voor node.js 18 toegevoegd, afhankelijkheden gewijzigd in niet-node.js 12-ondersteuning",
-        "fr": "BREAKING : suppression de la prise en charge de node.js 12, ajout de tests pour node.js 18, modification des dépendances pour la prise en charge non node.js 12",
-        "it": "ROTTURA: supporto node.js 12 abbandonato, aggiunta test per node.js 18, dipendenze modificate in supporto non node.js 12",
-        "es": "ÚLTIMA HORA: se eliminó la compatibilidad con node.js 12, se agregaron pruebas para node.js 18, se cambiaron las dependencias para que no sean compatibles con node.js 12",
-        "pl": "ZŁAMANIE: zrezygnowano z obsługi node.js 12, dodano testy dla node.js 18, zmieniono zależności na nie obsługujące node.js 12",
-        "uk": "BREAKING: скидати node.js 12 підтримка, додати тести для node.js 18, змінені залежності до не node.js 12 підтримка",
-        "zh-cn": "BREAKING：删除 node.js 12 支持，为 node.js 18 添加测试，将依赖项更改为非 node.js 12 支持"
       }
     },
     "titleLang": {
