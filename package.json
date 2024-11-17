@@ -22,13 +22,14 @@
     "registry": "https://registry.npmjs.org"
   },
   "engines": {
-    "node": ">= 18"
+    "node": ">= 18.18"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.2.2",
     "axios": "^1.7.7"
   },
   "devDependencies": {
+    "@alcalzone/pak": "^0.11.0",
     "@iobroker/testing": "^5.0.0",
     "@types/chai": "^4.3.11",
     "@types/chai-as-promised": "^7.1.8",
@@ -53,10 +54,11 @@
     "test:package": "mocha test/package --exit",
     "test:integration": "mocha test/integration --exit",
     "test": "npm run test:js && npm run test:package",
+    "check": "tsc --noEmit",
     "lint": "eslint"
   },
   "bugs": {
-    "url": "https://github.com/hombach/ioBroker.go-e-charger/issues"
+    "url": "https://github.com/Hombach/ioBroker.go-e-charger/issues"
   },
   "directories": {
     "lib": "lib",
