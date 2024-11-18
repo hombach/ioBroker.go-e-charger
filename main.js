@@ -53,7 +53,7 @@ class go_e_charger extends utils.Adapter {
             this.log.warn('go-eCharger IP address not set');
         }
 
-        this.subscribeStates('Settings.*'); // all states changes inside the adapters settings namespace are subscribed
+        this.subscribeStates(`Settings.*`); // all states changes inside the adapters settings namespace are subscribed
 
         if (this.config.ipaddress) {
             await this.Read_Charger();
