@@ -47,6 +47,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 - (HombachC) harmonize tests, add tests for node 22
 - (HombachC) fix bug in state subscription
+- (HombachC) replace deprecated async state access
 - (HombachC) bumped dependency
 
 ### 0.19.4 (2024-08-14)

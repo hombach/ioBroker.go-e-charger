@@ -90,7 +90,7 @@ class go_e_charger extends utils.Adapter {
 
         } else {
             this.log.error(`No IP address configured!! - shutting down adapter.`);
-            await this.setStateAsync('info.connection', { val: false, ack: true });
+            await this.setState('info.connection', { val: false, ack: true });
             this.stop;
         }
     }
@@ -102,18 +102,18 @@ class go_e_charger extends utils.Adapter {
     async onStateChange(id, state) {
         try {
             if (state) { // The state was changed
-                this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
                 if (!state.ack) {
+                    this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
                     MinHomeBatVal = await this.asyncGetStateVal('Settings.Setpoint_HomeBatSoC'); // Get desired battery SoC
-                    this.setStateAsync('Settings.Setpoint_HomeBatSoC', MinHomeBatVal, true);
+                    this.setState('Settings.Setpoint_HomeBatSoC', MinHomeBatVal, true);
                     ChargeNOW = await this.asyncGetStateVal('Settings.ChargeNOW'); // Get charging override trigger
-                    this.setStateAsync('Settings.ChargeNOW', ChargeNOW, true);
+                    this.setState('Settings.ChargeNOW', ChargeNOW, true);
                     ChargeManager = await this.asyncGetStateVal('Settings.ChargeManager'); // Get enable for charge manager
-                    this.setStateAsync('Settings.ChargeManager', ChargeManager, true);
+                    this.setState('Settings.ChargeManager', ChargeManager, true);
                     ChargeCurrent = await this.asyncGetStateVal('Settings.ChargeCurrent'); // Get current for charging override
-                    this.setStateAsync('Settings.ChargeCurrent', ChargeCurrent, true);
+                    this.setState('Settings.ChargeCurrent', ChargeCurrent, true);
                     Charge3Phase = await this.asyncGetStateVal('Settings.Charge3Phase'); // Get enable of 3 phases for charging override
-                    this.setStateAsync('Settings.Charge3Phase', Charge3Phase, true);
+                    this.setState('Settings.Charge3Phase', Charge3Phase, true);
                 }
             } else { // The state was deleted
                 this.log.warn(`state ${id} deleted`);
@@ -131,7 +131,7 @@ class go_e_charger extends utils.Adapter {
             clearTimeout(adapterIntervals.stateMachine);
             Object.keys(adapterIntervals).forEach(interval => clearInterval(adapterIntervals[interval]));
             this.log.info(`Adapter go-eCharger cleaned up everything...`);
-            this.setStateAsync('info.connection', { val: false, ack: true });
+            this.setState('info.connection', { val: false, ack: true });
             callback();
         } catch (e) {
             callback();
@@ -147,7 +147,7 @@ class go_e_charger extends utils.Adapter {
                 case 'EHostUnreach':
                     // no charger found - stop adapter - only on first run
                     this.log.error(`No charger detected on given IP address - shutting down adapter.`);
-                    await this.setStateAsync('info.connection', { val: false, ack: true });
+                    await this.setState('info.connection', { val: false, ack: true });
                     this.stop;
                     break;
                 case '033':
@@ -163,11 +163,11 @@ class go_e_charger extends utils.Adapter {
                 case '56.2':
                 case '56.8':
                     this.log.debug(`Init done, launching state machine`);
-                    this.setStateAsync('info.connection', { val: true, ack: true });
+                    this.setState('info.connection', { val: true, ack: true });
                     break;
                 default:
                     this.log.warn(`Not explicitly supported firmware ${Firmware} found!!!`);
-                    this.setStateAsync('info.connection', { val: true, ack: true });
+                    this.setState('info.connection', { val: true, ack: true });
                     // sentry.io send firmware version
                     if (this.supportsFeature && this.supportsFeature('PLUGINS')) {
                         const sentryInstance = this.getPluginInstance('sentry');
@@ -241,42 +241,42 @@ class go_e_charger extends utils.Adapter {
 
     /*****************************************************************************************/
     ParseStatus(status) {
-        this.setStateAsync('Info.RebootCounter', Number(status.rbc), true);
-        this.setStateAsync('Info.RebootTimer', Math.floor(status.rbt / 1000 / 3600), true); // trim to hours
-        this.setStateAsync('Info.CarState', Number(status.car), true);
+        this.setState('Info.RebootCounter', Number(status.rbc), true);
+        this.setState('Info.RebootTimer', Math.floor(status.rbt / 1000 / 3600), true); // trim to hours
+        this.setState('Info.CarState', Number(status.car), true);
         switch (status.car) {
             case '1':
-                this.setStateAsync('Info.CarStateString', 'Wallbox ready, no car', true);
+                this.setState('Info.CarStateString', 'Wallbox ready, no car', true);
                 break;
             case '2':
-                this.setStateAsync('Info.CarStateString', 'Charging...', true);
+                this.setState('Info.CarStateString', 'Charging...', true);
                 break;
             case '3':
-                this.setStateAsync('Info.CarStateString', 'Wait for car', true);
+                this.setState('Info.CarStateString', 'Wait for car', true);
                 break;
             case '4':
-                this.setStateAsync('Info.CarStateString', 'Charge finished, car still connected', true);
+                this.setState('Info.CarStateString', 'Charge finished, car still connected', true);
                 break;
             default:
-                this.setStateAsync('Info.CarStateString', 'Error', true);
+                this.setState('Info.CarStateString', 'Error', true);
         }
-        this.setStateAsync('Power.ChargeCurrent', Number(status.amp), true);
-        this.setStateAsync('Power.ChargeCurrentVolatile', Number(status.amx), true);
+        this.setState('Power.ChargeCurrent', Number(status.amp), true);
+        this.setState('Power.ChargeCurrentVolatile', Number(status.amx), true);
         switch (status.alw) {
             case '0':
-                this.setStateAsync('Power.ChargingAllowed', false, true);
+                this.setState('Power.ChargingAllowed', false, true);
                 break;
             case '1':
-                this.setStateAsync('Power.ChargingAllowed', true, true);
+                this.setState('Power.ChargingAllowed', true, true);
                 break;
         }
         GridPhases = ((32 & status.pha) >> 5) + ((16 & status.pha) >> 4) + ((8 & status.pha) >> 3);
-        this.setStateAsync('Power.GridPhases', GridPhases, true);
-        this.setStateAsync('Statistics_Total.Charged', (status.eto / 10), true);
-        this.setStateAsync('Power.Charge', (status.nrg[11] * 10), true); // trim to Watt
-        this.setStateAsync('Power.MeasuredMaxPhaseCurrent', (Math.max(status.nrg[4], status.nrg[5], status.nrg[6]) / 10), true);
+        this.setState('Power.GridPhases', GridPhases, true);
+        this.setState('Statistics_Total.Charged', (status.eto / 10), true);
+        this.setState('Power.Charge', (status.nrg[11] * 10), true); // trim to Watt
+        this.setState('Power.MeasuredMaxPhaseCurrent', (Math.max(status.nrg[4], status.nrg[5], status.nrg[6]) / 10), true);
         Firmware = status.fwv;
-        this.setStateAsync('Info.FirmwareVersion', Firmware, true);
+        this.setState('Info.FirmwareVersion', Firmware, true);
         this.log.debug('got and parsed go-eCharger data');
     }
 
@@ -301,20 +301,20 @@ class go_e_charger extends utils.Adapter {
     ParseStatusAPIV2(status) {
         switch (status.psm) {
             case 1:
-                this.setStateAsync('Power.EnabledPhases', 1, true);
+                this.setState('Power.EnabledPhases', 1, true);
                 EnabledPhases = 1;
                 break;
             case 2:
-                this.setStateAsync('Power.EnabledPhases', 3, true);
+                this.setState('Power.EnabledPhases', 3, true);
                 EnabledPhases = 3;
                 break;
             default:
-                this.setStateAsync('Power.EnabledPhases', 0, true);
+                this.setState('Power.EnabledPhases', 0, true);
                 EnabledPhases = 0;
         }
         this.log.debug(`got enabled phases ${EnabledPhases}`);
         Hardware = status.typ;
-        this.setStateAsync('Info.HardwareVersion', Hardware, true);
+        this.setState('Info.HardwareVersion', Hardware, true);
         this.log.debug(`got and parsed go-eCharger data with API V2`);
     }
 
@@ -373,13 +373,13 @@ class go_e_charger extends utils.Adapter {
                         if (!response.error && response.statusCode == 200) {
                             this.log.debug(`Sent to firmware 033: ${response.data}`);
                             const result = await JSON.parse(response.data);
-                            this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
+                            this.setState('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
                             switch (result.alw) {
                                 case '0':
-                                    this.setStateAsync('Power.ChargingAllowed', false, true);
+                                    this.setState('Power.ChargingAllowed', false, true);
                                     break;
                                 case '1':
-                                    this.setStateAsync('Power.ChargingAllowed', true, true);
+                                    this.setState('Power.ChargingAllowed', true, true);
                                     break;
                             }
                         }
@@ -409,13 +409,13 @@ class go_e_charger extends utils.Adapter {
                         if (!response.error && response.statusCode == 200) {
                             this.log.debug(`Sent to firmware > 033: ${response.data}`);
                             const result = await JSON.parse(response.data);
-                            this.setStateAsync('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
+                            this.setState('Power.ChargeCurrent', Number(result.amp), true); // in readcharger integriert
                             switch (result.alw) {
                                 case '0':
-                                    this.setStateAsync('Power.ChargingAllowed', false, true);
+                                    this.setState('Power.ChargingAllowed', false, true);
                                     break;
                                 case '1':
-                                    this.setStateAsync('Power.ChargingAllowed', true, true);
+                                    this.setState('Power.ChargingAllowed', true, true);
                                     break;
                             }
                         }
