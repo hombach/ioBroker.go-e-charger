@@ -43,12 +43,13 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ## Changelog
 
-### 0.19.5 (2024-11-xx) WORK in PROGRESS
+### 0.19.5 (2025-01-01)
 
 - (HombachC) harmonize tests, add tests for node 22
 - (HombachC) fix bug in state subscription
 - (HombachC) replace deprecated async state access
-- (HombachC) bumped dependency
+- (HombachC) year 2025 changes
+- (HombachC) bumped dependencies
 
 ### 0.19.4 (2024-08-14)
 
@@ -135,7 +136,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 ## License
 MIT License
 
-Copyright (c) 2020 - 2024 HombachC
+Copyright (c) 2020 - 2025 HombachC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "0.19.4",
+    "version": "0.19.5",
     "news": {
+      "0.19.5": {
+        "en": "Harmonize tests, add tests for Node.js 22\nFix bug in state subscription\nReplace deprecated async state access\nYear 2025 changes\nBumped dependencies",
+        "de": "Tests harmonisieren, Tests für Node.js 22 hinzufügen\nFehler in der Zustandsabonnement beheben\nVeralteten asynchronen Zustandszugriff ersetzen\nÄnderungen für das Jahr 2025\nAbhängigkeiten aktualisiert",
+        "ru": "Унифицировать тесты, добавить тесты для Node.js 22\nИсправить ошибку в подписке на состояние\nЗаменить устаревший асинхронный доступ к состоянию\nИзменения на 2025 год\nОбновлены зависимости",
+        "pt": "Harmonizar testes, adicionar testes para Node.js 22\nCorrigir bug na assinatura de estado\nSubstituir acesso assíncrono de estado obsoleto\nAlterações para o ano de 2025\nDependências atualizadas",
+        "nl": "Tests harmoniseren, tests voor Node.js 22 toevoegen\nFout in statusabonnement oplossen\nVerouderde asynchrone status-toegang vervangen\nWijzigingen voor het jaar 2025\nAfhankelijkheden bijgewerkt",
+        "fr": "Harmoniser les tests, ajouter des tests pour Node.js 22\nCorriger un bug dans l'abonnement à l'état\nRemplacer l'accès asynchrone obsolète aux états\nModifications pour l'année 2025\nDépendances mises à jour",
+        "it": "Armonizzare i test, aggiungere test per Node.js 22\nCorreggere bug nella sottoscrizione dello stato\nSostituire l'accesso asincrono allo stato deprecato\nModifiche per l'anno 2025\nDipendenze aggiornate",
+        "es": "Armonizar pruebas, agregar pruebas para Node.js 22\nCorregir error en la suscripción de estado\nReemplazar acceso asincrónico obsoleto al estado\nCambios para el año 2025\nDependencias actualizadas",
+        "pl": "Ujednolicić testy, dodać testy dla Node.js 22\nNaprawić błąd w subskrypcji stanu\nZastąpić przestarzały asynchroniczny dostęp do stanu\nZmiany na rok 2025\nZaktualizowano zależności",
+        "uk": "Уніфікувати тести, додати тести для Node.js 22\nВиправити помилку в підписці на стан\nЗамінити застарілий асинхронний доступ до стану\nЗміни на 2025 рік\nОновлено залежності",
+        "zh-cn": "统一测试，添加 Node.js 22 的测试\n修复状态订阅中的错误\n替换已弃用的异步状态访问\n2025 年的更改\n更新依赖项"
+      },
       "0.19.4": {
         "en": "fixed vulnerability in dependency",
         "de": "Schwachstelle in Abhängigkeit behoben",
@@ -68,19 +81,6 @@
         "uk": "введено можливість не віднімати потужність зарядного пристрою від споживання електроенергії дому",
         "zh-cn": "引入了不从家庭电力消耗中扣除充电器功率的可能性"
       },
-      "0.18.1": {
-        "en": "change test procedure to ioBroker standard\nrevert eslint to 8.57\nadd info.connection state (#564)\nadd node 21 tests\nhandle not reachable chargers (#563)",
-        "de": "Testverfahren auf ioBroker-Standard ändern\neslint auf 8.57 zurücksetzen\ninfo.connection-Zustand hinzufügen (#564)\nNode 21-Tests hinzufügen\nUmgang mit nicht erreichbaren Ladegeräten (#563)",
-        "ru": "изменить процедуру тестирования на стандарт ioBroker\nвернуть eslint до 8.57\nдобавить состояние info.connection (#564)\nдобавить тесты Node 21\nобработка недоступных зарядных устройств (#563)",
-        "pt": "alterar o procedimento de teste para o padrão ioBroker\nreverter eslint para 8.57\nadicionar estado info.connection (#564)\nadicionar testes do Node 21\nlidar com carregadores inalcançáveis (#563)",
-        "nl": "testprocedure wijzigen naar ioBroker-standaard\neslint terugzetten naar 8.57\ninfo.connection-status toevoegen (#564)\nNode 21-tests toevoegen\nniet bereikbare opladers afhandelen (#563)",
-        "fr": "changer la procédure de test en norme ioBroker\nrevenir eslint à 8.57\najouter l'état info.connection (#564)\najouter des tests pour Node 21\ngérer les chargeurs inaccessibles (#563)",
-        "it": "cambiare la procedura di test allo standard ioBroker\nrevertire eslint a 8.57\naggiungere lo stato info.connection (#564)\naggiungere i test per Node 21\ngestire i caricabatterie non raggiungibili (#563)",
-        "es": "cambiar el procedimiento de prueba al estándar de ioBroker\nrevertir eslint a 8.57\nagregar estado info.connection (#564)\nagregar pruebas para Node 21\nmanejar cargadores no accesibles (#563)",
-        "pl": "zmiana procedury testowej na standard ioBroker\nprzywrócenie eslint do 8.57\ndodanie stanu info.connection (#564)\ndodanie testów Node 21\nobsługa niedostępnych ładowarek (#563)",
-        "uk": "змінити процедуру тестування на стандарт ioBroker\nповернути eslint до 8.57\nдодати стан info.connection (#564)\nдодати тести для Node 21\nобробка недоступних зарядних пристроїв (#563)",
-        "zh-cn": "将测试程序更改为 ioBroker 标准\n将 eslint 恢复为 8.57\n添加 info.connection 状态 (#564)\n添加 Node 21 测试\n处理不可达的充电器 (#563)"
-      },
       "0.18.0": {
         "en": "BREAKING: dropped support for Node.js 16 (#368)\nBREAKING: js-controller >= 5 is required\nupdate adapter-core to 3.1.4",
         "de": "WICHTIG: Unterstützung für Node.js 16 wurde eingestellt (#368)\nWICHTIG: js-controller >= 5 ist erforderlich\nadapter-core auf 3.1.4 aktualisiert",
@@ -93,110 +93,6 @@
         "pl": "WAŻNE: wsparcie dla Node.js 16 zostało usunięte (#368)\nWAŻNE: wymagane jest js-controller >= 5\naktualizacja adapter-core do wersji 3.1.4",
         "uk": "ВАЖЛИВО: підтримка Node.js 16 скасована (#368)\nВАЖЛИВО: потрібен js-controller >= 5\nоновлення adapter-core до 3.1.4",
         "zh-cn": "重要: 放弃对 Node.js 16 的支持 (#368)\n重要: js-controller >= 5 已必需\n将 adapter-core 更新到 3.1.4"
-      },
-      "0.17.4": {
-        "en": "added support for firmware V56.1",
-        "de": "Unterstützung für Firmware V56.1 hinzugefügt",
-        "ru": "добавлена поддержка прошивки V56.1",
-        "pt": "adicionado suporte para firmware V56.1",
-        "nl": "ondersteuning toegevoegd voor firmware V56.1",
-        "fr": "ajouté le support pour le firmware V56.1",
-        "it": "aggiunto il supporto per il firmware V56.1",
-        "es": "añadido soporte para firmware V56.1",
-        "pl": "dodano obsługę oprogramowania V56.1",
-        "uk": "додано підтримку прошивки V56.1",
-        "zh-cn": "添加了对固件 V56.1 的支持"
-      },
-      "0.17.2": {
-        "en": "Fix error in calling API V2 on old HW",
-        "de": "Fehler bei Aufruf von API V2 auf älterer Hardware beheben",
-        "ru": "Исправлена ошибка при вызове API V2 на старом оборудовании",
-        "pt": "Corrigir erro na chamada da API V2 em hardware antigo",
-        "nl": "Fout bij het oproepen van API V2 op oude hardware oplossen",
-        "fr": "Corriger l'erreur lors de l'appel à l'API V2 sur du matériel ancien",
-        "it": "Correggi errore nella chiamata API V2 su hardware vecchio",
-        "es": "Corregir error al llamar a la API V2 en hardware antiguo",
-        "pl": "Napraw błąd przy wywoływaniu API V2 na starym sprzęcie",
-        "uk": "Виправлено помилку при виклику API V2 на старому обладнанні",
-        "zh-cn": "修复在旧硬件上调用 API V2 的错误"
-      },
-      "0.17.1": {
-        "en": "Fix phases calculation error (#533)",
-        "de": "Fehler in der Phasenberechnung beheben (#533)",
-        "ru": "Исправлена ошибка в расчете фаз (#533)",
-        "pt": "Corrigir erro de cálculo de fases (#533)",
-        "nl": "Fout in fasenberekening oplossen (#533)",
-        "fr": "Corriger l'erreur de calcul des phases (#533)",
-        "it": "Correggi errore di calcolo delle fasi (#533)",
-        "es": "Corregir error en el cálculo de fases (#533)",
-        "pl": "Napraw błąd w obliczeniach faz (#533)",
-        "uk": "Виправлено помилку в обчисленні фаз (#533)",
-        "zh-cn": "修复阶段计算错误 (#533)"
-      },
-      "0.17.0": {
-        "en": "BREAKING: dropped support for js-controller 3.x\nimplement API V2 to get and switch charging phases\noptimized sentry logging",
-        "de": "WICHTIG: Unterstützung für js-controller 3.x wurde eingestellt\nImplementierung von API V2 zum Abrufen und Wechseln von Ladephasen\noptimiertes Sentry-Protokollierung",
-        "ru": "ВАЖНО: Прекращена поддержка js-controller 3.x\nреализован API V2 для получения и переключения фаз зарядки\nоптимизирована запись в Sentry",
-        "pt": "IMPORTANTE: Suporte interrompido para js-controller 3.x\nimplementar API V2 para obter e alternar fases de carregamento\nregistro Sentry otimizado",
-        "nl": "BELANGRIJK: Ondersteuning voor js-controller 3.x is stopgezet\nimplementeer API V2 om laadfasen op te halen en te schakelen\ngeoptimaliseerde Sentry-logging",
-        "fr": "IMPORTANT : Prise en charge abandonnée pour js-controller 3.x\nimplémenter l'API V2 pour obtenir et basculer les phases de charge\njournalisation Sentry optimisée",
-        "it": "IMPORTANTE: Supporto interrotto per js-controller 3.x\nimplementare API V2 per ottenere e cambiare le fasi di ricarica\nregistrazione Sentry ottimizzata",
-        "es": "¡IMPORTANTE! Soporte discontinuado para js-controller 3.x\nimplementar API V2 para obtener y cambiar las fases de carga\nregistro de Sentry optimizado",
-        "pl": "WAŻNE: Zakończono wsparcie dla js-controller 3.x\nwdrożenie API V2 do pobierania i przełączania faz ładowania\nzoptymalizowane logowanie w Sentry",
-        "uk": "ВАЖЛИВО: Підтримка js-controller 3.x припинена\nвпроваджено API V2 для отримання та перемикання фаз заряду\nоптимізоване ведення журналу в Sentry",
-        "zh-cn": "重大变更：不再支持 js-controller 3.x\n实现 API V2 以获取和切换充电阶段\n优化的 Sentry 记录"
-      },
-      "0.16.3": {
-      	"en": "Add support for V055.8",
-      	"de": "Unterstützung für V055.8 hinzufügen",
-      	"ru": "Добавить поддержку V055.8",
-      	"pt": "Adicionar suporte para V055.8",
-      	"nl": "Ondersteuning toevoegen voor V055.8",
-      	"fr": "Ajouter la prise en charge de V055.8",
-      	"it": "Aggiungi supporto per V055.8",
-      	"es": "Agregar soporte para V055.8",
-      	"pl": "Dodaj obsługę dla V055.8",
-      	"uk": "Додати підтримку для V055.8",
-      	"zh-cn": "添加对 V055.8 的支持"
-      },
-      "0.16.2": {
-        "en": "Add support for V055.5 & V055.7",
-        "de": "Unterstützung für V055.5 & V055.7 hinzufügen",
-        "ru": "Добавить поддержку V055.5 и V055.7",
-        "pt": "Adicionar suporte para V055.5 e V055.7",
-        "nl": "Ondersteuning toevoegen voor V055.5 en V055.7",
-        "fr": "Ajouter la prise en charge de V055.5 et V055.7",
-        "it": "Aggiungere supporto per V055.5 e V055.7",
-        "es": "Agregar soporte para V055.5 y V055.7",
-        "pl": "Dodaj obsługę dla V055.5 i V055.7",
-        "uk": "Додати підтримку для V055.5 і V055.7",
-        "zh-cn": "为 V055.5 和 V055.7 添加支持"
-      },
-      "0.16.0": {
-        "en": "Replaced 'got' with 'axios'",
-        "de": "'got' durch 'axios' ersetzt",
-        "ru": "Заменен 'got' на 'axios'",
-        "pt": "Substituído 'got' por 'axios'",
-        "nl": "'got' vervangen door 'axios'",
-        "fr": "Remplacé 'got' par 'axios'",
-        "it": "Sostituito 'got' con 'axios'",
-        "es": "Reemplazado 'got' por 'axios'",
-        "pl": "Zastąpiono 'got' przez 'axios'",
-        "uk": "Замінено 'got' на 'axios'",
-        "zh-cn": "用'axios'替换了'got'"
-      },
-      "0.15.0": {
-        "en": "BREAKING: dropped node.js 14 support, add tests for node.js 20, dropped ioBroker.admin 4 support",
-        "de": "BREAKING: Node.js 14-Unterstützung wurde eingestellt, tests für node.js 20 hinzugefügt, ioBroker.admin 4 Unterstützung entfernt",
-        "ru": "ЗАВТРАК: упала поддержка node.js 14, добавьте тесты для node.js 20, удалили ioBroker. admin 4 поддержка",
-        "pt": "BREAKING: deixou cair node.js 14 suporte, adicionar testes para node.js 20, caiu ioBroker. suporte admin 4",
-        "nl": "Gedroogde node.js 14-steun, voeg testen toe voor node.js 20, drop ioBroker. administratie 4",
-        "fr": "BREAKING: largué node.js 14 support, ajouter des tests pour node.js 20, lâché ioBroker. admin 4 support",
-        "it": "BREAKING: drop node.js 14 supporto, aggiungere test per node.js 20, ioBroker caduto. admin 4 supporto",
-        "es": "BREAKING: drop node.js 14 support, add tests for node.js 20, dropped ioBroker. Apoyo administrativo 4",
-        "pl": "BREAKING: Uruchomiona obsługa węzła.js 14, dodaje testy dla węzła.js 20, zrzucił ioBrokera. Administracja 4",
-        "uk": "BREAKING: скидати node.js 14 підтримка, додати тести для node.js 20, скидати ioBroker. Підтримка адміністратора 4",
-        "zh-cn": "BREAKRE:撤除不de.js 14支持,增加20js,降水箱。 附录4"
       }
     },
     "titleLang": {
