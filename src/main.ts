@@ -256,7 +256,7 @@ class go_e_charger extends utils.Adapter {
 		}
 
 		// WIP adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltime);
-		const stateMachine = this.setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
+		const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.polltimelive));
 		this.timeoutList.push(stateMachine);
 	}
 
