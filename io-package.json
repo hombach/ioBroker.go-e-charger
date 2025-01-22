@@ -1,501 +1,513 @@
 {
-  "common": {
-    "name": "go-e-charger",
-    "version": "0.19.5",
-    "news": {
-      "0.19.5": {
-        "en": "Harmonize tests, add tests for Node.js 22\nFix bug in state subscription\nReplace deprecated async state access\nYear 2025 changes\nBumped dependencies",
-        "de": "Tests harmonisieren, Tests für Node.js 22 hinzufügen\nFehler in der Zustandsabonnement beheben\nVeralteten asynchronen Zustandszugriff ersetzen\nÄnderungen für das Jahr 2025\nAbhängigkeiten aktualisiert",
-        "ru": "Унифицировать тесты, добавить тесты для Node.js 22\nИсправить ошибку в подписке на состояние\nЗаменить устаревший асинхронный доступ к состоянию\nИзменения на 2025 год\nОбновлены зависимости",
-        "pt": "Harmonizar testes, adicionar testes para Node.js 22\nCorrigir bug na assinatura de estado\nSubstituir acesso assíncrono de estado obsoleto\nAlterações para o ano de 2025\nDependências atualizadas",
-        "nl": "Tests harmoniseren, tests voor Node.js 22 toevoegen\nFout in statusabonnement oplossen\nVerouderde asynchrone status-toegang vervangen\nWijzigingen voor het jaar 2025\nAfhankelijkheden bijgewerkt",
-        "fr": "Harmoniser les tests, ajouter des tests pour Node.js 22\nCorriger un bug dans l'abonnement à l'état\nRemplacer l'accès asynchrone obsolète aux états\nModifications pour l'année 2025\nDépendances mises à jour",
-        "it": "Armonizzare i test, aggiungere test per Node.js 22\nCorreggere bug nella sottoscrizione dello stato\nSostituire l'accesso asincrono allo stato deprecato\nModifiche per l'anno 2025\nDipendenze aggiornate",
-        "es": "Armonizar pruebas, agregar pruebas para Node.js 22\nCorregir error en la suscripción de estado\nReemplazar acceso asincrónico obsoleto al estado\nCambios para el año 2025\nDependencias actualizadas",
-        "pl": "Ujednolicić testy, dodać testy dla Node.js 22\nNaprawić błąd w subskrypcji stanu\nZastąpić przestarzały asynchroniczny dostęp do stanu\nZmiany na rok 2025\nZaktualizowano zależności",
-        "uk": "Уніфікувати тести, додати тести для Node.js 22\nВиправити помилку в підписці на стан\nЗамінити застарілий асинхронний доступ до стану\nЗміни на 2025 рік\nОновлено залежності",
-        "zh-cn": "统一测试，添加 Node.js 22 的测试\n修复状态订阅中的错误\n替换已弃用的异步状态访问\n2025 年的更改\n更新依赖项"
-      },
-      "0.19.4": {
-        "en": "fixed vulnerability in dependency",
-        "de": "Schwachstelle in Abhängigkeit behoben",
-        "ru": "устранена уязвимость в зависимости",
-        "pt": "vulnerabilidade corrigida na dependência",
-        "nl": "kwetsbaarheid in afhankelijkheid opgelost",
-        "fr": "vulnérabilité corrigée dans la dépendance",
-        "it": "corretta vulnerabilità nella dipendenza",
-        "es": "vulnerabilidad solucionada en la dependencia",
-        "pl": "usunięto lukę w zależności",
-        "uk": "виправлено уразливість у залежності",
-        "zh-cn": "修复了依赖项中的漏洞"
-      },
-      "0.19.3": {
-        "en": "added support for firmware V56.",
-        "de": "Unterstützung für Firmware V56.8 hinzugefügt",
-        "ru": "добавлена поддержка прошивки V56.8",
-        "pt": "adicionado suporte para firmware V56.8",
-        "nl": "ondersteuning toegevoegd voor firmware V56.8",
-        "fr": "ajouté le support pour le firmware V56.8",
-        "it": "aggiunto il supporto per il firmware V56.8",
-        "es": "añadido soporte para firmware V56.8",
-        "pl": "dodano obsługę oprogramowania V56.8",
-        "uk": "додано підтримку прошивки V56.8",
-        "zh-cn": "添加了对固件 V56.8 的支持"
-      },
-      "0.19.2": {
-        "en": "added support for firmware V56.2",
-        "de": "Unterstützung für Firmware V56.2 hinzugefügt",
-        "ru": "добавлена поддержка прошивки V56.2",
-        "pt": "adicionado suporte para firmware V56.2",
-        "nl": "ondersteuning toegevoegd voor firmware V56.2",
-        "fr": "ajouté le support pour le firmware V56.2",
-        "it": "aggiunto il supporto per il firmware V56.2",
-        "es": "añadido soporte para firmware V56.2",
-        "pl": "dodano obsługę oprogramowania V56.2",
-        "uk": "додано підтримку прошивки V56.2",
-        "zh-cn": "添加了对固件 V56.2 的支持"
-      },
-      "0.19.1": {
-        "en": "fixed known vulnerability in dependency",
-        "de": "bekannte Schwachstelle in Abhängigkeit behoben",
-        "ru": "устранена известная уязвимость в зависимости",
-        "pt": "corrigida vulnerabilidade conhecida na dependência",
-        "nl": "bekende kwetsbaarheid in afhankelijkheid verholpen",
-        "fr": "corrigée une vulnérabilité connue dans la dépendance",
-        "it": "corretta una vulnerabilità nota in una dipendenza",
-        "es": "corregida una vulnerabilidad conocida en la dependencia",
-        "pl": "naprawiono znaną podatność w zależności",
-        "uk": "виправлено відому вразливість у залежності",
-        "zh-cn": "修复了依赖项中的已知漏洞"
-      },
-      "0.19.0": {
-        "en": "introduced possibility to not subtract charger power from home consumption",
-        "de": "Möglichkeit eingeführt, die Ladeleistung nicht vom Hausverbrauch abzuziehen",
-        "ru": "введена возможность не вычитать мощность зарядного устройства из потребления электроэнергии дома",
-        "pt": "introduzida a possibilidade de não subtrair a energia do carregador do consumo doméstico",
-        "nl": "mogelijkheid geïntroduceerd om het verbruik van de oplader niet van het stroomverbruik van het huis af te trekken",
-        "fr": "possibilité introduite de ne pas soustraire la puissance du chargeur de la consommation domestique",
-        "it": "introdotta la possibilità di non sottrarre la potenza del caricabatterie dal consumo domestico",
-        "es": "introducida la posibilidad de no restar la potencia del cargador del consumo doméstico",
-        "pl": "wprowadzono możliwość nieodejmowania mocy ładowarki od zużycia energii w domu",
-        "uk": "введено можливість не віднімати потужність зарядного пристрою від споживання електроенергії дому",
-        "zh-cn": "引入了不从家庭电力消耗中扣除充电器功率的可能性"
-      },
-      "0.18.0": {
-        "en": "BREAKING: dropped support for Node.js 16 (#368)\nBREAKING: js-controller >= 5 is required\nupdate adapter-core to 3.1.4",
-        "de": "WICHTIG: Unterstützung für Node.js 16 wurde eingestellt (#368)\nWICHTIG: js-controller >= 5 ist erforderlich\nadapter-core auf 3.1.4 aktualisiert",
-        "ru": "ВАЖНО: прекращена поддержка Node.js 16 (#368)\nВАЖНО: требуется js-controller >= 5\nобновление adapter-core до 3.1.4",
-        "pt": "IMPORTANTE: suporte para Node.js 16 foi removido (#368)\nIMPORTANTE: js-controller >= 5 é necessário\natualização do adapter-core para 3.1.4",
-        "nl": "BELANGRIJK: ondersteuning voor Node.js 16 is verwijderd (#368)\nBELANGRIJK: js-controller >= 5 is vereist\nupdate adapter-core naar 3.1.4",
-        "fr": "IMPORTANT : prise en charge de Node.js 16 abandonnée (#368)\nIMPORTANT : js-controller >= 5 est requis\nmise à jour de adapter-core vers 3.1.4",
-        "it": "IMPORTANTE: supporto per Node.js 16 eliminato (#368)\nIMPORTANTE: js-controller >= 5 è richiesto\naggiornato adapter-core a 3.1.4",
-        "es": "IMPORTANTE: se eliminó el soporte para Node.js 16 (#368)\nIMPORTANTE: se requiere js-controller >= 5\nactualización de adapter-core a 3.1.4",
-        "pl": "WAŻNE: wsparcie dla Node.js 16 zostało usunięte (#368)\nWAŻNE: wymagane jest js-controller >= 5\naktualizacja adapter-core do wersji 3.1.4",
-        "uk": "ВАЖЛИВО: підтримка Node.js 16 скасована (#368)\nВАЖЛИВО: потрібен js-controller >= 5\nоновлення adapter-core до 3.1.4",
-        "zh-cn": "重要: 放弃对 Node.js 16 的支持 (#368)\n重要: js-controller >= 5 已必需\n将 adapter-core 更新到 3.1.4"
-      }
+    "common": {
+        "name": "go-e-charger",
+        "version": "0.19.6",
+        "news": {
+            "0.19.6": {
+                "en": "added support for firmware V56.9 (#657)\nported adapter to TypeScript\nbumped dependencies\nswitch to ES2022\nfixed chai",
+                "de": "Unterstützung für Firmware V56.9 (#657) hinzugefügt\nportierter Adapter für TypeScript\ngestoßene Abhängigkeiten\nWechseln Sie zu ES2022\nfester Chai",
+                "ru": "добавлена ​​поддержка прошивки V56.9 (#657)\nпортировал адаптер на TypeScript\nизмененные зависимости\nперейти на ES2022\nфиксированный чай",
+                "pt": "adicionado suporte para firmware V56.9 (#657)\nadaptador portado para TypeScript\ndependências colididas\nmudar para ES2022\nchai fixo",
+                "nl": "ondersteuning toegevoegd voor firmware V56.9 (#657)\ngeporteerde adapter naar TypeScript\nafhankelijkheden tegengekomen\noverstappen naar ES2022\nvaste chai",
+                "fr": "ajout de la prise en charge du firmware V56.9 (#657)\nadaptateur porté vers TypeScript\ndépendances déplacées\npasser à ES2022\nchai fixe",
+                "it": "aggiunto il supporto per il firmware V56.9 (#657)\nadattatore portato su TypeScript\ndipendenze urtate\npassare a ES2022\nchai fisso",
+                "es": "soporte agregado para el firmware V56.9 (#657)\nadaptador portado a TypeScript\ndependencias chocadas\ncambiar a ES2022\nchai fijo",
+                "pl": "dodano obsługę oprogramowania sprzętowego V56.9 (#657)\nprzeniesiony adapter do TypeScript\nzdeformowane zależności\nprzejdź na ES2022\nnaprawiono chai",
+                "uk": "додана підтримка мікропрограми V56.9 (#657)\nпортований адаптер до TypeScript\nзіткнулися залежності\nперейти на ES2022\nфіксований чай",
+                "zh-cn": "添加了对固件 V56.9 (#657) 的支持\n将适配器移植到 TypeScript\n碰撞依赖性\n切换到ES2022\n固定柴"
+            },
+            "0.19.5": {
+                "en": "Harmonize tests, add tests for Node.js 22\nFix bug in state subscription\nReplace deprecated async state access\nYear 2025 changes\nBumped dependencies",
+                "de": "Tests harmonisieren, Tests für Node.js 22 hinzufügen\nFehler in der Zustandsabonnement beheben\nVeralteten asynchronen Zustandszugriff ersetzen\nÄnderungen für das Jahr 2025\nAbhängigkeiten aktualisiert",
+                "ru": "Унифицировать тесты, добавить тесты для Node.js 22\nИсправить ошибку в подписке на состояние\nЗаменить устаревший асинхронный доступ к состоянию\nИзменения на 2025 год\nОбновлены зависимости",
+                "pt": "Harmonizar testes, adicionar testes para Node.js 22\nCorrigir bug na assinatura de estado\nSubstituir acesso assíncrono de estado obsoleto\nAlterações para o ano de 2025\nDependências atualizadas",
+                "nl": "Tests harmoniseren, tests voor Node.js 22 toevoegen\nFout in statusabonnement oplossen\nVerouderde asynchrone status-toegang vervangen\nWijzigingen voor het jaar 2025\nAfhankelijkheden bijgewerkt",
+                "fr": "Harmoniser les tests, ajouter des tests pour Node.js 22\nCorriger un bug dans l'abonnement à l'état\nRemplacer l'accès asynchrone obsolète aux états\nModifications pour l'année 2025\nDépendances mises à jour",
+                "it": "Armonizzare i test, aggiungere test per Node.js 22\nCorreggere bug nella sottoscrizione dello stato\nSostituire l'accesso asincrono allo stato deprecato\nModifiche per l'anno 2025\nDipendenze aggiornate",
+                "es": "Armonizar pruebas, agregar pruebas para Node.js 22\nCorregir error en la suscripción de estado\nReemplazar acceso asincrónico obsoleto al estado\nCambios para el año 2025\nDependencias actualizadas",
+                "pl": "Ujednolicić testy, dodać testy dla Node.js 22\nNaprawić błąd w subskrypcji stanu\nZastąpić przestarzały asynchroniczny dostęp do stanu\nZmiany na rok 2025\nZaktualizowano zależności",
+                "uk": "Уніфікувати тести, додати тести для Node.js 22\nВиправити помилку в підписці на стан\nЗамінити застарілий асинхронний доступ до стану\nЗміни на 2025 рік\nОновлено залежності",
+                "zh-cn": "统一测试，添加 Node.js 22 的测试\n修复状态订阅中的错误\n替换已弃用的异步状态访问\n2025 年的更改\n更新依赖项"
+            },
+            "0.19.4": {
+                "en": "fixed vulnerability in dependency",
+                "de": "Schwachstelle in Abhängigkeit behoben",
+                "ru": "устранена уязвимость в зависимости",
+                "pt": "vulnerabilidade corrigida na dependência",
+                "nl": "kwetsbaarheid in afhankelijkheid opgelost",
+                "fr": "vulnérabilité corrigée dans la dépendance",
+                "it": "corretta vulnerabilità nella dipendenza",
+                "es": "vulnerabilidad solucionada en la dependencia",
+                "pl": "usunięto lukę w zależności",
+                "uk": "виправлено уразливість у залежності",
+                "zh-cn": "修复了依赖项中的漏洞"
+            },
+            "0.19.3": {
+                "en": "added support for firmware V56.",
+                "de": "Unterstützung für Firmware V56.8 hinzugefügt",
+                "ru": "добавлена поддержка прошивки V56.8",
+                "pt": "adicionado suporte para firmware V56.8",
+                "nl": "ondersteuning toegevoegd voor firmware V56.8",
+                "fr": "ajouté le support pour le firmware V56.8",
+                "it": "aggiunto il supporto per il firmware V56.8",
+                "es": "añadido soporte para firmware V56.8",
+                "pl": "dodano obsługę oprogramowania V56.8",
+                "uk": "додано підтримку прошивки V56.8",
+                "zh-cn": "添加了对固件 V56.8 的支持"
+            },
+            "0.19.2": {
+                "en": "added support for firmware V56.2",
+                "de": "Unterstützung für Firmware V56.2 hinzugefügt",
+                "ru": "добавлена поддержка прошивки V56.2",
+                "pt": "adicionado suporte para firmware V56.2",
+                "nl": "ondersteuning toegevoegd voor firmware V56.2",
+                "fr": "ajouté le support pour le firmware V56.2",
+                "it": "aggiunto il supporto per il firmware V56.2",
+                "es": "añadido soporte para firmware V56.2",
+                "pl": "dodano obsługę oprogramowania V56.2",
+                "uk": "додано підтримку прошивки V56.2",
+                "zh-cn": "添加了对固件 V56.2 的支持"
+            },
+            "0.19.1": {
+                "en": "fixed known vulnerability in dependency",
+                "de": "bekannte Schwachstelle in Abhängigkeit behoben",
+                "ru": "устранена известная уязвимость в зависимости",
+                "pt": "corrigida vulnerabilidade conhecida na dependência",
+                "nl": "bekende kwetsbaarheid in afhankelijkheid verholpen",
+                "fr": "corrigée une vulnérabilité connue dans la dépendance",
+                "it": "corretta una vulnerabilità nota in una dipendenza",
+                "es": "corregida una vulnerabilidad conocida en la dependencia",
+                "pl": "naprawiono znaną podatność w zależności",
+                "uk": "виправлено відому вразливість у залежності",
+                "zh-cn": "修复了依赖项中的已知漏洞"
+            },
+            "0.19.0": {
+                "en": "introduced possibility to not subtract charger power from home consumption",
+                "de": "Möglichkeit eingeführt, die Ladeleistung nicht vom Hausverbrauch abzuziehen",
+                "ru": "введена возможность не вычитать мощность зарядного устройства из потребления электроэнергии дома",
+                "pt": "introduzida a possibilidade de não subtrair a energia do carregador do consumo doméstico",
+                "nl": "mogelijkheid geïntroduceerd om het verbruik van de oplader niet van het stroomverbruik van het huis af te trekken",
+                "fr": "possibilité introduite de ne pas soustraire la puissance du chargeur de la consommation domestique",
+                "it": "introdotta la possibilità di non sottrarre la potenza del caricabatterie dal consumo domestico",
+                "es": "introducida la posibilidad de no restar la potencia del cargador del consumo doméstico",
+                "pl": "wprowadzono możliwość nieodejmowania mocy ładowarki od zużycia energii w domu",
+                "uk": "введено можливість не віднімати потужність зарядного пристрою від споживання електроенергії дому",
+                "zh-cn": "引入了不从家庭电力消耗中扣除充电器功率的可能性"
+            },
+            "0.18.0": {
+                "en": "BREAKING: dropped support for Node.js 16 (#368)\nBREAKING: js-controller >= 5 is required\nupdate adapter-core to 3.1.4",
+                "de": "WICHTIG: Unterstützung für Node.js 16 wurde eingestellt (#368)\nWICHTIG: js-controller >= 5 ist erforderlich\nadapter-core auf 3.1.4 aktualisiert",
+                "ru": "ВАЖНО: прекращена поддержка Node.js 16 (#368)\nВАЖНО: требуется js-controller >= 5\nобновление adapter-core до 3.1.4",
+                "pt": "IMPORTANTE: suporte para Node.js 16 foi removido (#368)\nIMPORTANTE: js-controller >= 5 é necessário\natualização do adapter-core para 3.1.4",
+                "nl": "BELANGRIJK: ondersteuning voor Node.js 16 is verwijderd (#368)\nBELANGRIJK: js-controller >= 5 is vereist\nupdate adapter-core naar 3.1.4",
+                "fr": "IMPORTANT : prise en charge de Node.js 16 abandonnée (#368)\nIMPORTANT : js-controller >= 5 est requis\nmise à jour de adapter-core vers 3.1.4",
+                "it": "IMPORTANTE: supporto per Node.js 16 eliminato (#368)\nIMPORTANTE: js-controller >= 5 è richiesto\naggiornato adapter-core a 3.1.4",
+                "es": "IMPORTANTE: se eliminó el soporte para Node.js 16 (#368)\nIMPORTANTE: se requiere js-controller >= 5\nactualización de adapter-core a 3.1.4",
+                "pl": "WAŻNE: wsparcie dla Node.js 16 zostało usunięte (#368)\nWAŻNE: wymagane jest js-controller >= 5\naktualizacja adapter-core do wersji 3.1.4",
+                "uk": "ВАЖЛИВО: підтримка Node.js 16 скасована (#368)\nВАЖЛИВО: потрібен js-controller >= 5\nоновлення adapter-core до 3.1.4",
+                "zh-cn": "重要: 放弃对 Node.js 16 的支持 (#368)\n重要: js-controller >= 5 已必需\n将 adapter-core 更新到 3.1.4"
+            }
+        },
+        "titleLang": {
+            "en": "go-eCharger",
+            "de": "go-eCharger",
+            "ru": "go-eCharger",
+            "pt": "go-eCharger",
+            "nl": "go-eCharger",
+            "fr": "go-eCharger",
+            "it": "go-eCharger",
+            "es": "go-eCharger",
+            "pl": "go-eCharger",
+            "uk": "go-eCharger",
+            "zh-cn": "导 言"
+        },
+        "desc": {
+            "en": "Adapter for reading go-eCharger data",
+            "de": "Adapter zum Lesen von go-eCharger-Daten",
+            "ru": "Адаптер для чтения данных go-eCharger",
+            "pt": "Adaptador para leitura de dados do go-eCharger",
+            "nl": "Adapter voor het lezen van go-eCharger-gegevens",
+            "fr": "Adaptateur pour lire les données de go-eCharger",
+            "it": "Adattatore per la lettura di dati go-eCharger",
+            "es": "Adaptador para leer datos de go-eCharger",
+            "pl": "Adapter do odczytu danych go-eCharger",
+            "uk": "Адаптер для читання даних go-eCharger",
+            "zh-cn": "用于读取go-eCharger数据的适配器"
+        },
+        "authors": [
+            "Christian Hombach <go-eCharger@homba.ch>"
+        ],
+        "keywords": [
+            "go-e",
+            "go-eCharger",
+            "wallbox",
+            "solar-power"
+        ],
+        "licenseInformation": {
+            "license": "MIT",
+            "type": "free"
+        },
+        "platform": "Javascript/Node.js",
+        "icon": "go-eCharger.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/Hombach/ioBroker.go-e-charger/master/admin/go-eCharger.png",
+        "readme": "https://github.com/Hombach/ioBroker.go-e-charger/blob/master/README.md",
+        "loglevel": "info",
+        "tier": 3,
+        "mode": "daemon",
+        "type": "vehicle",
+        "compact": true,
+        "connectionType": "local",
+        "dataSource": "poll",
+        "adminUI": {
+            "config": "json"
+        },
+        "dependencies": [
+            {
+                "js-controller": ">=5.0.19"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": ">=5.1.28"
+            }
+        ],
+        "plugins": {
+            "sentry": {
+                "dsn": "https://dfd724bd663388712aefb1ea16cef06a@o415875.ingest.sentry.io/4506252607684608"
+            }
+        },
+        "supportCustoms": false
     },
-    "titleLang": {
-      "en": "go-eCharger",
-      "de": "go-eCharger",
-      "ru": "go-eCharger",
-      "pt": "go-eCharger",
-      "nl": "go-eCharger",
-      "fr": "go-eCharger",
-      "it": "go-eCharger",
-      "es": "go-eCharger",
-      "pl": "go-eCharger",
-      "uk": "go-eCharger",
-      "zh-cn": "导 言"
+    "native": {
+        "ipaddress": "",
+        "polltime": 10000,
+        "StateHomeBatSoc": "",
+        "StateHomeSolarPower": "",
+        "StateHomePowerConsumption": "",
+        "SubtractSelfConsumption": true,
+        "ReadOnlyMode": false
     },
-    "desc": {
-      "en": "Adapter for reading go-eCharger data",
-      "de": "Adapter zum Lesen von go-eCharger-Daten",
-      "ru": "Адаптер для чтения данных go-eCharger",
-      "pt": "Adaptador para leitura de dados do go-eCharger",
-      "nl": "Adapter voor het lezen van go-eCharger-gegevens",
-      "fr": "Adaptateur pour lire les données de go-eCharger",
-      "it": "Adattatore per la lettura di dati go-eCharger",
-      "es": "Adaptador para leer datos de go-eCharger",
-      "pl": "Adapter do odczytu danych go-eCharger",
-      "uk": "Адаптер для читання даних go-eCharger",
-      "zh-cn": "用于读取go-eCharger数据的适配器"
-    },
-    "authors": [
-      "Christian Hombach <kostal-piko-ba@homba.ch>"
-    ],
-    "keywords": [
-      "go-e",
-      "go-eCharger",
-      "wallbox",
-      "solar-power"
-    ],
-    "tier": 3,
-    "licenseInformation": {
-      "license": "MIT",
-      "type": "free"
-    },
-    "platform": "Javascript/Node.js",
-    "icon": "go-eCharger.png",
-    "extIcon": "https://raw.githubusercontent.com/hombach/ioBroker.go-e-charger/master/admin/go-eCharger.png",
-    "enabled": true,
-    "readme": "https://raw.githubusercontent.com/hombach/ioBroker.go-e-charger/master/README.md",
-    "loglevel": "info",
-    "mode": "daemon",
-    "type": "vehicle",
-    "compact": true,
-    "connectionType": "local",
-    "dataSource": "poll",
-    "adminUI": {
-      "config": "json"
-    },
-    "dependencies": [
-      {
-        "js-controller": ">=5.0.19"
-      }
-    ],
-    "globalDependencies": [
-      {
-        "admin": ">=5.1.28"
-      }
-    ],
-    "plugins": {
-      "sentry": {
-        "dsn": "https://dfd724bd663388712aefb1ea16cef06a@o415875.ingest.sentry.io/4506252607684608"
-      }
-    },
-        
-    "supportCustoms": false
-  },
-
-  "native": {
-    "ipaddress": "",
-    "polltimelive": 10000,
-    "StateHomeBatSoc": "",
-    "StateHomeSolarPower": "",
-    "StateHomePowerConsumption": "",
-    "SubtractSelfConsumption": true,
-    "ReadOnlyMode": false
-  },
-
-  "objects": [],
-
-  "instanceObjects": [
-    {
-      "_id": "info",
-      "type": "channel",
-      "common": { "name": "Information" },
-      "native": {}
-    },
-    {
-      "_id": "info.connection",
-      "type": "state",
-      "common": {
-        "role": "indicator.connected",
-        "name": "Device or service connected",
-        "type": "boolean",
-        "read": true,
-        "write": false,
-        "def": false
-      },
-      "native": {}
-    },
-
-    {
-      "_id": "Info",
-      "type": "channel",
-      "common": { "name": "Informations about go-eCharger" },
-      "native": {}
-    },
-    {
-      "_id": "Info.FirmwareVersion",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Firmware version of charger",
-        "type": "string",
-        "unit": "",
-        "read": true,
-        "write": false,
-        "def": ""
-      },
-      "native": {}
-    },
-    {
-      "_id": "Info.HardwareVersion",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Hardware version of charger",
-        "type": "string",
-        "unit": "",
-        "read": true,
-        "write": false,
-        "def": ""
-      },
-      "native": {}
-    },
-    {
-      "_id": "Info.RebootCounter",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Counter for system reboot events",
-        "type": "number",
-        "unit": "",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Info.RebootTimer",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Time since last reboot",
-        "type": "number",
-        "unit": "h",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Info.CarState",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "State of connected car",
-        "type": "number",
-        "unit": "",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Info.CarStateString",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "State of connected car",
-        "type": "string",
-        "unit": "",
-        "read": true,
-        "write": false,
-        "def": ""
-      },
-      "native": {}
-    },
-
-
-    {
-      "_id": "Power",
-      "type": "channel",
-      "common": { "name": "current charger power data" },
-      "native": {}
-    },
-    {
-      "_id": "Power.ChargeCurrent",
-      "type": "state",
-      "common": {
-        "role": "value.current",
-        "name": "Charge current output",
-        "type": "number",
-        "unit": "A",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Power.ChargeCurrentVolatile",
-      "type": "state",
-      "common": {
-        "role": "value.current",
-        "name": "Charge current output volatile",
-        "type": "number",
-        "unit": "A",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Power.GridPhases",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "No of available grid phases",
-        "type": "number",
-        "unit": "phase",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Power.EnabledPhases",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "No of enabled phases in go-e wallbox",
-        "type": "number",
-        "unit": "phase",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Power.MeasuredMaxPhaseCurrent",
-      "type": "state",
-      "common": {
-        "role": "value.current",
-        "name": "Measured max. current of grid phases",
-        "type": "number",
-        "unit": "A",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Power.Charge",
-      "type": "state",
-      "common": {
-        "role": "value.power",
-        "name": "actual charging-power",
-        "type": "number",
-        "unit": "W",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-    {
-      "_id": "Power.ChargingAllowed",
-      "type": "state",
-      "common": {
-        "role": "switch.mode.manual",
-        "name": "Charging allowed",
-        "type": "boolean",
-        "unit": "",
-        "read": true,
-        "write": false,
-        "def": false
-      },
-      "native": {}
-    },
-
-
-    {
-      "_id": "Statistics_Total",
-      "type": "channel",
-      "common": { "name": "statistical data total lifetime" },
-      "native": {}
-    },
-    {
-      "_id": "Statistics_Total.Charged",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Totally charged in go-e lifetime",
-        "type": "number",
-        "unit": "kWh",
-        "read": true,
-        "write": false,
-        "def": 0
-      },
-      "native": {}
-    },
-
-
-    {
-      "_id": "Settings",
-      "type": "channel",
-      "common": { "name": "states to dynamically adjust go-eCharger settings" },
-      "native": {}
-    },
-    {
-      "_id": "Settings.Setpoint_HomeBatSoC",
-      "type": "state",
-      "common": {
-        "role": "level",
-        "name": "Setpoint for home battery state of charge",
-        "type": "number",
-        "unit": "%",
-        "read": true,
-        "write": true,
-        "def": 50
-      },
-      "native": {}
-    },
-    {
-      "_id": "Settings.ChargeNOW",
-      "type": "state",
-      "common": {
-        "role": "switch",
-        "name": "ChargeNOW enabled",
-        "type": "boolean",
-        "unit": "",
-        "read": true,
-        "write": true,
-        "def": false
-      },
-      "native": {}
-    },
-    {
-      "_id": "Settings.ChargeCurrent",
-      "type": "state",
-      "common": {
-        "role": "value.current",
-        "name": "Setting charge current output",
-        "type": "number",
-        "unit": "A",
-        "read": true,
-        "write": true,
-        "def": 6
-      },
-      "native": {}
-    },
-    {
-      "_id": "Settings.Charge3Phase",
-      "type": "state",
-      "common": {
-        "role": "value",
-        "name": "Set manual charge to 3 phase mode",
-        "type": "boolean",
-        "unit": "",
-        "read": true,
-        "write": true,
-        "def": true
-      },
-      "native": {}
-    },
-    {
-      "_id": "Settings.ChargeManager",
-      "type": "state",
-      "common": {
-        "role": "switch.mode.auto",
-        "name": "Charge Manager enabled",
-        "type": "boolean",
-        "unit": "",
-        "read": true,
-        "write": true,
-        "def": false
-      },
-      "native": {}
-    }
-  ]
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": {
+                "name": "Information"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "Device or service connected",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "Info",
+            "type": "channel",
+            "common": {
+                "name": "Informations about go-eCharger"
+            },
+            "native": {}
+        },
+        {
+            "_id": "Info.FirmwareVersion",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "Firmware version of charger",
+                "type": "string",
+                "unit": "",
+                "read": true,
+                "write": false,
+                "def": ""
+            },
+            "native": {}
+        },
+        {
+            "_id": "Info.HardwareVersion",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "Hardware version of charger",
+                "type": "string",
+                "unit": "",
+                "read": true,
+                "write": false,
+                "def": ""
+            },
+            "native": {}
+        },
+        {
+            "_id": "Info.RebootCounter",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "Counter for system reboot events",
+                "type": "number",
+                "unit": "",
+                "read": true,
+                "write": false,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "Info.RebootTimer",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "Time since last reboot",
+                "type": "number",
+                "unit": "h",
+                "read": true,
+                "write": false,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "Info.CarState",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "State of connected car",
+                "type": "number",
+                "unit": "",
+                "read": true,
+                "write": false,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "Info.CarStateString",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "State of connected car",
+                "type": "string",
+                "unit": "",
+                "read": true,
+                "write": false,
+                "def": ""
+            },
+            "native": {}
+        },
+        {
+            "_id": "Power",
+            "type": "channel",
+            "common": {
+                "name": "current charger power data"
+            },
+            "native": {}
+        },
+        {
+            "_id": "Power.ChargeCurrent",
+            "type": "state",
+            "common": {
+                "role": "value.current",
+                "name": "Charge current output",
+                "type": "number",
+                "unit": "A",
+                "read": true,
+                "write": false,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "Power.ChargeCurrentVolatile",
+            "type": "state",
+            "common": {
+                "role": "value.current",
+                "name": "Charge current output volatile",
+                "type": "number",
+                "unit": "A",
+                "read": true,
+                "write": false,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "Power.GridPhases",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "No of available grid phases",
+                "type": "number",
+                "unit": "phase",
+                "read": true,
+                "write": false,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "Power.EnabledPhases",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "No of enabled phases in go-e wallbox",
+                "type": "number",
+                "unit": "phase",
+                "read": true,
+                "write": false,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "Power.MeasuredMaxPhaseCurrent",
+            "type": "state",
+            "common": {
+                "role": "value.current",
+                "name": "Measured max. current of grid phases",
+                "type": "number",
+                "unit": "A",
+                "read": true,
+                "write": false,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "Power.Charge",
+            "type": "state",
+            "common": {
+                "role": "value.power",
+                "name": "actual charging-power",
+                "type": "number",
+                "unit": "W",
+                "read": true,
+                "write": false,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "Power.ChargingAllowed",
+            "type": "state",
+            "common": {
+                "role": "switch.mode.manual",
+                "name": "Charging allowed",
+                "type": "boolean",
+                "unit": "",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "Statistics_Total",
+            "type": "channel",
+            "common": {
+                "name": "statistical data total lifetime"
+            },
+            "native": {}
+        },
+        {
+            "_id": "Statistics_Total.Charged",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "Totally charged in go-e lifetime",
+                "type": "number",
+                "unit": "kWh",
+                "read": true,
+                "write": false,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "Settings",
+            "type": "channel",
+            "common": {
+                "name": "states to dynamically adjust go-eCharger settings"
+            },
+            "native": {}
+        },
+        {
+            "_id": "Settings.Setpoint_HomeBatSoC",
+            "type": "state",
+            "common": {
+                "role": "level",
+                "name": "Setpoint for home battery state of charge",
+                "type": "number",
+                "unit": "%",
+                "read": true,
+                "write": true,
+                "def": 50
+            },
+            "native": {}
+        },
+        {
+            "_id": "Settings.ChargeNOW",
+            "type": "state",
+            "common": {
+                "role": "switch",
+                "name": "ChargeNOW enabled",
+                "type": "boolean",
+                "unit": "",
+                "read": true,
+                "write": true,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "Settings.ChargeCurrent",
+            "type": "state",
+            "common": {
+                "role": "value.current",
+                "name": "Setting charge current output",
+                "type": "number",
+                "unit": "A",
+                "read": true,
+                "write": true,
+                "def": 6
+            },
+            "native": {}
+        },
+        {
+            "_id": "Settings.Charge3Phase",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "Set manual charge to 3 phase mode",
+                "type": "boolean",
+                "unit": "",
+                "read": true,
+                "write": true,
+                "def": true
+            },
+            "native": {}
+        },
+        {
+            "_id": "Settings.ChargeManager",
+            "type": "state",
+            "common": {
+                "role": "switch.mode.auto",
+                "name": "Charge Manager enabled",
+                "type": "boolean",
+                "unit": "",
+                "read": true,
+                "write": true,
+                "def": false
+            },
+            "native": {}
+        }
+    ]
 }

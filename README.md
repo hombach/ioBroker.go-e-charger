@@ -28,7 +28,7 @@
 
 ## Adapter for reading go-eCharger data for iOBroker
 
-Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your car. Working with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1, V56.2, V56.8.
+Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your car. Working with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1, V56.2, V56.8, V56.9.
 
 For use with hardware generation 3 & 4 you have to enable "HTTP API v1" in your go-e api.
 For use with phase switching you need hardware generation 3 or 4 and additionally you have to enable "HTTP API v2" in your go-e api.
@@ -43,100 +43,108 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ## Changelog
 
+### 0.19.6 (2025-01-xx) WORK in PROGRESS
+
+- (hombach) added support for firmware V56.9 (#657)
+- (hombach) ported adapter to TypeScript
+- (hombach) bumped dependencies
+- (hombach) switch to ES2022
+- (hombach) fixed chai
+
 ### 0.19.5 (2025-01-01)
 
-- (HombachC) harmonize tests, add tests for node 22
-- (HombachC) fix bug in state subscription
-- (HombachC) replace deprecated async state access
-- (HombachC) year 2025 changes
-- (HombachC) bumped dependencies
+- (hombach) harmonize tests, add tests for node 22
+- (hombach) fix bug in state subscription
+- (hombach) replace deprecated async state access
+- (hombach) year 2025 changes
+- (hombach) bumped dependencies
 
 ### 0.19.4 (2024-08-14)
 
-- (HombachC) fixed vulnerability in dependency
+- (hombach) fixed vulnerability in dependency
 
-### 0.19.3 (03.08.2024)
+### 0.19.3 (2024-08-03)
 
-- (HombachC) added support for firmware V56.8
+- (hombach) added support for firmware V56.8
 
 ### 0.19.2 (2024-08-03)
 
-- (HombachC) added support for firmware V56.2
+- (hombach) added support for firmware V56.2
 
-### 0.19.1 (11.06.2024)
+### 0.19.1 (2024-06-11)
 
-- (HombachC) fixed known vulnerability in dependency
+- (hombach) fixed known vulnerability in dependency
 
-### 0.19.0 (30.05.2024)
+### 0.19.0 (2024-05-30)
 
-- (HombachC) intruduced possibility to not subtract charger power from homeconsumption
+- (hombach) intruduced possibility to not subtract charger power from homeconsumption
 
-### 0.18.1 (28.05.2024)
+### 0.18.1 (2024-05-28)
 
-- (HombachC) change test procedure to ioBroker standard
-- (HombachC) revert eslint to 8.57
-- (HombachC) add info.connection state (#564)
-- (HombachC) add node 21 tests
-- (HombachC) handle not reachable chargers (#563)
+- (hombach) change test procedure to ioBroker standard
+- (hombach) revert eslint to 8.57
+- (hombach) add info.connection state (#564)
+- (hombach) add node 21 tests
+- (hombach) handle not reachable chargers (#563)
 
-### 0.18.0 (19.04.2024)
+### 0.18.0 (2024-04-19)
 
-- (HombachC) BREAKING: dropped support for node.js 16 (#558)
-- (HombachC) BREAKING: js-controller >= 5 is required (#559)
-- (HombachC) updated adapter-core to 3.1.4
+- (hombach) BREAKING: dropped support for node.js 16 (#558)
+- (hombach) BREAKING: js-controller >= 5 is required (#559)
+- (hombach) updated adapter-core to 3.1.4
 
-### 0.17.5 (27.03.2024)
+### 0.17.5 (2024-03-27)
 
-- (HombachC) smaller logo
-- (HombachC) corrected io-package.json according to new schema
+- (hombach) smaller logo
+- (hombach) corrected io-package.json according to new schema
 
-### 0.17.4 (27.03.2024)
+### 0.17.4 (2024-03-27)
 
-- (HombachC) added support for firmware V56.1
+- (hombach) added support for firmware V56.1
 
-### 0.17.3 (27.03.2024)
+### 0.17.3 (2024-03-27)
 
-- (HombachC) Update github workflows
-- (HombachC) update adapter-core to 3.0.6
+- (hombach) Update github workflows
+- (hombach) update adapter-core to 3.0.6
 
-### 0.17.2 (16.01.2024)
+### 0.17.2 (2024-01-16)
 
-- (HombachC) Fix error in calling API V2 on old HW
+- (hombach) Fix error in calling API V2 on old HW
 
-### 0.17.1 (10.01.2024)
+### 0.17.1 (2024-01-10)
 
-- (HombachC) Fix phases calculation error (#533)
+- (hombach) Fix phases calculation error (#533)
 
-### 0.17.0 (10.01.2024)
+### 0.17.0 (2024-01-10)
 
-- (HombachC) BREAKING: dropped support for js-controller 3.x
-- (HombachC) Implement API V2 to get and switch charging phases
-- (HombachC) optimized sentry logging
+- (hombach) BREAKING: dropped support for js-controller 3.x
+- (hombach) Implement API V2 to get and switch charging phases
+- (hombach) optimized sentry logging
 
-### 0.16.3 (23.12.2023)
+### 0.16.3 (2023-12-23)
 
-- (HombachC) add support for V055.8
-- (HombachC) year 2024 changes
+- (hombach) add support for V055.8
+- (hombach) year 2024 changes
 
-### 0.16.2 (19.11.2023)
+### 0.16.2 (2023-11-19)
 
-- (HombachC) add support for V055.5 & V055.7
-- (HombachC) Change Sentry logging to new project
+- (hombach) add support for V055.5 & V055.7
+- (hombach) Change Sentry logging to new project
 
-### 0.16.1 (19.11.2023)
+### 0.16.1 (2023-11-19)
 
-- (HombachC) Add support for V054.11
+- (hombach) Add support for V054.11
 
-### 0.16.0 (18.11.2023)
+### 0.16.0 (2023-11-18)
 
-- (HombachC) replaced got by axios
+- (hombach) replaced got by axios
 
 ### Old Changes see [CHANGELOG OLD](CHANGELOG_OLD.md)
 
 ## License
 MIT License
 
-Copyright (c) 2020 - 2025 HombachC
+Copyright (c) 2020-2025 C.Hombach
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
