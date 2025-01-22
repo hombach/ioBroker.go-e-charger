@@ -43,8 +43,6 @@ const projectUtils_1 = require("./lib/projectUtils");
 const axiosInstance = axios_1.default.create({
 //timeout: 5000, //by default
 });
-// WIP const adapterIntervals = {};
-// Adapter for EV-Charger go-E with firmware >V033
 // Variablen
 let FirstStart = true;
 let ZielAmpere = 5;
@@ -66,7 +64,7 @@ let Hardware = "V2";
 let HardwareMin3 = false;
 class go_e_charger extends utils.Adapter {
     ProjectUtils = new projectUtils_1.ProjectUtils(this);
-    timeoutList; //WIP
+    timeoutList;
     /****************************************************************************************
      * @param {Partial<utils.AdapterOptions>} [options={}]
      */
@@ -102,7 +100,6 @@ class go_e_charger extends utils.Adapter {
             // sentry.io ping
             if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
                 const sentryInstance = this.getPluginInstance("sentry");
-                // const today = new Date(); WIP
                 if (sentryInstance) {
                     const Sentry = sentryInstance.getSentryObject();
                     Sentry &&
@@ -116,15 +113,10 @@ class go_e_charger extends utils.Adapter {
                 }
             }
             MinHomeBatVal = await this.ProjectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
-            // MinHomeBatVal = await this.asyncGetStateVal("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
             ChargeNOW = await this.ProjectUtils.getStateValue("Settings.ChargeNOW"); // Get charging override trigger
-            // ChargeNOW = await this.asyncGetStateVal("Settings.ChargeNOW"); // Get charging override trigger
             ChargeManager = await this.ProjectUtils.getStateValue("Settings.ChargeManager"); // Get enable for charge manager
-            // ChargeManager = await this.asyncGetStateVal("Settings.ChargeManager"); // Get enable for charge manager
             ChargeCurrent = await this.ProjectUtils.getStateValue("Settings.ChargeCurrent"); // Get current for charging override
-            // ChargeCurrent = await this.asyncGetStateVal("Settings.ChargeCurrent"); // Get current for charging override
             this.log.debug(`Pre-init done, launching state machine interval`);
-            // WIP adapterIntervals.stateMachine = this.setTimeout(this.StateMachine.bind(this), this.config.polltime);
             const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.polltimelive));
             this.timeoutList.push(stateMachine);
         }
@@ -145,19 +137,14 @@ class go_e_charger extends utils.Adapter {
                 if (!state.ack) {
                     this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
                     MinHomeBatVal = await this.ProjectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
-                    // MinHomeBatVal = await this.asyncGetStateVal("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
                     await this.setState("Settings.Setpoint_HomeBatSoC", MinHomeBatVal, true);
                     ChargeNOW = await this.ProjectUtils.getStateValue("Settings.ChargeNOW"); // Get charging override trigger
-                    // ChargeNOW = await this.asyncGetStateVal("Settings.ChargeNOW"); // Get charging override trigger
                     await this.setState("Settings.ChargeNOW", ChargeNOW, true);
                     ChargeManager = await this.ProjectUtils.getStateValue("Settings.ChargeManager"); // Get enable for charge manager
-                    // ChargeManager = await this.asyncGetStateVal("Settings.ChargeManager"); // Get enable for charge manager
                     await this.setState("Settings.ChargeManager", ChargeManager, true);
                     ChargeCurrent = await this.ProjectUtils.getStateValue("Settings.ChargeCurrent"); // Get current for charging override
-                    // ChargeCurrent = await this.asyncGetStateVal("Settings.ChargeCurrent"); // Get current for charging override
                     await this.setState("Settings.ChargeCurrent", ChargeCurrent, true);
                     Charge3Phase = await this.ProjectUtils.getStateValue("Settings.Charge3Phase"); // Get enable of 3 phases for charging override
-                    // Charge3Phase = await this.asyncGetStateVal("Settings.Charge3Phase"); // Get enable of 3 phases for charging override
                     await this.setState("Settings.Charge3Phase", Charge3Phase, true);
                 }
             }
@@ -177,11 +164,9 @@ class go_e_charger extends utils.Adapter {
      */
     onUnload(callback) {
         try {
-            // WIP clearTimeout(adapterIntervals.stateMachine);
             for (const timeoutJob of this.timeoutList) {
                 this.clearTimeout(timeoutJob);
             }
-            //Object.keys(adapterIntervals).forEach(interval => clearInterval(adapterIntervals[interval]));
             this.log.info(`Adapter go-eCharger cleaned up everything...`);
             void this.setState("info.connection", false, true);
             callback();
@@ -266,7 +251,7 @@ class go_e_charger extends utils.Adapter {
             }
             else {
                 // FUTURE: time of day forces emptying of home battery
-                if ((await this.asyncGetStateVal("Power.ChargingAllowed")) == true) {
+                if ((await this.ProjectUtils.getStateValue("Power.ChargingAllowed")) == true) {
                     // Set to false only if still true
                     ZielAmpere = 6;
                     await this.Charge_Config("0", ZielAmpere, `Hausbatterie laden bis ${MinHomeBatVal}%`);
@@ -275,14 +260,22 @@ class go_e_charger extends utils.Adapter {
         }
         else {
             // only if Power.ChargingAllowed is still set: switch OFF; set to min. current;
-            if ((await this.asyncGetStateVal("Power.ChargingAllowed")) == true) {
+            if ((await this.ProjectUtils.getStateValue("Power.ChargingAllowed")) == true) {
                 // Set to false only if still true
                 await this.Read_Charger();
+                if (HardwareMin3) {
+                    await this.Read_ChargerAPIV2();
+                }
                 ZielAmpere = 6;
                 await this.Charge_Config("0", ZielAmpere, `go-eCharger abschalten`);
             }
+            else if (Number(await this.ProjectUtils.getStateValue("Power.Charge")) > 0) {
+                await this.Read_Charger();
+                if (HardwareMin3) {
+                    await this.Read_ChargerAPIV2();
+                }
+            }
         }
-        // WIP adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltime);
         const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.polltimelive));
         this.timeoutList.push(stateMachine);
     }
@@ -305,7 +298,7 @@ class go_e_charger extends utils.Adapter {
                 this.log.error(`Error in calling go-eCharger API: ${error}`);
             }
             this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
-        }); // END catch
+        });
     } // END Read_Charger
     /*****************************************************************************************/
     async ParseStatus(status) {
@@ -390,21 +383,6 @@ class go_e_charger extends utils.Adapter {
             if (Charge3Phase) {
                 psm = 2;
             }
-            /*
-            (async () => {
-                try {
-                    const response = await axiosInstance.get(`http://${this.config.ipaddress}/api/set?psm=${psm}`);
-                    if (!response.error && response.status === 200) {
-                        this.log.debug(`Sent: PSM=${psm}`);
-                    } else if (response.error) {
-                        this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} 3 phases = ${Charge3Phase}`);
-                    }
-                } catch (error) {
-                    this.log.error(`Error in calling go-eCharger API V2: ${error}`);
-                    this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
-                } // END catch
-            })();
-            */
             await axiosInstance
                 .get(`http://${this.config.ipaddress}/api/set?psm=${psm}`, { transformResponse: r => r })
                 .then(response => {
@@ -421,21 +399,6 @@ class go_e_charger extends utils.Adapter {
     async Charge_Config(Allow, Ampere, LogMessage) {
         this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
         if (!this.config.ReadOnlyMode) {
-            /*
-            (async () => {
-                try {
-                    const response = await axiosInstance.get(`http://${this.config.ipaddress}/mqtt?payload=alw=${Allow}`); // activate charging
-                    if (!response.error && response.statusCode == 200) {
-                        this.log.debug(`Sent: ${response.data}`);
-                    } else if (response.error) {
-                        this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} alw=${Allow}`);
-                    }
-                } catch (error) {
-                    this.log.error(`Error in calling go-eCharger API: ${error}`);
-                    this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
-                } // END catch
-            })();
-            */
             await axiosInstance
                 .get(`http://${this.config.ipaddress}/mqtt?payload=alw=${Allow}`, { transformResponse: r => r }) // activate charging
                 .then(response => {
@@ -447,32 +410,8 @@ class go_e_charger extends utils.Adapter {
                 this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
             });
         }
-        //(async () => {
         switch (Firmware) {
             case "033":
-                /*
-                try {
-                        const response = await axiosInstance.get(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`); // set charging current
-                        if (!response.error && response.statusCode == 200) {
-                            this.log.debug(`Sent to firmware 033: ${response.data}`);
-                            const result = await JSON.parse(response.data);
-                            this.setState("Power.ChargeCurrent", Number(result.amp), true); // in readcharger integriert
-                            switch (result.alw) {
-                                case "0":
-                                    this.setState("Power.ChargingAllowed", false, true);
-                                    break;
-                                case "1":
-                                    this.setState("Power.ChargingAllowed", true, true);
-                                    break;
-                            }
-                        } else if (response.error) {
-                            this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amp=${Ampere}`);
-                        }
-                    } catch (error) {
-                        this.log.error(`Error in calling go-eCharger API: ${error}`);
-                        this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
-                    }
-                */
                 await axiosInstance
                     .get(`http://${this.config.ipaddress}/mqtt?payload=amp=${Ampere}`, { transformResponse: r => r }) // set charging current
                     .then(response => {
@@ -498,29 +437,6 @@ class go_e_charger extends utils.Adapter {
                 // case '040', '040.0', '041.0':
                 // case '054.7', '054.11', '055.5', '055.7', '055.8':
                 // case '56.1', '56.2', '56.8', '56.9':
-                /*
-                try {
-                    const response = await axiosInstance.get(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`); // set charging current
-                    if (!response.error && response.statusCode == 200) {
-                        this.log.debug(`Sent to firmware > 033: ${response.data}`);
-                        const result = await JSON.parse(response.data);
-                        this.setState("Power.ChargeCurrent", Number(result.amp), true); // in readcharger integriert
-                        switch (result.alw) {
-                            case "0":
-                                this.setState("Power.ChargingAllowed", false, true);
-                                break;
-                            case "1":
-                                this.setState("Power.ChargingAllowed", true, true);
-                                break;
-                        }
-                    } else if (response.error) {
-                        this.log.warn(`Error: ${response.error} by writing @ ${this.config.ipaddress} amx=${Ampere}`);
-                    }
-                } catch (error) {
-                    this.log.error(`Error in calling go-eCharger API: ${error}`);
-                    this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
-                }
-                */
                 await axiosInstance
                     .get(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`, { transformResponse: r => r }) // set charging current
                     .then(response => {
@@ -542,21 +458,16 @@ class go_e_charger extends utils.Adapter {
                     this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
                 });
         }
-        //		})();
     } // END Charge_Config
     /*****************************************************************************************/
     async Charge_Manager() {
         SolarPower = await this.ProjectUtils.asyncGetForeignStateVal(this.config.StateHomeSolarPower);
-        // SolarPower = await this.asyncGetForeignStateVal(this.config.StateHomeSolarPower);
         this.log.debug(`Got external state of solar power: ${SolarPower} W`);
         HouseConsumption = await this.ProjectUtils.asyncGetForeignStateVal(this.config.StateHomePowerConsumption);
-        // HouseConsumption = await this.asyncGetForeignStateVal(this.config.StateHomePowerConsumption);
         this.log.debug(`Got external state of house power consumption: ${HouseConsumption} W`);
         BatSoC = await this.ProjectUtils.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
-        // BatSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
         this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
         ChargePower = await this.ProjectUtils.getStateValue("Power.Charge");
-        // ChargePower = await this.asyncGetStateVal("Power.Charge");
         let Phases = 3;
         if (HardwareMin3 && EnabledPhases) {
             Phases = EnabledPhases;
