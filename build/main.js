@@ -125,7 +125,7 @@ class go_e_charger extends utils.Adapter {
             // ChargeCurrent = await this.asyncGetStateVal("Settings.ChargeCurrent"); // Get current for charging override
             this.log.debug(`Pre-init done, launching state machine interval`);
             // WIP adapterIntervals.stateMachine = this.setTimeout(this.StateMachine.bind(this), this.config.polltime);
-            const stateMachine = this.setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
+            const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.polltimelive));
             this.timeoutList.push(stateMachine);
         }
         else {
@@ -836,5 +836,19 @@ Auf 3. Phasen schalten: http://192.168.xx.xx/api/set?psm=2
 # Get settings (all or some, see https://github.com/goecharger/go-eCharg ... keys-de.md ):
 curl "http://1.2.3.4/api/status"
 curl "http://1.2.3.4/api/status?filter=amp,psm"
+
+
+
+
+
+
+
+
+Terminated (UNCAUGHT_EXCEPTION): Without reason
+
+Error: Parameter "timeout" needs to be of type "number" but type "string" has been passed at Function.assertNumber (/opt/iobroker/node_modules/@iobroker/js-controller-adapter/src/lib/adapter/validator.ts:288:19) at go_e_charger.setTimeout (/opt/iobroker/node_modules/@iobroker/js-controller-adapter/src/lib/adapter/adapter.ts:2656:19) at go_e_charger.onReady (/opt/iobroker/node_modules/iobroker.go-e-charger/src/main.ts:102:30)
+
+unhandled promise rejection: Parameter "timeout" needs to be of type "number" but type "string" has been passed
+Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch().
 */
 //# sourceMappingURL=main.js.map
