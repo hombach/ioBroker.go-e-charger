@@ -94,11 +94,11 @@ class go_e_charger extends utils.Adapter {
             await this.Read_Charger();
             await this.Read_ChargerAPIV2();
             this.log.info(`IP address found in config: ${this.config.ipaddress}`);
-            if (!this.config.polltime) {
+            if (!this.config.polltimelive) {
                 this.log.warn("Polltime not configured or zero - will be set to 10 seconds");
-                this.config.polltime = 10000;
+                this.config.polltimelive = 10000;
             }
-            this.log.info(`Polltime set to: ${this.config.polltime / 1000} seconds`);
+            this.log.info(`Polltime set to: ${this.config.polltimelive / 1000} seconds`);
             // sentry.io ping
             if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
                 const sentryInstance = this.getPluginInstance("sentry");
@@ -125,7 +125,7 @@ class go_e_charger extends utils.Adapter {
             // ChargeCurrent = await this.asyncGetStateVal("Settings.ChargeCurrent"); // Get current for charging override
             this.log.debug(`Pre-init done, launching state machine interval`);
             // WIP adapterIntervals.stateMachine = this.setTimeout(this.StateMachine.bind(this), this.config.polltime);
-            const stateMachine = this.setTimeout(this.StateMachine.bind(this), this.config.polltime);
+            const stateMachine = this.setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
             this.timeoutList.push(stateMachine);
         }
         else {
@@ -283,7 +283,7 @@ class go_e_charger extends utils.Adapter {
             }
         }
         // WIP adapterIntervals.stateMachine = setTimeout(this.StateMachine.bind(this), this.config.polltime);
-        const stateMachine = this.setTimeout(this.StateMachine.bind(this), this.config.polltime);
+        const stateMachine = this.setTimeout(this.StateMachine.bind(this), this.config.polltimelive);
         this.timeoutList.push(stateMachine);
     }
     /*****************************************************************************************/

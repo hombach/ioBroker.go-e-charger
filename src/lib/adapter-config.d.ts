@@ -5,7 +5,7 @@ declare global {
 	namespace ioBroker {
 		interface AdapterConfig {
             ipaddress: string;
-            polltime: number;
+            polltimelive: number;
             StateHomeBatSoc: string;
             StateHomeSolarPower: string;
             StateHomePowerConsumption: string;
