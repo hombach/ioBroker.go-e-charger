@@ -505,96 +505,6 @@ class go_e_charger extends utils.Adapter {
             }
         }
     } // END Charge_Manager
-    /**
-     * Get foreign state value
-     *
-     * @param statePath - Full path to state, like 0_userdata.0.other.isSummer
-     * @returns - State value, or null if error
-     */
-    async asyncGetForeignStateVal(statePath) {
-        try {
-            const stateObject = await this.asyncGetForeignState(statePath);
-            if (stateObject == null) {
-                return null;
-            } // errors thrown already in asyncGetForeignState()
-            return stateObject.val;
-        }
-        catch (e) {
-            this.log.error(`[asyncGetForeignStateValue](${statePath}): ${e}`);
-            return null;
-        }
-    }
-    /**
-     * Get foreign state
-     *
-     * @param statePath - Full path to state, like 0_userdata.0.other.isSummer
-     * @returns - State object: {val: false, ack: true, ts: 1591117034451, …}, or null if error
-     */
-    async asyncGetForeignState(statePath) {
-        try {
-            const stateObject = await this.getForeignObjectAsync(statePath); // Check state existence
-            if (!stateObject) {
-                throw new Error(`State '${statePath}' does not exist.`);
-            }
-            else {
-                // Get state value, so like: {val: false, ack: true, ts: 1591117034451, …}
-                const stateValueObject = await this.getForeignStateAsync(statePath);
-                if (!this.isLikeEmpty(stateValueObject)) {
-                    return stateValueObject;
-                }
-                throw new Error(`Unable to retrieve info from state '${statePath}'.`);
-            }
-        }
-        catch (error) {
-            this.log.error(`[asyncGetForeignState](${statePath}): ${error}`);
-            return null;
-        }
-    }
-    /**
-     * Get state value
-     *
-     * @param statePath - Path to state, like other.isSummer
-     * @returns - State value, or null if error
-     */
-    async asyncGetStateVal(statePath) {
-        try {
-            const stateObject = await this.asyncGetState(statePath);
-            if (stateObject == null) {
-                return null;
-            } // errors thrown already in asyncGetState()
-            return stateObject.val;
-        }
-        catch (e) {
-            this.log.error(`[asyncGetStateValue](${statePath}): ${e}`);
-            return null;
-        }
-    }
-    /**
-     * Get state
-     *
-     * @param statePath - Path to state, like other.isSummer
-     * @returns - State object: {val: false, ack: true, ts: 1591117034451, …}, or null if error
-     */
-    async asyncGetState(statePath) {
-        try {
-            const stateObject = await this.getObjectAsync(statePath); // Check state existence
-            if (!stateObject) {
-                throw new Error(`State '${statePath}' does not exist.`);
-            }
-            else {
-                // Get state value, so like: {val: false, ack: true, ts: 1591117034451, …}
-                const stateValueObject = await this.getStateAsync(statePath);
-                if (!this.isLikeEmpty(stateValueObject)) {
-                    return stateValueObject;
-                }
-                throw new Error(`Unable to retrieve info from state '${statePath}'.`);
-            }
-        }
-        catch (error) {
-            this.log.error(`[asyncGetState](${statePath}): ${error}`);
-            return null;
-        }
-    }
     isLikeEmpty(inputVar) {
         if (typeof inputVar !== "undefined" && inputVar !== null) {
             let sTemp = JSON.stringify(inputVar);
@@ -747,19 +657,5 @@ Auf 3. Phasen schalten: http://192.168.xx.xx/api/set?psm=2
 # Get settings (all or some, see https://github.com/goecharger/go-eCharg ... keys-de.md ):
 curl "http://1.2.3.4/api/status"
 curl "http://1.2.3.4/api/status?filter=amp,psm"
-
-
-
-
-
-
-
-
-Terminated (UNCAUGHT_EXCEPTION): Without reason
-
-Error: Parameter "timeout" needs to be of type "number" but type "string" has been passed at Function.assertNumber (/opt/iobroker/node_modules/@iobroker/js-controller-adapter/src/lib/adapter/validator.ts:288:19) at go_e_charger.setTimeout (/opt/iobroker/node_modules/@iobroker/js-controller-adapter/src/lib/adapter/adapter.ts:2656:19) at go_e_charger.onReady (/opt/iobroker/node_modules/iobroker.go-e-charger/src/main.ts:102:30)
-
-unhandled promise rejection: Parameter "timeout" needs to be of type "number" but type "string" has been passed
-Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch().
 */
 //# sourceMappingURL=main.js.map
