@@ -43,7 +43,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ## Changelog
 
-### 0.19.6 (2025-01-xx) WORK in PROGRESS
+### 0.19.6 (2025-01-23)
 
 - (hombach) added support for firmware V56.9 (#657)
 - (hombach) ported adapter to TypeScript
