@@ -43,6 +43,10 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ## Changelog
 
+### 0.19.7 (2025-01-25)
+
+- (hombach) added support for firmware V56.11 (#658)
+
 ### 0.19.6 (2025-01-23)
 
 - (hombach) added support for firmware V56.9 (#657)

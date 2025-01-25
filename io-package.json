@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "go-e-charger",
-        "version": "0.19.6",
+        "version": "0.19.7",
         "news": {
+            "0.19.7": {
+                "en": "added support for firmware V56.11 (#658)",
+                "de": "Unterstützung für Firmware V56.11 (#658) hinzugefügt",
+                "ru": "Добавлена ​​поддержка прошивки v56.11 (#658)",
+                "pt": "adicionado suporte para firmware V56.11 (#658)",
+                "nl": "Ondersteuning toegevoegd voor firmware v56.11 (#658)",
+                "fr": "Ajout de la prise en charge du firmware v56.11 (# 658)",
+                "it": "aggiunto il supporto per il firmware V56.11 (#658)",
+                "es": "soporte agregado para el firmware V56.11 (#658)",
+                "pl": "Dodano obsługę oprogramowania układowego V56.11 (#658)",
+                "uk": "Додана підтримка прошивки V56.11 (#658)",
+                "zh-cn": "添加了对固件 V56.11 (#658) 的支持"
+            },
             "0.19.6": {
                 "en": "added support for firmware V56.9 (#657)\nported adapter to TypeScript\nbumped dependencies\nswitch to ES2022\nfixed chai",
                 "de": "Unterstützung für Firmware V56.9 (#657) hinzugefügt\nportierter Adapter für TypeScript\ngestoßene Abhängigkeiten\nWechseln Sie zu ES2022\nfester Chai",
@@ -43,7 +56,7 @@
                 "zh-cn": "修复了依赖项中的漏洞"
             },
             "0.19.3": {
-                "en": "added support for firmware V56.",
+                "en": "added support for firmware V56.8",
                 "de": "Unterstützung für Firmware V56.8 hinzugefügt",
                 "ru": "добавлена поддержка прошивки V56.8",
                 "pt": "adicionado suporte para firmware V56.8",
@@ -54,32 +67,6 @@
                 "pl": "dodano obsługę oprogramowania V56.8",
                 "uk": "додано підтримку прошивки V56.8",
                 "zh-cn": "添加了对固件 V56.8 的支持"
-            },
-            "0.19.2": {
-                "en": "added support for firmware V56.2",
-                "de": "Unterstützung für Firmware V56.2 hinzugefügt",
-                "ru": "добавлена поддержка прошивки V56.2",
-                "pt": "adicionado suporte para firmware V56.2",
-                "nl": "ondersteuning toegevoegd voor firmware V56.2",
-                "fr": "ajouté le support pour le firmware V56.2",
-                "it": "aggiunto il supporto per il firmware V56.2",
-                "es": "añadido soporte para firmware V56.2",
-                "pl": "dodano obsługę oprogramowania V56.2",
-                "uk": "додано підтримку прошивки V56.2",
-                "zh-cn": "添加了对固件 V56.2 的支持"
-            },
-            "0.19.1": {
-                "en": "fixed known vulnerability in dependency",
-                "de": "bekannte Schwachstelle in Abhängigkeit behoben",
-                "ru": "устранена известная уязвимость в зависимости",
-                "pt": "corrigida vulnerabilidade conhecida na dependência",
-                "nl": "bekende kwetsbaarheid in afhankelijkheid verholpen",
-                "fr": "corrigée une vulnérabilité connue dans la dépendance",
-                "it": "corretta una vulnerabilità nota in una dipendenza",
-                "es": "corregida una vulnerabilidad conocida en la dependencia",
-                "pl": "naprawiono znaną podatność w zależności",
-                "uk": "виправлено відому вразливість у залежності",
-                "zh-cn": "修复了依赖项中的已知漏洞"
             },
             "0.19.0": {
                 "en": "introduced possibility to not subtract charger power from home consumption",
