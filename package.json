@@ -9,6 +9,7 @@
 	"homepage": "https://github.com/hombach/ioBroker.go-e-charger",
 	"license": "MIT",
 	"keywords": [
+		"ioBroker",
 		"go-e charger",
 		"wallbox",
 		"Smart Home",

@@ -16,19 +16,6 @@
                 "uk": "Додана підтримка прошивки V57.0 (#659)\nДодана підтримка прошивки V57.1 (#660)",
                 "zh-cn": "添加了对固件V57.0（＃659）的支持\n添加了对固件v57.1（＃660）的支持"
             },
-            "0.19.7": {
-                "en": "added support for firmware V56.11 (#658)",
-                "de": "Unterstützung für Firmware V56.11 (#658) hinzugefügt",
-                "ru": "Добавлена ​​поддержка прошивки v56.11 (#658)",
-                "pt": "adicionado suporte para firmware V56.11 (#658)",
-                "nl": "Ondersteuning toegevoegd voor firmware v56.11 (#658)",
-                "fr": "Ajout de la prise en charge du firmware v56.11 (# 658)",
-                "it": "aggiunto il supporto per il firmware V56.11 (#658)",
-                "es": "soporte agregado para el firmware V56.11 (#658)",
-                "pl": "Dodano obsługę oprogramowania układowego V56.11 (#658)",
-                "uk": "Додана підтримка прошивки V56.11 (#658)",
-                "zh-cn": "添加了对固件 V56.11 (#658) 的支持"
-            },
             "0.19.6": {
                 "en": "added support for firmware V56.9 (#657)\nported adapter to TypeScript\nbumped dependencies\nswitch to ES2022\nfixed chai",
                 "de": "Unterstützung für Firmware V56.9 (#657) hinzugefügt\nportierter Adapter für TypeScript\ngestoßene Abhängigkeiten\nWechseln Sie zu ES2022\nfester Chai",
