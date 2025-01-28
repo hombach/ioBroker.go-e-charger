@@ -1,8 +1,11 @@
 {
     "common": {
         "name": "go-e-charger",
-        "version": "0.19.7",
+        "version": "0.19.8",
         "news": {
+            "0.19.8": {
+                "en": "WIP"
+            },
             "0.19.7": {
                 "en": "added support for firmware V56.11 (#658)",
                 "de": "Unterstützung für Firmware V56.11 (#658) hinzugefügt",

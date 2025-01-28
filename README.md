@@ -43,6 +43,12 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ## Changelog
 
+### 0.19.8 (2025-01-28)
+
+- (hombach) roll back bad ioBroker.testing
+- (hombach) added support for firmware V57.0 (#659)
+- (hombach) added support for firmware V57.1 (#660)
+
 ### 0.19.7 (2025-01-25)
 
 - (hombach) added support for firmware V56.11 (#658)
