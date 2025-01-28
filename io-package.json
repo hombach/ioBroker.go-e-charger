@@ -4,7 +4,17 @@
         "version": "0.19.8",
         "news": {
             "0.19.8": {
-                "en": "WIP"
+                "en": "added support for firmware V57.0 (#659)\nadded support for firmware V57.1 (#660)",
+                "de": "Unterstützung für Firmware V57.0 (#659) hinzugefügt\nUnterstützung für Firmware V57.1 (#660) hinzugefügt",
+                "ru": "Добавлена ​​поддержка прошивки v57.0 (#659)\nДобавлена ​​поддержка прошивки v57.1 (#660)",
+                "pt": "Suporte adicionado ao firmware v57.0 (#659)\nSuporte adicionado ao firmware v57.1 (#660)",
+                "nl": "Ondersteuning toegevoegd voor firmware v57.0 (#659)\nOndersteuning toegevoegd voor firmware v57.1 (#660)",
+                "fr": "Ajout de la prise en charge du firmware V57.0 (# 659)\nAjout de la prise en charge du firmware V57.1 (# 660)",
+                "it": "Aggiunto supporto per il firmware V57.0 (#659)\nAggiunto supporto per il firmware V57.1 (#660)",
+                "es": "Se agregó soporte para el firmware v57.0 (#659)\nSe agregó soporte para el firmware v57.1 (#660)",
+                "pl": "Dodano obsługę oprogramowania układowego V57.0 (#659)\nDodano obsługę oprogramowania układowego V57.1 (#660)",
+                "uk": "Додана підтримка прошивки V57.0 (#659)\nДодана підтримка прошивки V57.1 (#660)",
+                "zh-cn": "添加了对固件V57.0（＃659）的支持\n添加了对固件v57.1（＃660）的支持"
             },
             "0.19.7": {
                 "en": "added support for firmware V56.11 (#658)",
