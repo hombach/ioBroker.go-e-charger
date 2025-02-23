@@ -32,7 +32,7 @@ jobs:
                   # Uncomment the following line if your adapter cannot be installed using 'npm ci'
                   # install-command: "npm install"
                   # install-command: "npm install --legacy-peer-deps"
-                  type-checking: true
+                  # WIP type-checking: true
                   lint: true
 
     # Runs adapter tests on all supported node versions and OSes

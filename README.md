@@ -43,6 +43,11 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ## Changelog
 
+
+### 0.20.0 (2025-02-23)
+
+- (hombach) change to admin 7.4.10 as recommended by ioBroker
+
 ### 0.19.8 (2025-01-28)
 
 - (hombach) roll back bad ioBroker.testing

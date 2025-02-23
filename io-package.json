@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "go-e-charger",
-        "version": "0.19.8",
+        "version": "0.20.0",
         "news": {
+            "0.20.0": {
+                "en": "change to admin 7.4.10 as recommended by ioBroker",
+                "de": "Wechseln Sie zu Admin 7.4.10, wie von IOBROKER empfohlen",
+                "ru": "Изменение на администрацию 7.4.10, как рекомендовано iobroker",
+                "pt": "Mudança para Admin 7.4.10, conforme recomendado pelo IOBROKER",
+                "nl": "Wijziging naar admin 7.4.10 zoals aanbevolen door IOBROKER",
+                "fr": "Changement à Admin 7.4.10 Comme recommandé par IOBROKER",
+                "it": "modificare l'amministratore 7.4.10 come consigliato da IoBroker",
+                "es": "Cambiar a Admin 7.4.10 según lo recomendado por Iobroker",
+                "pl": "Zmień na admin 7.4.10 zgodnie z zaleceniami IOBRAKER",
+                "uk": "Зміна на адміністратора 7.4.10, як рекомендували iobroker",
+                "zh-cn": "根据Iobroker的建议，更改为管理员7.4.10"
+            },
             "0.19.8": {
                 "en": "added support for firmware V57.0 (#659)\nadded support for firmware V57.1 (#660)",
                 "de": "Unterstützung für Firmware V57.0 (#659) hinzugefügt\nUnterstützung für Firmware V57.1 (#660) hinzugefügt",
@@ -143,7 +156,7 @@
         ],
         "globalDependencies": [
             {
-                "admin": ">=5.1.28"
+                "admin": ">=7.4.10"
             }
         ],
         "plugins": {
