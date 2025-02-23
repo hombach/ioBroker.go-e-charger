@@ -1,0 +1,9 @@
+{
+    "ReadOnlyMode": "只读模式 - 释放电荷不发送到充电器（使用 RFID 标签",
+    "StateHomeBatSoc": "当前家用电池充电状态的对象ID [％]",
+    "StateHomePowerConsumption": "当前家庭功耗的对象ID [W]",
+    "StateHomeSolarPower": "当前可用太阳能的对象ID [W]",
+    "SubtractSelfConsumption": "充电器消耗包含在家庭电力消耗值中",
+    "ipaddress": "go-eCharger的IP地址",
+    "polltimelive": "充电器进行数据轮询之间的时间[ms]"
+}

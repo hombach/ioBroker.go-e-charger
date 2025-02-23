@@ -1,0 +1,9 @@
+{
+    "ReadOnlyMode": "alleen-lezen modus - het opladen wordt niet naar de oplader gestuurd (om RFID-tags te gebruiken)",
+    "StateHomeBatSoc": "object-ID voor de huidige laadtoestand van de thuisbatterij [%]",
+    "StateHomePowerConsumption": "object-id voor huidig energieverbruik thuis [W]",
+    "StateHomeSolarPower": "object-id voor momenteel beschikbare zonne-energie [W]",
+    "SubtractSelfConsumption": "Het verbruik van de oplader is inbegrepen in de waarde van het stroomverbruik van het huis",
+    "ipaddress": "IP-adres van go-eCharger",
+    "polltimelive": "Tijd tussen gegevenspolls van oplader [ms]"
+}

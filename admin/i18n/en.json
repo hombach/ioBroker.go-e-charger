@@ -1,0 +1,9 @@
+{
+    "ReadOnlyMode": "read only mode - release of charge is not send to charger (to use RFID tags)",
+    "StateHomeBatSoc": "object-id for current home battery state of charge [%]",
+    "StateHomePowerConsumption": "object-id for current home power consumption [W]",
+    "StateHomeSolarPower": "object-id for currently available solar power [W]",
+    "SubtractSelfConsumption": "Charger consumption is included in home power consumption value",
+    "ipaddress": "IP address of go-eCharger",
+    "polltimelive": "Time between data polls from charger [ms]"
+}

@@ -1,0 +1,9 @@
+{
+    "ReadOnlyMode": "modalità di sola lettura - il rilascio della carica non viene inviato al caricabatterie (per utilizzare tag RFID)",
+    "StateHomeBatSoc": "object-id per l'attuale stato di carica della batteria domestica [%]",
+    "StateHomePowerConsumption": "object-id per il consumo energetico domestico corrente [W]",
+    "StateHomeSolarPower": "ID oggetto per l'energia solare attualmente disponibile [W]",
+    "SubtractSelfConsumption": "Il consumo del caricabatterie è incluso nel valore del consumo energetico domestico",
+    "ipaddress": "Indirizzo IP di go-eCharger",
+    "polltimelive": "Tempo tra sondaggi di dati dal caricatore [ms]"
+}

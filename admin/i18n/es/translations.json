@@ -1,9 +1,0 @@
-{
-    "ipaddress": "Dirección IP de go-eCharger",
-    "polltimelive": "Tiempo entre encuestas de datos del cargador [ms]",
-    "StateHomeSolarPower": "ID de objeto para la energía solar disponible actualmente [W]",
-    "StateHomeBatSoc": "ID de objeto para el estado de carga actual de la batería doméstica [%]",
-    "StateHomePowerConsumption": "ID de objeto para el consumo actual de energía en el hogar [W]",
-    "SubtractSelfConsumption": "El consumo del cargador está incluido en el valor del consumo de energía del hogar",
-    "ReadOnlyMode": "modo de solo lectura: la liberación de la carga no se envía al cargador (para usar etiquetas RFID)"
-}

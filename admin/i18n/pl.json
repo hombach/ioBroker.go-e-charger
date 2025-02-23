@@ -1,0 +1,9 @@
+{
+    "ReadOnlyMode": "tryb tylko do odczytu - zwolnienie ładunku nie jest wysyłane do ładowarki (w celu użycia tagów RFID)",
+    "StateHomeBatSoc": "id obiektu dla aktualnego stanu naładowania akumulatora w domu [%]",
+    "StateHomePowerConsumption": "id obiektu dla bieżącego zużycia energii w domu [W]",
+    "StateHomeSolarPower": "id obiektu dla aktualnie dostępnej energii słonecznej [W]",
+    "SubtractSelfConsumption": "Zużycie ładowarki jest uwzględnione w wartości zużycia energii w domu",
+    "ipaddress": "Adres IP go-eCharger",
+    "polltimelive": "Czas między sondażami danych z ładowarki [ms]"
+}
