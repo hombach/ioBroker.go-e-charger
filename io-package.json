@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "go-e-charger",
-        "version": "0.20.0",
+        "version": "0.20.1",
         "news": {
+            "0.20.1": {
+                "en": "bump dependencies",
+                "de": "Beuleabhängigkeiten",
+                "ru": "Удар зависимости",
+                "pt": "Bump dependências",
+                "nl": "Bump -afhankelijkheden",
+                "fr": "dépendances",
+                "it": "dipendenze bump",
+                "es": "dependencias de la protuberancia",
+                "pl": "zależności od wypukłości",
+                "uk": "залежності від удару",
+                "zh-cn": "凸起依赖性"
+            },
             "0.20.0": {
                 "en": "change to admin 7.4.10 as recommended by ioBroker",
                 "de": "Wechseln Sie zu Admin 7.4.10, wie von IOBROKER empfohlen",
@@ -80,19 +93,6 @@
                 "pl": "dodano obsługę oprogramowania V56.8",
                 "uk": "додано підтримку прошивки V56.8",
                 "zh-cn": "添加了对固件 V56.8 的支持"
-            },
-            "0.19.0": {
-                "en": "introduced possibility to not subtract charger power from home consumption",
-                "de": "Möglichkeit eingeführt, die Ladeleistung nicht vom Hausverbrauch abzuziehen",
-                "ru": "введена возможность не вычитать мощность зарядного устройства из потребления электроэнергии дома",
-                "pt": "introduzida a possibilidade de não subtrair a energia do carregador do consumo doméstico",
-                "nl": "mogelijkheid geïntroduceerd om het verbruik van de oplader niet van het stroomverbruik van het huis af te trekken",
-                "fr": "possibilité introduite de ne pas soustraire la puissance du chargeur de la consommation domestique",
-                "it": "introdotta la possibilità di non sottrarre la potenza del caricabatterie dal consumo domestico",
-                "es": "introducida la posibilidad de no restar la potencia del cargador del consumo doméstico",
-                "pl": "wprowadzono możliwość nieodejmowania mocy ładowarki od zużycia energii w domu",
-                "uk": "введено можливість не віднімати потужність зарядного пристрою від споживання електроенергії дому",
-                "zh-cn": "引入了不从家庭电力消耗中扣除充电器功率的可能性"
             }
         },
         "titleLang": {

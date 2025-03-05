@@ -43,6 +43,9 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ## Changelog
 
+### 0.20.1 (2025-03-xx) WIP
+
+- (hombach) bump dependencies
 
 ### 0.20.0 (2025-02-23)
 
