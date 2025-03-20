@@ -109,7 +109,7 @@ class go_e_charger extends utils.Adapter {
 				// this.subscribeStates(`Settings.*`);
 				if (!state.ack) {
 					this.log.debug(`state change detected and parsing for id: ${id} - state: ${state.val}`);
-					if (id.includes(`Settings.`)) {
+					if (id.includes(`.Settings.`)) {
 						const statePath = id.split(".");
 						const settingType = statePath[3];
 						if (settingType !== undefined) {
@@ -169,30 +169,11 @@ class go_e_charger extends utils.Adapter {
 							}
 						}
 					}
-					// this.subscribeStates(`Settings.*`);
-					/*
-					if (!state.ack) {
-						this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
-						
-						MinHomeBatVal = await this.ProjectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
-						await this.setState("Settings.Setpoint_HomeBatSoC", MinHomeBatVal, true);
-						
-						ChargeNOW = await this.ProjectUtils.getStateValue("Settings.ChargeNOW"); // Get charging override trigger
-						await this.setState("Settings.ChargeNOW", ChargeNOW, true);
-						
-						ChargeManager = await this.ProjectUtils.getStateValue("Settings.ChargeManager"); // Get enable for charge manager
-						await this.setState("Settings.ChargeManager", ChargeManager, true);
-						
-						ChargeCurrent = await this.ProjectUtils.getStateValue("Settings.ChargeCurrent"); // Get current for charging override
-						await this.setState("Settings.ChargeCurrent", ChargeCurrent, true);
-						
-						Charge3Phase = await this.ProjectUtils.getStateValue("Settings.Charge3Phase"); // Get enable of 3 phases for charging override
-						await this.setState("Settings.Charge3Phase", Charge3Phase, true);
-					}*/
-				} else {
-					// The state was deleted
-					this.log.warn(`state ${id} deleted`);
 				}
+			} else {
+				// The state was deleted
+				// state go-e-charger.1.Settings.ChargeManager deleted
+				this.log.warn(`state ${id} deleted`);
 			}
 		} catch (e) {
 			this.log.error(`Unhandled exception processing onStateChange: ${e}`);
