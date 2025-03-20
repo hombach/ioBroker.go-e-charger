@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "go-e-charger",
-        "version": "0.20.1",
+        "version": "0.20.2",
         "news": {
+            "0.20.2": {
+                "en": "fix error in statechange recognition (#637)\nfix axios\nbump dependencies",
+                "de": "Fehler in der StateChange-Erkennung beheben (#637)\nAxios reparieren\nBeuleabhängigkeiten",
+                "ru": "Ошибка исправления в распознавании StateChange (#637)\nИсправить Axios\nУдар зависимости",
+                "pt": "Corrija o erro no reconhecimento Statechange (#637)\nCorrija axios\nBump dependências",
+                "nl": "FOUT FOUT IN STATECHANGE HEKENING (#637)\nrepareer Axios\nBump -afhankelijkheden",
+                "fr": "Correction de l'erreur dans la reconnaissance de StateChange (# 637)\nFix Axios\ndépendances",
+                "it": "Risolvi l'errore nel riconoscimento di StateChange (#637)\nCorreggi gli assios\ndipendenze bump",
+                "es": "corrige el error en el reconocimiento de statechange (#637)\nArreglar axios\ndependencias de la protuberancia",
+                "pl": "Napraw błąd w rozpoznawaniu Statechange (#637)\nNapraw aksios\nzależności od wypukłości",
+                "uk": "Виправити помилку в розпізнаванні StateChange (#637)\nВиправити Axios\nзалежності від удару",
+                "zh-cn": "修复Statechange识别中的错误（＃637）\n修复轴\n凸起依赖性"
+            },
             "0.20.1": {
                 "en": "bump dependencies",
                 "de": "Beuleabhängigkeiten",
@@ -80,19 +93,6 @@
                 "pl": "usunięto lukę w zależności",
                 "uk": "виправлено уразливість у залежності",
                 "zh-cn": "修复了依赖项中的漏洞"
-            },
-            "0.19.3": {
-                "en": "added support for firmware V56.8",
-                "de": "Unterstützung für Firmware V56.8 hinzugefügt",
-                "ru": "добавлена поддержка прошивки V56.8",
-                "pt": "adicionado suporte para firmware V56.8",
-                "nl": "ondersteuning toegevoegd voor firmware V56.8",
-                "fr": "ajouté le support pour le firmware V56.8",
-                "it": "aggiunto il supporto per il firmware V56.8",
-                "es": "añadido soporte para firmware V56.8",
-                "pl": "dodano obsługę oprogramowania V56.8",
-                "uk": "додано підтримку прошивки V56.8",
-                "zh-cn": "添加了对固件 V56.8 的支持"
             }
         },
         "titleLang": {
