@@ -10,9 +10,11 @@
   				"type": "text",
 				"label": "ipaddress",
 	    		"maxLength": 15,
+				"xs": 6,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
+				"xl": 6,
 				"newLine": true
   			},
 			"polltimelive": {
@@ -20,52 +22,64 @@
 				"label": "polltimelive",
 				"min": 3000,
 				"step": 100,
+				"xs": 6,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
+				"xl": 6,
 				"newLine": false
 			},
 
 			"StateHomeSolarPower": {
   				"type": "objectId",
 				"label": "StateHomeSolarPower",
+				"xs": 6,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
+				"xl": 6,
 				"newLine": true
 			},
 			"StateHomeBatSoc": {
   				"type": "objectId",
 				"label": "StateHomeBatSoc",
+				"xs": 6,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
+				"xl": 6,
 				"newLine": false
 			},
 
 			"StateHomePowerConsumption": {
   				"type": "objectId",
 				"label": "StateHomePowerConsumption",
+				"xs": 6,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
+				"xl": 6,
 				"newLine": true
 			},
 			"SubtractSelfConsumption": {
 				"type": "checkbox",
 				"label": "SubtractSelfConsumption",
+				"xs": 6,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
+				"xl": 6,
 				"newLine": false
 			},
 
 			"ReadOnlyMode": {
 				"type": "checkbox",
 				"label": "ReadOnlyMode",
+				"xs": 6,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
+				"xl": 6,
 				"newLine": true
 			}
 		}

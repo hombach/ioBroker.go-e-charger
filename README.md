@@ -43,7 +43,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ## Changelog
 
-### 0.2021 (2025-03-20)
+### 0.20.2 (2025-03-20)
 
 - (hombach) fix error in statechange recognition (#637)
 - (hombach) fix axios
