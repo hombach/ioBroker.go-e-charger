@@ -10,7 +10,7 @@
   				"type": "text",
 				"label": "ipaddress",
 	    		"maxLength": 15,
-				"xs": 6,
+				"xs": 12,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
@@ -22,7 +22,7 @@
 				"label": "polltimelive",
 				"min": 3000,
 				"step": 100,
-				"xs": 6,
+				"xs": 12,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
@@ -33,7 +33,7 @@
 			"StateHomeSolarPower": {
   				"type": "objectId",
 				"label": "StateHomeSolarPower",
-				"xs": 6,
+				"xs": 12,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
@@ -43,7 +43,7 @@
 			"StateHomeBatSoc": {
   				"type": "objectId",
 				"label": "StateHomeBatSoc",
-				"xs": 6,
+				"xs": 12,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
@@ -54,7 +54,7 @@
 			"StateHomePowerConsumption": {
   				"type": "objectId",
 				"label": "StateHomePowerConsumption",
-				"xs": 6,
+				"xs": 12,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
@@ -64,7 +64,7 @@
 			"SubtractSelfConsumption": {
 				"type": "checkbox",
 				"label": "SubtractSelfConsumption",
-				"xs": 6,
+				"xs": 12,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
@@ -75,7 +75,7 @@
 			"ReadOnlyMode": {
 				"type": "checkbox",
 				"label": "ReadOnlyMode",
-				"xs": 6,
+				"xs": 12,
 				"sm": 6,
 				"md": 6,
 				"lg": 6,
