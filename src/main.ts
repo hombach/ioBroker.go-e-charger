@@ -102,29 +102,100 @@ class go_e_charger extends utils.Adapter {
 	 * Is called if a subscribed state changes
 	 * @param { string } id
 	 * @param { ioBroker.State | null | undefined } state */
-	private async onStateChange(id: string, state: ioBroker.State | null | undefined): Promise<void> {
+	private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
 		try {
 			if (state) {
 				// The state was changed
+				// this.subscribeStates(`Settings.*`);
 				if (!state.ack) {
-					this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
-					MinHomeBatVal = await this.ProjectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
-					await this.setState("Settings.Setpoint_HomeBatSoC", MinHomeBatVal, true);
-					ChargeNOW = await this.ProjectUtils.getStateValue("Settings.ChargeNOW"); // Get charging override trigger
-					await this.setState("Settings.ChargeNOW", ChargeNOW, true);
-					ChargeManager = await this.ProjectUtils.getStateValue("Settings.ChargeManager"); // Get enable for charge manager
-					await this.setState("Settings.ChargeManager", ChargeManager, true);
-					ChargeCurrent = await this.ProjectUtils.getStateValue("Settings.ChargeCurrent"); // Get current for charging override
-					await this.setState("Settings.ChargeCurrent", ChargeCurrent, true);
-					Charge3Phase = await this.ProjectUtils.getStateValue("Settings.Charge3Phase"); // Get enable of 3 phases for charging override
-					await this.setState("Settings.Charge3Phase", Charge3Phase, true);
+					this.log.debug(`state change detected and parsing for id: ${id} - state: ${state.val}`);
+					if (id.includes(`Settings.`)) {
+						const statePath = id.split(".");
+						const settingType = statePath[3];
+						if (settingType !== undefined) {
+							switch (settingType) {
+								case "Setpoint_HomeBatSoC":
+									// Get desired battery SoC
+									if (typeof state.val === "number") {
+										MinHomeBatVal = state.val;
+										this.log.debug(`settings state changed to Setpoint_HomeBatSoC: ${MinHomeBatVal}`);
+										void this.setState(id, state.val, true);
+									} else {
+										this.log.warn(`Wrong type for Setpoint_HomeBatSoC: ${state.val}`);
+									}
+									break;
+								case "ChargeNOW":
+									// Get charging override trigger
+									if (typeof state.val === "boolean") {
+										ChargeNOW = state.val;
+										this.log.debug(`settings state changed to ChargeNOW: ${ChargeNOW}`);
+										void this.setState(id, state.val, true);
+									} else {
+										this.log.warn(`Wrong type for ChargeNOW: ${state.val}`);
+									}
+									break;
+								case "ChargeManager":
+									// Get enable for charge manager
+									if (typeof state.val === "boolean") {
+										ChargeManager = state.val;
+										this.log.debug(`settings state changed to ChargeManager: ${ChargeManager}`);
+										void this.setState(id, state.val, true);
+									} else {
+										this.log.warn(`Wrong type for ChargeManager: ${state.val}`);
+									}
+									break;
+								case "ChargeCurrent":
+									// Get current for charging override
+									if (typeof state.val === "number") {
+										ChargeCurrent = state.val;
+										this.log.debug(`settings state changed to ChargeCurrent: ${ChargeCurrent}`);
+										void this.setState(id, state.val, true);
+									} else {
+										this.log.warn(`Wrong type for ChargeCurrent: ${state.val}`);
+									}
+									break;
+								case "Charge3Phase":
+									// Get enable of 3 phases for charging override
+									if (typeof state.val === "boolean") {
+										Charge3Phase = state.val;
+										this.log.debug(`settings state changed to Charge3Phase: ${Charge3Phase}`);
+										void this.setState(id, state.val, true);
+									} else {
+										this.log.warn(`Wrong type for Charge3Phase: ${state.val}`);
+									}
+									break;
+								default:
+									this.log.debug(`unknown value for setting type: ${settingType}`);
+							}
+						}
+					}
+					// this.subscribeStates(`Settings.*`);
+					/*
+					if (!state.ack) {
+						this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+						
+						MinHomeBatVal = await this.ProjectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
+						await this.setState("Settings.Setpoint_HomeBatSoC", MinHomeBatVal, true);
+						
+						ChargeNOW = await this.ProjectUtils.getStateValue("Settings.ChargeNOW"); // Get charging override trigger
+						await this.setState("Settings.ChargeNOW", ChargeNOW, true);
+						
+						ChargeManager = await this.ProjectUtils.getStateValue("Settings.ChargeManager"); // Get enable for charge manager
+						await this.setState("Settings.ChargeManager", ChargeManager, true);
+						
+						ChargeCurrent = await this.ProjectUtils.getStateValue("Settings.ChargeCurrent"); // Get current for charging override
+						await this.setState("Settings.ChargeCurrent", ChargeCurrent, true);
+						
+						Charge3Phase = await this.ProjectUtils.getStateValue("Settings.Charge3Phase"); // Get enable of 3 phases for charging override
+						await this.setState("Settings.Charge3Phase", Charge3Phase, true);
+					}*/
+				} else {
+					// The state was deleted
+					this.log.warn(`state ${id} deleted`);
 				}
-			} else {
-				// The state was deleted
-				this.log.warn(`state ${id} deleted`);
 			}
-		} catch (error) {
-			this.log.error(`Unhandled exception processing stateChange: ${error}`);
+		} catch (e) {
+			this.log.error(`Unhandled exception processing onStateChange: ${e}`);
 		}
 	}
 
@@ -518,131 +589,3 @@ if (require.main !== module) {
 	// otherwise start the instance directly
 	(() => new go_e_charger())();
 }
-
-/*
-Erklärung Format: alle Parameter werden im JSON Objekt als String gesendet (in Anführungszeichen). Die meisten dieser
-Parameter können in ein integer Format konvertiert werden. Der bei Format angegebene Datentyp zeigt die zu erwartende
-Größe. Sollte der String nicht in den angegebenen Datentyp konvertiert werden, soll ein Kommunikationsfehler angezeigt
-werden.
-
-Parameter - Format - Erklärung
-version - String(1) - JSON Format; "B": Normalfall; "C": Wenn Ende-zu-Ende Verschlüsselung aktiviert
-rbc     - uint32_t  - reboot_counter; Zählt die Anzahl der Bootvorgänge.
-rbt     - uint32_t  - reboot_timer; Zählt die Millisekunden seit dem letzten Bootvorgang.
-car     - uint8_t   - Status PWM Signalisierung
-                      1: Ladestation bereit, kein Fahrzeug   2: Fahrzeug lädt
-                      3: Warte auf Fahrzeug                  4: Ladung beendet, Fahrzeug noch verbunden
-amp     - uint8_t   - Ampere Wert für die PWM Signalisierung in ganzen Ampere von 6-32A
-amx     - uint8_t   - Ampere Wert für die PWM Signalisierung in ganzen Ampere von 6-32A.
-                      Wird nicht auf dem Flash persistiert, verhält sich sonst aber gleich wie amp.
-                      Nach dem reboot wird amp auf den letzten Wert zurückgesetzt, der mit amp gesetzt wurde.
-                      Für PV Regelung empfohlen.
-err     - uint8_t   - error
-                      1: RCCB (Fehlerstromschutzschalter)    3: PHASE (Phasenstörung)
-                      8: NO_GROUND (Erdungserkennung)        10, default: INTERNAL (sonstiges)
-ast     - uint8_t   - access_state: Zugangskontrolle
-                      0: Offen                               1: RFID / App benötigt
-                      2: Strompreis / automatisch
-alw     - uint8_t   - allow_charging: PWM Signal darf anliegen; 0: nein; 1: ja
-stp     - uint8_t   - stop_state: Automatische Abschaltung; 0: deaktiviert; 2: nach kWh abschalten
-cbl     - uint8_t   - Typ2 Kabel Ampere codierung; 13-32: Ampere Codierung; 0: kein Kabel
-pha     - uint8_t   - Phasen vor und nach dem Schütz; binary flags: 0b00ABCDEF
-                      A... phase 3 vor dem Schütz            B... phase 2 vor dem Schütz
-                      C... phase 1 vor dem Schütz            D... phase 3 nach dem Schütz
-                      E... phase 2 nach dem Schütz           F... phase 1 nach dem Schütz
-tmp     - uint8_t   - Temperatur des Controllers in °C
-tma     -           - internal temperature sensor 0-3
-amt     -           - max ampere limited through temperature sensors (32 = no limit)
-dws     - uint32_t  - Geladene Energiemenge in Deka-Watt-Sekunden
-dwo     - uint16_t  - Abschaltwert in 0.1kWh wenn stp==2, für dws Parameter
-adi     - uint8_t   - adapter_in: Ladebox ist mit Adapter angesteckt; 0: NO_ADAPTER; 1: 16A_ADAPTER
-uby     - uint8_t   - unlocked_by: Nummer der RFID Karte, die den jetzigen Ladevorgang freigeschalten hat
-eto     - uint32_t  - energy_total: Gesamt geladene Energiemenge in 0.1kWh
-wst     - uint8_t   - wifi_state: WLAN Verbindungsstatus; 3: verbunden; default: nicht verbunden
-nrg     - array[15] - Array mit Werten des Strom- und Spannungssensors
-                      nrg[0]: Spannung auf L1 in Volt            nrg[1]: Spannung auf L2 in Volt
-                      nrg[2]: Spannung auf L3 in Volt            nrg[3]: Spannung auf N in Volt
-                      nrg[4]: Ampere auf L1 in 0.1A              nrg[5]: Ampere auf L2 in 0.1A
-                      nrg[6]: Ampere auf L3 in 0.1A              nrg[7]: Leistung auf L1 in 0.1kW
-                      nrg[8]: Leistung auf L2 in 0.1kW           nrg[9]: Leistung auf L3 in 0.1kW
-                      nrg[10]: Leistung auf N in 0.1kW           nrg[11]: Leistung gesamt in 0.01kW
-                      nrg[12]: Leistungsfaktor auf L1 in %       nrg[13]: Leistungsfaktor auf L2 in %
-                      nrg[14]: Leistungsfaktor auf L3 in %       nrg[15]: Leistungsfaktor auf N in %
-fwv     - String    - Firmware Version
-sse     - String    - Seriennummer als %06d formatierte Zahl
-wss     - String    - WLAN SSID
-wke     - String    - WLAN Key
-wen     - uint8_t   - wifi_enabled: WLAN aktiviert; 0: deaktiviert; 1: aktiviert
-tof     - uint8_t   - time_offset: Zeitzone in Stunden für interne batteriegestützte Uhr +100; Beispiel: 101 entspricht GMT+1
-tds     - uint8_t   - Daylight saving time offset (Sommerzeit) in Stunden
-lbr     - uint8_t   - LED Helligkeit von 0-255; 0: LED aus; 255: LED Helligkeit maximal
-aho     - uint8_t   - Minimale Anzahl von Stunden in der mit "Strompreis-automatisch" geladen werden muss
-afi     - uint8_t   - Stunde (Uhrzeit) in der mit "Strompreis - automatisch" die Ladung mindestens aho Stunden gedauert haben muss.
-azo     - uint8_t   - Awattar Preiszone; 0: Österreich; 1: Deutschland
-ama     - uint8_t   - Absolute max. Ampere: Maximalwert für Ampere Einstellung
-al1     - uint8_t   - Ampere Level 1 für Druckknopf am Gerät.
-                      6-32: Ampere Stufe aktiviert           0: Stufe deaktivert (wird übersprungen)
-al2     - uint8_t   - Ampere Level 2 für Druckknopf am Gerät; muss entweder 0 oder > al1 sein
-al3     - uint8_t   - Ampere Level 3 für Druckknopf am Gerät; muss entweder 0 oder > al2 sein
-al4     - uint8_t   - Ampere Level 4 für Druckknopf am Gerät; muss entweder 0 oder > al3 sein
-al5     - uint8_t   - Ampere Level 5 für Druckknopf am Gerät; muss entweder 0 oder > al4 sein
-cid     - uint24_t  - Color idle: Farbwert für Standby (kein Auto angesteckt) als Zahl
-cch     - uint24_t  - Color charging: Farbwert für Ladevorgang aktiv, als Zahl
-cfi     - uint24_t  - Color idle: Farbwert für Ladevorgang abgeschlossen, als Zahl
-lse     - uint8_t   - led_save_energy: LED automatisch nach 10 Sekunden abschalten
-                      0: Energiesparfunktion deaktiviert     1: Energiesparfunktion aktiviert
-ust     - uint8_t   - unlock_state: Kabelverriegelung Einstellung
-                      0: Verriegeln solange Auto angesteckt  1: Nach Ladevorgang automatisch entriegeln
-                      2: Kabel immer verriegelt lassen
-wak     - String    - WLAN Hotspot Password; Beispiel: "abdef0123456"
-r1x     - uint8_t   - Flags
-                      0b1: HTTP Api im WLAN Netzwerk aktiviert (0: nein, 1:ja)
-                      0b10: Ende-zu-Ende Verschlüsselung aktiviert (0: nein, 1:ja)
-dto     - uint8_t   - Restzeit in Millisekunden verbleibend auf Aktivierung durch Strompreise
-nmo     - uint8_t   - Norwegen-Modus aktiviert
-                      0: deaktiviert (Erdungserkennung aktiviert)
-                      1: aktiviert (keine Erdungserkennung, nur für IT-Netze gedacht)
-eca; ecr; ecd; ec4; ec5; ec6; ec7; ec8; ec9; ec1
-        - uint32_t  - Geladene Energiemenge pro RFID Karte von 1-10
-rca; rcr; rcd; rc4; rc5; rc6; rc7; rc8; rc9; rc1
-        - String    - RFID Karte ID von 1-10 als String Format und Länge: variabel, je nach Version
-rna; rnm; rne; rn4; rn5; rn6; rn7; rn8; rn9; rn1
-        - String    - RFID Karte Name von 1-10; Maximallänge: 10 Zeichen
-tme     - String    - Aktuelle Uhrzeit, formatiert als ddmmyyhhmm
-sch     - String    - Scheduler einstellungen (base64 encodiert)
-sdp     - uint8_t   - Scheduler double press: Aktiviert Ladung nach doppeltem Drücken des Button, wenn die Ladung gerade durch den Scheduler unterbrochen wurde
-                      0: Funktion deaktiviert                1: Ladung sofort erlauben
-upd     - uint8_t   - Update available (nur verfügbar bei Verbindung über go-e Server)
-                      0: kein Update verfügbar               1: Update verfügbar
-cdi     - uint8_t   - Cloud disabled
-                      0: cloud enabled                       1: cloud disabled
-loe     - uint8_t   - Lastmanagement enabled
-                      0: Lastmanagement deaktiviert          1: Lastmanagement über Cloud aktiviert
-lot     - uint8_t   - Lastmanagement Gruppe Total Ampere
-lom     - uint8_t   - Lastmanagement minimale Amperezahl
-lop     - uint8_t   - Lastmanagement Priorität
-log     - String    - Lastmanagement Gruppen ID
-lon     - uint8_t   - Lastmanagement erwartete Anzahl von Ladestationen (derzeit nicht unterstützt)
-lof     - uint8_t   - Lastmanagement Fallback Amperezahl
-loa     - uint8_t   - Lastmanagement Ampere (derzeitiger erlaubter Ladestrom); wird vom Lastmanagement automatisch gesteuert
-lch     - uint32_t  - Lastmanagement Sekunden seit letzten Stromfluss bei noch angestecktem Auto
-mce     - uint8_t   - MQTT custom enabled; Verbindung mit eigenen MQTT Server herstellen
-                      0: Funktion deaktiviert                1: Funktion aktiviert
-mcs     - String(63) -MQTT custom Server; Hostname ohne Protokollangabe (z.B. test.mosquitto.org)
-mcp     - uint16_t  - MQTT custom Port; z.B. 1883
-mcu     - String(16) -MQTT custom Username
-mck     - String(16) -MQTT custom key
-mcc     - uint8_t   - MQTT custom connected
-                      0: nicht verbunden                     1: verbunden
-
-
-https://github.com/goecharger/go-eCharger-API-v2/blob/main/apikeys-de.md
-
-Ab HW3 Phasenumschaltung - per API2
-Auf 1. Phase schalten: http://192.168.xx.xx/api/set?psm=1
-Auf 3. Phasen schalten: http://192.168.xx.xx/api/set?psm=2
-
-# Get settings (all or some, see https://github.com/goecharger/go-eCharg ... keys-de.md ):
-curl "http://1.2.3.4/api/status"
-curl "http://1.2.3.4/api/status?filter=amp,psm"
-*/

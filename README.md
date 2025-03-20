@@ -45,6 +45,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ### **WORK IN PROGRESS**
 
+- (hombach) fix error in statechange recognition (#637)
 - (hombach) fix axios
 - (hombach) bump dependencies
 
