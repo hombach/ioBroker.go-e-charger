@@ -43,6 +43,11 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ## Changelog
 
+### **WORK IN PROGRESS**
+
+- (hombach) fix axios
+- (hombach) bump dependencies
+
 ### 0.20.1 (2025-03-05)
 
 - (hombach) bump dependencies
