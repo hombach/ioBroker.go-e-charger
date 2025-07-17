@@ -262,6 +262,7 @@ class go_e_charger extends utils.Adapter {
                 case "56.11":
                 case "57.0":
                 case "57.1":
+                case "59.4":
                     this.log.debug(`Init done, launching state machine`);
                     await this.setState("info.connection", { val: true, ack: true });
                     break;
@@ -407,7 +408,7 @@ class go_e_charger extends utils.Adapter {
     /*****************************************************************************************/
     async Read_ChargerAPIV2() {
         await axiosInstance
-            .get(`http://${this.config.ipaddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ`, { transformResponse: r => r })
+            .get(`http://${this.config.ipaddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,uby`, { transformResponse: r => r })
             .then(response => {
             //.status == 200
             const result = JSON.parse(response.data);
@@ -500,7 +501,7 @@ class go_e_charger extends utils.Adapter {
             default:
                 // case '040', '040.0', '041.0':
                 // case '054.7', '054.11', '055.5', '055.7', '055.8':
-                // case '56.1', '56.2', '56.8', '56.9', '56.11', '57.0', '57.1':
+                // case '56.1', '56.2', '56.8', '56.9', '56.11', '57.0', '57.1', '59.4':
                 await axiosInstance
                     .get(`http://${this.config.ipaddress}/mqtt?payload=amx=${Ampere}`, { transformResponse: r => r }) // set charging current
                     .then(response => {
