@@ -398,6 +398,10 @@ class go_e_charger extends utils.Adapter {
         await this.setState("Power.MeasuredMaxPhaseCurrent", Math.max(status.nrg[4], status.nrg[5], status.nrg[6]) / 10, true);
         Firmware = status.fwv;
         await this.setState("Info.FirmwareVersion", Firmware, true);
+        // WiP 634
+        // uby - uint8_t - unlocked_by: Nummer der RFID Karte, die den jetzigen Ladevorgang freigeschalten hat
+        await this.setState("Info.UnlockedByRFIDNo", Number(status.uby), true);
+        // WiP 634
         this.log.debug("got and parsed go-eCharger data");
     }
     /*****************************************************************************************/

@@ -43,6 +43,12 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ## Changelog
 
+### **WORK IN PROGRESS**
+
+- (hombach) add state for unlocked by (#634)
+- (hombach) added support for firmware V59.4 (#716)
+- (hombach) bump dependencies
+
 ### 0.20.2 (2025-03-20)
 
 - (hombach) fix error in statechange recognition (#637)
