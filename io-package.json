@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "go-e-charger",
-        "version": "0.20.2",
+        "version": "0.20.3",
         "news": {
+            "0.20.3": {
+                "en": "add state for unlocked by (#634)\nadded support for firmware V59.4 (#716)\nbump dependencies",
+                "de": "Zustand für freigeschaltet durch hinzugefügt(#634)\nUnterstützung für Firmware V59.4 (#716)\nBeuleabhängigkeiten",
+                "ru": "Добавьте состояние для разблокировки (#634)\nДобавлена поддержка прошивки v59.4 (#716)\nУдар зависимости",
+                "pt": "Adicionar estado para desbloqueado por (#634)\nSuporte adicionado ao firmware v59.4 (#716)\nBump dependências",
+                "nl": "Staat toevoegen voor ontgrendeld door (#634)\nOndersteuning toegevoegd voor firmware v59.4 (#716)\nBump -afhankelijkheden",
+                "fr": "Ajouter un état pour déverrouiller par (# 634)\nAjout de la prise en charge du firmware v59.4 (# 716)\ndépendances",
+                "it": "Aggiungi stato per sbloccato da (#634)\nAggiunto supporto per il firmware V59.4 (#716)\ndipendenze bump",
+                "es": "Agregar estado para desbloqueado por (#634)\nSe agregó soporte para el firmware v59.4 (#716)\ndependencias de la protuberancia",
+                "pl": "Dodaj stan odblokowany przez (#634)\nDodano obsługę oprogramowania układowego V59.4 (#716)\nzależności od wypukłości",
+                "uk": "Додайте стан для розблокованого (#634)\nДодана підтримка прошивки V59.4 (#716)\nзалежності від удару",
+                "zh-cn": "添加状态以解锁（＃634）\n添加了对固件v59.4（＃716）的支持\n凸起依赖性"
+            },
             "0.20.2": {
                 "en": "fix error in statechange recognition (#637)\nfix axios\nbump dependencies",
                 "de": "Fehler in der StateChange-Erkennung beheben (#637)\nAxios reparieren\nBeuleabhängigkeiten",
@@ -80,19 +93,6 @@
                 "pl": "Ujednolicić testy, dodać testy dla Node.js 22\nNaprawić błąd w subskrypcji stanu\nZastąpić przestarzały asynchroniczny dostęp do stanu\nZmiany na rok 2025\nZaktualizowano zależności",
                 "uk": "Уніфікувати тести, додати тести для Node.js 22\nВиправити помилку в підписці на стан\nЗамінити застарілий асинхронний доступ до стану\nЗміни на 2025 рік\nОновлено залежності",
                 "zh-cn": "统一测试，添加 Node.js 22 的测试\n修复状态订阅中的错误\n替换已弃用的异步状态访问\n2025 年的更改\n更新依赖项"
-            },
-            "0.19.4": {
-                "en": "fixed vulnerability in dependency",
-                "de": "Schwachstelle in Abhängigkeit behoben",
-                "ru": "устранена уязвимость в зависимости",
-                "pt": "vulnerabilidade corrigida na dependência",
-                "nl": "kwetsbaarheid in afhankelijkheid opgelost",
-                "fr": "vulnérabilité corrigée dans la dépendance",
-                "it": "corretta vulnerabilità nella dipendenza",
-                "es": "vulnerabilidad solucionada en la dependencia",
-                "pl": "usunięto lukę w zależności",
-                "uk": "виправлено уразливість у залежності",
-                "zh-cn": "修复了依赖项中的漏洞"
             }
         },
         "titleLang": {
