@@ -42,6 +42,15 @@ To connect to the go-eCharger type in its IP-address in the config.
 This adapter employs Sentry libraries to automatically report exceptions and code errors to the developers. For more details and information on how to disable error reporting, please consult the [Sentry-Plugin Documentation](https://github.com/ioBroker/plugin-sentry#plugin-sentry)! Sentry reporting is initiated starting with js-controller 3.0.
 
 ## Changelog
+<!--
+  Placeholder for the next version (at the beginning of the line):
+  ### **WORK IN PROGRESS**
+-->
+
+### **WORK IN PROGRESS**
+
+- (hombach) fix vulnerability
+- (hombach) bump dependencies
 
 ### 0.20.3 (2025-07-17)
 
