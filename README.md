@@ -49,6 +49,8 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ### **WORK IN PROGRESS**
 
+- (hombach) BREAKING: dropped node.js 18 support
+- (hombach) BREAKING: dropped js-controller 5 support
 - (hombach) fix vulnerability
 - (hombach) bump dependencies
 
