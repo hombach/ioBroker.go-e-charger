@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "go-e-charger",
-        "version": "0.20.3",
+        "version": "0.21.0",
         "news": {
+            "0.21.0": {
+                "en": "BREAKING dropped Node.js 18 support\nBREAKING dropped js-controller 5 support\nAdd tests for Node 24\nRemove tests for Node 18\nFix vulnerability\nBump dependencies",
+                "de": "BREAKING Unterstützung für Node.js 18 eingestellt\nBREAKING Unterstützung für js-controller 5 eingestellt\nTests für Node 24 hinzugefügt\nTests für Node 18 entfernt\nSicherheitslücke behoben\nAbhängigkeiten aktualisiert",
+                "ru": "Прекращена поддержка Node.js 18\nПрекращена поддержка js-controller 5\nДобавлены тесты для Node 24\nУдалены тесты для Node 18\nИсправлена уязвимость\nОбновлены зависимости",
+                "pt": "Suporte ao Node.js 18 encerrado\nSuporte ao js-controller 5 encerrado\nAdicionados testes para Node 24\nRemovidos testes para Node 18\nCorrigida vulnerabilidade\nAtualizadas dependências",
+                "nl": "Ondersteuning voor Node.js 18 stopgezet\nOndersteuning voor js-controller 5 stopgezet\nTests toegevoegd voor Node 24\nTests verwijderd voor Node 18\nKwetsbaarheid opgelost\nAfhankelijkheden bijgewerkt",
+                "fr": "Abandon du support de Node.js 18\nAbandon du support de js-controller 5\nAjout de tests pour Node 24\nSuppression des tests pour Node 18\nCorrection de vulnérabilité\nMise à jour des dépendances",
+                "it": "Supporto per Node.js 18 interrotto\nSupporto per js-controller 5 interrotto\nAggiunti test per Node 24\nRimossi test per Node 18\nCorretta vulnerabilità\nAggiornate dipendenze",
+                "es": "Finalizado el soporte para Node.js 18\nFinalizado el soporte para js-controller 5\nAñadidas pruebas para Node 24\nEliminadas pruebas para Node 18\nCorregida vulnerabilidad\nActualizadas dependencias",
+                "pl": "Zakończono wsparcie dla Node.js 18\nZakończono wsparcie dla js-controller 5\nDodano testy dla Node 24\nUsunięto testy dla Node 18\nNaprawiono podatność\nZaktualizowano zależności",
+                "uk": "Припинено підтримку Node.js 18\nПрипинено підтримку js-controller 5\nДодано тести для Node 24\nВидалено тести для Node 18\nВиправлено вразливість\nОновлено залежності",
+                "zh-cn": "停止支持 Node.js 18\n停止支持 js-controller 5\n为 Node 24 添加测试\n移除 Node 18 的测试\n修复漏洞\n更新依赖项"
+            },
             "0.20.3": {
                 "en": "add state for unlocked by (#634)\nadded support for firmware V59.4 (#716)\nbump dependencies",
                 "de": "Zustand für freigeschaltet durch hinzugefügt(#634)\nUnterstützung für Firmware V59.4 (#716)\nBeuleabhängigkeiten",
@@ -80,19 +93,6 @@
                 "pl": "dodano obsługę oprogramowania sprzętowego V56.9 (#657)\nprzeniesiony adapter do TypeScript\nzdeformowane zależności\nprzejdź na ES2022\nnaprawiono chai",
                 "uk": "додана підтримка мікропрограми V56.9 (#657)\nпортований адаптер до TypeScript\nзіткнулися залежності\nперейти на ES2022\nфіксований чай",
                 "zh-cn": "添加了对固件 V56.9 (#657) 的支持\n将适配器移植到 TypeScript\n碰撞依赖性\n切换到ES2022\n固定柴"
-            },
-            "0.19.5": {
-                "en": "Harmonize tests, add tests for Node.js 22\nFix bug in state subscription\nReplace deprecated async state access\nYear 2025 changes\nBumped dependencies",
-                "de": "Tests harmonisieren, Tests für Node.js 22 hinzufügen\nFehler in der Zustandsabonnement beheben\nVeralteten asynchronen Zustandszugriff ersetzen\nÄnderungen für das Jahr 2025\nAbhängigkeiten aktualisiert",
-                "ru": "Унифицировать тесты, добавить тесты для Node.js 22\nИсправить ошибку в подписке на состояние\nЗаменить устаревший асинхронный доступ к состоянию\nИзменения на 2025 год\nОбновлены зависимости",
-                "pt": "Harmonizar testes, adicionar testes para Node.js 22\nCorrigir bug na assinatura de estado\nSubstituir acesso assíncrono de estado obsoleto\nAlterações para o ano de 2025\nDependências atualizadas",
-                "nl": "Tests harmoniseren, tests voor Node.js 22 toevoegen\nFout in statusabonnement oplossen\nVerouderde asynchrone status-toegang vervangen\nWijzigingen voor het jaar 2025\nAfhankelijkheden bijgewerkt",
-                "fr": "Harmoniser les tests, ajouter des tests pour Node.js 22\nCorriger un bug dans l'abonnement à l'état\nRemplacer l'accès asynchrone obsolète aux états\nModifications pour l'année 2025\nDépendances mises à jour",
-                "it": "Armonizzare i test, aggiungere test per Node.js 22\nCorreggere bug nella sottoscrizione dello stato\nSostituire l'accesso asincrono allo stato deprecato\nModifiche per l'anno 2025\nDipendenze aggiornate",
-                "es": "Armonizar pruebas, agregar pruebas para Node.js 22\nCorregir error en la suscripción de estado\nReemplazar acceso asincrónico obsoleto al estado\nCambios para el año 2025\nDependencias actualizadas",
-                "pl": "Ujednolicić testy, dodać testy dla Node.js 22\nNaprawić błąd w subskrypcji stanu\nZastąpić przestarzały asynchroniczny dostęp do stanu\nZmiany na rok 2025\nZaktualizowano zależności",
-                "uk": "Уніфікувати тести, додати тести для Node.js 22\nВиправити помилку в підписці на стан\nЗамінити застарілий асинхронний доступ до стану\nЗміни на 2025 рік\nОновлено залежності",
-                "zh-cn": "统一测试，添加 Node.js 22 的测试\n修复状态订阅中的错误\n替换已弃用的异步状态访问\n2025 年的更改\n更新依赖项"
             }
         },
         "titleLang": {
