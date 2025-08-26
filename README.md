@@ -47,6 +47,11 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
   ### **WORK IN PROGRESS**
 -->
 
+### **WORK IN PROGRESS**
+
+- (hombach) update adapter-core
+- (hombach) bump dependencies
+
 ### 0.21.0 (2025-08-17)
 
 - (hombach) BREAKING: dropped node.js 18 support
