@@ -29,7 +29,7 @@
 	"devDependencies": {
 		"@iobroker/adapter-dev": "^1.4.0",
 		"@iobroker/eslint-config": "^2.1.0",
-		"@iobroker/testing": "^5.1.0",
+		"@iobroker/testing": "^5.1.1",
 		"@iobroker/types": "^7.0.7",
 		"@types/chai": "^4.3.11",
 		"@types/chai-as-promised": "^8.0.2",
