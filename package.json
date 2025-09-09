@@ -4,7 +4,7 @@
 	"description": "Adapter for reading go-eCharger data",
 	"author": {
 		"name": "Hombach",
-		"email": "NPM@Homba.ch"
+		"email": "go-e-charger@Homba.ch"
 	},
 	"homepage": "https://github.com/hombach/ioBroker.go-e-charger",
 	"license": "MIT",
