@@ -47,9 +47,10 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
   ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 0.21.1 (2025-09-26)
 
 - (hombach) update adapter-core
+- (hombach) update adapter-dev (#742)
 - (hombach) update chai system (#729)
 - (hombach) fix vulnerability with axios
 - (hombach) bump dependencies

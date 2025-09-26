@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "go-e-charger",
-        "version": "0.21.0",
+        "version": "0.21.1",
         "news": {
+            "0.21.1": {
+                "en": "update adapter-core\nupdate adapter-dev (#742)\nupdate chai system (#729)\nfix vulnerability with axios\nbump dependencies",
+                "de": "Aktualisieren Sie Adapter-Core\nAdapter-dev aktualisieren (#742)\nAktualisieren Sie das Chai -System (#729)\nBeheben der Verwundbarkeit mit Axios\nBeuleabhängigkeiten",
+                "ru": "Обновление адаптер-ядер\nОбновление адаптер-DEV (#742)\nОбновить систему Chai (#729)\nисправить уязвимость с помощью Axios\nУдар зависимости",
+                "pt": "Atualize o adaptador-core\nAtualizar adaptador-Dev (#742)\nAtualizar sistema chai (#729)\nCorrija a vulnerabilidade com axios\nBump dependências",
+                "nl": "Update adapter-core\nUpdate Adapter-Dev (#742)\nUpdate Chai System (#729)\nVergelijk de kwetsbaarheid met Axios\nBump -afhankelijkheden",
+                "fr": "Mettre à jour l'adaptateur-noyau\nMettre à jour l'adaptateur-DEV (# 742)\nMettre à jour le système Chai (# 729)\nFixer la vulnérabilité avec Axios\ndépendances",
+                "it": "Aggiorna l'adattatore-core\nAggiorna Adapter-Dev (#742)\nAggiorna il sistema Chai (#729)\nRisolvi la vulnerabilità con gli assios\ndipendenze bump",
+                "es": "Actualizar el núcleo adaptador\nActualizar adaptador-dev (#742)\nActualizar el sistema Chai (#729)\nArreglar la vulnerabilidad con Axios\ndependencias de la protuberancia",
+                "pl": "Zaktualizuj adapter\nAktualizacja adaptera-dev (#742)\nAktualizacja systemu Chai (#729)\nnaprawić podatność na AxiOS\nzależności od wypukłości",
+                "uk": "Оновіть адаптер-ямочко\nОновити адаптер-DEV (#742)\nОновити систему Chai (#729)\nвиправити вразливість за допомогою Axios\nзалежності від удару",
+                "zh-cn": "更新适配器核\n更新适配器-DEV（＃742）\n更新柴系统（＃729）\n用Axios修复漏洞\n凸起依赖性"
+            },
             "0.21.0": {
                 "en": "BREAKING dropped Node.js 18 support\nBREAKING dropped js-controller 5 support\nAdd tests for Node 24\nRemove tests for Node 18\nFix vulnerability\nBump dependencies",
                 "de": "BREAKING Unterstützung für Node.js 18 eingestellt\nBREAKING Unterstützung für js-controller 5 eingestellt\nTests für Node 24 hinzugefügt\nTests für Node 18 entfernt\nSicherheitslücke behoben\nAbhängigkeiten aktualisiert",
@@ -80,19 +93,6 @@
                 "pl": "Dodano obsługę oprogramowania układowego V57.0 (#659)\nDodano obsługę oprogramowania układowego V57.1 (#660)",
                 "uk": "Додана підтримка прошивки V57.0 (#659)\nДодана підтримка прошивки V57.1 (#660)",
                 "zh-cn": "添加了对固件V57.0（＃659）的支持\n添加了对固件v57.1（＃660）的支持"
-            },
-            "0.19.6": {
-                "en": "added support for firmware V56.9 (#657)\nported adapter to TypeScript\nbumped dependencies\nswitch to ES2022\nfixed chai",
-                "de": "Unterstützung für Firmware V56.9 (#657) hinzugefügt\nportierter Adapter für TypeScript\ngestoßene Abhängigkeiten\nWechseln Sie zu ES2022\nfester Chai",
-                "ru": "добавлена ​​поддержка прошивки V56.9 (#657)\nпортировал адаптер на TypeScript\nизмененные зависимости\nперейти на ES2022\nфиксированный чай",
-                "pt": "adicionado suporte para firmware V56.9 (#657)\nadaptador portado para TypeScript\ndependências colididas\nmudar para ES2022\nchai fixo",
-                "nl": "ondersteuning toegevoegd voor firmware V56.9 (#657)\ngeporteerde adapter naar TypeScript\nafhankelijkheden tegengekomen\noverstappen naar ES2022\nvaste chai",
-                "fr": "ajout de la prise en charge du firmware V56.9 (#657)\nadaptateur porté vers TypeScript\ndépendances déplacées\npasser à ES2022\nchai fixe",
-                "it": "aggiunto il supporto per il firmware V56.9 (#657)\nadattatore portato su TypeScript\ndipendenze urtate\npassare a ES2022\nchai fisso",
-                "es": "soporte agregado para el firmware V56.9 (#657)\nadaptador portado a TypeScript\ndependencias chocadas\ncambiar a ES2022\nchai fijo",
-                "pl": "dodano obsługę oprogramowania sprzętowego V56.9 (#657)\nprzeniesiony adapter do TypeScript\nzdeformowane zależności\nprzejdź na ES2022\nnaprawiono chai",
-                "uk": "додана підтримка мікропрограми V56.9 (#657)\nпортований адаптер до TypeScript\nзіткнулися залежності\nперейти на ES2022\nфіксований чай",
-                "zh-cn": "添加了对固件 V56.9 (#657) 的支持\n将适配器移植到 TypeScript\n碰撞依赖性\n切换到ES2022\n固定柴"
             }
         },
         "titleLang": {
