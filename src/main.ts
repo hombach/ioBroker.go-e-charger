@@ -98,15 +98,16 @@ class go_e_charger extends utils.Adapter {
 		}
 	}
 
-	/****************************************************************************************
+	/**
 	 * Is called if a subscribed state changes
-	 * @param { string } id
-	 * @param { ioBroker.State | null | undefined } state */
+	 *
+	 * @param id - The id of the state that changed.
+	 * @param state - The changed state object, null if it was deleted.
+	 */
 	private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
 		try {
 			if (state) {
-				// The state was changed
-				// this.subscribeStates(`Settings.*`);
+				// The state was changed  -  this.subscribeStates(`Settings.*`);
 				if (!state.ack) {
 					this.log.debug(`state change detected and parsing for id: ${id} - state: ${state.val}`);
 					if (id.includes(`.Settings.`)) {
@@ -172,7 +173,6 @@ class go_e_charger extends utils.Adapter {
 				}
 			} else {
 				// The state was deleted
-				// state go-e-charger.1.Settings.ChargeManager deleted
 				this.log.warn(`state ${id} deleted`);
 			}
 		} catch (e) {
@@ -274,7 +274,8 @@ class go_e_charger extends utils.Adapter {
 			// BatSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
 			this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
 			if (BatSoC >= MinHomeBatVal) {
-				// SoC of home battery sufficient?
+				// SoC of home battery is sufficient
+				await this.Switch_3Phases(Charge3Phase);
 				await this.Charge_Manager();
 			} else {
 				// FUTURE: time of day forces emptying of home battery
@@ -325,7 +326,7 @@ class go_e_charger extends utils.Adapter {
 				}
 				this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
 			});
-	} // END Read_Charger
+	}
 
 	/*****************************************************************************************/
 	async ParseStatus(status): Promise<void> {
@@ -389,45 +390,60 @@ class go_e_charger extends utils.Adapter {
 			});
 	}
 
-	/*****************************************************************************************/
+	/**
+	 * Parses and processes status information from the go-eCharger API V2.
+	 *
+	 * @async
+	 * @param status - The API V2 status object returned by the charger.
+	 * @param status.psm - Phase switching mode (1 = single-phase, 2 = three-phase).
+	 * @param status.typ - Hardware version or type identifier.
+	 * @returns Resolves once the parsed values are written to states.
+	 * @description
+	 * The `ParseStatusAPIV2` function interprets the charger’s API V2 status data and updates internal states accordingly:
+	 * - Maps the numeric phase switching mode (`psm`) to the number of enabled phases.
+	 * - Updates `Power.EnabledPhases` and `Info.HardwareVersion` states.
+	 * - Logs the parsed data for debugging and traceability.
+	 */
 	async ParseStatusAPIV2(status): Promise<void> {
 		switch (status.psm) {
 			case 1:
-				await this.setState("Power.EnabledPhases", 1, true);
 				EnabledPhases = 1;
 				break;
 			case 2:
-				await this.setState("Power.EnabledPhases", 3, true);
 				EnabledPhases = 3;
 				break;
 			default:
-				await this.setState("Power.EnabledPhases", 0, true);
 				EnabledPhases = 0;
 		}
+		await this.setState("Power.EnabledPhases", EnabledPhases, true);
 		this.log.debug(`got enabled phases ${EnabledPhases}`);
 		Hardware = status.typ;
 		await this.setState("Info.HardwareVersion", Hardware, true);
 		this.log.debug(`got and parsed go-eCharger data with API V2`);
 	}
 
-	/*****************************************************************************************/
+	/**
+	 * Switches between 1-phase and 3-phase charging mode via HTTP API.
+	 *
+	 * @async
+	 * @param Charge3Phase - Defines whether to enable (true) or disable (false) 3-phase charging.
+	 * @returns Resolves when the request has completed.
+	 */
 	async Switch_3Phases(Charge3Phase: boolean): Promise<void> {
-		if (HardwareMin3) {
-			let psm = 1;
-			if (Charge3Phase) {
-				psm = 2;
-			}
-			await axiosInstance
-				.get(`http://${this.config.ipaddress}/api/set?psm=${psm}`, { transformResponse: r => r })
-				.then(response => {
-					//.status == 200
-					this.log.debug(`Sent: PSM=${psm} with response ${response.statusText}`);
-				})
-				.catch(error => {
-					this.log.warn(`Error: ${error} by writing @ ${this.config.ipaddress} 3 phases = ${Charge3Phase}`);
-					this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
-				});
+		if (!HardwareMin3) {
+			return;
 		}
+		const psm = Charge3Phase ? 2 : 1;
+		await axiosInstance
+			.get(`http://${this.config.ipaddress}/api/set?psm=${psm}`, { transformResponse: r => r })
+			.then(response => {
+				//.status == 200
+				this.log.debug(`Sent: PSM=${psm} → Response: ${response.statusText}`);
+			})
+			.catch(error => {
+				this.log.warn(`Error: ${error} while setting 3 phases = ${Charge3Phase} @ ${this.config.ipaddress}`);
+				this.log.error(`Please verify IP address: ${this.config.ipaddress} !!!`);
+			});
 	}
 
 	/*****************************************************************************************/
@@ -497,7 +513,32 @@ class go_e_charger extends utils.Adapter {
 		}
 	} // END Charge_Config
 
-	/*****************************************************************************************/
+	/**
+	 * Manages the dynamic charging process based on solar power availability,
+	 * household consumption, and battery state of charge (SoC).
+	 *
+	 * @async
+	 * @returns Resolves when all state values are retrieved and charging logic is applied.
+	 * @description
+	 * The `Charge_Manager` function continuously evaluates the energy situation and adjusts
+	 * the charging current (`ZielAmpere`) to optimize self-consumption of solar energy.
+	 * Data sources include:
+	 * - `StateHomeSolarPower`: current solar generation (W)
+	 * - `StateHomePowerConsumption`: total household power demand (W)
+	 * - `StateHomeBatSoc`: battery state of charge (%)
+	 *
+	 * The resulting charging current (`OptAmpere`) is computed based on:
+	 * - Available surplus energy
+	 * - Configured self-consumption setting
+	 * - Number of active phases
+	 * - Battery SoC offset for reserve management
+	 *
+	 * **Behavior:**
+	 * - Limits `OptAmpere` to 16 A.
+	 * - Adjusts `ZielAmpere` incrementally to avoid abrupt current changes.
+	 * - Enables charging if current exceeds 9 A (5 A base + 4 A hysteresis).
+	 * - Disables charging if below 6 A after multiple cycles (`OffVerzoegerung` > 12).
+	 */
 	async Charge_Manager(): Promise<void> {
 		SolarPower = await this.ProjectUtils.asyncGetForeignStateVal(this.config.StateHomeSolarPower);
 		this.log.debug(`Got external state of solar power: ${SolarPower} W`);
@@ -506,22 +547,18 @@ class go_e_charger extends utils.Adapter {
 		BatSoC = await this.ProjectUtils.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
 		this.log.debug(`Got external state of battery SoC: ${BatSoC}%`);
 		ChargePower = await this.ProjectUtils.getStateValue("Power.Charge");
-		let Phases = 3;
-		if (HardwareMin3 && EnabledPhases) {
-			Phases = EnabledPhases;
-		} else {
-			Phases = GridPhases;
-		}
+
+		const Phases = HardwareMin3 && EnabledPhases ? EnabledPhases : GridPhases;
+
 		OptAmpere = Math.floor(
 			(SolarPower -
 				HouseConsumption +
-				(this.config.SubtractSelfConsumption ? ChargePower : 0) - // Bedingte Einbeziehung von ChargePower
-				100 + // Reserve
-				(2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal)) / // Batterieleerung
+				(this.config.SubtractSelfConsumption ? ChargePower : 0) - // optional inclusion of charger power
+				100 + // reserve offset
+				(2000 / (100 - MinHomeBatVal)) * (BatSoC - MinHomeBatVal)) / // discharge offset
 				230 /
 				Phases,
 		);
-
 		if (OptAmpere > 16) {
 			OptAmpere = 16;
 		}
@@ -533,37 +570,49 @@ class go_e_charger extends utils.Adapter {
 			ZielAmpere--;
 		}
 
-		this.log.debug(
-			`ZielAmpere: ${ZielAmpere} Ampere; Leistung DC: ${SolarPower} W; ` +
-				`Hausverbrauch: ${HouseConsumption} W; Gesamtleistung Charger: ${ChargePower} W`,
-		);
+		this.log.debug(`ZielAmpere: ${ZielAmpere} A; Solar: ${SolarPower} W; House: ${HouseConsumption} W; Charger: ${ChargePower} W`);
 
 		if (ZielAmpere > 5 + 4) {
-			await this.Charge_Config("1", ZielAmpere, `Charging current: ${ZielAmpere} A`); // An und Zielstrom da größer 5 + Hysterese
+			await this.Charge_Config("1", ZielAmpere, `Charging current: ${ZielAmpere} A`);
 		} else if (ZielAmpere < 6) {
 			OffVerzoegerung++;
 			if (OffVerzoegerung > 12) {
-				await this.Charge_Config("0", ZielAmpere, `zu wenig Überschuss`); // Aus und Zielstrom
+				await this.Charge_Config("0", ZielAmpere, `Insufficient surplus`);
 				OffVerzoegerung = 0;
 			}
 		}
 	} // END Charge_Manager
 
-	isLikeEmpty(inputVar): boolean {
-		if (typeof inputVar !== "undefined" && inputVar !== null) {
-			let sTemp = JSON.stringify(inputVar);
-			sTemp = sTemp.replace(/\s+/g, ""); // remove all white spaces
-			sTemp = sTemp.replace(/"+/g, ""); // remove all >"<
-			sTemp = sTemp.replace(/'+/g, ""); // remove all >'<
-			sTemp = sTemp.replace(/\[+/g, ""); // remove all >[<
-			sTemp = sTemp.replace(/\]+/g, ""); // remove all >]<
-			sTemp = sTemp.replace(/\{+/g, ""); // remove all >{<
-			sTemp = sTemp.replace(/\}+/g, ""); // remove all >}<
-			if (sTemp !== "") {
-				return false;
-			}
+	/**
+	 * Checks whether a given input value is considered "empty-like".
+	 *
+	 * @param inputVar - The variable to check for emptiness.
+	 * @returns `true` if the input is undefined, null, or contains only
+	 *                    whitespace, quotes, or empty structural characters (`[]`, `{}`), otherwise `false`.
+	 * @description
+	 * This function evaluates whether an input is effectively empty by:
+	 * - Ignoring whitespace, quotes (`"` and `'`), and empty object/array brackets.
+	 * - Returning `true` if the cleaned string representation is empty.
+	 * @example
+	 * isLikeEmpty(null);               // → true
+	 * isLikeEmpty("   ");              // → true
+	 * isLikeEmpty("{}");               // → true
+	 * isLikeEmpty("[  ]");             // → true
+	 * isLikeEmpty("non-empty text");   // → false
+	 */
+	isLikeEmpty(inputVar: unknown): boolean {
+		if (inputVar === undefined || inputVar === null) {
+			return true;
 		}
-		return true;
+		const sTemp = JSON.stringify(inputVar)
+			.replace(/\s+/g, "") // remove all white spaces
+			.replace(/"+/g, "") // remove all double quotes
+			.replace(/'+/g, "") // remove all single quotes
+			.replace(/\[+/g, "") // remove all [
+			.replace(/\]+/g, "") // remove all ]
+			.replace(/\{+/g, "") // remove all {
+			.replace(/\}+/g, ""); // remove all }
+		return sTemp === "";
 	}
 } // END Class
 

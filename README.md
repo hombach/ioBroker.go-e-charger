@@ -47,6 +47,11 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
   ### **WORK IN PROGRESS**
 -->
 
+### **WORK IN PROGRESS**
+
+- (hombach) code optimizations
+- (hombach) update dependencies
+
 ### 0.21.1 (2025-09-26)
 
 - (hombach) update adapter-core
