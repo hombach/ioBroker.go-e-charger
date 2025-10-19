@@ -49,6 +49,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ### **WORK IN PROGRESS**
 
+- (hombach) update NPM deployment system
 - (hombach) code optimizations
 - (hombach) update dependencies
 
