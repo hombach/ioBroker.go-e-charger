@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "go-e-charger",
-        "version": "0.21.1",
+        "version": "0.21.2",
         "news": {
+            "0.21.2": {
+                "en": "update NPM deployment system\ncode optimizations\nupdate dependencies",
+                "de": "Aktualisieren Sie das NPM-Bereitstellungssystem\nCodeoptimierungen\nAbhängigkeiten aktualisieren",
+                "ru": "обновить систему развертывания NPM\nоптимизация кода\nобновить зависимости",
+                "pt": "atualizar o sistema de implantação NPM\notimizações de código\natualizar dependências",
+                "nl": "update het NPM-implementatiesysteem\ncode-optimalisaties\nafhankelijkheden bijwerken",
+                "fr": "mettre à jour le système de déploiement NPM\noptimisations de code\nmettre à jour les dépendances",
+                "it": "aggiornare il sistema di distribuzione NPM\nottimizzazioni del codice\naggiornare le dipendenze",
+                "es": "actualizar el sistema de implementación de NPM\noptimizaciones de código\nactualizar dependencias",
+                "pl": "zaktualizuj system wdrażania NPM\noptymalizacje kodu\nzaktualizować zależności",
+                "uk": "оновити систему розгортання NPM\nоптимізація коду\nоновити залежності",
+                "zh-cn": "更新NPM部署系统\n代码优化\n更新依赖项"
+            },
             "0.21.1": {
                 "en": "update adapter-core\nupdate adapter-dev (#742)\nupdate chai system (#729)\nfix vulnerability with axios\nbump dependencies",
                 "de": "Aktualisieren Sie Adapter-Core\nAdapter-dev aktualisieren (#742)\nAktualisieren Sie das Chai -System (#729)\nBeheben der Verwundbarkeit mit Axios\nBeuleabhängigkeiten",

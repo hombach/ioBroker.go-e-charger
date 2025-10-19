@@ -47,7 +47,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
   ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 0.21.2 (2025-10-19)
 
 - (hombach) update NPM deployment system
 - (hombach) code optimizations
@@ -107,18 +107,6 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 - (hombach) bumped dependencies
 - (hombach) switch to ES2022
 - (hombach) fixed chai
-
-### 0.19.5 (2025-01-01)
-
-- (hombach) harmonize tests, add tests for node 22
-- (hombach) fix bug in state subscription
-- (hombach) replace deprecated async state access
-- (hombach) year 2025 changes
-- (hombach) bumped dependencies
-
-### 0.19.4 (2024-08-14)
-
-- (hombach) fixed vulnerability in dependency
 
 ### Old Changes see [CHANGELOG OLD](CHANGELOG_OLD.md)
 

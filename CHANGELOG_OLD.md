@@ -15,6 +15,13 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 
 ## Changelog - OLD CHANGES
 
+### 0.19.5 (2025-01-01)
+
+- (hombach) harmonize tests, add tests for node 22
+- (hombach) fix bug in state subscription
+- (hombach) replace deprecated async state access
+- (hombach) year 2025 changes
+
 ### 0.19.4 (2024-08-14)
 
 - (hombach) fixed vulnerability in dependency
