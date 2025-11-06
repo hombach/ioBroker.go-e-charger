@@ -47,6 +47,10 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
   ### **WORK IN PROGRESS**
 -->
 
+### **WORK IN PROGRESS**
+
+- (hombach) update axios
+
 ### 0.21.2 (2025-10-19)
 
 - (hombach) update NPM deployment system
