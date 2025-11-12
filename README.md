@@ -50,6 +50,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 ### **WORK IN PROGRESS**
 
 - (hombach) update axios
+- (hombach) update iobroker/testing (#759)
 
 ### 0.21.2 (2025-10-19)
 
