@@ -47,6 +47,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
   ### **WORK IN PROGRESS**
 -->
 
+
 ### 0.21.3 (2026-01-01)
 
 - (hombach) added support for firmware V60.0
