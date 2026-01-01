@@ -52,6 +52,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 - (hombach) added support for firmware V60.0
 - (hombach) added support for firmware V60.1
 - (hombach) added support for firmware V60.2
+- (hombach) year 2026 changes
 - (hombach) update axios
 - (hombach) update iobroker/testing (#759)
 
@@ -121,7 +122,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 ## License
 MIT License
 
-Copyright (c) 2020-2025 C.Hombach
+Copyright (c) 2020-2026 C.Hombach
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
