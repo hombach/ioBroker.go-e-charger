@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "go-e-charger",
-        "version": "0.21.2",
+        "version": "0.21.3",
         "news": {
+            "0.21.3": {
+                "en": "dded support for firmware V60.0, V60.1, V60.2\nyear 2026 changes\nupdate axios\nupdate iobroker/testing (#759)",
+                "de": "Unterstützung für Firmware V60.0, V60.1, V60.2 hinzugefügt\nDas Jahr 2026 ändert sich\nAxios aktualisieren\niobroker/testing aktualisieren (#759)",
+                "ru": "добавлена поддержка прошивок V60.0, V60.1, V60.2\nизменения 2026 года\nобновить аксиомы\nобновить iobroker/тестирование (#759)",
+                "pt": "suporte adicional para firmware V60.0, V60.1, V60.2\nmudanças no ano de 2026\natualizar eixos\natualizar iobroker/teste (#759)",
+                "nl": "Ondersteuning toegevoegd voor firmware V60.0, V60.1, V60.2\njaar 2026 verandert\naxio's bijwerken\nupdate iobroker/testen (#759)",
+                "fr": "Prise en charge supplémentaire du firmware V60.0, V60.1, V60.2\nchangements de l'année 2026\nmettre à jour axios\nmettre à jour iobroker/testing (#759)",
+                "it": "aggiunto supporto per firmware V60.0, V60.1, V60.2\nanno 2026 cambia\naggiornare gli assi\naggiorna iobroker/test (#759)",
+                "es": "Soporte adicional para firmware V60.0, V60.1, V60.2\naño 2026 cambios\nactualizar axios\nactualizar iobroker/pruebas (#759)",
+                "pl": "dodano obsługę oprogramowania sprzętowego V60.0, V60.1, V60.2\nzmiany roku 2026\nzaktualizować osie\nzaktualizuj iobroker/testowanie (#759)",
+                "uk": "додана підтримка мікропрограм V60.0, V60.1, V60.2\n2026 рік зміни\nоновити axios\nоновлення iobroker/тестування (#759)",
+                "zh-cn": "添加了对固件 V60.0、V60.1、V60.2 的支持\n2026年的变化\n更新 axios\n更新 iobroker/测试 (#759)"
+            },
             "0.21.2": {
                 "en": "update NPM deployment system\ncode optimizations\nupdate dependencies",
                 "de": "Aktualisieren Sie das NPM-Bereitstellungssystem\nCodeoptimierungen\nAbhängigkeiten aktualisieren",

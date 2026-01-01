@@ -47,7 +47,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
   ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 0.21.3 (2026-01-01)
 
 - (hombach) added support for firmware V60.0
 - (hombach) added support for firmware V60.1
@@ -98,24 +98,6 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 ### 0.20.0 (2025-02-23)
 
 - (hombach) change to admin 7.4.10 as recommended by ioBroker
-
-### 0.19.8 (2025-01-28)
-
-- (hombach) roll back bad ioBroker.testing
-- (hombach) added support for firmware V57.0 (#659)
-- (hombach) added support for firmware V57.1 (#660)
-
-### 0.19.7 (2025-01-25)
-
-- (hombach) added support for firmware V56.11 (#658)
-
-### 0.19.6 (2025-01-23)
-
-- (hombach) added support for firmware V56.9 (#657)
-- (hombach) ported adapter to TypeScript
-- (hombach) bumped dependencies
-- (hombach) switch to ES2022
-- (hombach) fixed chai
 
 ### Old Changes see [CHANGELOG OLD](CHANGELOG_OLD.md)
 

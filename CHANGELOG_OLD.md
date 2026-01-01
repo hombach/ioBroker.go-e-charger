@@ -15,6 +15,24 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 
 ## Changelog - OLD CHANGES
 
+### 0.19.8 (2025-01-28)
+
+- (hombach) roll back bad ioBroker.testing
+- (hombach) added support for firmware V57.0 (#659)
+- (hombach) added support for firmware V57.1 (#660)
+
+### 0.19.7 (2025-01-25)
+
+- (hombach) added support for firmware V56.11 (#658)
+
+### 0.19.6 (2025-01-23)
+
+- (hombach) added support for firmware V56.9 (#657)
+- (hombach) ported adapter to TypeScript
+- (hombach) bumped dependencies
+- (hombach) switch to ES2022
+- (hombach) fixed chai
+
 ### 0.19.5 (2025-01-01)
 
 - (hombach) harmonize tests, add tests for node 22
@@ -134,7 +152,7 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 
 ### 0.14.3 (2022-12-29)
 
-- (HombachC) bumped dependencies and year 2023 changes
+- (HombachC) year 2023 changes
 
 ### 0.14.2 (2022-06-27)
 
@@ -142,7 +160,7 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 
 ### 0.14.1 (2022-06-05)
 
-- (HombachC) bumped dependencies, small code tweaks, removed gulp
+- (HombachC) small code tweaks, removed gulp
 
 ### 0.14.0 (2022-05-08)
 
@@ -225,7 +243,7 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 
 ### 0.3.2 (2020-12-08)
 
-- (HombachC) bumped dependencies, added poll of firmware version, fixed error in CarStateString
+- (HombachC) added poll of firmware version, fixed error in CarStateString
 
 ### 0.2.0 (2020-09-11)
 
