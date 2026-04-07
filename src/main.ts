@@ -2,7 +2,6 @@
 import * as utils from "@iobroker/adapter-core";
 import axios from "axios";
 import { ProjectUtils } from "./lib/projectUtils";
-
 const axiosInstance = axios.create({
 	//timeout: 5000, //by default
 });
@@ -73,7 +72,7 @@ class go_e_charger extends utils.Adapter {
 				if (sentryInstance) {
 					const Sentry = sentryInstance.getSentryObject();
 					Sentry &&
-						Sentry.withScope(scope => {
+						Sentry?.withScope((scope: any) => {
 							scope.setLevel("info");
 							scope.setTag("Charger", this.config.ipaddress);
 							scope.setTag("Firmware", Firmware);
@@ -246,7 +245,7 @@ class go_e_charger extends utils.Adapter {
 						if (sentryInstance) {
 							const Sentry = sentryInstance.getSentryObject();
 							Sentry &&
-								Sentry.withScope(scope => {
+								Sentry?.withScope((scope: any) => {
 									scope.setLevel("warning");
 									scope.setTag("Firmware", Firmware);
 									Sentry.captureMessage("Adapter go-e-Charger found unknown firmware", "warning"); // Level "warning"
@@ -336,7 +335,19 @@ class go_e_charger extends utils.Adapter {
 	}
 
 	/*****************************************************************************************/
-	async ParseStatus(status): Promise<void> {
+	async ParseStatus(status: {
+		rbc: any;
+		rbt: number;
+		car: any;
+		amp: any;
+		amx: any;
+		alw: any;
+		pha: number;
+		eto: number;
+		nrg: number[];
+		fwv: string;
+		uby: any;
+	}): Promise<void> {
 		await this.setState("Info.RebootCounter", Number(status.rbc), true);
 		await this.setState("Info.RebootTimer", Math.floor(status.rbt / 1000 / 3600), true); // trim to hours
 		await this.setState("Info.CarState", Number(status.car), true);
@@ -411,7 +422,7 @@ class go_e_charger extends utils.Adapter {
 	 * - Updates `Power.EnabledPhases` and `Info.HardwareVersion` states.
 	 * - Logs the parsed data for debugging and traceability.
 	 */
-	async ParseStatusAPIV2(status): Promise<void> {
+	async ParseStatusAPIV2(status: { psm: number; typ: string }): Promise<void> {
 		switch (status.psm) {
 			case 1:
 				EnabledPhases = 1;

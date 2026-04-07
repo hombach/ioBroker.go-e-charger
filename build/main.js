@@ -103,7 +103,7 @@ class go_e_charger extends utils.Adapter {
                 if (sentryInstance) {
                     const Sentry = sentryInstance.getSentryObject();
                     Sentry &&
-                        Sentry.withScope(scope => {
+                        Sentry?.withScope((scope) => {
                             scope.setLevel("info");
                             scope.setTag("Charger", this.config.ipaddress);
                             scope.setTag("Firmware", Firmware);
@@ -280,7 +280,7 @@ class go_e_charger extends utils.Adapter {
                         if (sentryInstance) {
                             const Sentry = sentryInstance.getSentryObject();
                             Sentry &&
-                                Sentry.withScope(scope => {
+                                Sentry?.withScope((scope) => {
                                     scope.setLevel("warning");
                                     scope.setTag("Firmware", Firmware);
                                     Sentry.captureMessage("Adapter go-e-Charger found unknown firmware", "warning"); // Level "warning"
