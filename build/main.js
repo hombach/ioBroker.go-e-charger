@@ -118,7 +118,9 @@ class go_e_charger extends utils.Adapter {
             ChargeCurrent = await this.ProjectUtils.getStateValue("Settings.ChargeCurrent"); // Get current for charging override
             this.log.debug(`Pre-init done, launching state machine interval`);
             const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.polltimelive));
-            this.timeoutList.push(stateMachine);
+            if (stateMachine != null) {
+                this.timeoutList.push(stateMachine);
+            }
         }
         else {
             this.log.error(`No IP address configured!! - shutting down adapter.`);
@@ -342,7 +344,9 @@ class go_e_charger extends utils.Adapter {
             }
         }
         const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.polltimelive));
-        this.timeoutList.push(stateMachine);
+        if (stateMachine != null) {
+            this.timeoutList.push(stateMachine);
+        }
     }
     /*****************************************************************************************/
     async Read_Charger() {

@@ -90,7 +90,9 @@ class go_e_charger extends utils.Adapter {
 
 			this.log.debug(`Pre-init done, launching state machine interval`);
 			const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.polltimelive));
-			this.timeoutList.push(stateMachine);
+			if (stateMachine != null) {
+				this.timeoutList.push(stateMachine);
+			}
 		} else {
 			this.log.error(`No IP address configured!! - shutting down adapter.`);
 			await this.setState("info.connection", { val: false, ack: true });
@@ -307,7 +309,9 @@ class go_e_charger extends utils.Adapter {
 		}
 
 		const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.polltimelive));
-		this.timeoutList.push(stateMachine);
+		if (stateMachine != null) {
+			this.timeoutList.push(stateMachine);
+		}
 	}
 
 	/*****************************************************************************************/
@@ -450,7 +454,7 @@ class go_e_charger extends utils.Adapter {
 	}
 
 	/*****************************************************************************************/
-	async Charge_Config(Allow, Ampere, LogMessage): Promise<void> {
+	async Charge_Config(Allow: string, Ampere: number, LogMessage: string): Promise<void> {
 		this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
 		if (!this.config.ReadOnlyMode) {
 			await axiosInstance
