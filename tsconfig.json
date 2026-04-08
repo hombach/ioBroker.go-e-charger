@@ -22,7 +22,7 @@
 		// this is necessary for the automatic typing of the adapter config
 		"resolveJsonModule": true,
 		// WiP 0.21.4
-		"types": ["node"],
+		"types": ["node", "mocha"],
 
 		// If you want to disable the stricter type checks (not recommended), uncomment the following line
 		// "strict": false,
