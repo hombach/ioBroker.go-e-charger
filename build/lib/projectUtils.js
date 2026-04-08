@@ -39,7 +39,7 @@ class ProjectUtils {
     async getState(stateName) {
         try {
             if (await this.verifyStateAvailable(stateName)) {
-                // Get state value, so like: {val: false, ack: true, ts: 1591117034451, �}
+                // Get state value, so like: {val: false, ack: true, ts: 1591117034451, }
                 const stateValueObject = await this.adapter.getStateAsync(stateName);
                 if (!this.isLikeEmpty(stateValueObject)) {
                     return stateValueObject;
@@ -102,7 +102,7 @@ class ProjectUtils {
                 // Get state value, so like: {val: false, ack: true, ts: 1591117034451, …}
                 const stateValueObject = await this.adapter.getForeignStateAsync(stateName);
                 if (!this.isLikeEmpty(stateValueObject)) {
-                    return stateValueObject;
+                    return stateValueObject ?? null;
                 }
                 throw new Error(`Unable to retrieve info from state '${stateName}'.`);
             }
@@ -123,14 +123,15 @@ class ProjectUtils {
      */
     isLikeEmpty(inputVar) {
         if (typeof inputVar !== "undefined" && inputVar !== null) {
-            let sTemp = JSON.stringify(inputVar);
-            sTemp = sTemp.replace(/\s+/g, ""); // remove all white spaces
-            sTemp = sTemp.replace(/"+/g, ""); // remove all >"<
-            sTemp = sTemp.replace(/'+/g, ""); // remove all >'<
-            sTemp = sTemp.replace(/\[+/g, ""); // remove all >[<
-            sTemp = sTemp.replace(/\]+/g, ""); // remove all >]<
-            sTemp = sTemp.replace(/\{+/g, ""); // remove all >{<
-            sTemp = sTemp.replace(/\}+/g, ""); // remove all >}<
+            //WiP Optimize let sTemp = JSON.stringify(inputVar);
+            //WiP Optimize sTemp = sTemp.replace(/\s+/g, ""); // remove all white spaces
+            //WiP Optimize sTemp = sTemp.replace(/"+/g, ""); // remove all >"<
+            //WiP Optimize sTemp = sTemp.replace(/'+/g, ""); // remove all >'<
+            //WiP Optimize sTemp = sTemp.replace(/\[+/g, ""); // remove all >[<
+            //WiP Optimize sTemp = sTemp.replace(/\]+/g, ""); // remove all >]<
+            //WiP Optimize sTemp = sTemp.replace(/\{+/g, ""); // remove all >{<
+            //WiP Optimize sTemp = sTemp.replace(/\}+/g, ""); // remove all >}<
+            const sTemp = JSON.stringify(inputVar).replace(/[\s"'[\]{}]/g, "");
             if (sTemp !== "") {
                 return false;
             }
@@ -191,8 +192,8 @@ class ProjectUtils {
                 read: true,
                 write: writeable,
             };
-            // Add unit only if it's provided and not null or undefined
-            if (unit !== null && unit !== undefined) {
+            // Add unit only if it's provided
+            if (unit != null) {
                 commonObj.unit = unit;
             }
             await (forceMode

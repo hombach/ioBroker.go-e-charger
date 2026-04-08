@@ -37,10 +37,10 @@ export class ProjectUtils {
 	 * @param stateName - A string representing the name of the state to retrieve.
 	 * @returns A Promise that resolves with the object of the state if it exists, otherwise resolves with null.
 	 */
-	private async getState(stateName: string): Promise<ioBroker.State | null> {
+	private async getState(stateName: string): Promise<ioBroker.State | null | undefined> {
 		try {
 			if (await this.verifyStateAvailable(stateName)) {
-				// Get state value, so like: {val: false, ack: true, ts: 1591117034451, �}
+				// Get state value, so like: {val: false, ack: true, ts: 1591117034451, }
 				const stateValueObject = await this.adapter.getStateAsync(stateName);
 				if (!this.isLikeEmpty(stateValueObject)) {
 					return stateValueObject;
@@ -94,7 +94,7 @@ export class ProjectUtils {
 	 * @param stateName - Full path to state, like 0_userdata.0.other.isSummer
 	 * @returns State object: {val: false, ack: true, ts: 1591117034451, …}, or null if error
 	 */
-	private async asyncGetForeignState(stateName: string): Promise<ioBroker.State | null | undefined> {
+	private async asyncGetForeignState(stateName: string): Promise<ioBroker.State | null> {
 		try {
 			const stateObject = await this.adapter.getForeignObjectAsync(stateName); // Check state existence
 			if (!stateObject) {
@@ -103,7 +103,7 @@ export class ProjectUtils {
 				// Get state value, so like: {val: false, ack: true, ts: 1591117034451, …}
 				const stateValueObject = await this.adapter.getForeignStateAsync(stateName);
 				if (!this.isLikeEmpty(stateValueObject)) {
-					return stateValueObject;
+					return stateValueObject ?? null;
 				}
 				throw new Error(`Unable to retrieve info from state '${stateName}'.`);
 			}
@@ -124,14 +124,16 @@ export class ProjectUtils {
 	 */
 	private isLikeEmpty(inputVar: ioBroker.State | null | undefined): boolean {
 		if (typeof inputVar !== "undefined" && inputVar !== null) {
-			let sTemp = JSON.stringify(inputVar);
-			sTemp = sTemp.replace(/\s+/g, ""); // remove all white spaces
-			sTemp = sTemp.replace(/"+/g, ""); // remove all >"<
-			sTemp = sTemp.replace(/'+/g, ""); // remove all >'<
-			sTemp = sTemp.replace(/\[+/g, ""); // remove all >[<
-			sTemp = sTemp.replace(/\]+/g, ""); // remove all >]<
-			sTemp = sTemp.replace(/\{+/g, ""); // remove all >{<
-			sTemp = sTemp.replace(/\}+/g, ""); // remove all >}<
+			//WiP Optimize let sTemp = JSON.stringify(inputVar);
+			//WiP Optimize sTemp = sTemp.replace(/\s+/g, ""); // remove all white spaces
+			//WiP Optimize sTemp = sTemp.replace(/"+/g, ""); // remove all >"<
+			//WiP Optimize sTemp = sTemp.replace(/'+/g, ""); // remove all >'<
+			//WiP Optimize sTemp = sTemp.replace(/\[+/g, ""); // remove all >[<
+			//WiP Optimize sTemp = sTemp.replace(/\]+/g, ""); // remove all >]<
+			//WiP Optimize sTemp = sTemp.replace(/\{+/g, ""); // remove all >{<
+			//WiP Optimize sTemp = sTemp.replace(/\}+/g, ""); // remove all >}<
+			const sTemp = JSON.stringify(inputVar).replace(/[\s"'[\]{}]/g, "");
+
 			if (sTemp !== "") {
 				return false;
 			}
@@ -212,8 +214,8 @@ export class ProjectUtils {
 				read: true,
 				write: writeable,
 			};
-			// Add unit only if it's provided and not null or undefined
-			if (unit !== null && unit !== undefined) {
+			// Add unit only if it's provided
+			if (unit != null) {
 				commonObj.unit = unit;
 			}
 

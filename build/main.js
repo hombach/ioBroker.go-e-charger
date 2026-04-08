@@ -223,9 +223,7 @@ class go_e_charger extends utils.Adapter {
      */
     onUnload(callback) {
         try {
-            for (const timeoutJob of this.timeoutList) {
-                this.clearTimeout(timeoutJob);
-            }
+            this.timeoutList.forEach(timeoutJob => this.clearTimeout(timeoutJob));
             this.log.info(`Adapter go-eCharger cleaned up everything...`);
             void this.setState("info.connection", false, true);
             callback();
@@ -404,7 +402,8 @@ class go_e_charger extends utils.Adapter {
         await this.setState("Power.GridPhases", GridPhases, true);
         await this.setState("Statistics_Total.Charged", status.eto / 10, true);
         await this.setState("Power.Charge", status.nrg[11] * 10, true); // trim to Watt
-        await this.setState("Power.MeasuredMaxPhaseCurrent", Math.max(status.nrg[4], status.nrg[5], status.nrg[6]) / 10, true);
+        //WIP replaced await this.setState("Power.MeasuredMaxPhaseCurrent", Math.max(status.nrg[4], status.nrg[5], status.nrg[6]) / 10, true);
+        await this.setState("Power.MeasuredMaxPhaseCurrent", Math.max(...status.nrg.slice(4, 7)) / 10, true); // trim to Ampere
         Firmware = status.fwv;
         await this.setState("Info.FirmwareVersion", Firmware, true);
         // WiP 634
