@@ -47,6 +47,10 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
   ### **WORK IN PROGRESS**
 -->
 
+### **WORK IN PROGRESS**
+
+- (hombach) repo cleanup
+
 ### 0.21.4 (2026-04-19)
 
 - (hombach) prepare multi-charger support

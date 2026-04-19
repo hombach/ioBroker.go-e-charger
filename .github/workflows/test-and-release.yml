@@ -31,7 +31,7 @@ jobs:
         steps:
             - uses: ioBroker/testing-action-check@v1
               with:
-                  node-version: "24.x"
+                  node-version: '24.x'
                   # Uncomment the following line if your adapter cannot be installed using 'npm ci'
                   # install-command: npm install
                   # install-command: npm install --legacy-peer-deps
@@ -80,7 +80,7 @@ jobs:
         steps:
             - uses: ioBroker/testing-action-deploy@v1
               with:
-                  node-version: "24.x"
+                  node-version: '24.x'
                   # Uncomment the following line if your adapter cannot be installed using 'npm ci'
                   # install-command: 'npm install'
                   build: true
@@ -92,8 +92,8 @@ jobs:
                   # Then uncomment and customize the following block:
                   # sentry: true
                   # sentry-token: ${{ secrets.SENTRY_AUTH_TOKEN }}
-                  # sentry-project: "iobroker-kostal-piko-ba"
-                  # sentry-version-prefix: "iobroker.kostal-piko-ba"
+                  # sentry-project: "iobroker-go-e-charger"
+                  # sentry-version-prefix: "iobroker.go-e-charger"
                   # sentry-sourcemap-paths: "build/"
                   # If your sentry project is linked to a GitHub repository, you can enable the following option
                   # sentry-github-integration: true

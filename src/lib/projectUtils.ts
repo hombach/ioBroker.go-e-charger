@@ -193,6 +193,9 @@ export class ProjectUtils {
 	 * @param writeable - Optional boolean indicating if the state should be writeable (default is false).
 	 * @param dontUpdate - Optional boolean indicating if the state should not be updated if it already exists (default is false).
 	 * @param forceMode - Optional boolean indicating if the state should be reinitiated if it already exists (default is false).
+	 * @param min - Optional number setting allowed value minimum
+	 * @param max - Optional number setting allowed value maximum
+	 * @param step - Optional number setting value step
 	 * @returns A Promise that resolves when the state is checked, created (if necessary), and updated.
 	 */
 	protected async checkAndSetValueNumber(
@@ -204,6 +207,9 @@ export class ProjectUtils {
 		writeable = false,
 		dontUpdate = false,
 		forceMode = false,
+		min?: number,
+		max?: number,
+		step?: number,
 	): Promise<void> {
 		if (value !== undefined) {
 			const commonObj: ioBroker.StateCommon = {
@@ -213,6 +219,12 @@ export class ProjectUtils {
 				desc: description,
 				read: true,
 				write: writeable,
+				// Add unit only if it's provided and not null or undefined
+				...((unit ?? undefined) ? { unit } : {}),
+				// Add minimum, maximum and step for value only if it's provided and not null or undefined
+				...((min ?? undefined) ? { min } : {}),
+				...((max ?? undefined) ? { max } : {}),
+				...((step ?? undefined) ? { step } : {}),
 			};
 			// Add unit only if it's provided
 			if (unit != null) {
