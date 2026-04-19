@@ -1,10 +1,23 @@
 {
     "common": {
         "name": "go-e-charger",
-        "version": "0.21.3",
+        "version": "0.21.4",
         "news": {
+            "0.21.4": {
+                "en": "prepare multi-charger support\nupdate axios\nupdate iobroker/testing (#765)\nswitch to ES2023 code\nfix vulnerabilities\nupdate dependencies",
+                "de": "Unterstützung für mehrere Ladegeräte vorbereitet\nAxios aktualisiert\niobroker/testing aktualisiert (#765)\nWechsel zu ES2023-Code\nSchwachstellen behoben\nAbhängigkeiten aktualisiert",
+                "ru": "подготовить поддержку нескольких зарядных устройств\nобновить аксиомы\nобновить iobroker/тестирование (#765)\nперейти на код ES2023\nисправить уязвимости\nобновить зависимости",
+                "pt": "preparar suporte para vários carregadores\natualizar eixos\natualizar iobroker/teste (#765)\nmudar para o código ES2023\ncorrigir vulnerabilidades\natualizar dependências",
+                "nl": "ondersteuning voor meerdere laders voorbereiden\naxio's bijwerken\nupdate iobroker/testen (#765)\nschakel over naar ES2023-code\nkwetsbaarheden oplossen\nafhankelijkheden bijwerken",
+                "fr": "préparer le support multi-chargeurs\nmettre à jour axios\nmettre à jour iobroker/testing (#765)\npasser au code ES2023\ncorriger les vulnérabilités\nmettre à jour les dépendances",
+                "it": "preparare il supporto multi-caricatore\naggiornare gli assi\naggiorna iobroker/test (#765)\npassare al codice ES2023\ncorreggere le vulnerabilità\naggiornare le dipendenze",
+                "es": "preparar soporte multicargador\nactualizar axios\nactualizar iobroker/pruebas (#765)\ncambiar al código ES2023\narreglar vulnerabilidades\nactualizar dependencias",
+                "pl": "przygotować obsługę wielu ładowarek\nzaktualizować osie\nzaktualizuj iobroker/testowanie (#765)\nprzejdź na kod ES2023\nnaprawić luki\nzaktualizować zależności",
+                "uk": "підготуйте підтримку кількох зарядних пристроїв\nоновити axios\nоновлення iobroker/тестування (#765)\nперейти на код ES2023\nвиправити вразливості\nоновити залежності",
+                "zh-cn": "准备多充电器支持\n更新 axios\n更新 iobroker/测试 (#765)\n切换到ES2023代码\n修复漏洞\n更新依赖关系"
+            },
             "0.21.3": {
-                "en": "dded support for firmware V60.0, V60.1, V60.2\nyear 2026 changes\nupdate axios\nupdate iobroker/testing (#759)",
+                "en": "added support for firmware V60.0, V60.1, V60.2\nyear 2026 changes\nupdate axios\nupdate iobroker/testing (#759)",
                 "de": "Unterstützung für Firmware V60.0, V60.1, V60.2 hinzugefügt\nDas Jahr 2026 ändert sich\nAxios aktualisieren\niobroker/testing aktualisieren (#759)",
                 "ru": "добавлена поддержка прошивок V60.0, V60.1, V60.2\nизменения 2026 года\nобновить аксиомы\nобновить iobroker/тестирование (#759)",
                 "pt": "suporte adicional para firmware V60.0, V60.1, V60.2\nmudanças no ano de 2026\natualizar eixos\natualizar iobroker/teste (#759)",

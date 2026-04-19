@@ -47,7 +47,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
   ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 0.21.4 (2026-04-19)
 
 - (hombach) prepare multi-charger support
 - (hombach) update axios
@@ -97,15 +97,10 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 - (hombach) fix error in statechange recognition (#637)
 - (hombach) fix axios
-- (hombach) bump dependencies
 
 ### 0.20.1 (2025-03-05)
 
 - (hombach) bump dependencies
-
-### 0.20.0 (2025-02-23)
-
-- (hombach) change to admin 7.4.10 as recommended by ioBroker
 
 ### Old Changes see [CHANGELOG OLD](CHANGELOG_OLD.md)
 
