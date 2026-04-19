@@ -123,14 +123,6 @@ class ProjectUtils {
      */
     isLikeEmpty(inputVar) {
         if (typeof inputVar !== "undefined" && inputVar !== null) {
-            //WiP Optimize let sTemp = JSON.stringify(inputVar);
-            //WiP Optimize sTemp = sTemp.replace(/\s+/g, ""); // remove all white spaces
-            //WiP Optimize sTemp = sTemp.replace(/"+/g, ""); // remove all >"<
-            //WiP Optimize sTemp = sTemp.replace(/'+/g, ""); // remove all >'<
-            //WiP Optimize sTemp = sTemp.replace(/\[+/g, ""); // remove all >[<
-            //WiP Optimize sTemp = sTemp.replace(/\]+/g, ""); // remove all >]<
-            //WiP Optimize sTemp = sTemp.replace(/\{+/g, ""); // remove all >{<
-            //WiP Optimize sTemp = sTemp.replace(/\}+/g, ""); // remove all >}<
             const sTemp = JSON.stringify(inputVar).replace(/[\s"'[\]{}]/g, "");
             if (sTemp !== "") {
                 return false;

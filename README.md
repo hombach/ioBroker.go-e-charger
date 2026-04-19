@@ -49,6 +49,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ### **WORK IN PROGRESS**
 
+- (hombach) BREAKING: Switch to multi charger support (#801)
 - (hombach) repo cleanup
 
 ### 0.21.4 (2026-04-19)

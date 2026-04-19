@@ -1,5 +1,96 @@
 import type * as utils from "@iobroker/adapter-core";
 
+// Variablen
+let OptAmpere = 6;
+let OffVerzoegerung = 0;
+
+/**
+ * IWallboxInfo
+ */
+export interface IWallboxInfo {
+	/**
+	 * ID of charger
+	 */
+	ID: number;
+	/**
+	 * Firmware version
+	 */
+	Firmware: string;
+	/**
+	 * Hardware version
+	 */
+	Hardware: string;
+	/**
+	 * Hardware version is minimum V3, so API V2 is available
+	 */
+	HardwareMin3: boolean;
+	/**
+	 * GridPhases
+	 */
+	GridPhases: number;
+	/**
+	 * ChargeNOW
+	 */
+	ChargeNOW: boolean;
+	/**
+	 * ChargeManager
+	 */
+	ChargeManager: boolean;
+	/**
+	 * ChargeCurrent
+	 */
+	ChargeCurrent: number;
+	/**
+	 * ChargePower
+	 */
+	ChargePower: number;
+	/**
+	 * Charge3Phase
+	 */
+	Charge3Phase: boolean;
+	/**
+	 * EnabledPhases
+	 */
+	EnabledPhases: number;
+	/**
+	 * MeasuredMaxChargeAmp
+	 */
+	MeasuredMaxChargeAmp: number;
+	/**
+	 * MinAmp
+	 */
+	MinAmp: number;
+	/**
+	 * MaxAmp
+	 */
+	MaxAmp: number;
+	/**
+	 * DelayOff
+	 */
+	DelayOff: number;
+	/**
+	 * CurrentHysteresis
+	 */
+	CurrentHysteresis: number;
+	/**
+	 * SetOptAmp
+	 */
+	SetOptAmp: number;
+	/**
+	 * SetOptAllow
+	 */
+	SetOptAllow: boolean;
+	/**
+	SetAmp: number;
+	 * 
+	 */
+	SetAmp: number;
+	/**
+	 * SetAllow
+	 */
+	SetAllow: boolean;
+}
+
 /**
  * ProjectUtils
  */
@@ -124,16 +215,7 @@ export class ProjectUtils {
 	 */
 	private isLikeEmpty(inputVar: ioBroker.State | null | undefined): boolean {
 		if (typeof inputVar !== "undefined" && inputVar !== null) {
-			//WiP Optimize let sTemp = JSON.stringify(inputVar);
-			//WiP Optimize sTemp = sTemp.replace(/\s+/g, ""); // remove all white spaces
-			//WiP Optimize sTemp = sTemp.replace(/"+/g, ""); // remove all >"<
-			//WiP Optimize sTemp = sTemp.replace(/'+/g, ""); // remove all >'<
-			//WiP Optimize sTemp = sTemp.replace(/\[+/g, ""); // remove all >[<
-			//WiP Optimize sTemp = sTemp.replace(/\]+/g, ""); // remove all >]<
-			//WiP Optimize sTemp = sTemp.replace(/\{+/g, ""); // remove all >{<
-			//WiP Optimize sTemp = sTemp.replace(/\}+/g, ""); // remove all >}<
 			const sTemp = JSON.stringify(inputVar).replace(/[\s"'[\]{}]/g, "");
-
 			if (sTemp !== "") {
 				return false;
 			}
@@ -154,7 +236,7 @@ export class ProjectUtils {
 	 * @param forceMode - Optional boolean indicating if the state should be reinitiated if it already exists (default is false).
 	 * @returns A Promise that resolves when the state is checked, created (if necessary), and updated.
 	 */
-	protected async checkAndSetValue(
+	async checkAndSetValue(
 		stateName: string,
 		value: string,
 		description = "-",
@@ -198,7 +280,7 @@ export class ProjectUtils {
 	 * @param step - Optional number setting value step
 	 * @returns A Promise that resolves when the state is checked, created (if necessary), and updated.
 	 */
-	protected async checkAndSetValueNumber(
+	async checkAndSetValueNumber(
 		stateName: string,
 		value: number,
 		description = "-",
@@ -253,7 +335,7 @@ export class ProjectUtils {
 	 * @param forceMode - Optional boolean indicating if the state should be overwritten if it already exists (default is false).
 	 * @returns A Promise that resolves when the state is checked, created (if necessary), and updated.
 	 */
-	protected async checkAndSetValueBoolean(
+	async checkAndSetValueBoolean(
 		stateName: string,
 		value: boolean,
 		description = "-",

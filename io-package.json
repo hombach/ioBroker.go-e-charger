@@ -246,20 +246,6 @@
             "native": {}
         },
         {
-            "_id": "Info.FirmwareVersion",
-            "type": "state",
-            "common": {
-                "role": "value",
-                "name": "Firmware version of charger",
-                "type": "string",
-                "unit": "",
-                "read": true,
-                "write": false,
-                "def": ""
-            },
-            "native": {}
-        },
-        {
             "_id": "Info.HardwareVersion",
             "type": "state",
             "common": {
@@ -274,76 +260,6 @@
             "native": {}
         },
         {
-            "_id": "Info.RebootCounter",
-            "type": "state",
-            "common": {
-                "role": "value",
-                "name": "Counter for system reboot events",
-                "type": "number",
-                "unit": "",
-                "read": true,
-                "write": false,
-                "def": 0
-            },
-            "native": {}
-        },
-        {
-            "_id": "Info.RebootTimer",
-            "type": "state",
-            "common": {
-                "role": "value",
-                "name": "Time since last reboot",
-                "type": "number",
-                "unit": "h",
-                "read": true,
-                "write": false,
-                "def": 0
-            },
-            "native": {}
-        },
-        {
-            "_id": "Info.CarState",
-            "type": "state",
-            "common": {
-                "role": "value",
-                "name": "State of connected car",
-                "type": "number",
-                "unit": "",
-                "read": true,
-                "write": false,
-                "def": 0
-            },
-            "native": {}
-        },
-        {
-            "_id": "Info.CarStateString",
-            "type": "state",
-            "common": {
-                "role": "value",
-                "name": "State of connected car",
-                "type": "string",
-                "unit": "",
-                "read": true,
-                "write": false,
-                "def": ""
-            },
-            "native": {}
-        },
-        {
-            "_id": "Info.UnlockedByRFIDNo",
-            "type": "state",
-            "common": {
-                "role": "value",
-                "name": "Number of current session RFID chip",
-                "type": "number",
-                "unit": "",
-                "read": true,
-                "write": false,
-                "def": 0
-            },
-            "native": {}
-        },
-        {
             "_id": "Power",
             "type": "channel",
             "common": {
@@ -352,122 +268,10 @@
             "native": {}
         },
         {
-            "_id": "Power.ChargeCurrent",
-            "type": "state",
-            "common": {
-                "role": "value.current",
-                "name": "Charge current output",
-                "type": "number",
-                "unit": "A",
-                "read": true,
-                "write": false,
-                "def": 0
-            },
-            "native": {}
-        },
-        {
-            "_id": "Power.ChargeCurrentVolatile",
-            "type": "state",
-            "common": {
-                "role": "value.current",
-                "name": "Charge current output volatile",
-                "type": "number",
-                "unit": "A",
-                "read": true,
-                "write": false,
-                "def": 0
-            },
-            "native": {}
-        },
-        {
-            "_id": "Power.GridPhases",
-            "type": "state",
-            "common": {
-                "role": "value",
-                "name": "No of available grid phases",
-                "type": "number",
-                "unit": "phase",
-                "read": true,
-                "write": false,
-                "def": 0
-            },
-            "native": {}
-        },
-        {
-            "_id": "Power.EnabledPhases",
-            "type": "state",
-            "common": {
-                "role": "value",
-                "name": "No of enabled phases in go-e wallbox",
-                "type": "number",
-                "unit": "phase",
-                "read": true,
-                "write": false,
-                "def": 0
-            },
-            "native": {}
-        },
-        {
-            "_id": "Power.MeasuredMaxPhaseCurrent",
-            "type": "state",
-            "common": {
-                "role": "value.current",
-                "name": "Measured max. current of grid phases",
-                "type": "number",
-                "unit": "A",
-                "read": true,
-                "write": false,
-                "def": 0
-            },
-            "native": {}
-        },
-        {
-            "_id": "Power.Charge",
-            "type": "state",
-            "common": {
-                "role": "value.power",
-                "name": "actual charging-power",
-                "type": "number",
-                "unit": "W",
-                "read": true,
-                "write": false,
-                "def": 0
-            },
-            "native": {}
-        },
-        {
-            "_id": "Power.ChargingAllowed",
-            "type": "state",
-            "common": {
-                "role": "switch.mode.manual",
-                "name": "Charging allowed",
-                "type": "boolean",
-                "unit": "",
-                "read": true,
-                "write": false,
-                "def": false
-            },
-            "native": {}
-        },
-        {
             "_id": "Statistics_Total",
             "type": "channel",
             "common": {
                 "name": "statistical data total lifetime"
-            },
-            "native": {}
-        },
-        {
-            "_id": "Statistics_Total.Charged",
-            "type": "state",
-            "common": {
-                "role": "value",
-                "name": "Totally charged in go-e lifetime",
-                "type": "number",
-                "unit": "kWh",
-                "read": true,
-                "write": false,
-                "def": 0
             },
             "native": {}
         },
