@@ -2,7 +2,6 @@ import type * as utils from "@iobroker/adapter-core";
 
 // Variablen
 let OptAmpere = 6;
-let OffVerzoegerung = 0;
 
 /**
  * IWallboxInfo

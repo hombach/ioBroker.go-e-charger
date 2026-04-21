@@ -238,36 +238,6 @@
             "native": {}
         },
         {
-            "_id": "Info",
-            "type": "channel",
-            "common": {
-                "name": "Informations about go-eCharger"
-            },
-            "native": {}
-        },
-        {
-            "_id": "Info.HardwareVersion",
-            "type": "state",
-            "common": {
-                "role": "value",
-                "name": "Hardware version of charger",
-                "type": "string",
-                "unit": "",
-                "read": true,
-                "write": false,
-                "def": ""
-            },
-            "native": {}
-        },
-        {
-            "_id": "Power",
-            "type": "channel",
-            "common": {
-                "name": "current charger power data"
-            },
-            "native": {}
-        },
-        {
             "_id": "Statistics_Total",
             "type": "channel",
             "common": {
@@ -294,62 +264,6 @@
                 "read": true,
                 "write": true,
                 "def": 50
-            },
-            "native": {}
-        },
-        {
-            "_id": "Settings.ChargeNOW",
-            "type": "state",
-            "common": {
-                "role": "switch",
-                "name": "ChargeNOW enabled",
-                "type": "boolean",
-                "unit": "",
-                "read": true,
-                "write": true,
-                "def": false
-            },
-            "native": {}
-        },
-        {
-            "_id": "Settings.ChargeCurrent",
-            "type": "state",
-            "common": {
-                "role": "value.current",
-                "name": "Setting charge current output",
-                "type": "number",
-                "unit": "A",
-                "read": true,
-                "write": true,
-                "def": 6
-            },
-            "native": {}
-        },
-        {
-            "_id": "Settings.Charge3Phase",
-            "type": "state",
-            "common": {
-                "role": "value",
-                "name": "Set manual charge to 3 phase mode",
-                "type": "boolean",
-                "unit": "",
-                "read": true,
-                "write": true,
-                "def": true
-            },
-            "native": {}
-        },
-        {
-            "_id": "Settings.ChargeManager",
-            "type": "state",
-            "common": {
-                "role": "switch.mode.auto",
-                "name": "Charge Manager enabled",
-                "type": "boolean",
-                "unit": "",
-                "read": true,
-                "write": true,
-                "def": false
             },
             "native": {}
         }

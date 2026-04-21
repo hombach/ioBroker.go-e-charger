@@ -18,7 +18,6 @@ let totalMeasuredChargeCurrent = 0;
 
 let ZielAmpere = 5;
 let OptAmpere = 6;
-let OffVerzoegerung = 0;
 
 class go_e_charger extends utils.Adapter {
 	private projectUtils = new ProjectUtils(this);
@@ -57,7 +56,7 @@ class go_e_charger extends utils.Adapter {
 		this.log.info(`Cycletime set to: ${this.config.cycleTime / 1000} seconds`);
 
 		this.subscribeStates(`Settings.*`); // all states changes inside the adapters settings namespace are subscribed
-
+		minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
 
 		for (let i = 0; i < this.config.wallBoxList.length; i++) {
 			try {
@@ -65,57 +64,57 @@ class go_e_charger extends utils.Adapter {
 					throw new Error(`Charger ${i} - IP address not set - stopping adapter`);
 				} 
 
+				// init settings and info states for each charger
+				await this.projectUtils.checkAndSetValue(`Charger.${i}.Info`, "", `Informations about go-eCharger`, "channel");
+				await this.projectUtils.checkAndSetValue(`Charger.${i}.Power`, "", `current charger power data`, "channel");
+				await this.projectUtils.checkAndSetValue(`Charger.${i}.Settings`, "", `states to dynamically adjust go-eCharger settings`, "channel");
 
+				// init settings values for each charger in wallboxInfoList
+				await this.projectUtils.checkAndSetValueBoolean(`Charger.${i}.Settings.ChargeNOW`, false, `ChargeNOW enabled`, "switch", true, true);
+				await this.projectUtils.checkAndSetValueBoolean(`Charger.${i}.Settings.ChargeManager`, false, `Charge Manager enabled`, "switch", true, true);
+				await this.projectUtils.checkAndSetValueNumber(`Charger.${i}.Settings.ChargeCurrent`, 6, `Setting charge current output`, "A", "value.current", true, true);
+				await this.projectUtils.checkAndSetValueBoolean(`Charger.${i}.Settings.Charge3Phase`, true, `Set manual charge to 3 phase mode`, "switch", true, true);
 
 				if (this.config.wallBoxList[i].ipAddress) {
 					await this.Read_ChargerAPIV1(i);
 					await this.Read_ChargerAPIV2(i);
 					this.log.info(`IP address charger ${i} found in config: ${this.config.wallBoxList[i].ipAddress}`);
-
-
-
-			// sentry.io ping
-			if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
-				const sentryInstance = this.getPluginInstance("sentry");
-				if (sentryInstance) {
-					const Sentry = sentryInstance.getSentryObject();
-					Sentry &&
-						Sentry?.withScope((scope: any) => {
-							scope.setLevel("info");
-							scope.setTag("Charger", this.config.ipaddress);
-							scope.setTag("Firmware", Firmware);
-							scope.setTag("Hardware", Hardware);
-							Sentry.captureMessage("Adapter go-e-Charger started", "info"); // Level "info"
-						});
 				}
-			}
 
-			minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
-			ChargeNOW = await this.projectUtils.getStateValue("Settings.ChargeNOW"); // Get charging override trigger
-			ChargeManager = await this.projectUtils.getStateValue("Settings.ChargeManager"); // Get enable for charge manager
-			ChargeCurrent = await this.projectUtils.getStateValue("Settings.ChargeCurrent"); // Get current for charging override
-
-			this.log.debug(`Pre-init done, launching state machine interval`);
-			const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
-			if (stateMachine != null) {
-				this.timeoutList.push(stateMachine);
-			}
-		} else {
-			this.log.error(`No IP address configured!! - shutting down adapter.`);
-			await this.setState("info.connection", { val: false, ack: true });
-			this.stop;
-		}
-
+				this.wallboxInfoList[i].ChargeNOW = await this.projectUtils.getStateValue("Settings.ChargeNOW"); // Get charging override trigger
+				this.wallboxInfoList[i].ChargeManager = await this.projectUtils.getStateValue("Settings.ChargeManager"); // Get enable for charge manager
+				this.wallboxInfoList[i].ChargeCurrent = await this.projectUtils.getStateValue("Settings.ChargeCurrent"); // Get current for charging override
+				this.wallboxInfoList[i].Charge3Phase = await this.projectUtils.getStateValue("Settings.Charge3Phase"); // Get enable of 3 phases for charging override
 
 			} catch (e) {
 				this.log.error((e as Error).message);
-				void this.setState(`info.connection`, false, true);
+				void this.setState(`info.connection`, { val: false, ack: true });
 				await this.stop?.({ exitCode: 11, reason: `invalid config` });
 				return;
 			}	
+		}
 
+		// sentry.io ping
+		if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
+			const sentryInstance = this.getPluginInstance("sentry");
+			if (sentryInstance) {
+				const Sentry = sentryInstance.getSentryObject();
+				Sentry &&
+					Sentry?.withScope((scope: any) => {
+						scope.setLevel("info");
+						scope.setTag("Charger", this.config.wallBoxList.map(wb => wb.ipAddress).join(', '));
+						scope.setTag("Firmware", this.wallboxInfoList.map(wb => wb.Firmware).join(', '));
+						scope.setTag("Hardware", this.wallboxInfoList.map(wb => wb.Hardware).join(', '));
+						Sentry.captureMessage("Adapter go-e-Charger started", "info"); // Level "info"
+					});
+			}
+		}
 
-
+		this.log.debug(`Pre-init done, launching state machine interval`);
+		const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
+		if (stateMachine != null) {
+			this.timeoutList.push(stateMachine);
+		}
 
 	}
 
@@ -461,7 +460,7 @@ class go_e_charger extends utils.Adapter {
 		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.EnabledPhases`, this.wallboxInfoList[iWB].EnabledPhases, "No of enabled phases in go-e wallbox", "phase", "value");
 		this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
 		this.wallboxInfoList[iWB].Hardware = status.typ;
-		void this.projectUtils.checkAndSetValue(`${basePath}.Info.HardwareVersion`, status.typ, "Counter for system reboot events", "value");
+		void this.projectUtils.checkAndSetValue(`${basePath}.Info.HardwareVersion`, status.typ, "Hardware version of charger", "value");
 		this.log.debug(`got and parsed go-e charger ${iWB} data with API V2`);
 	}
 
@@ -581,7 +580,7 @@ class go_e_charger extends utils.Adapter {
 	 * - Limits `OptAmpere` to 16 A.
 	 * - Adjusts `ZielAmpere` incrementally to avoid abrupt current changes.
 	 * - Enables charging if current exceeds 9 A (5 A base + 4 A hysteresis).
-	 * - Disables charging if below 6 A after multiple cycles (`OffVerzoegerung` > 12).
+	 * - Disables charging if below 6 A after multiple cycles (`DelayOff` > 12).
 	 */
 	async Charge_Manager(iWB: number): Promise<void> {
 		solarPower = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower);
@@ -619,10 +618,10 @@ class go_e_charger extends utils.Adapter {
 		if (ZielAmpere > 5 + 4) {
 			await this.Charge_Config("1", ZielAmpere, `Charging current: ${ZielAmpere} A`, iWB);
 		} else if (ZielAmpere < 6) {
-			OffVerzoegerung++;
-			if (OffVerzoegerung > 12) {
+			DelayOff++;
+			if (DelayOff > 12) {
 				await this.Charge_Config("0", ZielAmpere, `Insufficient surplus`, iWB);
-				OffVerzoegerung = 0;
+				DelayOff = 0;
 			}
 		}
 	} // END Charge_Manager
