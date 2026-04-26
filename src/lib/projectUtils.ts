@@ -1,8 +1,5 @@
 import type * as utils from "@iobroker/adapter-core";
 
-// Variablen
-let OptAmpere = 6;
-
 /**
  * IWallboxInfo
  */
@@ -80,8 +77,7 @@ export interface IWallboxInfo {
 	 */
 	SetOptAllow: boolean;
 	/**
-	SetAmp: number;
-	 * 
+	 * SetAmp
 	 */
 	SetAmp: number;
 	/**

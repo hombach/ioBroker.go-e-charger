@@ -61,6 +61,33 @@
 					"newLine": false
 				},
 
+				"wallBoxList": {
+					"type": "table",
+					"label": "LBL_HomesList",
+					"xs": 12,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12,
+					"items": [
+						{
+							"type": "text",
+							"label": "ipaddress",
+							"attr": "ipaddress",
+							"maxLength": 15,
+							"newLine": true
+						},
+						{
+							"type": "checkbox",
+							"label": "ReadOnlyMode",
+							"attr": "ReadOnlyMode",
+							"newLine": false
+						}
+					]
+				},
+
+
+
 				"ipaddress": {
 					"type": "text",
 					"label": "ipaddress",
@@ -82,6 +109,9 @@
 					"xl": 6,
 					"newLine": false
 				}
+
+
+
 			}
 	    }
 	}
