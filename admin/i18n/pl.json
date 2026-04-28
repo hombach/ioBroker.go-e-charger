@@ -1,4 +1,5 @@
 {
+    "LBL_WallBoxList": "Lista Wallboxów",
     "ReadOnlyMode": "tryb tylko do odczytu - zwolnienie ładunku nie jest wysyłane do ładowarki (w celu użycia tagów RFID)",
     "StateHomeBatSoc": "id obiektu dla aktualnego stanu naładowania akumulatora w domu [%]",
     "StateHomePowerConsumption": "id obiektu dla bieżącego zużycia energii w domu [W]",

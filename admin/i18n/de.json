@@ -1,4 +1,5 @@
 {
+    "LBL_WallBoxList": "Wallbox-Liste",
     "ReadOnlyMode": "Nur-Lese-Modus - Ladefreigabe wird nicht an das Ladegerät gesendet (um RFID-Tags zu verwenden)",
     "StateHomeBatSoc": "Objekt-ID für den aktuellen Ladezustand der Heimbatterie [%]",
     "StateHomePowerConsumption": "Objekt-ID für den aktuellen Stromverbrauch zu Hause [W]",

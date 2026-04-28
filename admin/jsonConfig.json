@@ -63,7 +63,7 @@
 
 				"wallBoxList": {
 					"type": "table",
-					"label": "LBL_HomesList",
+					"label": "LBL_WallBoxList",
 					"xs": 12,
 					"sm": 12,
 					"md": 12,
@@ -75,43 +75,26 @@
 							"label": "ipaddress",
 							"attr": "ipaddress",
 							"maxLength": 15,
+							"xs": 12,
+							"sm": 6,
+							"md": 6,
+							"lg": 6,
+							"xl": 6,
 							"newLine": true
 						},
 						{
 							"type": "checkbox",
 							"label": "ReadOnlyMode",
 							"attr": "ReadOnlyMode",
+							"xs": 12,
+							"sm": 6,
+							"md": 6,
+							"lg": 6,
+							"xl": 6,
 							"newLine": false
 						}
 					]
-				},
-
-
-
-				"ipaddress": {
-					"type": "text",
-					"label": "ipaddress",
-					"maxLength": 15,
-					"xs": 12,
-					"sm": 6,
-					"md": 6,
-					"lg": 6,
-					"xl": 6,
-					"newLine": true
-				},
-				"ReadOnlyMode": {
-					"type": "checkbox",
-					"label": "ReadOnlyMode",
-					"xs": 12,
-					"sm": 6,
-					"md": 6,
-					"lg": 6,
-					"xl": 6,
-					"newLine": false
 				}
-
-
-
 			}
 	    }
 	}

@@ -1,4 +1,5 @@
 {
+    "LBL_WallBoxList": "Lista de cajas de pared",
     "ReadOnlyMode": "modo de solo lectura: la liberación de la carga no se envía al cargador (para usar etiquetas RFID)",
     "StateHomeBatSoc": "ID de objeto para el estado de carga actual de la batería doméstica [%]",
     "StateHomePowerConsumption": "ID de objeto para el consumo actual de energía en el hogar [W]",

@@ -1,4 +1,5 @@
 {
+    "LBL_WallBoxList": "Lista de caixas de embutir",
     "ReadOnlyMode": "modo somente leitura - a liberação da carga não é enviada ao carregador (para usar etiquetas RFID)",
     "StateHomeBatSoc": "object-id para o estado atual de carga da bateria doméstica [%]",
     "StateHomePowerConsumption": "object-id para o consumo atual de energia em casa [W]",
