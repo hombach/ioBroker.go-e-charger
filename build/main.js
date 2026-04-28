@@ -88,9 +88,10 @@ class go_e_charger extends utils.Adapter {
         this.subscribeStates(`Charger.*`); // all states changes inside the adapters settings namespace are subscribed
         minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
         try {
-            for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
-                //try {
-                if (!this.config.wallBoxList[iWB].ipAddress) {
+            for (const [iWB, wallBox] of this.config.wallBoxList.entries()) {
+                //for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
+                if (!wallBox.ipAddress) {
+                    //if (!this.config.wallBoxList[iWB].ipAddress) {
                     throw new Error(`Charger ${iWB} - IP address not set - stopping adapter`);
                 }
                 // init settings and info states for each charger
@@ -102,21 +103,17 @@ class go_e_charger extends utils.Adapter {
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeManager`, false, `Charge Manager enabled`, "switch", true, true);
                 await this.projectUtils.checkAndSetValueNumber(`Charger.${iWB}.Settings.ChargeCurrent`, 6, `Setting charge current output`, "A", "value.current", true, true);
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Info.Connection`, false, `Device connected`, "indicator.connected");
-                if (this.config.wallBoxList[iWB].ipAddress) {
+                if (wallBox.ipAddress) {
+                    //if (this.config.wallBoxList[iWB].ipAddress) {
                     await this.Read_ChargerAPIV1(iWB);
                     await this.Read_ChargerAPIV2(iWB);
-                    this.log.info(`IP address charger ${iWB} found in config: ${this.config.wallBoxList[iWB].ipAddress}`);
+                    this.log.info(`IP address charger ${iWB} found in config: ${wallBox.ipAddress}`);
+                    //this.log.info(`IP address charger ${iWB} found in config: ${this.config.wallBoxList[iWB].ipAddress}`);
                 }
-                this.wallboxInfoList[iWB].ChargeNOW = await this.projectUtils.getStateValue("Settings.ChargeNOW"); // Get charging override trigger
-                this.wallboxInfoList[iWB].ChargeManager = await this.projectUtils.getStateValue("Settings.ChargeManager"); // Get enable for charge manager
-                this.wallboxInfoList[iWB].ChargeCurrent = await this.projectUtils.getStateValue("Settings.ChargeCurrent"); // Get current for charging override
-                this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue("Settings.Charge3Phase"); // Get enable of 3 phases for charging override
-                /*} catch (e) {
-                this.log.error((e as Error).message);
-                void this.setState(`info.connection`, { val: false, ack: true });
-                await this.stop?.({ exitCode: 11, reason: `invalid config` });
-                return;
-                }*/
+                this.wallboxInfoList[iWB].ChargeNOW = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.ChargeNOW`); // Get charging override trigger
+                this.wallboxInfoList[iWB].ChargeManager = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.ChargeManager`); // Get enable for charge manager
+                this.wallboxInfoList[iWB].ChargeCurrent = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.ChargeCurrent`); // Get current for charging override
+                this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
             }
         }
         catch (e) {
