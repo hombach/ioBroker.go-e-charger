@@ -57,8 +57,9 @@ class go_e_charger extends utils.Adapter {
 		this.subscribeStates(`Charger.*`); // all states changes inside the adapters settings namespace are subscribed
 		minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
 
-		for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
-			try {
+		try {
+			for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
+				//try {
 				if (!this.config.wallBoxList[iWB].ipAddress) {
 					throw new Error(`Charger ${iWB} - IP address not set - stopping adapter`);
 				}
@@ -92,12 +93,18 @@ class go_e_charger extends utils.Adapter {
 				this.wallboxInfoList[iWB].ChargeManager = await this.projectUtils.getStateValue("Settings.ChargeManager"); // Get enable for charge manager
 				this.wallboxInfoList[iWB].ChargeCurrent = await this.projectUtils.getStateValue("Settings.ChargeCurrent"); // Get current for charging override
 				this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue("Settings.Charge3Phase"); // Get enable of 3 phases for charging override
-			} catch (e) {
+				/*} catch (e) {
 				this.log.error((e as Error).message);
 				void this.setState(`info.connection`, { val: false, ack: true });
 				await this.stop?.({ exitCode: 11, reason: `invalid config` });
 				return;
+				}*/
 			}
+		} catch (e) {
+			this.log.error((e as Error).message);
+			void this.setState(`info.connection`, { val: false, ack: true });
+			await this.stop?.({ exitCode: 11, reason: `invalid config` });
+			return;
 		}
 
 		// sentry.io ping
@@ -232,7 +239,7 @@ class go_e_charger extends utils.Adapter {
 		try {
 			this.timeoutList.forEach(timeoutJob => this.clearTimeout(timeoutJob));
 			this.log.info(`Adapter go-eCharger cleaned up everything...`);
-			void this.setState("info.connection", false, true);
+			void this.setState(`info.connection`, false, true);
 			callback();
 		} catch (e) {
 			this.log.warn((e as Error).message);
