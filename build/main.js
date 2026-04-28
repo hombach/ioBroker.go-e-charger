@@ -50,8 +50,6 @@ let solarPower = 0;
 let houseConsumption = 0;
 //ToDo let totalChargePower = 0;
 //ToDo let totalMeasuredChargeCurrent = 0;
-//let ZielAmpere = 5;
-//let OptAmpere = 6;
 class go_e_charger extends utils.Adapter {
     projectUtils = new projectUtils_1.ProjectUtils(this);
     timeoutList;
@@ -84,8 +82,8 @@ class go_e_charger extends utils.Adapter {
             this.config.cycleTime = 10000;
         }
         this.log.info(`Cycletime set to: ${this.config.cycleTime / 1000} seconds`);
-        this.subscribeStates(`Settings.*`); // all states changes inside the adapters settings namespace are subscribed
-        this.subscribeStates(`Charger.*`); // all states changes inside the adapters settings namespace are subscribed
+        this.subscribeStates(`Settings.*`); //all states changes inside the adapters settings namespace are subscribed
+        this.subscribeStates(`Charger.*`); //all states changes inside the adapters settings namespace are subscribed
         minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
         try {
             for (const [iWB, wallBox] of this.config.wallBoxList.entries()) {
@@ -268,6 +266,7 @@ class go_e_charger extends utils.Adapter {
     async firstStart() {
         for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
             this.log.debug(`Initial ReadCharger done, detected charger ${iWB} firmware ${this.wallboxInfoList[iWB].Firmware}`);
+            //this.log.debug(`Initial ReadCharger done, detected charger ${iWB} firmware ${this.wallboxInfoList[iWB].Firmware}`);
             switch (this.wallboxInfoList[iWB].Firmware) {
                 case "0":
                 case "EHostUnreach":
@@ -421,28 +420,28 @@ class go_e_charger extends utils.Adapter {
                 await this.projectUtils.checkAndSetValue(`${basePath}.Info.CarStateString`, `Charge finished, car still connected`, "State of connected car", "value");
                 break;
             default:
-                await this.projectUtils.checkAndSetValue(`${basePath}.Info.CarStateString`, "Error", "State of connected car", "value");
+                await this.projectUtils.checkAndSetValue(`${basePath}.Info.CarStateString`, "Error", `State of connected car`, "value");
         }
-        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrent`, Number(status.amp), "Charge current output", "A", "value.current");
+        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrent`, Number(status.amp), `Charge current output`, "A", "value.current");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrentVolatile`, Number(status.amx), `Charge current output volatile`, "A", "value.current");
         switch (status.alw) {
             case "0":
-                await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, false, "Charging allowed", "switch.mode.manual");
+                await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, false, `Charging allowed`, "switch.mode.manual");
                 break;
             case "1":
-                await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, true, "Charging allowed", "switch.mode.manual");
+                await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, true, `Charging allowed`, "switch.mode.manual");
                 break;
         }
         this.wallboxInfoList[iWB].GridPhases = ((32 & status.pha) >> 5) + ((16 & status.pha) >> 4) + ((8 & status.pha) >> 3);
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.GridPhases`, this.wallboxInfoList[iWB].GridPhases, `No of available grid phases`, "phase", "value");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Statistics_Total.Charged`, status.eto / 10, `Totally charged in go-e lifetime`, "kWh", "value");
-        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.Charge`, status.nrg[11] * 10, "actual charging-power", "W", "value.power");
+        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.Charge`, status.nrg[11] * 10, `actual charging-power`, "W", "value.power");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.MeasuredMaxPhaseCurrent`, Math.max(...status.nrg.slice(4, 7)) / 10, `Measured max. current of grid phases`, "A", "value.current");
         this.wallboxInfoList[iWB].Firmware = status.fwv;
-        void this.projectUtils.checkAndSetValue(`${basePath}.Info.FirmwareVersion`, status.fwv, "Firmware version of charger");
+        void this.projectUtils.checkAndSetValue(`${basePath}.Info.FirmwareVersion`, status.fwv, `Firmware version of charger`);
         // WiP 634
         // uby - uint8_t - unlocked_by: Nummer der RFID Karte, die den jetzigen Ladevorgang freigeschalten hat
-        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Info.UnlockedByRFIDNo`, Number(status.uby), "Number of current session RFID chip");
+        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Info.UnlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
         // WiP 634
         this.log.debug(`got and parsed go-e charger ${iWB} data`);
     }
@@ -493,7 +492,7 @@ class go_e_charger extends utils.Adapter {
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.EnabledPhases`, this.wallboxInfoList[iWB].EnabledPhases, `No of enabled phases in go-e wallbox`, "phase", "value");
         this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
         this.wallboxInfoList[iWB].Hardware = status.typ;
-        void this.projectUtils.checkAndSetValue(`${basePath}.Info.HardwareVersion`, status.typ, "Hardware version of charger", "value");
+        void this.projectUtils.checkAndSetValue(`${basePath}.Info.HardwareVersion`, status.typ, `Hardware version of charger`, "value");
         this.log.debug(`got and parsed go-e charger ${iWB} data with API V2`);
     }
     /**
@@ -547,10 +546,10 @@ class go_e_charger extends utils.Adapter {
                     void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrent`, Number(result.amp), `Charge current output`, "A", "value.current");
                     switch (result.alw) {
                         case "0":
-                            await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, false, "Charging allowed", "switch.mode.manual");
+                            await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, false, `Charging allowed`, "switch.mode.manual");
                             break;
                         case "1":
-                            await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, true, "Charging allowed", "switch.mode.manual");
+                            await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, true, `Charging allowed`, "switch.mode.manual");
                             break;
                     }
                 })
@@ -573,10 +572,10 @@ class go_e_charger extends utils.Adapter {
                     void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrent`, Number(result.amp), `Charge current output`, "A", "value.current");
                     switch (result.alw) {
                         case "0":
-                            await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, false, "Charging allowed", "switch.mode.manual");
+                            await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, false, `Charging allowed`, "switch.mode.manual");
                             break;
                         case "1":
-                            await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, true, "Charging allowed", "switch.mode.manual");
+                            await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, true, `Charging allowed`, "switch.mode.manual");
                             break;
                     }
                 })
