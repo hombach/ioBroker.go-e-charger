@@ -6,5 +6,5 @@
     "StateHomeSolarPower": "object-id voor momenteel beschikbare zonne-energie [W]",
     "SubtractSelfConsumption": "Het verbruik van de oplader is inbegrepen in de waarde van het stroomverbruik van het huis",
     "ipaddress": "IP-adres van go-eCharger",
-    "polltimelive": "Tijd tussen gegevenspolls van oplader [ms]"
+    "cycleTime": "Tijd tussen gegevenspolls van oplader [ms]"
 }

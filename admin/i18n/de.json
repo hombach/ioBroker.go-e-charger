@@ -6,5 +6,5 @@
     "StateHomeSolarPower": "Objekt-ID für derzeit verfügbare Solarenergie [W]",
     "SubtractSelfConsumption": "Ladeverbrauch ist im Hausstromverbrauch enthalten",
     "ipaddress": "IP-Adresse von go-eCharger",
-    "polltimelive": "Zeit zwischen Datenabfragen vom Ladegerät [ms]"
+    "cycleTime": "Zeit zwischen Datenabfragen vom Ladegerät [ms]"
 }

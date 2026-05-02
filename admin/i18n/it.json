@@ -6,5 +6,5 @@
     "StateHomeSolarPower": "ID oggetto per l'energia solare attualmente disponibile [W]",
     "SubtractSelfConsumption": "Il consumo del caricabatterie è incluso nel valore del consumo energetico domestico",
     "ipaddress": "Indirizzo IP di go-eCharger",
-    "polltimelive": "Tempo tra sondaggi di dati dal caricatore [ms]"
+    "cycleTime": "Tempo tra sondaggi di dati dal caricatore [ms]"
 }

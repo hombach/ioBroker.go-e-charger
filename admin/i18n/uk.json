@@ -6,5 +6,5 @@
     "StateHomeSolarPower": "object-id for currently available solar power [W]",
     "SubtractSelfConsumption": "Charger consumption is included in home power consumption value",
     "ipaddress": "IP address of go-eCharger",
-    "polltimelive": "Time between data polls from charger [ms]"
+    "cycleTime": "Time between data polls from charger [ms]"
 }

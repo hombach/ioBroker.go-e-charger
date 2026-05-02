@@ -6,9 +6,9 @@
        		"type": "panel",
 		"label": "Standard settings",
 	        "items": {
-				"polltimelive": {
+				"cycleTime": {
 					"type": "number",
-					"label": "polltimelive",
+					"label": "cycleTime",
 					"min": 3000,
 					"step": 100,
 					"xs": 12,
