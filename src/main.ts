@@ -7,7 +7,7 @@ const axiosInstance = axios.create({
 });
 
 // variables
-let minHomeBatVal = 85;
+let minHomeBatVal = 87;
 let batSoC = 0;
 let solarPower = 0;
 let houseConsumption = 0;
@@ -17,10 +17,10 @@ let houseConsumption = 0;
 class go_e_charger extends utils.Adapter {
 	private projectUtils = new ProjectUtils(this);
 
+	//WIP NEW adapterIntervals: NodeJS.Timeout[];
 	timeoutList: ioBroker.Timeout[];
 	//WiP
 	wallboxInfoList: IWallboxInfo[] = [];
-	//WIP NEW adapterIntervals: NodeJS.Timeout[];
 
 	/****************************************************************************************
 	 * @param {Partial<utils.AdapterOptions>} [options={}]
@@ -52,6 +52,33 @@ class go_e_charger extends utils.Adapter {
 
 		minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
 		this.log.debug(`Initial value for Setpoint HomeBatSoC: ${minHomeBatVal}%`);
+
+		this.wallboxInfoList = this.config.wallBoxList.map((wallboxConfig, index) => ({
+			ID: index,
+			ipAddress: wallboxConfig.ipAddress,
+			readOnlyMode: wallboxConfig.readOnlyMode,
+			Firmware: "0",
+			Hardware: "V2",
+			HardwareMin3: false,
+			GridPhases: 0,
+			ChargeNOW: false,
+			ChargeManager: false,
+			ChargeCurrent: 6,
+			ChargePower: 0,
+			Charge3Phase: false,
+			EnabledPhases: 0,
+			MeasuredMaxChargeAmp: 0,
+			MinAmp: 6,
+			MaxAmp: 16,
+			DelayOff: 0,
+			CurrentHysteresis: 0,
+			SetOptAmp: 5,
+			SetOptAllow: false,
+			SetAmp: 0,
+			SetAllow: false,
+		}));
+
+		this.log.info(`wallboxInfoList initialised with ${this.wallboxInfoList.length} entries`);
 
 		this.subscribeStates(`Settings.*`); //all states changes inside the adapters settings namespace are subscribed
 		this.subscribeStates(`Charger.*`); //all states changes inside the adapters settings namespace are subscribed
@@ -368,7 +395,7 @@ class go_e_charger extends utils.Adapter {
 			.then(response => {
 				//.status == 200
 				const result = JSON.parse(response.data);
-				this.log.debug(`Read charger ${iWB}: ${response.data}`);
+				this.log.debug(`Read charger ${iWB} API V1: ${response.data}`);
 				void this.ParseStatusAPIV1(result, iWB);
 			})
 			.catch(error => {
