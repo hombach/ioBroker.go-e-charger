@@ -8,7 +8,7 @@
 	        "items": {
 				"cycleTime": {
 					"type": "number",
-					"label": "cycleTime",
+					"label": "LBL_cycleTime",
 					"min": 3000,
 					"step": 100,
 					"xs": 12,
@@ -72,8 +72,8 @@
 					"items": [
 						{
 							"type": "text",
-							"label": "ipaddress",
-							"attr": "ipaddress",
+							"label": "LBL_ipAddress",
+							"attr": "ipAddress",
 							"maxLength": 15,
 							"xs": 12,
 							"sm": 6,
@@ -84,8 +84,8 @@
 						},
 						{
 							"type": "checkbox",
-							"label": "ReadOnlyMode",
-							"attr": "ReadOnlyMode",
+							"label": "LBL_readOnlyMode",
+							"attr": "readOnlyMode",
 							"xs": 12,
 							"sm": 6,
 							"md": 6,

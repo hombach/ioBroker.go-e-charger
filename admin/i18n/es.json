@@ -1,10 +1,10 @@
 {
     "LBL_WallBoxList": "Lista de cajas de pared",
-    "ReadOnlyMode": "modo de solo lectura: la liberación de la carga no se envía al cargador (para usar etiquetas RFID)",
+    "LBL_readOnlyMode": "modo de solo lectura: la liberación de la carga no se envía al cargador (para usar etiquetas RFID)",
     "StateHomeBatSoc": "ID de objeto para el estado de carga actual de la batería doméstica [%]",
     "StateHomePowerConsumption": "ID de objeto para el consumo actual de energía en el hogar [W]",
     "StateHomeSolarPower": "ID de objeto para la energía solar disponible actualmente [W]",
     "SubtractSelfConsumption": "El consumo del cargador está incluido en el valor del consumo de energía del hogar",
-    "ipaddress": "Dirección IP de go-eCharger",
-    "cycleTime": "Tiempo entre encuestas de datos del cargador [ms]"
+    "LBL_ipAddress": "Dirección IP de go-eCharger",
+    "LBL_cycleTime": "Tiempo entre encuestas de datos del cargador [ms]"
 }

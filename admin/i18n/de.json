@@ -1,10 +1,10 @@
 {
     "LBL_WallBoxList": "Wallbox-Liste",
-    "ReadOnlyMode": "Nur-Lese-Modus - Ladefreigabe wird nicht an das Ladegerät gesendet (um RFID-Tags zu verwenden)",
+    "LBL_readOnlyMode": "Nur-Lese-Modus - Ladefreigabe wird nicht an das Ladegerät gesendet (um RFID-Tags zu verwenden)",
     "StateHomeBatSoc": "Objekt-ID für den aktuellen Ladezustand der Heimbatterie [%]",
     "StateHomePowerConsumption": "Objekt-ID für den aktuellen Stromverbrauch zu Hause [W]",
     "StateHomeSolarPower": "Objekt-ID für derzeit verfügbare Solarenergie [W]",
     "SubtractSelfConsumption": "Ladeverbrauch ist im Hausstromverbrauch enthalten",
-    "ipaddress": "IP-Adresse von go-eCharger",
-    "cycleTime": "Zeit zwischen Datenabfragen vom Ladegerät [ms]"
+    "LBL_ipAddress": "IP-Adresse von go-eCharger",
+    "LBL_cycleTime": "Zeit zwischen Datenabfragen vom Ladegerät [ms]"
 }
