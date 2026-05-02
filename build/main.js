@@ -82,11 +82,13 @@ class go_e_charger extends utils.Adapter {
             this.config.cycleTime = 10000;
         }
         this.log.info(`Cycletime set to: ${this.config.cycleTime / 1000} seconds`);
+        minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
+        this.log.debug(`Initial value for Setpoint HomeBatSoC: ${minHomeBatVal}%`);
         this.subscribeStates(`Settings.*`); //all states changes inside the adapters settings namespace are subscribed
         this.subscribeStates(`Charger.*`); //all states changes inside the adapters settings namespace are subscribed
-        minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
         try {
             for (const [iWB, wallBox] of this.config.wallBoxList.entries()) {
+                this.log.debug(`Setting up charger ${iWB} with IP ${wallBox.ipAddress} in config`);
                 //for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
                 if (!wallBox.ipAddress) {
                     //if (!this.config.wallBoxList[iWB].ipAddress) {
