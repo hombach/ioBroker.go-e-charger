@@ -152,7 +152,8 @@ class go_e_charger extends utils.Adapter {
 		}
 
 		await this.firstStart();
-		this.log.debug(`Pre-init done, launching state machine interval`);
+		this.log.debug(`Init done, launching state machine interval`);
+
 		const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
 		if (stateMachine != null) {
 			this.timeoutList.push(stateMachine);
@@ -275,17 +276,24 @@ class go_e_charger extends utils.Adapter {
 		}
 	}
 
-	/*****************************************************************************************/
+	/**
+	 * Handles the initial startup check for all configured go-e Chargers.
+	 *
+	 * Checks the detected firmware version of each wallbox and performs the following:
+	 * - Logs an error and stops the adapter if no charger is reachable.
+	 * - Sets the connection state accordingly.
+	 * - Logs a warning and reports unknown firmware versions via Sentry (if available).
+	 *
+	 */
 	private async firstStart(): Promise<void> {
 		for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
 			this.log.debug(`Initial ReadCharger done, detected charger ${iWB} firmware ${this.wallboxInfoList[iWB].Firmware}`);
-			//this.log.debug(`Initial ReadCharger done, detected charger ${iWB} firmware ${this.wallboxInfoList[iWB].Firmware}`);
 			switch (this.wallboxInfoList[iWB].Firmware) {
 				case "0":
 				case "EHostUnreach":
 					// no charger found - stop adapter - only on first run
 					this.log.error(`No charger detected on given IP address for charger ${iWB} - shutting down adapter.`);
-					await this.setState(`Charger.${iWB}.Info.connection`, { val: false, ack: true });
+					await this.setState(`Charger.${iWB}.info.connection`, { val: false, ack: true });
 					this.stop;
 					break;
 				case "033":
@@ -309,11 +317,11 @@ class go_e_charger extends utils.Adapter {
 				case "60.1":
 				case "60.2":
 					this.log.debug(`Init done, launching state machine`);
-					await this.setState(`Charger.${iWB}.Info.connection`, { val: true, ack: true });
+					await this.setState(`Charger.${iWB}.info.connection`, { val: true, ack: true });
 					break;
 				default:
 					this.log.warn(`Not explicitly supported firmware ${this.wallboxInfoList[iWB].Firmware} for charger ${iWB} found!!!`);
-					await this.setState(`Charger.${iWB}.Info.connection`, { val: true, ack: true });
+					await this.setState(`Charger.${iWB}.info.connection`, { val: true, ack: true });
 					// sentry.io send firmware version
 					if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
 						const sentryInstance = this.getPluginInstance("sentry");
@@ -345,7 +353,7 @@ class go_e_charger extends utils.Adapter {
 
 			if (this.wallboxInfoList[iWB].ChargeNOW) {
 				// Charge-NOW is enabled
-				await this.Charge_Config("1", this.wallboxInfoList[iWB].ChargeCurrent, `go-eCharger für erzwungene Schnellladung aktivieren`, iWB); // keep active charging current!!
+				await this.Charge_Config("1", this.wallboxInfoList[iWB].ChargeCurrent, `activate go-eCharger for forced charging`, iWB); // keep active charging current!!
 				await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
 				if (this.wallboxInfoList[iWB].HardwareMin3) {
 					await this.Read_ChargerAPIV2(iWB);
@@ -353,7 +361,7 @@ class go_e_charger extends utils.Adapter {
 			} else if (this.wallboxInfoList[iWB].ChargeManager) {
 				// Charge-Manager is enabled
 				batSoC = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeBatSoc);
-				// BatSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
+				// WiP batSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
 				this.log.debug(`Got external state of battery SoC: ${batSoC}%`);
 				if (batSoC >= minHomeBatVal) {
 					// SoC of home battery is sufficient
@@ -364,7 +372,7 @@ class go_e_charger extends utils.Adapter {
 					if ((await this.projectUtils.getStateValue(`Charger.${iWB}.Power.ChargingAllowed`)) == true) {
 						// Set to false only if still true
 						this.wallboxInfoList[iWB].SetAmp = 6;
-						await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Hausbatterie laden bis ${minHomeBatVal}%`, iWB);
+						await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Charging home battery until ${minHomeBatVal}%`, iWB);
 					}
 				}
 			} else {
@@ -376,7 +384,7 @@ class go_e_charger extends utils.Adapter {
 						await this.Read_ChargerAPIV2(iWB);
 					}
 					this.wallboxInfoList[iWB].SetAmp = 6;
-					await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `go-eCharger abschalten`, iWB);
+					await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Deactivate go-eCharger`, iWB);
 				} else if (Number(await this.projectUtils.getStateValue(`Charger.${iWB}.Power.Charge`)) > 0) {
 					await this.Read_ChargerAPIV1(iWB);
 					if (this.wallboxInfoList[iWB].HardwareMin3) {
@@ -392,7 +400,14 @@ class go_e_charger extends utils.Adapter {
 		} // next charger
 	} // END StateMachine
 
-	/*****************************************************************************************/
+	/**
+	 * Reads the status of a go-e Charger using API V1.
+	 *
+	 * Performs an HTTP GET request to the `/status` endpoint of the wallbox,
+	 * parses the JSON response and passes it to `ParseStatusAPIV1`.
+	 *
+	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
+	 */
 	async Read_ChargerAPIV1(iWB: number): Promise<void> {
 		await axiosInstance
 			.get(`http://${this.config.wallBoxList[iWB].ipAddress}/status`, { transformResponse: r => r })
@@ -413,7 +428,26 @@ class go_e_charger extends utils.Adapter {
 			});
 	}
 
-	/*****************************************************************************************/
+	/**
+	 * Parses the status response from a go-e Charger API V1 and updates all relevant states.
+	 *
+	 * Processes the received JSON data (car state, currents, power, energy, firmware, etc.)
+	 * and writes the values into the corresponding objects in the adapter.
+	 *
+	 * @param status - Status object returned by the go-e Charger API V1
+	 * @param status.rbc - Reboot counter
+	 * @param status.rbt - Reboot timer
+	 * @param status.car - Car state
+	 * @param status.amp - Current amperage persistent
+	 * @param status.amx - Current amperage volatile
+	 * @param status.alw - Allow charging
+	 * @param status.pha - Phases config
+	 * @param status.eto - Energy charged total
+	 * @param status.nrg - Energy states array
+	 * @param status.fwv - Firmware version
+	 * @param status.uby - Unlocked by RFID number
+	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
+	 */
 	async ParseStatusAPIV1(
 		status: {
 			rbc: any;
@@ -487,13 +521,7 @@ class go_e_charger extends utils.Adapter {
 			"phase",
 			"value",
 		);
-		void this.projectUtils.checkAndSetValueNumber(
-			`${basePath}.Statistics_Total.Charged`,
-			status.eto / 10,
-			`Totally charged in go-e lifetime`,
-			"kWh",
-			"value",
-		);
+		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Statistics.Charged`, status.eto / 10, `Totally charged in go-e lifetime`, "kWh", "value");
 		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.Charge`, status.nrg[11] * 10, `actual charging-power`, "W", "value.power");
 		void this.projectUtils.checkAndSetValueNumber(
 			`${basePath}.Power.MeasuredMaxPhaseCurrent`,
@@ -511,7 +539,14 @@ class go_e_charger extends utils.Adapter {
 		this.log.debug(`got and parsed go-e charger ${iWB} data`);
 	}
 
-	/*****************************************************************************************/
+	/**
+	 * Reads the status of a go-e Charger using API V2.
+	 *
+	 * Performs an HTTP GET request to the `/status` endpoint of the wallbox,
+	 * parses the JSON response and passes it to `ParseStatusAPIV2`.
+	 *
+	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
+	 */
 	async Read_ChargerAPIV2(iWB: number): Promise<void> {
 		await axiosInstance
 			.get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,uby`, {

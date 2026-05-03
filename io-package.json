@@ -241,7 +241,7 @@
             "_id": "Statistics_Total",
             "type": "channel",
             "common": {
-                "name": "statistical data total lifetime"
+                "name": "statistical data sum of all chargers"
             },
             "native": {}
         },
@@ -249,7 +249,7 @@
             "_id": "Settings",
             "type": "channel",
             "common": {
-                "name": "states to dynamically adjust go-eCharger settings"
+                "name": "states to dynamically adjust adapter behavior"
             },
             "native": {}
         },
