@@ -53,32 +53,36 @@ class go_e_charger extends utils.Adapter {
 		minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
 		this.log.debug(`Initial value for Setpoint HomeBatSoC: ${minHomeBatVal}%`);
 
-		this.wallboxInfoList = this.config.wallBoxList.map((wallboxConfig, index) => ({
-			ID: index,
-			ipAddress: wallboxConfig.ipAddress,
-			readOnlyMode: wallboxConfig.readOnlyMode,
-			Firmware: "0",
-			Hardware: "V2",
-			HardwareMin3: false,
-			GridPhases: 0,
-			ChargeNOW: false,
-			ChargeManager: false,
-			ChargeCurrent: 6,
-			ChargePower: 0,
-			Charge3Phase: false,
-			EnabledPhases: 0,
-			MeasuredMaxChargeAmp: 0,
-			MinAmp: 6,
-			MaxAmp: 16,
-			DelayOff: 0,
-			CurrentHysteresis: 0,
-			SetOptAmp: 5,
-			SetOptAllow: false,
-			SetAmp: 0,
-			SetAllow: false,
-		}));
-
-		this.log.info(`wallboxInfoList initialised with ${this.wallboxInfoList.length} entries`);
+		const wallBoxList = Array.isArray(this.config.wallBoxList) ? this.config.wallBoxList : [];
+		if (!wallBoxList.length) {
+			this.log.warn("No wallBoxList configured or wallBoxList is not an array. Charger setup will be skipped.");
+		} else {
+			this.wallboxInfoList = wallBoxList.map((wallboxConfig, index) => ({
+				ID: index,
+				ipAddress: wallboxConfig.ipAddress,
+				readOnlyMode: wallboxConfig.readOnlyMode,
+				Firmware: "0",
+				Hardware: "V2",
+				HardwareMin3: false,
+				GridPhases: 0,
+				ChargeNOW: false,
+				ChargeManager: false,
+				ChargeCurrent: 6,
+				ChargePower: 0,
+				Charge3Phase: false,
+				EnabledPhases: 0,
+				MeasuredMaxChargeAmp: 0,
+				MinAmp: 6,
+				MaxAmp: 16,
+				DelayOff: 0,
+				CurrentHysteresis: 0,
+				SetOptAmp: 5,
+				SetOptAllow: false,
+				SetAmp: 0,
+				SetAllow: false,
+			}));
+			this.log.info(`WallboxInfoList initialised with ${this.wallboxInfoList.length} entries`);
+		}
 
 		this.subscribeStates(`Settings.*`); //all states changes inside the adapters settings namespace are subscribed
 		this.subscribeStates(`Charger.*`); //all states changes inside the adapters settings namespace are subscribed

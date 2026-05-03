@@ -19,9 +19,9 @@
 					"newLine": true
 				},
 
-				"StateHomeSolarPower": {
+				"stateHomeSolarPower": {
 					"type": "objectId",
-					"label": "StateHomeSolarPower",
+					"label": "LBL_stateHomeSolarPower",
 					"xs": 12,
 					"sm": 6,
 					"md": 6,
@@ -29,9 +29,9 @@
 					"xl": 6,
 					"newLine": true
 				},
-				"StateHomeBatSoc": {
+				"stateHomeBatSoc": {
 					"type": "objectId",
-					"label": "StateHomeBatSoc",
+					"label": "LBL_stateHomeBatSoc",
 					"xs": 12,
 					"sm": 6,
 					"md": 6,
@@ -40,9 +40,9 @@
 					"newLine": false
 				},
 
-				"StateHomePowerConsumption": {
+				"stateHomePowerConsumption": {
 					"type": "objectId",
-					"label": "StateHomePowerConsumption",
+					"label": "LBL_stateHomePowerConsumption",
 					"xs": 12,
 					"sm": 6,
 					"md": 6,
@@ -50,9 +50,9 @@
 					"xl": 6,
 					"newLine": true
 				},
-				"SubtractSelfConsumption": {
+				"subtractSelfConsumption": {
 					"type": "checkbox",
-					"label": "SubtractSelfConsumption",
+					"label": "LBL_subtractSelfConsumption",
 					"xs": 12,
 					"sm": 6,
 					"md": 6,
@@ -63,7 +63,7 @@
 
 				"wallBoxList": {
 					"type": "table",
-					"label": "LBL_WallBoxList",
+					"label": "LBL_wallBoxList",
 					"xs": 12,
 					"sm": 12,
 					"md": 12,

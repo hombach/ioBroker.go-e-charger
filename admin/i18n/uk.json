@@ -1,10 +1,10 @@
 {
-    "LBL_WallBoxList": "Список Wallbox",
+    "LBL_wallBoxList": "Список Wallbox",
     "LBL_readOnlyMode": "read only mode - release of charge is not send to charger (to use RFID tags)",
-    "StateHomeBatSoc": "object-id for current home battery state of charge [%]",
-    "StateHomePowerConsumption": "object-id for current home power consumption [W]",
-    "StateHomeSolarPower": "object-id for currently available solar power [W]",
-    "SubtractSelfConsumption": "Charger consumption is included in home power consumption value",
+    "LBL_stateHomeBatSoc": "object-id for current home battery state of charge [%]",
+    "LBL_stateHomePowerConsumption": "object-id for current home power consumption [W]",
+    "LBL_stateHomeSolarPower": "object-id for currently available solar power [W]",
+    "LBL_subtractSelfConsumption": "Charger consumption is included in home power consumption value",
     "LBL_ipAddress": "IP address of go-eCharger",
     "LBL_cycleTime": "Time between data polls from charger [ms]"
 }

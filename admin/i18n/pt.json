@@ -1,10 +1,10 @@
 {
-    "LBL_WallBoxList": "Lista de caixas de embutir",
+    "LBL_wallBoxList": "Lista de caixas de embutir",
     "LBL_readOnlyMode": "modo somente leitura - a liberação da carga não é enviada ao carregador (para usar etiquetas RFID)",
-    "StateHomeBatSoc": "object-id para o estado atual de carga da bateria doméstica [%]",
-    "StateHomePowerConsumption": "object-id para o consumo atual de energia em casa [W]",
-    "StateHomeSolarPower": "object-id para energia solar atualmente disponível [W]",
-    "SubtractSelfConsumption": "O consumo do carregador está incluído no valor de consumo de energia doméstica",
+    "LBL_stateHomeBatSoc": "object-id para o estado atual de carga da bateria doméstica [%]",
+    "LBL_stateHomePowerConsumption": "object-id para o consumo atual de energia em casa [W]",
+    "LBL_stateHomeSolarPower": "object-id para energia solar atualmente disponível [W]",
+    "LBL_subtractSelfConsumption": "O consumo do carregador está incluído no valor de consumo de energia doméstica",
     "LBL_ipAddress": "Endereço IP do go-eCharger",
     "LBL_cycleTime": "Tempo entre pesquisas de dados do carregador [ms]"
 }

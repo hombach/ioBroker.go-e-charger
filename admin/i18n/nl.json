@@ -1,10 +1,10 @@
 {
-    "LBL_WallBoxList": "Wallbox-lijst",
+    "LBL_wallBoxList": "Wallbox-lijst",
     "LBL_readOnlyMode": "alleen-lezen modus - het opladen wordt niet naar de oplader gestuurd (om RFID-tags te gebruiken)",
-    "StateHomeBatSoc": "object-ID voor de huidige laadtoestand van de thuisbatterij [%]",
-    "StateHomePowerConsumption": "object-id voor huidig energieverbruik thuis [W]",
-    "StateHomeSolarPower": "object-id voor momenteel beschikbare zonne-energie [W]",
-    "SubtractSelfConsumption": "Het verbruik van de oplader is inbegrepen in de waarde van het stroomverbruik van het huis",
+    "LBL_stateHomeBatSoc": "object-ID voor de huidige laadtoestand van de thuisbatterij [%]",
+    "LBL_stateHomePowerConsumption": "object-id voor huidig energieverbruik thuis [W]",
+    "LBL_stateHomeSolarPower": "object-id voor momenteel beschikbare zonne-energie [W]",
+    "LBL_subtractSelfConsumption": "Het verbruik van de oplader is inbegrepen in de waarde van het stroomverbruik van het huis",
     "LBL_ipAddress": "IP-adres van go-eCharger",
     "LBL_cycleTime": "Tijd tussen gegevenspolls van oplader [ms]"
 }
