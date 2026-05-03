@@ -133,6 +133,8 @@ class go_e_charger extends utils.Adapter {
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeNOW`, false, `ChargeNOW enabled`, "switch", true, true);
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeManager`, false, `Charge Manager enabled`, "switch", true, true);
                 await this.projectUtils.checkAndSetValueNumber(`Charger.${iWB}.Settings.ChargeCurrent`, 6, `Setting charge current output`, "A", "value.current", true, true);
+                this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
+                await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.Charge3Phase`, false, `Setting 3-phase charging`, "switch", true, true);
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Info.Connection`, false, `Device connected`, "indicator.connected");
                 if (wallBox.ipAddress) {
                     //if (this.config.wallBoxList[iWB].ipAddress) {
