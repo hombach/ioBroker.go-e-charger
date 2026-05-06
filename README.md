@@ -49,7 +49,8 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ### **WORK IN PROGRESS**
 
-- (hombach) BREAKING: Switch to multi charger support (#801)
+- (hombach) BREAKING: switch to multi charger support (#801)
+- (hombach) BREAKING: adapter nedds node 22 now
 - (hombach) repo cleanup
 
 ### 0.21.4 (2026-04-19)

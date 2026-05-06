@@ -20,7 +20,7 @@
 		"url": "https://github.com/hombach/ioBroker.go-e-charger.git"
 	},
 	"engines": {
-		"node": ">= 20.11.0"
+		"node": ">= 22.18.0"
 	},
 	"dependencies": {
 		"@iobroker/adapter-core": "^3.3.2",
