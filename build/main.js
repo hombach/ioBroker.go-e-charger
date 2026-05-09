@@ -137,11 +137,10 @@ class go_e_charger extends utils.Adapter {
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.Charge3Phase`, false, `Setting 3-phase charging`, "switch", true, true);
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Info.Connection`, false, `Device connected`, "indicator.connected");
                 if (wallBox.ipAddress) {
-                    //if (this.config.wallBoxList[iWB].ipAddress) {
                     await this.Read_ChargerAPIV1(iWB);
                     await this.Read_ChargerAPIV2(iWB);
                     this.log.info(`IP address charger ${iWB} found in config: ${wallBox.ipAddress}`);
-                    //this.log.info(`IP address charger ${iWB} found in config: ${this.config.wallBoxList[iWB].ipAddress}`);
+                    void this.setState(`Charger.${iWB}.Info.Connection`, { val: true, ack: true });
                 }
                 this.wallboxInfoList[iWB].ChargeNOW = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.ChargeNOW`); // Get charging override trigger
                 this.wallboxInfoList[iWB].ChargeManager = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.ChargeManager`); // Get enable for charge manager
@@ -172,7 +171,7 @@ class go_e_charger extends utils.Adapter {
         }
         await this.firstStart();
         this.log.debug(`Start init done, launching state machine interval`);
-        void this.setState(`info.connection`, true, true);
+        void this.setState(`info.connection`, { val: true, ack: true });
         const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
         if (stateMachine != null) {
             this.timeoutList.push(stateMachine);
