@@ -17,14 +17,14 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/hombach/ioBroker.go-e-charger.git"
+		"url": "git+https://github.com/hombach/ioBroker.go-e-charger.git"
 	},
 	"engines": {
 		"node": ">= 22.18.0"
 	},
 	"dependencies": {
 		"@iobroker/adapter-core": "^3.3.2",
-		"axios": "^1.15.2"
+		"axios": "^1.16.0"
 	},
 	"devDependencies": {
 		"@iobroker/adapter-dev": "^1.5.0",
@@ -65,7 +65,7 @@
 		"test:ts": "mocha --config test/mocharc.custom.json src/**/*.test.ts",
 		"test:package": "mocha test/package --exit",
 		"test:integration": "mocha test/integration --exit",
-	    "test": "npm run test:ts && npm run test:package && npm run test:integration",
+		"test": "npm run test:ts && npm run test:package && npm run test:integration",
 		"check": "tsc --noEmit",
 		"lint": "eslint -c eslint.config.mjs .",
 		"lintdebug": "eslint --debug -c eslint.config.mjs . | more",
