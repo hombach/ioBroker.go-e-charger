@@ -171,7 +171,8 @@ class go_e_charger extends utils.Adapter {
             }
         }
         await this.firstStart();
-        this.log.debug(`Init done, launching state machine interval`);
+        this.log.debug(`Start init done, launching state machine interval`);
+        void this.setState(`info.connection`, true, true);
         const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
         if (stateMachine != null) {
             this.timeoutList.push(stateMachine);
@@ -416,12 +417,12 @@ class go_e_charger extends utils.Adapter {
                 }
             }
         } // next charger
-        /*
+        ///*
         const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
         if (stateMachine != null) {
             this.timeoutList.push(stateMachine);
         }
-        */
+        //*/
     } // END StateMachine
     /**
      * Reads the status of a go-e Charger using API V1.
