@@ -4,18 +4,19 @@
 declare global {
 	namespace ioBroker {
 		interface AdapterConfig {
-                  cycleTime : number;
-                  stateHomeBatSoc: string;
-                  stateHomeSolarPower: string;
-                  stateHomePowerConsumption: string;
-                  subtractSelfConsumption: boolean;
- 	            wallBoxList: [
-		            {
-                              ipAddress: string;
-                              readOnlyMode: boolean
-			      },
-		      ];
-            }
+            cycleTime : number;
+            stateHomeBatSoc: string;
+            stateHomeSolarPower: string;
+            stateHomePowerConsumption: string;
+            subtractSelfConsumption: boolean;
+ 	        wallBoxList: [
+		        {
+                    chargerName: string;
+                    ipAddress: string;
+                    readOnlyMode: boolean
+			    },
+		    ];
+        }
 	}
 }
 

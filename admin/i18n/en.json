@@ -6,5 +6,6 @@
     "LBL_subtractSelfConsumption": "Charger consumption is included in home power consumption value",
     "LBL_wallBoxList": "Wallbox List",
     "LBL_ipAddress": "IP address of go-eCharger",
-    "LBL_cycleTime": "Time between data polls from charger [ms]"
+    "LBL_cycleTime": "Time between data polls from charger [ms]",
+    "LBL_chargerName": "Charger name"
 }

@@ -1,10 +1,11 @@
 {
-    "LBL_wallBoxList": "Elenco delle cassette a muro",
+    "LBL_chargerName": "Nome del caricabatterie",
+    "LBL_cycleTime": "Tempo tra sondaggi di dati dal caricatore [ms]",
+    "LBL_ipAddress": "Indirizzo IP di go-eCharger",
     "LBL_readOnlyMode": "modalità di sola lettura - il rilascio della carica non viene inviato al caricabatterie (per utilizzare tag RFID)",
     "LBL_stateHomeBatSoc": "object-id per l'attuale stato di carica della batteria domestica [%]",
     "LBL_stateHomePowerConsumption": "object-id per il consumo energetico domestico corrente [W]",
     "LBL_stateHomeSolarPower": "ID oggetto per l'energia solare attualmente disponibile [W]",
     "LBL_subtractSelfConsumption": "Il consumo del caricabatterie è incluso nel valore del consumo energetico domestico",
-    "LBL_ipAddress": "Indirizzo IP di go-eCharger",
-    "LBL_cycleTime": "Tempo tra sondaggi di dati dal caricatore [ms]"
+    "LBL_wallBoxList": "Elenco delle cassette a muro"
 }

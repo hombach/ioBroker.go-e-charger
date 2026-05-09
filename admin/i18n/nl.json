@@ -1,10 +1,11 @@
 {
-    "LBL_wallBoxList": "Wallbox-lijst",
+    "LBL_chargerName": "Naam van oplader",
+    "LBL_cycleTime": "Tijd tussen gegevenspolls van oplader [ms]",
+    "LBL_ipAddress": "IP-adres van go-eCharger",
     "LBL_readOnlyMode": "alleen-lezen modus - het opladen wordt niet naar de oplader gestuurd (om RFID-tags te gebruiken)",
     "LBL_stateHomeBatSoc": "object-ID voor de huidige laadtoestand van de thuisbatterij [%]",
     "LBL_stateHomePowerConsumption": "object-id voor huidig energieverbruik thuis [W]",
     "LBL_stateHomeSolarPower": "object-id voor momenteel beschikbare zonne-energie [W]",
     "LBL_subtractSelfConsumption": "Het verbruik van de oplader is inbegrepen in de waarde van het stroomverbruik van het huis",
-    "LBL_ipAddress": "IP-adres van go-eCharger",
-    "LBL_cycleTime": "Tijd tussen gegevenspolls van oplader [ms]"
+    "LBL_wallBoxList": "Wallbox-lijst"
 }

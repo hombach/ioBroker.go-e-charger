@@ -26,16 +26,16 @@
 
 [![NPM](https://nodei.co/npm/iobroker.go-e-charger.png?downloads=true)](https://nodei.co/npm/iobroker.go-e-charger/)
 
-## Adapter for reading go-eCharger data for iOBroker
+## Adapter for reading data for multiple go-eCharger for iOBroker
 
-Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your car. Working with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1, V56.2, V56.8, V56.9, V56.11, V57.0, V57.1, V59.4, V60.0, V60.1, V60.2.
+Adapter for reading the data of multiple go-eCharger. Adapter creates some states and updates them sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your cars. Working with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1, V56.2, V56.8, V56.9, V56.11, V57.0, V57.1, V59.4, V60.0, V60.1, V60.2.
 
-For use with hardware generation 3 & 4 you have to enable "HTTP API v1" in your go-e api.
-For use with phase switching you need hardware generation 3 or 4 and additionally you have to enable "HTTP API v2" in your go-e api.
+For use with hardware generation 3 & 4 you have to enable "HTTP API v1" in your go-e APP.
+For use with phase switching you need hardware generation 3 or 4 and additionally you have to enable "HTTP API v2" in your go-e APP.
 
 ## Configuration
 
-To connect to the go-eCharger type in its IP-address in the config.
+To connect a go-e charger add a new line and enter its IP-address in the config.
 
 ## Sentry
 
@@ -50,7 +50,8 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 ### **WORK IN PROGRESS**
 
 - (hombach) BREAKING: switch to multi charger support (#801)
-- (hombach) BREAKING: adapter nedds node 22 now
+- (hombach) BREAKING: adapter needs node 22 now
+- (hombach) adapter requires admin >=7.6.20 now
 - (hombach) repo cleanup
 
 ### 0.21.4 (2026-04-19)
