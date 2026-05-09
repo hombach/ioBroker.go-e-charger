@@ -6,9 +6,9 @@
        		"type": "panel",
 		"label": "Standard settings",
 	        "items": {
-				"polltimelive": {
+				"cycleTime": {
 					"type": "number",
-					"label": "polltimelive",
+					"label": "LBL_cycleTime",
 					"min": 3000,
 					"step": 100,
 					"xs": 12,
@@ -19,9 +19,9 @@
 					"newLine": true
 				},
 
-				"StateHomeSolarPower": {
+				"stateHomeSolarPower": {
 					"type": "objectId",
-					"label": "StateHomeSolarPower",
+					"label": "LBL_stateHomeSolarPower",
 					"xs": 12,
 					"sm": 6,
 					"md": 6,
@@ -29,9 +29,9 @@
 					"xl": 6,
 					"newLine": true
 				},
-				"StateHomeBatSoc": {
+				"stateHomeBatSoc": {
 					"type": "objectId",
-					"label": "StateHomeBatSoc",
+					"label": "LBL_stateHomeBatSoc",
 					"xs": 12,
 					"sm": 6,
 					"md": 6,
@@ -40,9 +40,9 @@
 					"newLine": false
 				},
 
-				"StateHomePowerConsumption": {
+				"stateHomePowerConsumption": {
 					"type": "objectId",
-					"label": "StateHomePowerConsumption",
+					"label": "LBL_stateHomePowerConsumption",
 					"xs": 12,
 					"sm": 6,
 					"md": 6,
@@ -50,9 +50,9 @@
 					"xl": 6,
 					"newLine": true
 				},
-				"SubtractSelfConsumption": {
+				"subtractSelfConsumption": {
 					"type": "checkbox",
-					"label": "SubtractSelfConsumption",
+					"label": "LBL_subtractSelfConsumption",
 					"xs": 12,
 					"sm": 6,
 					"md": 6,
@@ -61,26 +61,39 @@
 					"newLine": false
 				},
 
-				"ipaddress": {
-					"type": "text",
-					"label": "ipaddress",
-					"maxLength": 15,
+				"wallBoxList": {
+					"type": "table",
+					"label": "LBL_wallBoxList",
 					"xs": 12,
-					"sm": 6,
-					"md": 6,
-					"lg": 6,
-					"xl": 6,
-					"newLine": true
-				},
-				"ReadOnlyMode": {
-					"type": "checkbox",
-					"label": "ReadOnlyMode",
-					"xs": 12,
-					"sm": 6,
-					"md": 6,
-					"lg": 6,
-					"xl": 6,
-					"newLine": false
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12,
+					"items": [
+						{
+							"type": "text",
+							"label": "LBL_ipAddress",
+							"attr": "ipAddress",
+							"maxLength": 15,
+							"xs": 12,
+							"sm": 6,
+							"md": 6,
+							"lg": 6,
+							"xl": 6,
+							"newLine": true
+						},
+						{
+							"type": "checkbox",
+							"label": "LBL_readOnlyMode",
+							"attr": "readOnlyMode",
+							"xs": 12,
+							"sm": 6,
+							"md": 6,
+							"lg": 6,
+							"xl": 6,
+							"newLine": false
+						}
+					]
 				}
 			}
 	    }
