@@ -208,7 +208,7 @@ class go_e_charger extends utils.Adapter {
 								break;
 							case "Charger":
 								settingType = statePath[5];
-								chargerNo = Number(statePath[4]);
+								chargerNo = Number(statePath[3]);
 								switch (settingType) {
 									case "ChargeNOW":
 										// Get charging override trigger
