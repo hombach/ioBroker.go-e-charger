@@ -236,6 +236,36 @@ class ProjectUtils {
         }
     }
     /**
+     * Checks if a folder object exists, creates it if necessary.
+     *
+     * @param folderObjectName - Object ID of the folder (e.g. Charger)
+     * @param name - Display name of the folder
+     * @param icon - Optional icon name/path (e.g. `go-eCharger.png`)
+     * @param forceMode - overwrite existing object
+     * @returns Promise<void>
+     */
+    async checkAndSetFolder(folderObjectName, name, icon = "", forceMode = false) {
+        const commonObj = {
+            type: "meta.folder",
+            name: name ?? folderObjectName.split(".").pop() ?? folderObjectName,
+            desc: "",
+        };
+        if (icon) {
+            commonObj.icon = icon;
+        }
+        await (forceMode
+            ? this.adapter.setObject(folderObjectName, {
+                type: "folder",
+                common: commonObj,
+                native: {},
+            })
+            : this.adapter.setObjectNotExistsAsync(folderObjectName, {
+                type: "folder",
+                common: commonObj,
+                native: {},
+            }));
+    }
+    /**
      * Checks if a device object exists, creates it if necessary.
      *
      * @param deviceObjectName - Object ID of the device (e.g. Charger.0)

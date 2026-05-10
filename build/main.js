@@ -125,20 +125,20 @@ class go_e_charger extends utils.Adapter {
                     //if (!this.config.wallBoxList[iWB].ipAddress) {
                     throw new Error(`Charger ${iWB} - IP address not set - stopping adapter`);
                 }
+                // init folder
+                await this.projectUtils.checkAndSetFolder(`Charger`, `List of wallboxes`, `go-eCharger.png`, true);
                 // init device
                 await this.projectUtils.checkAndSetDevice(`Charger.${iWB}`, wallBox.chargerName || `Wallbox ${iWB}`, `Info.connected`, `go-eCharger.png`, true);
                 // init channel for settings and info states for each charger
                 await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Info`, `Informations about go-eCharger`, `go-eCharger.png`, true);
-                // await this.projectUtils.checkAndSetValue(`Charger.${iWB}.Info`, "", `Informations about go-eCharger`, "channel");
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Info.connected`, false, `Device connected`, "indicator.connected");
                 await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Power`, `current charger power data`, `go-eCharger.png`, true);
-                // await this.projectUtils.checkAndSetValue(`Charger.${iWB}.Power`, "", `current charger power data`, "channel");
-                await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Settings`, `states to dynamically adjust go-eCharger settings`, `go-eCharger.png`, true);
-                // await this.projectUtils.checkAndSetValue(`Charger.${iWB}.Settings`, "", `states to dynamically adjust go-eCharger settings`, "channel");
+                await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Settings`, `states to dynamically adjust wallbox settings`, `go-eCharger.png`, true);
+                await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Statistics`, `Wallbox statistics data`, `go-eCharger.png`, true);
                 // init settings values for each charger in wallboxInfoList
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeNOW`, false, `ChargeNOW enabled`, "switch", true, true);
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeManager`, false, `Charge Manager enabled`, "switch", true, true);
-                await this.projectUtils.checkAndSetValueNumber(`Charger.${iWB}.Settings.ChargeCurrent`, 6, `Setting charge current output`, "A", "value.current", true, true);
+                await this.projectUtils.checkAndSetValueNumber(`Charger.${iWB}.Settings.ChargeCurrent`, 6, `charge current output`, "A", "value.current", true, true);
                 this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.Charge3Phase`, false, `Setting 3-phase charging`, "switch", true, true);
                 if (wallBox.ipAddress) {
@@ -424,12 +424,10 @@ class go_e_charger extends utils.Adapter {
                 }
             }
         } // next charger
-        ///*
         const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
         if (stateMachine != null) {
             this.timeoutList.push(stateMachine);
         }
-        //*/
     } // END StateMachine
     /**
      * Reads the status of a go-e Charger using API V1.
