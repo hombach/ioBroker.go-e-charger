@@ -79,8 +79,7 @@
 							"sm": 12,
 							"md": 6,
 							"lg": 6,
-							"xl": 4,
-							"newLine": true
+							"xl": 4
 						},
 						{
 							"type": "text",
@@ -101,8 +100,7 @@
 							"sm": 12,
 							"md": 6,
 							"lg": 6,
-							"xl": 4,
-							"newLine": false
+							"xl": 4
 						}
 					]
 				}
