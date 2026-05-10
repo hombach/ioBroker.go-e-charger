@@ -125,8 +125,11 @@ class go_e_charger extends utils.Adapter {
                     //if (!this.config.wallBoxList[iWB].ipAddress) {
                     throw new Error(`Charger ${iWB} - IP address not set - stopping adapter`);
                 }
-                // init settings and info states for each charger
-                await this.projectUtils.checkAndSetValue(`Charger.${iWB}.Info`, "", `Informations about go-eCharger`, "channel");
+                // init device
+                await this.projectUtils.checkAndSetDevice(`Charger.${iWB}`, wallBox.chargerName || `Wallbox ${iWB}`, true);
+                // init channel for settings and info states for each charger
+                await this.projectUtils.checkAndSetValue(`Charger.${iWB}.info`, "", `Informations about go-eCharger`, "channel");
+                await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.info.connected`, false, `Device connected`, "indicator.connected");
                 await this.projectUtils.checkAndSetValue(`Charger.${iWB}.Power`, "", `current charger power data`, "channel");
                 await this.projectUtils.checkAndSetValue(`Charger.${iWB}.Settings`, "", `states to dynamically adjust go-eCharger settings`, "channel");
                 // init settings values for each charger in wallboxInfoList
@@ -135,7 +138,6 @@ class go_e_charger extends utils.Adapter {
                 await this.projectUtils.checkAndSetValueNumber(`Charger.${iWB}.Settings.ChargeCurrent`, 6, `Setting charge current output`, "A", "value.current", true, true);
                 this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.Charge3Phase`, false, `Setting 3-phase charging`, "switch", true, true);
-                await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Info.Connection`, false, `Device connected`, "indicator.connected");
                 if (wallBox.ipAddress) {
                     await this.Read_ChargerAPIV1(iWB);
                     await this.Read_ChargerAPIV2(iWB);

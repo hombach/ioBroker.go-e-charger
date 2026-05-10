@@ -236,6 +236,31 @@ class ProjectUtils {
         }
     }
     /**
+     * Checks if a device object exists, creates it if necessary.
+     *
+     * @param deviceName - A string representing the name of the device.
+     * @param description - Optional description for the device (default is "-").
+     * @param forceMode - Optional boolean indicating if the device should be overwritten if it already exists (default is false).
+     * @returns A Promise that resolves when the device is checked and created (if necessary).
+     */
+    async checkAndSetDevice(deviceName, description = "-", forceMode = false) {
+        const commonObj = {
+            name: deviceName.split(".").pop() ?? deviceName,
+            desc: description,
+        };
+        await (forceMode
+            ? this.adapter.setObject(deviceName, {
+                type: "device",
+                common: commonObj,
+                native: {},
+            })
+            : this.adapter.setObjectNotExistsAsync(deviceName, {
+                type: "device",
+                common: commonObj,
+                native: {},
+            }));
+    }
+    /**
      * Generates a formatted error message based on the provided error object and context.
      *
      * @param error - The error object containing information about the error, such as status and error messages.
