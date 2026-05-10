@@ -97,7 +97,7 @@ class go_e_charger extends utils.Adapter {
 				}
 
 				// init device
-				await this.projectUtils.checkAndSetDevice(`Charger.${iWB}`, wallBox.chargerName || `Wallbox ${iWB}`, true);
+				await this.projectUtils.checkAndSetDevice(`Charger.${iWB}`, wallBox.chargerName || `Wallbox ${iWB}`, `info.connected`, `go-eCharger.png`, true);
 
 				// init channel for settings and info states for each charger
 				await this.projectUtils.checkAndSetValue(`Charger.${iWB}.info`, "", `Informations about go-eCharger`, "channel");

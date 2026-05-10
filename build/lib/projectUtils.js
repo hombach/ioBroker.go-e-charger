@@ -238,23 +238,33 @@ class ProjectUtils {
     /**
      * Checks if a device object exists, creates it if necessary.
      *
-     * @param deviceName - A string representing the name of the device.
-     * @param description - Optional description for the device (default is "-").
+     * @param deviceObjectName - Object ID of the device (e.g. Charger.0)
+     * @param name - Display name of the device (default: derived from ID)
+     * @param onlineId - Optional state ID for online status binding (e.g. `info.connected`)
+     * @param icon - Optional icon name/path (e.g. `go-eCharger.png`)
      * @param forceMode - Optional boolean indicating if the device should be overwritten if it already exists (default is false).
-     * @returns A Promise that resolves when the device is checked and created (if necessary).
+     * @returns Promise<void>
      */
-    async checkAndSetDevice(deviceName, description = "-", forceMode = false) {
+    async checkAndSetDevice(deviceObjectName, name, onlineId = "", icon = "", forceMode = false) {
         const commonObj = {
-            name: deviceName.split(".").pop() ?? deviceName,
-            desc: description,
+            name: name ?? deviceObjectName.split(".").pop() ?? deviceObjectName,
+            desc: "",
         };
+        if (onlineId) {
+            commonObj.statusStates = {
+                onlineId,
+            };
+        }
+        if (icon) {
+            commonObj.icon = icon;
+        }
         await (forceMode
-            ? this.adapter.setObject(deviceName, {
+            ? this.adapter.setObject(deviceObjectName, {
                 type: "device",
                 common: commonObj,
                 native: {},
             })
-            : this.adapter.setObjectNotExistsAsync(deviceName, {
+            : this.adapter.setObjectNotExistsAsync(deviceObjectName, {
                 type: "device",
                 common: commonObj,
                 native: {},
