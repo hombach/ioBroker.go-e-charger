@@ -47,7 +47,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
   ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 1.0.0 (2026-05-X)
 
 - (hombach) BREAKING: switch to multi charger support (#801), (#807)
 - (hombach) BREAKING: adapter needs node 22 now

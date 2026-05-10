@@ -1,8 +1,21 @@
 {
     "common": {
         "name": "go-e-charger",
-        "version": "0.21.4",
+        "version": "1.0.0",
         "news": {
+            "1.0.0": {
+                "en": "BREAKING: switch to multi charger support (#801), (#807)\nBREAKING: adapter needs node 22 now\nadapter requires admin >=7.6.20 now\nrepo cleanup",
+                "de": "BREAKING: Wechsel zur Multi-Ladegerät-Unterstützung (#801), (#807)\nBREAKING: Der Adapter benötigt jetzt node 22\nDer Adapter erfordert jetzt Admin >=7.6.20\nRepo-Bereinigung",
+                "ru": "СРОЧНО: переключитесь на поддержку нескольких зарядных устройств (#801), (#807).\nСРОЧНО: адаптеру теперь нужен узел 22\nадаптеру сейчас требуется администратор >=7.6.20\nочистка репо",
+                "pt": "QUEBRANDO: mude para suporte para vários carregadores (#801), (#807)\nQUEBRANDO: o adaptador precisa do nó 22 agora\nadaptador requer admin >=7.6.20 agora\nlimpeza de repositório",
+                "nl": "BREAKING: schakel over naar ondersteuning voor meerdere opladers (#801), (#807)\nBREAKING: adapter heeft nu knooppunt 22 nodig\nadapter vereist nu admin >=7.6.20\nrepository opruimen",
+                "fr": "RUPTURE : passer au support multi-chargeurs (#801), (#807)\nRUPTURE : l'adaptateur a besoin du nœud 22 maintenant\nl'adaptateur nécessite un administrateur >=7.6.20 maintenant\nnettoyage du dépôt",
+                "it": "ROTTURA: passaggio al supporto del caricatore multiplo (#801), (#807)\nBREAKING: l'adattatore necessita ora del nodo 22\nl'adattatore richiede ora l'amministratore >=7.6.20\npulizia del pronti contro termine",
+                "es": "ÚLTIMA HORA: cambiar a soporte de cargador múltiple (#801), (#807)\nÚLTIMA HORA: el adaptador necesita el nodo 22 ahora\nEl adaptador requiere administrador >=7.6.20 ahora\nlimpieza de repositorio",
+                "pl": "ŁAMANIE: przełącz na obsługę wielu ładowarek (#801), (#807)\nŁAMANIE: adapter potrzebuje teraz węzła 22\nadapter wymaga teraz administratora >=7.6.20\nczyszczenie repo",
+                "uk": "ПОЛИМКА: перейдіть на підтримку кількох зарядних пристроїв (#801), (#807)\nПОРУШЕННЯ: адаптеру зараз потрібен вузол 22\nдля адаптера потрібен адміністратор >=7.6.20\nочищення репо",
+                "zh-cn": "突破：切换到多充电器支持 (#801)、(#807)\n中断：适配器现在需要节点 22\n适配器现在需要 admin >=7.6.20\n回购清理"
+            },
             "0.21.4": {
                 "en": "prepare multi-charger support\nupdate axios\nupdate iobroker/testing (#765)\nswitch to ES2023 code\nfix vulnerabilities\nupdate dependencies",
                 "de": "Unterstützung für mehrere Ladegeräte vorbereitet\nAxios aktualisiert\niobroker/testing aktualisiert (#765)\nWechsel zu ES2023-Code\nSchwachstellen behoben\nAbhängigkeiten aktualisiert",
@@ -119,19 +132,6 @@
                 "pl": "Zmień na admin 7.4.10 zgodnie z zaleceniami IOBRAKER",
                 "uk": "Зміна на адміністратора 7.4.10, як рекомендували iobroker",
                 "zh-cn": "根据Iobroker的建议，更改为管理员7.4.10"
-            },
-            "0.19.8": {
-                "en": "added support for firmware V57.0 (#659)\nadded support for firmware V57.1 (#660)",
-                "de": "Unterstützung für Firmware V57.0 (#659) hinzugefügt\nUnterstützung für Firmware V57.1 (#660) hinzugefügt",
-                "ru": "Добавлена ​​поддержка прошивки v57.0 (#659)\nДобавлена ​​поддержка прошивки v57.1 (#660)",
-                "pt": "Suporte adicionado ao firmware v57.0 (#659)\nSuporte adicionado ao firmware v57.1 (#660)",
-                "nl": "Ondersteuning toegevoegd voor firmware v57.0 (#659)\nOndersteuning toegevoegd voor firmware v57.1 (#660)",
-                "fr": "Ajout de la prise en charge du firmware V57.0 (# 659)\nAjout de la prise en charge du firmware V57.1 (# 660)",
-                "it": "Aggiunto supporto per il firmware V57.0 (#659)\nAggiunto supporto per il firmware V57.1 (#660)",
-                "es": "Se agregó soporte para el firmware v57.0 (#659)\nSe agregó soporte para el firmware v57.1 (#660)",
-                "pl": "Dodano obsługę oprogramowania układowego V57.0 (#659)\nDodano obsługę oprogramowania układowego V57.1 (#660)",
-                "uk": "Додана підтримка прошивки V57.0 (#659)\nДодана підтримка прошивки V57.1 (#660)",
-                "zh-cn": "添加了对固件V57.0（＃659）的支持\n添加了对固件v57.1（＃660）的支持"
             }
         },
         "titleLang": {
@@ -239,7 +239,8 @@
             "_id": "Statistics_Total",
             "type": "channel",
             "common": {
-                "name": "statistical data sum of all chargers"
+                "name": "statistical data sum of all chargers",
+                "icon": "go-eCharger.png"
             },
             "native": {}
         },
@@ -247,7 +248,8 @@
             "_id": "Settings",
             "type": "channel",
             "common": {
-                "name": "states to dynamically adjust adapter behavior"
+                "name": "states to dynamically adjust adapter behavior",
+                "icon": "go-eCharger.png"
             },
             "native": {}
         },
@@ -261,7 +263,7 @@
                 "unit": "%",
                 "read": true,
                 "write": true,
-                "def": 50
+                "def": 70
             },
             "native": {}
         }
