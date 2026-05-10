@@ -117,24 +117,30 @@ class go_e_charger extends utils.Adapter {
         }
         this.subscribeStates(`Settings.*`); //all states changes inside the adapters settings namespace are subscribed
         this.subscribeStates(`Charger.*`); //all states changes inside the adapters settings namespace are subscribed
+        // init folder
+        await this.projectUtils.checkAndSetFolder(`Charger`, `List of wallboxes`, `go-eCharger.png`, true);
         try {
             for (const [iWB, wallBox] of this.config.wallBoxList.entries()) {
-                this.log.debug(`Setting up charger ${iWB} with IP ${wallBox.ipAddress} in config`);
+                this.log.debug(`Setting up Wallbox ${iWB} with IP ${wallBox.ipAddress} in config`);
                 //for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
                 if (!wallBox.ipAddress) {
                     //if (!this.config.wallBoxList[iWB].ipAddress) {
-                    throw new Error(`Charger ${iWB} - IP address not set - stopping adapter`);
+                    throw new Error(`Wallbox ${iWB} - IP address not set - stopping adapter`);
                 }
-                // init folder
-                await this.projectUtils.checkAndSetFolder(`Charger`, `List of wallboxes`, `go-eCharger.png`, true);
                 // init device
                 await this.projectUtils.checkAndSetDevice(`Charger.${iWB}`, wallBox.chargerName || `Wallbox ${iWB}`, `Info.connected`, `go-eCharger.png`, true);
+                await this.projectUtils.checkAndSetDevice(`Wallbox_${iWB}`, wallBox.chargerName || `Wallbox ${iWB}`, `Info.connected`, `go-eCharger.png`, true);
                 // init channel for settings and info states for each charger
                 await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Info`, `Informations about go-eCharger`, `go-eCharger.png`, true);
+                await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Info`, `Informations about go-eCharger`, `go-eCharger.png`, true);
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Info.connected`, false, `Device connected`, "indicator.connected");
+                await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Info.connected`, false, `Device connected`, "indicator.connected");
                 await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Power`, `current charger power data`, `go-eCharger.png`, true);
                 await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Settings`, `states to dynamically adjust wallbox settings`, `go-eCharger.png`, true);
-                await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Statistics`, `Wallbox statistics data`, `go-eCharger.png`, true);
+                await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Statistics`, `wallbox statistics data`, `go-eCharger.png`, true);
+                await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Power`, `current wallbox power data`, `go-eCharger.png`, true);
+                await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Settings`, `states to dynamically adjust wallbox settings`, `go-eCharger.png`, true);
+                await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Statistics`, `wallbox statistics data`, `go-eCharger.png`, true);
                 // init settings values for each charger in wallboxInfoList
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeNOW`, false, `ChargeNOW enabled`, "switch", true, true);
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeManager`, false, `Charge Manager enabled`, "switch", true, true);
