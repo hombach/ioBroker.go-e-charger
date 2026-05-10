@@ -271,6 +271,35 @@ class ProjectUtils {
             }));
     }
     /**
+     * Checks if a channel object exists, creates it if necessary.
+     *
+     * @param channelObjectName - Object ID of the channel (e.g. Charger.0.Info)
+     * @param name - Display name of the channel (default: derived from ID)
+     * @param icon - Optional icon name/path (e.g. `go-eCharger.png`)
+     * @param forceMode - Optional boolean indicating if the device should be overwritten if it already exists (default is false).
+     * @returns Promise<void>
+     */
+    async checkAndSetChannel(channelObjectName, name, icon = "", forceMode = false) {
+        const commonObj = {
+            name: name ?? channelObjectName.split(".").pop() ?? channelObjectName,
+            desc: "",
+        };
+        if (icon) {
+            commonObj.icon = icon;
+        }
+        await (forceMode
+            ? this.adapter.setObject(channelObjectName, {
+                type: "channel",
+                common: commonObj,
+                native: {},
+            })
+            : this.adapter.setObjectNotExistsAsync(channelObjectName, {
+                type: "channel",
+                common: commonObj,
+                native: {},
+            }));
+    }
+    /**
      * Generates a formatted error message based on the provided error object and context.
      *
      * @param error - The error object containing information about the error, such as status and error messages.

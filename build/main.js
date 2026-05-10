@@ -128,10 +128,13 @@ class go_e_charger extends utils.Adapter {
                 // init device
                 await this.projectUtils.checkAndSetDevice(`Charger.${iWB}`, wallBox.chargerName || `Wallbox ${iWB}`, `Info.connected`, `go-eCharger.png`, true);
                 // init channel for settings and info states for each charger
-                await this.projectUtils.checkAndSetValue(`Charger.${iWB}.Info`, "", `Informations about go-eCharger`, "channel");
+                await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Info`, `Informations about go-eCharger`, `go-eCharger.png`, true);
+                // await this.projectUtils.checkAndSetValue(`Charger.${iWB}.Info`, "", `Informations about go-eCharger`, "channel");
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Info.connected`, false, `Device connected`, "indicator.connected");
-                await this.projectUtils.checkAndSetValue(`Charger.${iWB}.Power`, "", `current charger power data`, "channel");
-                await this.projectUtils.checkAndSetValue(`Charger.${iWB}.Settings`, "", `states to dynamically adjust go-eCharger settings`, "channel");
+                await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Power`, `current charger power data`, `go-eCharger.png`, true);
+                // await this.projectUtils.checkAndSetValue(`Charger.${iWB}.Power`, "", `current charger power data`, "channel");
+                await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Settings`, `states to dynamically adjust go-eCharger settings`, `go-eCharger.png`, true);
+                // await this.projectUtils.checkAndSetValue(`Charger.${iWB}.Settings`, "", `states to dynamically adjust go-eCharger settings`, "channel");
                 // init settings values for each charger in wallboxInfoList
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeNOW`, false, `ChargeNOW enabled`, "switch", true, true);
                 await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeManager`, false, `Charge Manager enabled`, "switch", true, true);
