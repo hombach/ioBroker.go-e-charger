@@ -336,9 +336,10 @@ class go_e_charger extends utils.Adapter {
                                 break;
                             default:
                                 // Match Wallbox_0, Wallbox_1, ...
-                                if (statePath[2].startsWith("Wallbox_")) {
+                                // go-e-charger.0.Wallbox_2.Settings.ChargeNOW
+                                if (statePath[2].startsWith("Wallbox_") && statePath[3] === "Settings") {
                                     chargerNo = Number(statePath[2].replace("Wallbox_", ""));
-                                    settingType = statePath[3];
+                                    settingType = statePath[4];
                                     switch (settingType) {
                                         case "ChargeNOW":
                                             if (typeof state.val === "boolean") {
