@@ -117,8 +117,7 @@ class go_e_charger extends utils.Adapter {
         }
         this.subscribeStates(`Settings.*`); //all states changes inside the adapters settings namespace are subscribed
         //this.subscribeStates(`Charger.*`); //all states changes inside the adapters settings namespace are subscribed
-        this.subscribeStates(`Wallbox_*`);
-        //this.subscribeStates(`Wallbox*.`); //all states changes inside the adapters settings namespace are subscribed
+        this.subscribeStates(`Wallbox_*.Settings.*`); //all states changes inside the adapters settings namespace are subscribed
         // init folder
         await this.projectUtils.checkAndSetFolder(`Charger`, `List of wallboxes`, `go-eCharger.png`, true);
         try {
