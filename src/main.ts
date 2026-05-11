@@ -85,7 +85,8 @@ class go_e_charger extends utils.Adapter {
 		}
 
 		this.subscribeStates(`Settings.*`); //all states changes inside the adapters settings namespace are subscribed
-		this.subscribeStates(`Charger.*`); //all states changes inside the adapters settings namespace are subscribed
+		//this.subscribeStates(`Charger.*`); //all states changes inside the adapters settings namespace are subscribed
+		this.subscribeStates(`Wallbox*.`); //all states changes inside the adapters settings namespace are subscribed
 
 		// init folder
 		await this.projectUtils.checkAndSetFolder(`Charger`, `List of wallboxes`, `go-eCharger.png`, true);
@@ -100,26 +101,29 @@ class go_e_charger extends utils.Adapter {
 				}
 
 				// init device
-				await this.projectUtils.checkAndSetDevice(`Charger.${iWB}`, wallBox.chargerName || `Wallbox ${iWB}`, `Info.connected`, `go-eCharger.png`, true);
+				//await this.projectUtils.checkAndSetDevice(`Charger.${iWB}`, wallBox.chargerName || `Wallbox ${iWB}`, `Info.connected`, `go-eCharger.png`, true);
 				await this.projectUtils.checkAndSetDevice(`Wallbox_${iWB}`, wallBox.chargerName || `Wallbox ${iWB}`, `Info.connected`, `go-eCharger.png`, true);
 
 				// init channel for settings and info states for each charger
-				await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Info`, `Informations about go-eCharger`, `go-eCharger.png`, true);
+				//await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Info`, `Informations about go-eCharger`, `go-eCharger.png`, true);
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Info`, `Informations about go-eCharger`, `go-eCharger.png`, true);
-				await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Info.connected`, false, `Device connected`, "indicator.connected");
+				//await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Info.connected`, false, `Device connected`, "indicator.connected");
 				await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Info.connected`, false, `Device connected`, "indicator.connected");
-				await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Power`, `current charger power data`, `go-eCharger.png`, true);
-				await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Settings`, `states to dynamically adjust wallbox settings`, `go-eCharger.png`, true);
-				await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Statistics`, `wallbox statistics data`, `go-eCharger.png`, true);
+				//await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Power`, `current charger power data`, `go-eCharger.png`, true);
+				//await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Settings`, `states to dynamically adjust wallbox settings`, `go-eCharger.png`, true);
+				//await this.projectUtils.checkAndSetChannel(`Charger.${iWB}.Statistics`, `wallbox statistics data`, `go-eCharger.png`, true);
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Power`, `current wallbox power data`, `go-eCharger.png`, true);
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Settings`, `states to dynamically adjust wallbox settings`, `go-eCharger.png`, true);
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Statistics`, `wallbox statistics data`, `go-eCharger.png`, true);
 
 				// init settings values for each charger in wallboxInfoList
-				await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeNOW`, false, `ChargeNOW enabled`, "switch", true, true);
-				await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeManager`, false, `Charge Manager enabled`, "switch", true, true);
+				//await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeNOW`, false, `ChargeNOW enabled`, "switch", true, true);
+				await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Settings.ChargeNOW`, false, `ChargeNOW enabled`, "switch", true, true);
+				//await this.projectUtils.checkAndSetValueBoolean(`Charger.${iWB}.Settings.ChargeManager`, false, `Charge Manager enabled`, "switch", true, true);
+				await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Settings.ChargeManager`, false, `Charge Manager enabled`, "switch", true, true);
 				await this.projectUtils.checkAndSetValueNumber(
-					`Charger.${iWB}.Settings.ChargeCurrent`,
+					//`Charger.${iWB}.Settings.ChargeCurrent`,
+					`Wallbox_${iWB}.Settings.ChargeCurrent`,
 					6,
 					`charge current output`,
 					"A",
@@ -127,9 +131,11 @@ class go_e_charger extends utils.Adapter {
 					true,
 					true,
 				);
-				this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
+				//this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
+				this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
 				await this.projectUtils.checkAndSetValueBoolean(
-					`Charger.${iWB}.Settings.Charge3Phase`,
+					//`Charger.${iWB}.Settings.Charge3Phase`,
+					`Wallbox_${iWB}.Settings.Charge3Phase`,
 					false,
 					`Setting 3-phase charging`,
 					"switch",
@@ -141,13 +147,18 @@ class go_e_charger extends utils.Adapter {
 					await this.Read_ChargerAPIV1(iWB);
 					await this.Read_ChargerAPIV2(iWB);
 					this.log.info(`IP address charger ${iWB} found in config: ${wallBox.ipAddress}`);
-					void this.setState(`Charger.${iWB}.Info.connected`, { val: true, ack: true });
+					//void this.setState(`Charger.${iWB}.Info.connected`, { val: true, ack: true });
+					void this.setState(`Wallbox_${iWB}.Info.connected`, { val: true, ack: true });
 				}
 
-				this.wallboxInfoList[iWB].ChargeNOW = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.ChargeNOW`); // Get charging override trigger
-				this.wallboxInfoList[iWB].ChargeManager = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.ChargeManager`); // Get enable for charge manager
-				this.wallboxInfoList[iWB].ChargeCurrent = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.ChargeCurrent`); // Get current for charging override
-				this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
+				//this.wallboxInfoList[iWB].ChargeNOW = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.ChargeNOW`); // Get charging override trigger
+				//this.wallboxInfoList[iWB].ChargeManager = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.ChargeManager`); // Get enable for charge manager
+				//this.wallboxInfoList[iWB].ChargeCurrent = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.ChargeCurrent`); // Get current for charging override
+				//this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Charger.${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
+				this.wallboxInfoList[iWB].ChargeNOW = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeNOW`); // Get charging override trigger
+				this.wallboxInfoList[iWB].ChargeManager = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeManager`); // Get enable for charge manager
+				this.wallboxInfoList[iWB].ChargeCurrent = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeCurrent`); // Get current for charging override
+				this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
 			}
 		} catch (e) {
 			this.log.error((e as Error).message);
@@ -183,16 +194,12 @@ class go_e_charger extends utils.Adapter {
 	}
 
 	/**
-	 * Is called if a subscribed state changes
-	 *
-	 * @param id - The id of the state that changed.
-	 * @param state - The changed state object, null if it was deleted.
-	 */
-	private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
+	 private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
 		try {
 			if (state) {
 				// The state was changed  -  this.subscribeStates(`Settings.*`);  -  "go-e-charger.0.Settings.Setpoint_HomeBatSoC"
-				// The state was changed  -  this.subscribeStates(`Charger.*`);  -  "go-e-charger.0.Charger.0.Settings.ChargeNOW"
+				//DEL The state was changed  -  this.subscribeStates(`Charger.*`);  -  "go-e-charger.0.Charger.0.Settings.ChargeNOW"
+				// The state was changed  -  this.subscribeStates(`Wallbox*.`);  -  "go-e-charger.0.Wallbox_0.Settings.ChargeNOW"
 
 				if (!state.ack) {
 					this.log.debug(`state change detected and parsing for id: ${id} - state: ${state.val}`);
@@ -280,6 +287,103 @@ class go_e_charger extends utils.Adapter {
 			this.log.error(`Unhandled exception processing onStateChange: ${e}`);
 		}
 	}
+	*/
+
+	/**
+	 * Is called if a subscribed state changes
+	 *
+	 * @param id - The id of the state that changed.
+	 * @param state - The changed state object, null if it was deleted.
+	 */
+	private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
+		try {
+			if (state) {
+				if (!state.ack) {
+					this.log.debug(`state change detected and parsing for id: ${id} - state: ${state.val}`);
+
+					if (id.includes(`.Settings.`)) {
+						const statePath = id.split(".");
+						let settingType = "";
+						let chargerNo = -1;
+						// Example:
+						// go-e-charger.0.Settings.Setpoint_HomeBatSoC
+						// go-e-charger.0.Wallbox_0.Settings.ChargeNOW
+						switch (statePath[2]) {
+							case "Settings":
+								settingType = statePath[3];
+								switch (settingType) {
+									case "Setpoint_HomeBatSoC":
+										if (typeof state.val === "number") {
+											minHomeBatVal = state.val;
+											this.log.debug(`settings state changed to Setpoint_HomeBatSoC: ${minHomeBatVal}`);
+											void this.setState(id, state.val, true);
+										} else {
+											this.log.warn(`Wrong type for Setpoint_HomeBatSoC: ${state.val}`);
+										}
+										break;
+									default:
+										this.log.debug(`unknown value for setting type: ${settingType}`);
+								}
+								break;
+							default:
+								// Match Wallbox_0, Wallbox_1, ...
+								if (statePath[2].startsWith("Wallbox_")) {
+									chargerNo = Number(statePath[2].replace("Wallbox_", ""));
+									settingType = statePath[3];
+
+									switch (settingType) {
+										case "ChargeNOW":
+											if (typeof state.val === "boolean") {
+												this.wallboxInfoList[chargerNo].ChargeNOW = state.val;
+												this.log.debug(`settings state changed to ChargeNOW: ${this.wallboxInfoList[chargerNo].ChargeNOW}`);
+												void this.setState(id, state.val, true);
+											} else {
+												this.log.warn(`Wrong type for ChargeNOW: ${state.val}`);
+											}
+											break;
+										case "ChargeManager":
+											if (typeof state.val === "boolean") {
+												this.wallboxInfoList[chargerNo].ChargeManager = state.val;
+												this.log.debug(`settings state changed to ChargeManager: ${this.wallboxInfoList[chargerNo].ChargeManager}`);
+												void this.setState(id, state.val, true);
+											} else {
+												this.log.warn(`Wrong type for ChargeManager: ${state.val}`);
+											}
+											break;
+										case "ChargeCurrent":
+											if (typeof state.val === "number") {
+												this.wallboxInfoList[chargerNo].ChargeCurrent = state.val;
+												this.log.debug(`settings state changed to ChargeCurrent: ${this.wallboxInfoList[chargerNo].ChargeCurrent}`);
+												void this.setState(id, state.val, true);
+											} else {
+												this.log.warn(`Wrong type for ChargeCurrent: ${state.val}`);
+											}
+											break;
+										case "Charge3Phase":
+											if (typeof state.val === "boolean") {
+												this.wallboxInfoList[chargerNo].Charge3Phase = state.val;
+												this.log.debug(`settings state changed to Charge3Phase: ${this.wallboxInfoList[chargerNo].Charge3Phase}`);
+												void this.setState(id, state.val, true);
+											} else {
+												this.log.warn(`Wrong type for Charge3Phase: ${state.val}`);
+											}
+											break;
+										default:
+											this.log.debug(`unknown value for setting type: ${settingType}`);
+									}
+								} else {
+									this.log.debug(`unknown settings value`);
+								}
+						}
+					}
+				}
+			} else {
+				this.log.warn(`state ${id} deleted`);
+			}
+		} catch (e) {
+			this.log.error(`Unhandled exception processing onStateChange: ${e}`);
+		}
+	}
 
 	/**
 	 * Is called when adapter shuts down - callback has to be called under any circumstances!
@@ -291,7 +395,8 @@ class go_e_charger extends utils.Adapter {
 			this.timeoutList.forEach(timeoutJob => this.clearTimeout(timeoutJob));
 			this.log.info(`Adapter go-eCharger cleaned up everything...`);
 			for (const [iWB] of this.config.wallBoxList.entries()) {
-				void this.setState(`Charger.${iWB}.Info.connected`, { val: false, ack: true });
+				//void this.setState(`Charger.${iWB}.Info.connected`, { val: false, ack: true });
+				void this.setState(`Wallbox_${iWB}.Info.connected`, { val: false, ack: true });
 			}
 			void this.setState(`info.connection`, false, true);
 			callback();
@@ -318,7 +423,8 @@ class go_e_charger extends utils.Adapter {
 				case "EHostUnreach":
 					// no charger found - stop adapter - only on first run
 					this.log.error(`No charger detected on given IP address for charger ${iWB} - shutting down adapter.`);
-					await this.setState(`Charger.${iWB}.info.connection`, { val: false, ack: true });
+					//await this.setState(`Charger.${iWB}.info.connection`, { val: false, ack: true });
+					await this.setState(`Wallbox_${iWB}.info.connection`, { val: false, ack: true });
 					this.stop;
 					break;
 				case "033":
@@ -342,11 +448,13 @@ class go_e_charger extends utils.Adapter {
 				case "60.1":
 				case "60.2":
 					this.log.debug(`Init done, launching state machine`);
-					await this.setState(`Charger.${iWB}.info.connection`, { val: true, ack: true });
+					//await this.setState(`Charger.${iWB}.info.connection`, { val: true, ack: true });
+					await this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
 					break;
 				default:
 					this.log.warn(`Not explicitly supported firmware ${this.wallboxInfoList[iWB].Firmware} for charger ${iWB} found!!!`);
-					await this.setState(`Charger.${iWB}.info.connection`, { val: true, ack: true });
+					//await this.setState(`Charger.${iWB}.info.connection`, { val: true, ack: true });
+					await this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
 					// sentry.io send firmware version
 					if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
 						const sentryInstance = this.getPluginInstance("sentry");
@@ -394,7 +502,8 @@ class go_e_charger extends utils.Adapter {
 					await this.Charge_Manager(iWB);
 				} else {
 					// FUTURE: time of day forces emptying of home battery
-					if ((await this.projectUtils.getStateValue(`Charger.${iWB}.Power.ChargingAllowed`)) == true) {
+					//if ((await this.projectUtils.getStateValue(`Charger.${iWB}.Power.ChargingAllowed`)) == true) {
+					if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
 						// Set to false only if still true
 						this.wallboxInfoList[iWB].SetAmp = 6;
 						await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Charging home battery until ${minHomeBatVal}%`, iWB);
@@ -402,7 +511,8 @@ class go_e_charger extends utils.Adapter {
 				}
 			} else {
 				// only if Power.ChargingAllowed is still set: switch OFF; set to min. current;
-				if ((await this.projectUtils.getStateValue(`Charger.${iWB}.Power.ChargingAllowed`)) == true) {
+				//if ((await this.projectUtils.getStateValue(`Charger.${iWB}.Power.ChargingAllowed`)) == true) {
+				if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
 					// Set to false only if still true
 					await this.Read_ChargerAPIV1(iWB);
 					if (this.wallboxInfoList[iWB].HardwareMin3) {
@@ -410,7 +520,8 @@ class go_e_charger extends utils.Adapter {
 					}
 					this.wallboxInfoList[iWB].SetAmp = 6;
 					await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Deactivate go-eCharger`, iWB);
-				} else if (Number(await this.projectUtils.getStateValue(`Charger.${iWB}.Power.Charge`)) > 0) {
+					//} else if (Number(await this.projectUtils.getStateValue(`Charger.${iWB}.Power.Charge`)) > 0) {
+				} else if (Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`)) > 0) {
 					await this.Read_ChargerAPIV1(iWB);
 					if (this.wallboxInfoList[iWB].HardwareMin3) {
 						await this.Read_ChargerAPIV2(iWB);
@@ -488,7 +599,8 @@ class go_e_charger extends utils.Adapter {
 		},
 		iWB: number,
 	): Promise<void> {
-		const basePath = `Charger.${iWB}`;
+		//const basePath = `Charger.${iWB}`;
+		const basePath = `Wallbox_${iWB}`;
 
 		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Info.RebootCounter`, Number(status.rbc), "Counter for system reboot events", "", "value");
 		void this.projectUtils.checkAndSetValueNumber(
@@ -604,7 +716,8 @@ class go_e_charger extends utils.Adapter {
 	 * - Logs the parsed data for debugging and traceability.
 	 */
 	private ParseStatusAPIV2(status: { psm: number; typ: string }, iWB: number): void {
-		const basePath = `Charger.${iWB}`;
+		//const basePath = `Charger.${iWB}`;
+		const basePath = `Wallbox_${iWB}`;
 		switch (status.psm) {
 			case 1:
 				this.wallboxInfoList[iWB].EnabledPhases = 1;
@@ -656,7 +769,8 @@ class go_e_charger extends utils.Adapter {
 	/*****************************************************************************************/
 	async Charge_Config(Allow: string, Ampere: number, LogMessage: string, iWB: number): Promise<void> {
 		this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
-		const basePath = `Charger.${iWB}`;
+		//const basePath = `Charger.${iWB}`;
+		const basePath = `Wallbox_${iWB}`;
 		if (!this.config.wallBoxList[iWB].readOnlyMode) {
 			await axiosInstance
 				.get(`http://${this.config.wallBoxList[iWB].ipAddress}/mqtt?payload=alw=${Allow}`, { transformResponse: r => r }) // activate charging
@@ -787,7 +901,8 @@ class go_e_charger extends utils.Adapter {
 		this.log.debug(`Got external state of house power consumption: ${houseConsumption} W`);
 		batSoC = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeBatSoc);
 		this.log.debug(`Got external state of battery SoC: ${batSoC}%`);
-		this.wallboxInfoList[iWB].ChargePower = await this.projectUtils.getStateValue(`Charger.${iWB}Power.Charge`);
+		//this.wallboxInfoList[iWB].ChargePower = await this.projectUtils.getStateValue(`Charger.${iWB}Power.Charge`);
+		this.wallboxInfoList[iWB].ChargePower = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`);
 
 		const Phases =
 			this.wallboxInfoList[iWB].HardwareMin3 && this.wallboxInfoList[iWB].EnabledPhases
