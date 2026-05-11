@@ -86,8 +86,8 @@ class go_e_charger extends utils.Adapter {
 
 		this.subscribeStates(`Settings.*`); //all states changes inside the adapters settings namespace are subscribed
 		//this.subscribeStates(`Charger.*`); //all states changes inside the adapters settings namespace are subscribed
-		this.subscribeStates(`Wallbox*.`); //all states changes inside the adapters settings namespace are subscribed
-
+		this.subscribeStates(`Wallbox_*`);
+		//this.subscribeStates(`Wallbox*.`); //all states changes inside the adapters settings namespace are subscribed
 		// init folder
 		await this.projectUtils.checkAndSetFolder(`Charger`, `List of wallboxes`, `go-eCharger.png`, true);
 
@@ -298,6 +298,8 @@ class go_e_charger extends utils.Adapter {
 	private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
 		try {
 			if (state) {
+				// The state was changed - this.subscribeStates(`Settings.*`);  -  "go-e-charger.0.Settings.Setpoint_HomeBatSoC"
+				// The state was changed - this.subscribeStates(`Wallbox*.`);  -  "go-e-charger.0.Wallbox_0.Settings.ChargeNOW"
 				if (!state.ack) {
 					this.log.debug(`state change detected and parsing for id: ${id} - state: ${state.val}`);
 
