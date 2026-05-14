@@ -158,8 +158,8 @@ class go_e_charger extends utils.Adapter {
             return;
         }
         // init global statistics channel and states
-        await this.projectUtils.checkAndSetChannel(`Statistics_Global`, `statistical data sum of all chargers`, `go-eCharger.png`, true);
-        await this.projectUtils.checkAndSetValueNumber(`Statistics_Global.Charged`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh", "value", false, true);
+        await this.projectUtils.checkAndSetChannel(`statisticsGlobal`, `statistical data sum of all chargers`, `go-eCharger.png`, true);
+        await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.charged`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh", "value", false, true);
         // sentry.io ping
         if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
             const sentryInstance = this.getPluginInstance("sentry");
@@ -429,7 +429,7 @@ class go_e_charger extends utils.Adapter {
             totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.charged`)) || 0; // accumulate total charged energy of all chargers
         } // next wallbox
         // global statistics
-        await this.projectUtils.checkAndSetValueNumber(`Statistics_Global.Charged`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh");
+        await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.charged`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh");
         const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
         if (stateMachine != null) {
             this.timeoutList.push(stateMachine);
