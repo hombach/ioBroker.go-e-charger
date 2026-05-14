@@ -523,7 +523,7 @@ class go_e_charger extends utils.Adapter {
         void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`);
         // WiP 634
         // uby - uint8_t - unlocked_by: Nummer der RFID Karte, die den jetzigen Ladevorgang freigeschalten hat
-        void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.UnlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
+        void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
         // WiP 634
         this.log.debug(`got and parsed go-e charger ${iWB} data`);
     }
