@@ -126,10 +126,10 @@ class go_e_charger extends utils.Adapter {
                     throw new Error(`Wallbox ${iWB} - IP address not set - stopping adapter`);
                 }
                 // init device
-                await this.projectUtils.checkAndSetDevice(`Wallbox_${iWB}`, wallBox.chargerName || `Wallbox ${iWB}`, `Info.connected`, `go-eCharger.png`, true);
+                await this.projectUtils.checkAndSetDevice(`Wallbox_${iWB}`, wallBox.chargerName || `Wallbox ${iWB}`, `Info.connection`, `go-eCharger.png`, true);
                 // init channel for settings and info states for each charger
                 await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Info`, `Informations about go-eCharger`, `go-eCharger.png`, true);
-                await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Info.connected`, false, `Device connected`, "indicator.connected");
+                await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Info.connection`, false, `Device connected`, "indicator.connected");
                 await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Power`, `current wallbox power data`, `go-eCharger.png`, true);
                 await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Settings`, `states to dynamically adjust wallbox settings`, `go-eCharger.png`, true);
                 await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Statistics`, `wallbox statistics data`, `go-eCharger.png`, true);
@@ -143,7 +143,7 @@ class go_e_charger extends utils.Adapter {
                     await this.Read_ChargerAPIV1(iWB);
                     await this.Read_ChargerAPIV2(iWB);
                     this.log.info(`IP address charger ${iWB} found in config: ${wallBox.ipAddress}`);
-                    void this.setState(`Wallbox_${iWB}.Info.connected`, { val: true, ack: true });
+                    void this.setState(`Wallbox_${iWB}.Info.connection`, { val: true, ack: true });
                 }
                 this.wallboxInfoList[iWB].ChargeNOW = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeNOW`); // Get charging override trigger
                 this.wallboxInfoList[iWB].ChargeManager = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeManager`); // Get enable for charge manager
@@ -297,7 +297,7 @@ class go_e_charger extends utils.Adapter {
             this.timeoutList.forEach(timeoutJob => this.clearTimeout(timeoutJob));
             this.log.info(`Adapter go-eCharger cleaned up everything...`);
             for (const [iWB] of this.config.wallBoxList.entries()) {
-                void this.setState(`Wallbox_${iWB}.Info.connected`, { val: false, ack: true });
+                void this.setState(`Wallbox_${iWB}.Info.connection`, { val: false, ack: true });
             }
             void this.setState(`info.connection`, false, true);
             callback();

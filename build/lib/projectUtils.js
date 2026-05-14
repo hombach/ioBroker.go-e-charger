@@ -270,7 +270,7 @@ class ProjectUtils {
      *
      * @param deviceObjectName - Object ID of the device (e.g. Charger.0)
      * @param name - Display name of the device (default: derived from ID)
-     * @param onlineId - Optional state ID for online status binding (e.g. `info.connected`)
+     * @param onlineId - Optional state ID for online status binding (e.g. `info.connection`)
      * @param icon - Optional icon name/path (e.g. `go-eCharger.png`)
      * @param forceMode - Optional boolean indicating if the device should be overwritten if it already exists (default is false).
      * @returns Promise<void>
