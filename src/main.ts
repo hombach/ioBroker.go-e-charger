@@ -510,9 +510,15 @@ class go_e_charger extends utils.Adapter {
 	): Promise<void> {
 		const basePath = `Wallbox_${iWB}`;
 
-		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Info.RebootCounter`, Number(status.rbc), "Counter for system reboot events", "", "value");
 		void this.projectUtils.checkAndSetValueNumber(
-			`${basePath}.Info.RebootTimer`,
+			`${basePath}.Statistics.RebootCounter`,
+			Number(status.rbc),
+			`Counter for system reboot events`,
+			"",
+			"value",
+		);
+		void this.projectUtils.checkAndSetValueNumber(
+			`${basePath}.Statistics.RebootTimer`,
 			Math.floor(status.rbt / 1000 / 3600),
 			`Time since last reboot`,
 			"h",

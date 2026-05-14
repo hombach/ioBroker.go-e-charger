@@ -485,8 +485,8 @@ class go_e_charger extends utils.Adapter {
      */
     async ParseStatusAPIV1(status, iWB) {
         const basePath = `Wallbox_${iWB}`;
-        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Info.RebootCounter`, Number(status.rbc), "Counter for system reboot events", "", "value");
-        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Info.RebootTimer`, Math.floor(status.rbt / 1000 / 3600), `Time since last reboot`, "h", "value");
+        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Statistics.RebootCounter`, Number(status.rbc), `Counter for system reboot events`, "", "value");
+        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Statistics.RebootTimer`, Math.floor(status.rbt / 1000 / 3600), `Time since last reboot`, "h", "value");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Info.CarState`, Number(status.car), "State of connected car", "", "value");
         switch (status.car) {
             case "1":
