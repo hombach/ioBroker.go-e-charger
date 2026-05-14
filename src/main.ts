@@ -110,13 +110,13 @@ class go_e_charger extends utils.Adapter {
 				await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Settings.ChargeManager`, false, `Charge Manager enabled`, "switch", true, true);
 				await this.projectUtils.checkAndSetValueNumber(
 					`Wallbox_${iWB}.Settings.ChargeCurrent`,
-					6,
+					this.wallboxInfoList[iWB].MinAmp,
 					`charge current output`,
 					"A",
 					"value.current",
 					true,
-					true,
 					false,
+					true,
 					this.wallboxInfoList[iWB].MinAmp,
 					this.wallboxInfoList[iWB].MaxAmp,
 					1,
