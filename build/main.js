@@ -48,6 +48,7 @@ let minHomeBatVal = 87;
 let batSoC = 0;
 let solarPower = 0;
 let houseConsumption = 0;
+let totalChargeEnergy = 0;
 //ToDo let totalChargePower = 0;
 //ToDo let totalMeasuredChargeCurrent = 0;
 class go_e_charger extends utils.Adapter {
@@ -148,7 +149,7 @@ class go_e_charger extends utils.Adapter {
                 this.wallboxInfoList[iWB].ChargeManager = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeManager`); // Get enable for charge manager
                 this.wallboxInfoList[iWB].ChargeCurrent = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeCurrent`); // Get current for charging override
                 this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
-            }
+            } // next wallbox
         }
         catch (e) {
             this.log.error(e.message);
@@ -156,6 +157,9 @@ class go_e_charger extends utils.Adapter {
             await this.stop?.({ exitCode: 11, reason: `invalid config` });
             return;
         }
+        // init global statistics channel and states
+        await this.projectUtils.checkAndSetChannel(`Statistics_Global`, `statistical data sum of all chargers`, `go-eCharger.png`, true);
+        await this.projectUtils.checkAndSetValueNumber(`Statistics_Global.Charged`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh", "value", false, true);
         // sentry.io ping
         if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
             const sentryInstance = this.getPluginInstance("sentry");
@@ -368,6 +372,7 @@ class go_e_charger extends utils.Adapter {
     /*****************************************************************************************/
     async StateMachine() {
         this.log.debug(`StateMachine cycle start`);
+        totalChargeEnergy = 0; // reset total charge energy at the beginning of each cycle, will be accumulated from all chargers in the loop below
         for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
             if (this.wallboxInfoList[iWB].ChargeNOW || this.wallboxInfoList[iWB].ChargeManager) {
                 // Charge-NOW or Charge-Manager is enabled
@@ -421,7 +426,10 @@ class go_e_charger extends utils.Adapter {
                     }
                 }
             }
-        } // next charger
+            totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.Statistics.Charged`)) || 0; // accumulate total charged energy of all chargers
+        } // next wallbox
+        // global statistics
+        await this.projectUtils.checkAndSetValueNumber(`Statistics_Global.Charged`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh");
         const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
         if (stateMachine != null) {
             this.timeoutList.push(stateMachine);

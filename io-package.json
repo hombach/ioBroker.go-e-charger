@@ -236,15 +236,6 @@
             "native": {}
         },
         {
-            "_id": "Statistics_Total",
-            "type": "channel",
-            "common": {
-                "name": "statistical data sum of all chargers",
-                "icon": "go-eCharger.png"
-            },
-            "native": {}
-        },
-        {
             "_id": "Settings",
             "type": "channel",
             "common": {
