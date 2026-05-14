@@ -158,9 +158,9 @@ class go_e_charger extends utils.Adapter {
 		}
 
 		// init global statistics channel and states
-		await this.projectUtils.checkAndSetChannel(`Statistics_Global`, `statistical data sum of all chargers`, `go-eCharger.png`, true);
+		await this.projectUtils.checkAndSetChannel(`statisticsGlobal`, `statistical data sum of all chargers`, `go-eCharger.png`, true);
 		await this.projectUtils.checkAndSetValueNumber(
-			`Statistics_Global.Charged`,
+			`statisticsGlobal.charged`,
 			totalChargeEnergy,
 			`Totally charged sum of all go-e in lifetime`,
 			"kWh",
@@ -436,7 +436,7 @@ class go_e_charger extends utils.Adapter {
 		} // next wallbox
 
 		// global statistics
-		await this.projectUtils.checkAndSetValueNumber(`Statistics_Global.Charged`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh");
+		await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.charged`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh");
 
 		const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
 		if (stateMachine != null) {
