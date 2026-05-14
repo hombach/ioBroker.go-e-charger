@@ -100,14 +100,14 @@ class go_e_charger extends utils.Adapter {
 				await this.projectUtils.checkAndSetDevice(
 					`Wallbox_${iWB}`,
 					wallBox.chargerName || `Wallbox ${iWB}`,
-					`Info.connection`,
+					`info.connection`,
 					`go-eCharger.png`,
 					true,
 				);
 
 				// init channel for settings and info states for each charger
-				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Info`, `Informations about go-eCharger`, `go-eCharger.png`, true);
-				await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Info.connection`, false, `Device connected`, "indicator.connected");
+				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.info`, `Informations about go-eCharger`, `go-eCharger.png`, true);
+				await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.info.connection`, false, `Device connected`, "indicator.connected");
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Power`, `current wallbox power data`, `go-eCharger.png`, true);
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Settings`, `states to dynamically adjust wallbox settings`, `go-eCharger.png`, true);
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Statistics`, `wallbox statistics data`, `go-eCharger.png`, true);
@@ -142,7 +142,7 @@ class go_e_charger extends utils.Adapter {
 					await this.Read_ChargerAPIV1(iWB);
 					await this.Read_ChargerAPIV2(iWB);
 					this.log.info(`IP address charger ${iWB} found in config: ${wallBox.ipAddress}`);
-					void this.setState(`Wallbox_${iWB}.Info.connection`, { val: true, ack: true });
+					void this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
 				}
 
 				this.wallboxInfoList[iWB].ChargeNOW = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeNOW`); // Get charging override trigger
@@ -305,7 +305,7 @@ class go_e_charger extends utils.Adapter {
 			this.timeoutList.forEach(timeoutJob => this.clearTimeout(timeoutJob));
 			this.log.info(`Adapter go-eCharger cleaned up everything...`);
 			for (const [iWB] of this.config.wallBoxList.entries()) {
-				void this.setState(`Wallbox_${iWB}.Info.connection`, { val: false, ack: true });
+				void this.setState(`Wallbox_${iWB}.info.connection`, { val: false, ack: true });
 			}
 			void this.setState(`info.connection`, false, true);
 			callback();
@@ -524,27 +524,27 @@ class go_e_charger extends utils.Adapter {
 			"h",
 			"value",
 		);
-		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Info.CarState`, Number(status.car), "State of connected car", "", "value");
+		void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.CarState`, Number(status.car), "State of connected car", "", "value");
 		switch (status.car) {
 			case "1":
-				await this.projectUtils.checkAndSetValue(`${basePath}.Info.CarStateString`, "Wallbox ready, no car", "State of connected car", "value");
+				await this.projectUtils.checkAndSetValue(`${basePath}.info.CarStateString`, "Wallbox ready, no car", "State of connected car", "value");
 				break;
 			case "2":
-				await this.projectUtils.checkAndSetValue(`${basePath}.Info.CarStateString`, "Charging...", "State of connected car", "value");
+				await this.projectUtils.checkAndSetValue(`${basePath}.info.CarStateString`, "Charging...", "State of connected car", "value");
 				break;
 			case "3":
-				await this.projectUtils.checkAndSetValue(`${basePath}.Info.CarStateString`, "Wait for car", "State of connected car", "value");
+				await this.projectUtils.checkAndSetValue(`${basePath}.info.CarStateString`, "Wait for car", "State of connected car", "value");
 				break;
 			case "4":
 				await this.projectUtils.checkAndSetValue(
-					`${basePath}.Info.CarStateString`,
+					`${basePath}.info.CarStateString`,
 					`Charge finished, car still connected`,
 					"State of connected car",
 					"value",
 				);
 				break;
 			default:
-				await this.projectUtils.checkAndSetValue(`${basePath}.Info.CarStateString`, "Error", `State of connected car`, "value");
+				await this.projectUtils.checkAndSetValue(`${basePath}.info.CarStateString`, "Error", `State of connected car`, "value");
 		}
 
 		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrent`, Number(status.amp), `Charge current output`, "A", "value.current");
@@ -581,10 +581,10 @@ class go_e_charger extends utils.Adapter {
 			"value.current",
 		);
 		this.wallboxInfoList[iWB].Firmware = status.fwv;
-		void this.projectUtils.checkAndSetValue(`${basePath}.Info.FirmwareVersion`, status.fwv, `Firmware version of charger`);
+		void this.projectUtils.checkAndSetValue(`${basePath}.info.FirmwareVersion`, status.fwv, `Firmware version of charger`);
 		// WiP 634
 		// uby - uint8_t - unlocked_by: Nummer der RFID Karte, die den jetzigen Ladevorgang freigeschalten hat
-		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Info.UnlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
+		void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.UnlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
 		// WiP 634
 		this.log.debug(`got and parsed go-e charger ${iWB} data`);
 	}
@@ -650,7 +650,7 @@ class go_e_charger extends utils.Adapter {
 		);
 		this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
 		this.wallboxInfoList[iWB].Hardware = status.typ;
-		void this.projectUtils.checkAndSetValue(`${basePath}.Info.HardwareVersion`, status.typ, `Hardware version of charger`, "value");
+		void this.projectUtils.checkAndSetValue(`${basePath}.info.HardwareVersion`, status.typ, `Hardware version of charger`, "value");
 		this.log.debug(`got and parsed go-e charger ${iWB} data with API V2`);
 	}
 
