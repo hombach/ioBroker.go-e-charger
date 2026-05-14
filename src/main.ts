@@ -110,7 +110,7 @@ class go_e_charger extends utils.Adapter {
 				await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.info.connection`, false, `Device connected`, "indicator.connected");
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Power`, `current wallbox power data`, `go-eCharger.png`, true);
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Settings`, `states to dynamically adjust wallbox settings`, `go-eCharger.png`, true);
-				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Statistics`, `wallbox statistics data`, `go-eCharger.png`, true);
+				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.statistics`, `wallbox statistics data`, `go-eCharger.png`, true);
 
 				// init settings values for each charger in wallboxInfoList
 				await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Settings.ChargeNOW`, false, `ChargeNOW enabled`, "switch", true, true);
@@ -432,7 +432,7 @@ class go_e_charger extends utils.Adapter {
 					}
 				}
 			}
-			totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.Statistics.Charged`)) || 0; // accumulate total charged energy of all chargers
+			totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.charged`)) || 0; // accumulate total charged energy of all chargers
 		} // next wallbox
 
 		// global statistics
@@ -479,8 +479,8 @@ class go_e_charger extends utils.Adapter {
 	 * and writes the values into the corresponding objects in the adapter.
 	 *
 	 * @param status - Status object returned by the go-e Charger API V1
-	 * @param status.rbc - Reboot counter
-	 * @param status.rbt - Reboot timer
+	 * @param status.rbc - reboot counter
+	 * @param status.rbt - reboot timer
 	 * @param status.car - Car state
 	 * @param status.amp - Current amperage persistent
 	 * @param status.amx - Current amperage volatile
@@ -511,14 +511,14 @@ class go_e_charger extends utils.Adapter {
 		const basePath = `Wallbox_${iWB}`;
 
 		void this.projectUtils.checkAndSetValueNumber(
-			`${basePath}.Statistics.RebootCounter`,
+			`${basePath}.statistics.rebootCounter`,
 			Number(status.rbc),
 			`Counter for system reboot events`,
 			"",
 			"value",
 		);
 		void this.projectUtils.checkAndSetValueNumber(
-			`${basePath}.Statistics.RebootTimer`,
+			`${basePath}.statistics.rebootTimer`,
 			Math.floor(status.rbt / 1000 / 3600),
 			`Time since last reboot`,
 			"h",
@@ -571,7 +571,7 @@ class go_e_charger extends utils.Adapter {
 			"phase",
 			"value",
 		);
-		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Statistics.Charged`, status.eto / 10, `Totally charged in go-e lifetime`, "kWh", "value");
+		void this.projectUtils.checkAndSetValueNumber(`${basePath}.statistics.charged`, status.eto / 10, `Totally charged in go-e lifetime`, "kWh", "value");
 		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.Charge`, status.nrg[11] * 10, `actual charging-power`, "W", "value.power");
 		void this.projectUtils.checkAndSetValueNumber(
 			`${basePath}.Power.MeasuredMaxPhaseCurrent`,
