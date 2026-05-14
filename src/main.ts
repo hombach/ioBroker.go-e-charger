@@ -90,7 +90,6 @@ class go_e_charger extends utils.Adapter {
 		try {
 			for (const [iWB, wallBox] of this.config.wallBoxList.entries()) {
 				this.log.debug(`Setting up Wallbox ${iWB} with IP ${wallBox.ipAddress} in config`);
-				//for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
 				if (!wallBox.ipAddress) {
 					//if (!this.config.wallBoxList[iWB].ipAddress) {
 					throw new Error(`Wallbox ${iWB} - IP address not set - stopping adapter`);
@@ -118,8 +117,8 @@ class go_e_charger extends utils.Adapter {
 					true,
 					true,
 					false,
-					6,
-					32,
+					this.wallboxInfoList[iWB].MinAmp,
+					this.wallboxInfoList[iWB].MaxAmp,
 					1,
 				);
 				this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override

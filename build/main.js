@@ -120,7 +120,6 @@ class go_e_charger extends utils.Adapter {
         try {
             for (const [iWB, wallBox] of this.config.wallBoxList.entries()) {
                 this.log.debug(`Setting up Wallbox ${iWB} with IP ${wallBox.ipAddress} in config`);
-                //for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
                 if (!wallBox.ipAddress) {
                     //if (!this.config.wallBoxList[iWB].ipAddress) {
                     throw new Error(`Wallbox ${iWB} - IP address not set - stopping adapter`);
@@ -136,7 +135,7 @@ class go_e_charger extends utils.Adapter {
                 // init settings values for each charger in wallboxInfoList
                 await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Settings.ChargeNOW`, false, `ChargeNOW enabled`, "switch", true, true);
                 await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Settings.ChargeManager`, false, `Charge Manager enabled`, "switch", true, true);
-                await this.projectUtils.checkAndSetValueNumber(`Wallbox_${iWB}.Settings.ChargeCurrent`, 6, `charge current output`, "A", "value.current", true, true, false, 6, 32, 1);
+                await this.projectUtils.checkAndSetValueNumber(`Wallbox_${iWB}.Settings.ChargeCurrent`, 6, `charge current output`, "A", "value.current", true, true, false, this.wallboxInfoList[iWB].MinAmp, this.wallboxInfoList[iWB].MaxAmp, 1);
                 this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
                 await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Settings.Charge3Phase`, false, `Setting 3-phase charging`, "switch", true, true);
                 if (wallBox.ipAddress) {
