@@ -516,7 +516,7 @@ class go_e_charger extends utils.Adapter {
         }
         this.wallboxInfoList[iWB].GridPhases = ((32 & status.pha) >> 5) + ((16 & status.pha) >> 4) + ((8 & status.pha) >> 3);
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.GridPhases`, this.wallboxInfoList[iWB].GridPhases, `No of available grid phases`, "phase", "value");
-        void this.projectUtils.checkAndSetValueNumber(`${basePath}.statistics.chargedEnergy`, status.eto / 10, `Totally charged in go-e lifetime`, "kWh", "value");
+        void this.projectUtils.checkAndSetValueNumber(`${basePath}.statistics.chargedEnergy`, status.eto / 10, `Totally charged in wallbox lifetime`, "kWh", "value.energy.consumed");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.Charge`, status.nrg[11] * 10, `actual charging-power`, "W", "value.power");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.MeasuredMaxPhaseCurrent`, Math.max(...status.nrg.slice(4, 7)) / 10, `Measured max. current of grid phases`, "A", "value.current");
         this.wallboxInfoList[iWB].Firmware = status.fwv;

@@ -615,9 +615,9 @@ class go_e_charger extends utils.Adapter {
 		void this.projectUtils.checkAndSetValueNumber(
 			`${basePath}.statistics.chargedEnergy`,
 			status.eto / 10,
-			`Totally charged in go-e lifetime`,
+			`Totally charged in wallbox lifetime`,
 			"kWh",
-			"value",
+			"value.energy.consumed",
 		);
 		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.Charge`, status.nrg[11] * 10, `actual charging-power`, "W", "value.power");
 		void this.projectUtils.checkAndSetValueNumber(
