@@ -436,7 +436,13 @@ class go_e_charger extends utils.Adapter {
 		} // next wallbox
 
 		// global statistics
-		await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.charged`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh");
+		await this.projectUtils.checkAndSetValueNumber(
+			`statisticsGlobal.charged`,
+			totalChargeEnergy,
+			`Totally charged sum of all go-e in lifetime`,
+			"kWh",
+			"value.energy.consumed",
+		);
 
 		const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
 		if (stateMachine != null) {
@@ -492,6 +498,7 @@ class go_e_charger extends utils.Adapter {
 	 * @param status.uby - Unlocked by RFID number
 	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
 	 */
+
 	async ParseStatusAPIV1(
 		status: {
 			rbc: any;
@@ -505,6 +512,40 @@ class go_e_charger extends utils.Adapter {
 			nrg: number[];
 			fwv: string;
 			uby: any;
+
+			// === RFID Felder hinzufügen ===
+			rca?: string;
+			rcr?: string;
+			rcd?: string;
+			rc4?: string;
+			rc5?: string;
+			rc6?: string;
+			rc7?: string;
+			rc8?: string;
+			rc9?: string;
+			rc1?: string;
+
+			rna?: string;
+			rnm?: string;
+			rne?: string;
+			rn4?: string;
+			rn5?: string;
+			rn6?: string;
+			rn7?: string;
+			rn8?: string;
+			rn9?: string;
+			rn1?: string;
+
+			eca?: number;
+			ecr?: number;
+			ecd?: number;
+			ec4?: number;
+			ec5?: number;
+			ec6?: number;
+			ec7?: number;
+			ec8?: number;
+			ec9?: number;
+			ec1?: number;
 		},
 		iWB: number,
 	): Promise<void> {
@@ -586,6 +627,66 @@ class go_e_charger extends utils.Adapter {
 		// uby - uint8_t - unlocked_by: Nummer der RFID Karte, die den jetzigen Ladevorgang freigeschalten hat
 		void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
 		// WiP 634
+
+		// WiP 802
+		// rca; rcr; rcd; rc4; rc5; rc6; rc7; rc8; rc9; rc1 - String - RFID Karte ID von 1-10 als String Format und Länge: variabel, je nach Version
+		// rna; rnm; rne; rn4; rn5; rn6; rn7; rn8; rn9; rn1 - String - RFID Karte Name von 1-10; Maximallänge: 10 Zeichen
+		// eca; ecr; ecd; ec4; ec5; ec6; ec7; ec8; ec9; ec1 - uint32_t - Geladene Energiemenge pro RFID Karte von 1-10
+		void this.projectUtils.checkAndSetChannel(`${basePath}.statistics.RFID${Number(status.rca)}1`, status.rna);
+		void this.projectUtils.checkAndSetValueNumber(
+			`${basePath}.statistics.RFID${Number(status.rca)}1.chargedEnergy`,
+			Number(status.eca) / 10,
+			`Charged energy for RFID chip ${Number(status.rca)}1`,
+			"kWh",
+			"value.energy.consumed",
+		);
+		// WiP 802
+
+		// WiP 802 - RFID Karten (nur bei gefüllten Daten anlegen)
+		const rfidIds = ["rca", "rcr", "rcd", "rc4", "rc5", "rc6", "rc7", "rc8", "rc9", "rc1"];
+		const rfidNames = ["rna", "rnm", "rne", "rn4", "rn5", "rn6", "rn7", "rn8", "rn9", "rn1"];
+		const rfidEnergy = ["eca", "ecr", "ecd", "ec4", "ec5", "ec6", "ec7", "ec8", "ec9", "ec1"];
+
+		for (let i = 0; i < 10; i++) {
+			const idKey = rfidIds[i];
+			const nameKey = rfidNames[i];
+			const energyKey = rfidEnergy[i];
+
+			//const cardId = status[idKey]?.toString().trim();
+			//const cardName = status[nameKey]?.toString().trim();
+			//const energyRaw = status[energyKey];
+			const cardId = (status[idKey as keyof typeof status] as string | undefined)?.toString().trim();
+			const cardName = (status[nameKey as keyof typeof status] as string | undefined)?.toString().trim();
+			const energyRaw = status[energyKey as keyof typeof status] as number | undefined;
+
+			// Bedingung: Karte nur anlegen, wenn Name sinnvoll ist ODER Energie geladen wurde
+			if (!cardId || cardId === "0" || cardName === "n/a" || cardName === "" || cardName == null) {
+				// Optional: leere/existierende States löschen, falls gewünscht
+				// await this.projectUtils.deleteChannel(`${basePath}.statistics.RFID${i + 1}`);
+				continue;
+			}
+
+			const cardNumber = i + 1;
+			const channelPath = `${basePath}.statistics.dRFID${cardNumber}`;
+
+			// Channel + Name anlegen
+			await this.projectUtils.checkAndSetChannel(channelPath, cardName || `Karte ${cardNumber}`);
+
+			await this.projectUtils.checkAndSetValueNumber(
+				`${channelPath}.chargedEnergy`,
+				Number(energyRaw) / 10 || 0,
+				`Charged energy for RFID chip ${cardNumber}`,
+				"kWh",
+				"value.energy.consumed",
+			);
+
+			// Optional: weitere Werte (ID, etc.)
+			if (cardId && cardId !== "n/a") {
+				await this.projectUtils.checkAndSetValue(`${channelPath}.cardId`, cardId, `RFID Card ID ${cardNumber}`);
+			}
+		}
+		// WiP 802
+
 		this.log.debug(`got and parsed go-e charger ${iWB} data`);
 	}
 
