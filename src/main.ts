@@ -632,11 +632,11 @@ class go_e_charger extends utils.Adapter {
 		// rca; rcr; rcd; rc4; rc5; rc6; rc7; rc8; rc9; rc1 - String - RFID Karte ID von 1-10 als String Format und Länge: variabel, je nach Version
 		// rna; rnm; rne; rn4; rn5; rn6; rn7; rn8; rn9; rn1 - String - RFID Karte Name von 1-10; Maximallänge: 10 Zeichen
 		// eca; ecr; ecd; ec4; ec5; ec6; ec7; ec8; ec9; ec1 - uint32_t - Geladene Energiemenge pro RFID Karte von 1-10
-		void this.projectUtils.checkAndSetChannel(`${basePath}.statistics.RFID${Number(status.rca)}1`, status.rna);
+		void this.projectUtils.checkAndSetChannel(`${basePath}.statistics.RFID${Number(status.rca)}`, status.rna);
 		void this.projectUtils.checkAndSetValueNumber(
-			`${basePath}.statistics.RFID${Number(status.rca)}1.chargedEnergy`,
+			`${basePath}.statistics.TEST1RFID${Number(status.rca)}.chargedEnergy`,
 			Number(status.eca) / 10,
-			`Charged energy for RFID chip ${Number(status.rca)}1`,
+			`Charged energy for RFID chip ${Number(status.rca)}`,
 			"kWh",
 			"value.energy.consumed",
 		);
@@ -651,27 +651,20 @@ class go_e_charger extends utils.Adapter {
 			const idKey = rfidIds[i];
 			const nameKey = rfidNames[i];
 			const energyKey = rfidEnergy[i];
-
-			//const cardId = status[idKey]?.toString().trim();
-			//const cardName = status[nameKey]?.toString().trim();
-			//const energyRaw = status[energyKey];
 			const cardId = (status[idKey as keyof typeof status] as string | undefined)?.toString().trim();
 			const cardName = (status[nameKey as keyof typeof status] as string | undefined)?.toString().trim();
 			const energyRaw = status[energyKey as keyof typeof status] as number | undefined;
 
 			// Bedingung: Karte nur anlegen, wenn Name sinnvoll ist ODER Energie geladen wurde
-			if (!cardId || cardId === "0" || cardName === "n/a" || cardName === "" || cardName == null) {
-				// Optional: leere/existierende States löschen, falls gewünscht
+			//if (!cardId || cardId === "0" || cardName === "n/a" || cardName === "" || cardName == null) {
+			if (!cardId || cardId === "0") {
 				// await this.projectUtils.deleteChannel(`${basePath}.statistics.RFID${i + 1}`);
 				continue;
 			}
 
 			const cardNumber = i + 1;
-			const channelPath = `${basePath}.statistics.dRFID${cardNumber}`;
-
-			// Channel + Name anlegen
+			const channelPath = `${basePath}.statistics.RFID${cardNumber}`;
 			await this.projectUtils.checkAndSetChannel(channelPath, cardName || `Karte ${cardNumber}`);
-
 			await this.projectUtils.checkAndSetValueNumber(
 				`${channelPath}.chargedEnergy`,
 				Number(energyRaw) / 10 || 0,
@@ -679,10 +672,11 @@ class go_e_charger extends utils.Adapter {
 				"kWh",
 				"value.energy.consumed",
 			);
-
-			// Optional: weitere Werte (ID, etc.)
 			if (cardId && cardId !== "n/a") {
 				await this.projectUtils.checkAndSetValue(`${channelPath}.cardId`, cardId, `RFID Card ID ${cardNumber}`);
+			}
+			if (cardName && cardName !== "n/a") {
+				await this.projectUtils.checkAndSetValue(`${channelPath}.cardName`, cardName, `RFID Card Name ${cardNumber}`);
 			}
 		}
 		// WiP 802
