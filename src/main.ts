@@ -437,7 +437,7 @@ class go_e_charger extends utils.Adapter {
 
 		// global statistics
 		await this.projectUtils.checkAndSetValueNumber(
-			`statisticsGlobal.charged`,
+			`statisticsGlobal.chargedEnergy`,
 			totalChargeEnergy,
 			`Totally charged sum of all go-e in lifetime`,
 			"kWh",
@@ -612,7 +612,13 @@ class go_e_charger extends utils.Adapter {
 			"phase",
 			"value",
 		);
-		void this.projectUtils.checkAndSetValueNumber(`${basePath}.statistics.charged`, status.eto / 10, `Totally charged in go-e lifetime`, "kWh", "value");
+		void this.projectUtils.checkAndSetValueNumber(
+			`${basePath}.statistics.chargedEnergy`,
+			status.eto / 10,
+			`Totally charged in go-e lifetime`,
+			"kWh",
+			"value",
+		);
 		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.Charge`, status.nrg[11] * 10, `actual charging-power`, "W", "value.power");
 		void this.projectUtils.checkAndSetValueNumber(
 			`${basePath}.Power.MeasuredMaxPhaseCurrent`,
