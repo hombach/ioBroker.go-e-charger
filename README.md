@@ -52,7 +52,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 - (hombach) BREAKING: switch to multi charger support (#801), (#807)
 - (hombach) BREAKING: adapter needs node 22 now
 - (hombach) adapter requires admin >=7.6.20 now
-- (hombach) repo cleanup
+- (hombach) add RFID info (name, id, consumption) (#802)
 
 ### 0.21.4 (2026-04-19)
 

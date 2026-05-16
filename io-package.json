@@ -4,17 +4,17 @@
         "version": "1.0.0",
         "news": {
             "1.0.0": {
-                "en": "BREAKING: switch to multi charger support (#801), (#807)\nBREAKING: adapter needs node 22 now\nadapter requires admin >=7.6.20 now\nrepo cleanup",
-                "de": "BREAKING: Wechsel zur Multi-Ladegerät-Unterstützung (#801), (#807)\nBREAKING: Der Adapter benötigt jetzt node 22\nDer Adapter erfordert jetzt Admin >=7.6.20\nRepo-Bereinigung",
-                "ru": "СРОЧНО: переключитесь на поддержку нескольких зарядных устройств (#801), (#807).\nСРОЧНО: адаптеру теперь нужен узел 22\nадаптеру сейчас требуется администратор >=7.6.20\nочистка репо",
-                "pt": "QUEBRANDO: mude para suporte para vários carregadores (#801), (#807)\nQUEBRANDO: o adaptador precisa do nó 22 agora\nadaptador requer admin >=7.6.20 agora\nlimpeza de repositório",
-                "nl": "BREAKING: schakel over naar ondersteuning voor meerdere opladers (#801), (#807)\nBREAKING: adapter heeft nu knooppunt 22 nodig\nadapter vereist nu admin >=7.6.20\nrepository opruimen",
-                "fr": "RUPTURE : passer au support multi-chargeurs (#801), (#807)\nRUPTURE : l'adaptateur a besoin du nœud 22 maintenant\nl'adaptateur nécessite un administrateur >=7.6.20 maintenant\nnettoyage du dépôt",
-                "it": "ROTTURA: passaggio al supporto del caricatore multiplo (#801), (#807)\nBREAKING: l'adattatore necessita ora del nodo 22\nl'adattatore richiede ora l'amministratore >=7.6.20\npulizia del pronti contro termine",
-                "es": "ÚLTIMA HORA: cambiar a soporte de cargador múltiple (#801), (#807)\nÚLTIMA HORA: el adaptador necesita el nodo 22 ahora\nEl adaptador requiere administrador >=7.6.20 ahora\nlimpieza de repositorio",
-                "pl": "ŁAMANIE: przełącz na obsługę wielu ładowarek (#801), (#807)\nŁAMANIE: adapter potrzebuje teraz węzła 22\nadapter wymaga teraz administratora >=7.6.20\nczyszczenie repo",
-                "uk": "ПОЛИМКА: перейдіть на підтримку кількох зарядних пристроїв (#801), (#807)\nПОРУШЕННЯ: адаптеру зараз потрібен вузол 22\nдля адаптера потрібен адміністратор >=7.6.20\nочищення репо",
-                "zh-cn": "突破：切换到多充电器支持 (#801)、(#807)\n中断：适配器现在需要节点 22\n适配器现在需要 admin >=7.6.20\n回购清理"
+                "en": "BREAKING: switch to multi charger support (#801), (#807)\nBREAKING: adapter needs node 22 now\nadapter requires admin >=7.6.20 now\nadd RFID info (name, id, consumption) (#802)",
+                "de": "BREAKING: Unterstützung Multi-Wallbox (#801), (#807)\nBREAKING: Adapter benötigt jetzt node 22\nAdapter erfordert jetzt Admin >=7.6.20\nRFID-Informationen hinzufügen (Name, ID, Verbrauch) (#802)",
+                "ru": "СРОЧНО: переключитесь на поддержку нескольких зарядных устройств (#801), (#807).\nСРОЧНО: адаптеру теперь нужен узел 22\nадаптеру сейчас требуется администратор >=7.6.20\nдобавить информацию RFID (имя, идентификатор, потребление) (#802)",
+                "pt": "QUEBRANDO: mude para suporte para vários carregadores (#801), (#807)\nQUEBRANDO: o adaptador precisa do nó 22 agora\nadaptador requer admin >=7.6.20 agora\nadicione informações RFID (nome, id, consumo) (#802)",
+                "nl": "BREAKING: schakel over naar ondersteuning voor meerdere opladers (#801), (#807)\nBREAKING: adapter heeft nu knooppunt 22 nodig\nadapter vereist nu admin >=7.6.20\nRFID-info toevoegen (naam, id, verbruik) (#802)",
+                "fr": "RUPTURE : passer au support multi-chargeurs (#801), (#807)\nRUPTURE : l'adaptateur a besoin du nœud 22 maintenant\nl'adaptateur nécessite un administrateur >=7.6.20 maintenant\najouter des informations RFID (nom, identifiant, consommation) (#802)",
+                "it": "ROTTURA: passaggio al supporto del caricatore multiplo (#801), (#807)\nBREAKING: l'adattatore necessita ora del nodo 22\nl'adattatore richiede ora l'amministratore >=7.6.20\naggiungi informazioni RFID (nome, ID, consumo) (#802)",
+                "es": "ÚLTIMA HORA: cambiar a soporte de cargador múltiple (#801), (#807)\nÚLTIMA HORA: el adaptador necesita el nodo 22 ahora\nEl adaptador requiere administrador >=7.6.20 ahora\nagregar información RFID (nombre, id, consumo) (#802)",
+                "pl": "ŁAMANIE: przełącz na obsługę wielu ładowarek (#801), (#807)\nŁAMANIE: adapter potrzebuje teraz węzła 22\nadapter wymaga teraz administratora >=7.6.20\ndodaj informacje RFID (nazwa, identyfikator, zużycie) (#802)",
+                "uk": "ПОЛИМКА: перейдіть на підтримку кількох зарядних пристроїв (#801), (#807)\nПОРУШЕННЯ: адаптеру зараз потрібен вузол 22\nдля адаптера потрібен адміністратор >=7.6.20\nдодати інформацію про RFID (ім'я, ідентифікатор, споживання) (#802)",
+                "zh-cn": "突破：切换到多充电器支持 (#801)、(#807)\n中断：适配器现在需要节点 22\n适配器现在需要 admin >=7.6.20\n添加 RFID 信息（名称、ID、消费）(#802)"
             },
             "0.21.4": {
                 "en": "prepare multi-charger support\nupdate axios\nupdate iobroker/testing (#765)\nswitch to ES2023 code\nfix vulnerabilities\nupdate dependencies",
