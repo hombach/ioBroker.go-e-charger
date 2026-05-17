@@ -247,8 +247,8 @@ class go_e_charger extends utils.Adapter {
                 this.log.warn(`state ${id} deleted`);
             }
         }
-        catch (e) {
-            this.log.error(`Unhandled exception processing onStateChange: ${e}`);
+        catch (error) {
+            this.log.error(`Unhandled exception processing onStateChange: ${error}`);
         }
     }
     onUnload(callback) {
@@ -261,8 +261,8 @@ class go_e_charger extends utils.Adapter {
             void this.setState(`info.connection`, false, true);
             callback();
         }
-        catch (e) {
-            this.log.warn(e.message);
+        catch (error) {
+            this.log.warn(error.message);
             callback();
         }
     }
