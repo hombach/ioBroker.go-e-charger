@@ -432,7 +432,7 @@ class go_e_charger extends utils.Adapter {
 					}
 				}
 			}
-			totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.charged`)) || 0; // accumulate total charged energy of all chargers
+			totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.chargedEnergy`)) || 0; // accumulate total charged energy of all chargers
 		} // next wallbox
 
 		// global statistics

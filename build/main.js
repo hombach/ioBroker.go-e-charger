@@ -364,7 +364,7 @@ class go_e_charger extends utils.Adapter {
                     }
                 }
             }
-            totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.charged`)) || 0;
+            totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.chargedEnergy`)) || 0;
         }
         await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.chargedEnergy`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh", "value.energy.consumed");
         const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));

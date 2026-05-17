@@ -55,6 +55,7 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
 
 ### **WORK IN PROGRESS**
 
+- (hombach) fix total stats
 - (hombach) fix adapter checker findings
 - (hombach) fix docu
 - (hombach) fix tsconfig
