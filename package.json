@@ -70,7 +70,8 @@
 		"lint": "eslint -c eslint.config.mjs .",
 		"lintdebug": "eslint --debug -c eslint.config.mjs . | more",
 		"translate": "translate-adapter",
-		"make": "npm run lint && npm run build && npm run test"
+		"make": "npm run lint && npm run build && npm run test",
+		"release": "release-script"
 	},
 	"bugs": {
 		"url": "https://github.com/Hombach/ioBroker.go-e-charger/issues"
