@@ -194,7 +194,7 @@ export class ProjectUtils {
 				throw new Error(`Unable to retrieve info from state '${stateName}'.`);
 			}
 		} catch (error) {
-			this.adapter.log.error(`[asyncGetForeignState](${stateName}): ${error}`);
+			this.adapter.log.error(`[asyncGetForeignState](${stateName}): ${error as Error}`);
 			return null;
 		}
 	}
