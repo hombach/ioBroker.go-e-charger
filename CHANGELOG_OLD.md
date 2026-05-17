@@ -11,9 +11,14 @@
 [![NPM](https://nodei.co/npm/iobroker.go-e-charger.png?downloads=true)](https://nodei.co/npm/iobroker.go-e-charger/)
 
 ## Adapter for reading go-eCharger data for iOBroker
+
 Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your car. Working with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1.
 
 ## Changelog - OLD CHANGES
+
+### 0.20.1 (2025-03-05)
+
+- (hombach) bump dependencies
 
 ### 0.20.0 (2025-02-23)
 
@@ -141,7 +146,7 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 
 ### 0.15.1 (2023-06-19)
 
-* (HombachC) removed travis
+- (HombachC) removed travis
 
 ### 0.15.0 (2023-06-15)
 
@@ -214,7 +219,7 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 
 ### 0.9.0 (2021-10-04)
 
-- (HombachC) support for firmware 041.0 
+- (HombachC) support for firmware 041.0
 
 ### 0.8.0 (2021-05-09)
 
@@ -226,7 +231,7 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 
 ### 0.7.0 (2021-04-11)
 
-- (HombachC) added measured maximum current 
+- (HombachC) added measured maximum current
 
 ### 0.6.0 (2021-03-15)
 

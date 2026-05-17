@@ -1,8 +1,21 @@
 {
 	"common": {
 		"name": "go-e-charger",
-		"version": "1.0.0",
+		"version": "1.0.1",
 		"news": {
+			"1.0.1": {
+				"en": "fix total stats\nfix adapter checker findings\nfix docu\nfix tsconfig",
+				"de": "Gesamtstatistiken korrigieren\nBeheben Sie die Ergebnisse der Adapterprüfung\nDoku reparieren\ntsconfig reparieren",
+				"ru": "исправить общую статистику\nисправить результаты проверки адаптера\nисправить документ\nисправить цконфиг",
+				"pt": "corrigir estatísticas totais\ncorrigir descobertas do verificador de adaptador\ncorrigir documento\ncorrigir tsconfig",
+				"nl": "totale statistieken corrigeren\nbevindingen van de adaptercontrole oplossen\ndocument repareren\ntsconfig repareren",
+				"fr": "corriger les statistiques totales\ncorriger les résultats du vérificateur d'adaptateur\nréparer le document\nréparer tsconfig",
+				"it": "correggere le statistiche totali\ncorreggere i risultati del controllo dell'adattatore\ncorreggere il documento\ncorretto tsconfig",
+				"es": "arreglar estadísticas totales\narreglar los hallazgos del verificador del adaptador\narreglar documento\narreglar tsconfig",
+				"pl": "napraw statystyki całkowite\nnapraw wyniki sprawdzania adaptera\nnapraw dokument\nnapraw tsconfig",
+				"uk": "виправити загальну статистику\nвиправити висновки перевірки адаптера\nвиправити док\nвиправити tsconfig",
+				"zh-cn": "修复总统计数据\n修复适配器检查器结果\n修复文档\n修复 tsconfig"
+			},
 			"1.0.0": {
 				"en": "BREAKING: switched to multi charger support (#801), (#807)\nBREAKING: adapter needs node 22 now\nadapter requires admin >=7.6.20 now\nupdated typescript from 5.9.3 to 6.0.3\nadded RFID info (name, id, consumption) (#802)",
 				"de": "BREAKING: auf Multi-Ladegerät-Unterstützung umgestellt (#801), (#807)\nBREAKING: Der Adapter benötigt jetzt node 22\nDer Adapter erfordert jetzt admin >=7.6.20\nAktualisiertes Typeskript von 5.9.3 auf 6.0.3\nRFID-Info hinzugefügt (Name, ID, Verbrauch) (#802)",
@@ -80,19 +93,6 @@
 				"pl": "Zakończono wsparcie dla Node.js 18\nZakończono wsparcie dla js-controller 5\nDodano testy dla Node 24\nUsunięto testy dla Node 18\nNaprawiono podatność\nZaktualizowano zależności",
 				"uk": "Припинено підтримку Node.js 18\nПрипинено підтримку js-controller 5\nДодано тести для Node 24\nВидалено тести для Node 18\nВиправлено вразливість\nОновлено залежності",
 				"zh-cn": "停止支持 Node.js 18\n停止支持 js-controller 5\n为 Node 24 添加测试\n移除 Node 18 的测试\n修复漏洞\n更新依赖项"
-			},
-			"0.20.2": {
-				"en": "fix error in statechange recognition (#637)\nfix axios\nbump dependencies",
-				"de": "Fehler in der StateChange-Erkennung beheben (#637)\nAxios reparieren\nBeuleabhängigkeiten",
-				"ru": "Ошибка исправления в распознавании StateChange (#637)\nИсправить Axios\nУдар зависимости",
-				"pt": "Corrija o erro no reconhecimento Statechange (#637)\nCorrija axios\nBump dependências",
-				"nl": "FOUT FOUT IN STATECHANGE HEKENING (#637)\nrepareer Axios\nBump -afhankelijkheden",
-				"fr": "Correction de l'erreur dans la reconnaissance de StateChange (# 637)\nFix Axios\ndépendances",
-				"it": "Risolvi l'errore nel riconoscimento di StateChange (#637)\nCorreggi gli assios\ndipendenze bump",
-				"es": "corrige el error en el reconocimiento de statechange (#637)\nArreglar axios\ndependencias de la protuberancia",
-				"pl": "Napraw błąd w rozpoznawaniu Statechange (#637)\nNapraw aksios\nzależności od wypukłości",
-				"uk": "Виправити помилку в розпізнаванні StateChange (#637)\nВиправити Axios\nзалежності від удару",
-				"zh-cn": "修复Statechange识别中的错误（＃637）\n修复轴\n凸起依赖性"
 			}
 		},
 		"titleLang": {
@@ -121,8 +121,15 @@
 			"uk": "Адаптер для читання даних go-eCharger",
 			"zh-cn": "用于读取go-eCharger数据的适配器"
 		},
-		"authors": ["Christian Hombach <go-eCharger@homba.ch>"],
-		"keywords": ["go-e", "go-eCharger", "wallbox", "solar-power"],
+		"authors": [
+			"Christian Hombach <go-eCharger@homba.ch>"
+		],
+		"keywords": [
+			"go-e",
+			"go-eCharger",
+			"wallbox",
+			"solar-power"
+		],
 		"licenseInformation": {
 			"license": "MIT",
 			"type": "free"

@@ -53,14 +53,14 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
   ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 1.0.1 (2026-05-17)
 
 - (hombach) fix total stats
 - (hombach) fix adapter checker findings
 - (hombach) fix docu
 - (hombach) fix tsconfig
 
-### 1.0.0 (Work in Progress)
+### 1.0.0 (2026-05-17)
 
 - (hombach) BREAKING: switched to multi charger support (#801), (#807)
 - (hombach) BREAKING: adapter needs node 22 now
@@ -118,10 +118,6 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
 
 - (hombach) fix error in statechange recognition (#637)
 - (hombach) fix axios
-
-### 0.20.1 (2025-03-05)
-
-- (hombach) bump dependencies
 
 ### Old Changes see [CHANGELOG OLD](CHANGELOG_OLD.md)
 
