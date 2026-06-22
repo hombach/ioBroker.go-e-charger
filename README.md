@@ -56,6 +56,7 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
 ### **WORK IN PROGRESS**
 
 - (hombach) prepared for beta repo
+- (hombach) upgraded adapter-core
 - (hombach) updated dependencies
 
 ### 1.0.1 (2026-05-17)
