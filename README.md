@@ -39,7 +39,7 @@ To connect a go-e charger add a new line and enter its IP-address in the config.
 
 ## Sentry
 
-This adapter employs Sentry libraries to automatically report exceptions and code errors to the developers. For more details and information on how to disable error reporting, please consult the [Sentry-Plugin Documentation](https://github.com/ioBroker/plugin-sentry#plugin-sentry)! Sentry reporting is initiated starting with js-controller 3.0.
+This adapter employs Sentry libraries to automatically report exceptions and code errors to the developers. For more details and information on how to disable error reporting, please consult the [Sentry-Plugin Documentation](https://github.com/ioBroker/plugin-sentry#plugin-sentry)!
 
 ## Donate
 
@@ -57,6 +57,7 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
 
 - (hombach) prepared for beta repo
 - (hombach) upgraded adapter-core
+- (hombach) updated axios
 - (hombach) updated dependencies
 
 ### 1.0.1 (2026-05-17)
