@@ -430,16 +430,19 @@ class go_e_charger extends utils.Adapter {
         this.wallboxInfoList[iWB].Firmware = status.fwv;
         void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`);
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
+        if (!this.wallboxInfoList[iWB].HardwareMin3) {
+            await this.parseAndSetRFIDData(status, basePath);
+        }
+        this.log.debug(`got and parsed go-e charger ${iWB} data`);
+    }
+    async parseAndSetRFIDData(status, basePath) {
         const rfidIds = ["rca", "rcr", "rcd", "rc4", "rc5", "rc6", "rc7", "rc8", "rc9", "rc1"];
         const rfidNames = ["rna", "rnm", "rne", "rn4", "rn5", "rn6", "rn7", "rn8", "rn9", "rn1"];
         const rfidEnergy = ["eca", "ecr", "ecd", "ec4", "ec5", "ec6", "ec7", "ec8", "ec9", "ec1"];
         for (let i = 0; i < 10; i++) {
-            const idKey = rfidIds[i];
-            const nameKey = rfidNames[i];
-            const energyKey = rfidEnergy[i];
-            const cardId = status[idKey]?.toString().trim();
-            const cardName = status[nameKey]?.toString().trim();
-            const energyRaw = status[energyKey];
+            const cardId = status[rfidIds[i]]?.toString().trim();
+            const cardName = status[rfidNames[i]]?.toString().trim();
+            const energyRaw = status[rfidEnergy[i]];
             if (!cardId || cardId === "0") {
                 continue;
             }
@@ -447,18 +450,17 @@ class go_e_charger extends utils.Adapter {
             const channelPath = `${basePath}.statistics.RFID${cardNumber}`;
             await this.projectUtils.checkAndSetChannel(channelPath, cardName || `Karte ${cardNumber}`);
             await this.projectUtils.checkAndSetValueNumber(`${channelPath}.chargedEnergy`, Number(energyRaw) / 10 || 0, `Charged energy for RFID chip ${cardNumber}`, "kWh", "value.energy.consumed");
-            if (cardId && cardId !== "n/a") {
+            if (cardId !== "n/a") {
                 await this.projectUtils.checkAndSetValue(`${channelPath}.cardId`, cardId, `RFID Card ID ${cardNumber}`);
             }
             if (cardName && cardName !== "n/a") {
                 await this.projectUtils.checkAndSetValue(`${channelPath}.cardName`, cardName, `RFID Card Name ${cardNumber}`);
             }
         }
-        this.log.debug(`got and parsed go-e charger ${iWB} data`);
     }
     async Read_ChargerAPIV2(iWB) {
         await axiosInstance
-            .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,uby`, {
+            .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,uby,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`, {
             transformResponse: r => r,
         })
             .then(response => {
@@ -473,7 +475,7 @@ class go_e_charger extends utils.Adapter {
 						IP: ${this.config.wallBoxList[iWB].ipAddress}`);
         });
     }
-    ParseStatusAPIV2(status, iWB) {
+    async ParseStatusAPIV2(status, iWB) {
         const basePath = `Wallbox_${iWB}`;
         switch (status.psm) {
             case 1:
@@ -489,6 +491,7 @@ class go_e_charger extends utils.Adapter {
         this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
         this.wallboxInfoList[iWB].Hardware = status.typ;
         void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, "value");
+        await this.parseAndSetRFIDData(status, basePath);
         this.log.debug(`got and parsed go-e charger ${iWB} data with API V2`);
     }
     async Switch_3Phases(Charge3Phase, iWB) {

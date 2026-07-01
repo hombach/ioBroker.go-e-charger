@@ -55,6 +55,7 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
 
 ### **WORK IN PROGRESS**
 
+- (hombach) fix RFID data readout for gen 3+ chargers via API V2 (#802)
 - (hombach) prepared for beta repo
 - (hombach) eliminate yarn
 - (hombach) upgraded adapter-core
