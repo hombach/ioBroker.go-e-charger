@@ -20,6 +20,9 @@ class go_e_charger extends utils.Adapter {
 
 	//WIP NEW adapterIntervals: NodeJS.Timeout[];
 	timeoutList: ioBroker.Timeout[];
+	private pendingStateMachine: ioBroker.Timeout | null = null;
+	private stateMachineRunning = false;
+	private immediateRetrigger = false;
 	//WiP
 	wallboxInfoList: IWallboxInfo[] = [];
 
@@ -189,9 +192,29 @@ class go_e_charger extends utils.Adapter {
 		this.log.debug(`Start init done, launching state machine interval`);
 		void this.setState(`info.connection`, { val: true, ack: true });
 
-		const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
-		if (stateMachine != null) {
-			this.timeoutList.push(stateMachine);
+		this.pendingStateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime)) ?? null;
+		if (this.pendingStateMachine != null) {
+			this.timeoutList.push(this.pendingStateMachine);
+		}
+	}
+
+	/**
+	 * Cancels the pending StateMachine timer and schedules an immediate run.
+	 * If StateMachine is currently executing, sets a flag so it re-runs as soon as it finishes.
+	 */
+	private triggerStateMachineNow(): void {
+		if (this.stateMachineRunning) {
+			this.immediateRetrigger = true;
+			return;
+		}
+		if (this.pendingStateMachine != null) {
+			this.clearTimeout(this.pendingStateMachine);
+			this.timeoutList = this.timeoutList.filter(t => t !== this.pendingStateMachine);
+			this.pendingStateMachine = null;
+		}
+		this.pendingStateMachine = this.setTimeout(this.StateMachine.bind(this), 0) ?? null;
+		if (this.pendingStateMachine != null) {
+			this.timeoutList.push(this.pendingStateMachine);
 		}
 	}
 
@@ -247,6 +270,7 @@ class go_e_charger extends utils.Adapter {
 												this.wallboxInfoList[chargerNo].ChargeNOW = state.val;
 												this.log.debug(`settings state changed to ChargeNOW: ${this.wallboxInfoList[chargerNo].ChargeNOW}`);
 												void this.setState(id, state.val, true);
+												this.triggerStateMachineNow();
 											} else {
 												this.log.warn(`Wrong type for ChargeNOW: ${state.val}`);
 											}
@@ -256,6 +280,7 @@ class go_e_charger extends utils.Adapter {
 												this.wallboxInfoList[chargerNo].ChargeManager = state.val;
 												this.log.debug(`settings state changed to ChargeManager: ${this.wallboxInfoList[chargerNo].ChargeManager}`);
 												void this.setState(id, state.val, true);
+												this.triggerStateMachineNow();
 											} else {
 												this.log.warn(`Wrong type for ChargeManager: ${state.val}`);
 											}
@@ -265,6 +290,7 @@ class go_e_charger extends utils.Adapter {
 												this.wallboxInfoList[chargerNo].ChargeCurrent = state.val;
 												this.log.debug(`settings state changed to ChargeCurrent: ${this.wallboxInfoList[chargerNo].ChargeCurrent}`);
 												void this.setState(id, state.val, true);
+												this.triggerStateMachineNow();
 											} else {
 												this.log.warn(`Wrong type for ChargeCurrent: ${state.val}`);
 											}
@@ -274,6 +300,7 @@ class go_e_charger extends utils.Adapter {
 												this.wallboxInfoList[chargerNo].Charge3Phase = state.val;
 												this.log.debug(`settings state changed to Charge3Phase: ${this.wallboxInfoList[chargerNo].Charge3Phase}`);
 												void this.setState(id, state.val, true);
+												this.triggerStateMachineNow();
 											} else {
 												this.log.warn(`Wrong type for Charge3Phase: ${state.val}`);
 											}
@@ -380,6 +407,8 @@ class go_e_charger extends utils.Adapter {
 
 	/*****************************************************************************************/
 	async StateMachine(): Promise<void> {
+		this.stateMachineRunning = true;
+		this.immediateRetrigger = false;
 		this.log.debug(`StateMachine cycle start`);
 		totalChargeEnergy = 0; // reset total charge energy at the beginning of each cycle, will be accumulated from all chargers in the loop below
 		for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
@@ -444,9 +473,11 @@ class go_e_charger extends utils.Adapter {
 			"value.energy.consumed",
 		);
 
-		const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
-		if (stateMachine != null) {
-			this.timeoutList.push(stateMachine);
+		this.stateMachineRunning = false;
+		const delay = this.immediateRetrigger ? 0 : Number(this.config.cycleTime);
+		this.pendingStateMachine = this.setTimeout(this.StateMachine.bind(this), delay) ?? null;
+		if (this.pendingStateMachine != null) {
+			this.timeoutList.push(this.pendingStateMachine);
 		}
 	} // END StateMachine
 
