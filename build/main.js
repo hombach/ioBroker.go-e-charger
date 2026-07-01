@@ -343,59 +343,66 @@ class go_e_charger extends utils.Adapter {
         this.stateMachineRunning = true;
         this.immediateRetrigger = false;
         this.log.debug(`StateMachine cycle start`);
-        totalChargeEnergy = 0;
-        for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
-            if (this.wallboxInfoList[iWB].ChargeNOW || this.wallboxInfoList[iWB].ChargeManager) {
-                await this.Read_ChargerAPIV1(iWB);
-                if (this.wallboxInfoList[iWB].HardwareMin3) {
-                    await this.Read_ChargerAPIV2(iWB);
+        try {
+            totalChargeEnergy = 0;
+            for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
+                if (this.wallboxInfoList[iWB].ChargeNOW || this.wallboxInfoList[iWB].ChargeManager) {
+                    await this.Read_ChargerAPIV1(iWB);
+                    if (this.wallboxInfoList[iWB].HardwareMin3) {
+                        await this.Read_ChargerAPIV2(iWB);
+                    }
                 }
-            }
-            if (this.wallboxInfoList[iWB].ChargeNOW) {
-                await this.Charge_Config("1", this.wallboxInfoList[iWB].ChargeCurrent, `activate go-eCharger for forced charging`, iWB);
-                await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
-                if (this.wallboxInfoList[iWB].HardwareMin3) {
-                    await this.Read_ChargerAPIV2(iWB);
-                }
-            }
-            else if (this.wallboxInfoList[iWB].ChargeManager) {
-                batSoC = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeBatSoc);
-                this.log.debug(`Got external state of battery SoC: ${batSoC}%`);
-                if (batSoC >= minHomeBatVal) {
+                if (this.wallboxInfoList[iWB].ChargeNOW) {
+                    await this.Charge_Config("1", this.wallboxInfoList[iWB].ChargeCurrent, `activate go-eCharger for forced charging`, iWB);
                     await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
-                    await this.Charge_Manager(iWB);
+                    if (this.wallboxInfoList[iWB].HardwareMin3) {
+                        await this.Read_ChargerAPIV2(iWB);
+                    }
+                }
+                else if (this.wallboxInfoList[iWB].ChargeManager) {
+                    batSoC = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeBatSoc);
+                    this.log.debug(`Got external state of battery SoC: ${batSoC}%`);
+                    if (batSoC >= minHomeBatVal) {
+                        await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
+                        await this.Charge_Manager(iWB);
+                    }
+                    else {
+                        if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
+                            this.wallboxInfoList[iWB].SetAmp = 6;
+                            await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Charging home battery until ${minHomeBatVal}%`, iWB);
+                        }
+                    }
                 }
                 else {
                     if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
+                        await this.Read_ChargerAPIV1(iWB);
+                        if (this.wallboxInfoList[iWB].HardwareMin3) {
+                            await this.Read_ChargerAPIV2(iWB);
+                        }
                         this.wallboxInfoList[iWB].SetAmp = 6;
-                        await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Charging home battery until ${minHomeBatVal}%`, iWB);
+                        await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Deactivate go-eCharger`, iWB);
+                    }
+                    else if (Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`)) > 0) {
+                        await this.Read_ChargerAPIV1(iWB);
+                        if (this.wallboxInfoList[iWB].HardwareMin3) {
+                            await this.Read_ChargerAPIV2(iWB);
+                        }
                     }
                 }
+                totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.chargedEnergy`)) || 0;
             }
-            else {
-                if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
-                    await this.Read_ChargerAPIV1(iWB);
-                    if (this.wallboxInfoList[iWB].HardwareMin3) {
-                        await this.Read_ChargerAPIV2(iWB);
-                    }
-                    this.wallboxInfoList[iWB].SetAmp = 6;
-                    await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Deactivate go-eCharger`, iWB);
-                }
-                else if (Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`)) > 0) {
-                    await this.Read_ChargerAPIV1(iWB);
-                    if (this.wallboxInfoList[iWB].HardwareMin3) {
-                        await this.Read_ChargerAPIV2(iWB);
-                    }
-                }
-            }
-            totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.chargedEnergy`)) || 0;
+            await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.chargedEnergy`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh", "value.energy.consumed");
         }
-        await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.chargedEnergy`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh", "value.energy.consumed");
-        this.stateMachineRunning = false;
-        const delay = this.immediateRetrigger ? 0 : Number(this.config.cycleTime);
-        this.pendingStateMachine = this.setTimeout(this.StateMachine.bind(this), delay) ?? null;
-        if (this.pendingStateMachine != null) {
-            this.timeoutList.push(this.pendingStateMachine);
+        catch (error) {
+            this.log.error(`Unhandled exception in StateMachine: ${String(error)}`);
+        }
+        finally {
+            this.stateMachineRunning = false;
+            const delay = this.immediateRetrigger ? 0 : Number(this.config.cycleTime);
+            this.pendingStateMachine = this.setTimeout(this.StateMachine.bind(this), delay) ?? null;
+            if (this.pendingStateMachine != null) {
+                this.timeoutList.push(this.pendingStateMachine);
+            }
         }
     }
     async Read_ChargerAPIV1(iWB) {
