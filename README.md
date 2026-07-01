@@ -56,6 +56,7 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
 ### **WORK IN PROGRESS**
 
 - (hombach) prepared for beta repo
+- (hombach) eliminate yarn
 - (hombach) upgraded adapter-core
 - (hombach) updated axios
 - (hombach) updated dependencies
