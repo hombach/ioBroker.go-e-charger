@@ -55,11 +55,9 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
 
 ### **WORK IN PROGRESS**
 
-- (hombach) optimized config change handling
 - (hombach) prepared for beta repo
 - (hombach) upgraded adapter-core
 - (hombach) updated axios
-- (hombach) eliminated yarn
 - (hombach) updated dependencies
 
 ### 1.0.1 (2026-05-17)

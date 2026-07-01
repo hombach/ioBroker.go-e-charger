@@ -20,9 +20,6 @@ class go_e_charger extends utils.Adapter {
 
 	//WIP NEW adapterIntervals: NodeJS.Timeout[];
 	timeoutList: ioBroker.Timeout[];
-	private pendingStateMachine: ioBroker.Timeout | null = null;
-	private stateMachineRunning = false;
-	private immediateRetrigger = false;
 	//WiP
 	wallboxInfoList: IWallboxInfo[] = [];
 
@@ -192,29 +189,9 @@ class go_e_charger extends utils.Adapter {
 		this.log.debug(`Start init done, launching state machine interval`);
 		void this.setState(`info.connection`, { val: true, ack: true });
 
-		this.pendingStateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime)) ?? null;
-		if (this.pendingStateMachine != null) {
-			this.timeoutList.push(this.pendingStateMachine);
-		}
-	}
-
-	/**
-	 * Cancels the pending StateMachine timer and schedules an immediate run.
-	 * If StateMachine is currently executing, sets a flag so it re-runs as soon as it finishes.
-	 */
-	private triggerStateMachineNow(): void {
-		if (this.stateMachineRunning) {
-			this.immediateRetrigger = true;
-			return;
-		}
-		if (this.pendingStateMachine != null) {
-			this.clearTimeout(this.pendingStateMachine);
-			this.timeoutList = this.timeoutList.filter(t => t !== this.pendingStateMachine);
-			this.pendingStateMachine = null;
-		}
-		this.pendingStateMachine = this.setTimeout(this.StateMachine.bind(this), 500) ?? null;
-		if (this.pendingStateMachine != null) {
-			this.timeoutList.push(this.pendingStateMachine);
+		const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
+		if (stateMachine != null) {
+			this.timeoutList.push(stateMachine);
 		}
 	}
 
@@ -270,7 +247,6 @@ class go_e_charger extends utils.Adapter {
 												this.wallboxInfoList[chargerNo].ChargeNOW = state.val;
 												this.log.debug(`settings state changed to ChargeNOW: ${this.wallboxInfoList[chargerNo].ChargeNOW}`);
 												void this.setState(id, state.val, true);
-												this.triggerStateMachineNow();
 											} else {
 												this.log.warn(`Wrong type for ChargeNOW: ${state.val}`);
 											}
@@ -280,7 +256,6 @@ class go_e_charger extends utils.Adapter {
 												this.wallboxInfoList[chargerNo].ChargeManager = state.val;
 												this.log.debug(`settings state changed to ChargeManager: ${this.wallboxInfoList[chargerNo].ChargeManager}`);
 												void this.setState(id, state.val, true);
-												this.triggerStateMachineNow();
 											} else {
 												this.log.warn(`Wrong type for ChargeManager: ${state.val}`);
 											}
@@ -290,7 +265,6 @@ class go_e_charger extends utils.Adapter {
 												this.wallboxInfoList[chargerNo].ChargeCurrent = state.val;
 												this.log.debug(`settings state changed to ChargeCurrent: ${this.wallboxInfoList[chargerNo].ChargeCurrent}`);
 												void this.setState(id, state.val, true);
-												this.triggerStateMachineNow();
 											} else {
 												this.log.warn(`Wrong type for ChargeCurrent: ${state.val}`);
 											}
@@ -300,7 +274,6 @@ class go_e_charger extends utils.Adapter {
 												this.wallboxInfoList[chargerNo].Charge3Phase = state.val;
 												this.log.debug(`settings state changed to Charge3Phase: ${this.wallboxInfoList[chargerNo].Charge3Phase}`);
 												void this.setState(id, state.val, true);
-												this.triggerStateMachineNow();
 											} else {
 												this.log.warn(`Wrong type for Charge3Phase: ${state.val}`);
 											}
@@ -357,10 +330,10 @@ class go_e_charger extends utils.Adapter {
 			switch (this.wallboxInfoList[iWB].Firmware) {
 				case "0":
 				case "EHostUnreach":
-					this.log.warn(
-						`Charger ${iWB} not reachable at startup (${this.config.wallBoxList[iWB].ipAddress}) - marked disconnected, will retry in StateMachine.`,
-					);
+					// no charger found - stop adapter - only on first run
+					this.log.error(`No charger detected on given IP address for charger ${iWB} - shutting down adapter.`);
 					await this.setState(`Wallbox_${iWB}.info.connection`, { val: false, ack: true });
+					this.stop;
 					break;
 				case "033":
 				case "040":
@@ -407,91 +380,73 @@ class go_e_charger extends utils.Adapter {
 
 	/*****************************************************************************************/
 	async StateMachine(): Promise<void> {
-		this.stateMachineRunning = true;
-		this.immediateRetrigger = false;
 		this.log.debug(`StateMachine cycle start`);
-		try {
-			totalChargeEnergy = 0; // reset total charge energy at the beginning of each cycle, will be accumulated from all chargers in the loop below
-			for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
-				if (this.wallboxInfoList[iWB].ChargeNOW || this.wallboxInfoList[iWB].ChargeManager) {
-					// Charge-NOW or Charge-Manager is enabled
-					await this.Read_ChargerAPIV1(iWB);
-					if (this.wallboxInfoList[iWB].Firmware === `EHostUnreach`) {
-						void this.setState(`Wallbox_${iWB}.info.connection`, { val: false, ack: true });
-						this.log.debug(`Charger ${iWB} unreachable, skipping control actions this cycle`);
-						continue;
-					}
-					if (this.wallboxInfoList[iWB].HardwareMin3) {
-						await this.Read_ChargerAPIV2(iWB);
-					}
+		totalChargeEnergy = 0; // reset total charge energy at the beginning of each cycle, will be accumulated from all chargers in the loop below
+		for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
+			if (this.wallboxInfoList[iWB].ChargeNOW || this.wallboxInfoList[iWB].ChargeManager) {
+				// Charge-NOW or Charge-Manager is enabled
+				await this.Read_ChargerAPIV1(iWB);
+				if (this.wallboxInfoList[iWB].HardwareMin3) {
+					await this.Read_ChargerAPIV2(iWB);
 				}
+			}
 
-				if (this.wallboxInfoList[iWB].ChargeNOW) {
-					// Charge-NOW is enabled
-					await this.Charge_Config("1", this.wallboxInfoList[iWB].ChargeCurrent, `activate go-eCharger for forced charging`, iWB); // keep active charging current!!
+			if (this.wallboxInfoList[iWB].ChargeNOW) {
+				// Charge-NOW is enabled
+				await this.Charge_Config("1", this.wallboxInfoList[iWB].ChargeCurrent, `activate go-eCharger for forced charging`, iWB); // keep active charging current!!
+				await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
+				if (this.wallboxInfoList[iWB].HardwareMin3) {
+					await this.Read_ChargerAPIV2(iWB);
+				}
+			} else if (this.wallboxInfoList[iWB].ChargeManager) {
+				// Charge-Manager is enabled
+				batSoC = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeBatSoc);
+				// WiP batSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
+				this.log.debug(`Got external state of battery SoC: ${batSoC}%`);
+				if (batSoC >= minHomeBatVal) {
+					// SoC of home battery is sufficient
 					await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
-					if (this.wallboxInfoList[iWB].HardwareMin3) {
-						await this.Read_ChargerAPIV2(iWB);
-					}
-				} else if (this.wallboxInfoList[iWB].ChargeManager) {
-					// Charge-Manager is enabled
-					batSoC = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeBatSoc);
-					// WiP batSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
-					this.log.debug(`Got external state of battery SoC: ${batSoC}%`);
-					if (batSoC >= minHomeBatVal) {
-						// SoC of home battery is sufficient
-						await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
-						await this.Charge_Manager(iWB);
-					} else {
-						// FUTURE: time of day forces emptying of home battery
-						if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
-							// Set to false only if still true
-							this.wallboxInfoList[iWB].SetAmp = 6;
-							await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Charging home battery until ${minHomeBatVal}%`, iWB);
-						}
-					}
+					await this.Charge_Manager(iWB);
 				} else {
-					// only if Power.ChargingAllowed is still set: switch OFF; set to min. current;
+					// FUTURE: time of day forces emptying of home battery
 					if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
 						// Set to false only if still true
-						await this.Read_ChargerAPIV1(iWB);
-						if (this.wallboxInfoList[iWB].Firmware === `EHostUnreach`) {
-							void this.setState(`Wallbox_${iWB}.info.connection`, { val: false, ack: true });
-							this.log.debug(`Charger ${iWB} unreachable, skipping deactivation this cycle`);
-							continue;
-						}
-						if (this.wallboxInfoList[iWB].HardwareMin3) {
-							await this.Read_ChargerAPIV2(iWB);
-						}
 						this.wallboxInfoList[iWB].SetAmp = 6;
-						await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Deactivate go-eCharger`, iWB);
-					} else if (Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`)) > 0) {
-						await this.Read_ChargerAPIV1(iWB);
-						if (this.wallboxInfoList[iWB].Firmware !== `EHostUnreach` && this.wallboxInfoList[iWB].HardwareMin3) {
-							await this.Read_ChargerAPIV2(iWB);
-						}
+						await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Charging home battery until ${minHomeBatVal}%`, iWB);
 					}
 				}
-				totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.chargedEnergy`)) || 0; // accumulate total charged energy of all chargers
-			} // next wallbox
-
-			// global statistics
-			await this.projectUtils.checkAndSetValueNumber(
-				`statisticsGlobal.chargedEnergy`,
-				totalChargeEnergy,
-				`Totally charged sum of all go-e in lifetime`,
-				"kWh",
-				"value.energy.consumed",
-			);
-		} catch (error) {
-			this.log.error(`Unhandled exception in StateMachine: ${String(error)}`);
-		} finally {
-			this.stateMachineRunning = false;
-			const delay = this.immediateRetrigger ? 0 : Number(this.config.cycleTime);
-			this.pendingStateMachine = this.setTimeout(this.StateMachine.bind(this), delay) ?? null;
-			if (this.pendingStateMachine != null) {
-				this.timeoutList.push(this.pendingStateMachine);
+			} else {
+				// only if Power.ChargingAllowed is still set: switch OFF; set to min. current;
+				if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
+					// Set to false only if still true
+					await this.Read_ChargerAPIV1(iWB);
+					if (this.wallboxInfoList[iWB].HardwareMin3) {
+						await this.Read_ChargerAPIV2(iWB);
+					}
+					this.wallboxInfoList[iWB].SetAmp = 6;
+					await this.Charge_Config("0", this.wallboxInfoList[iWB].SetAmp, `Deactivate go-eCharger`, iWB);
+				} else if (Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`)) > 0) {
+					await this.Read_ChargerAPIV1(iWB);
+					if (this.wallboxInfoList[iWB].HardwareMin3) {
+						await this.Read_ChargerAPIV2(iWB);
+					}
+				}
 			}
+			totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.chargedEnergy`)) || 0; // accumulate total charged energy of all chargers
+		} // next wallbox
+
+		// global statistics
+		await this.projectUtils.checkAndSetValueNumber(
+			`statisticsGlobal.chargedEnergy`,
+			totalChargeEnergy,
+			`Totally charged sum of all go-e in lifetime`,
+			"kWh",
+			"value.energy.consumed",
+		);
+
+		const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
+		if (stateMachine != null) {
+			this.timeoutList.push(stateMachine);
 		}
 	} // END StateMachine
 
@@ -513,8 +468,13 @@ class go_e_charger extends utils.Adapter {
 				void this.ParseStatusAPIV1(result, iWB);
 			})
 			.catch(error => {
-				this.log.error(`Error reading charger ${iWB} API V1 (${this.config.wallBoxList[iWB].ipAddress}): ${error}`);
-				this.wallboxInfoList[iWB].Firmware = `EHostUnreach`;
+				if (error.message && error.message.includes("EHOSTUNREACH")) {
+					this.log.error(`Charger unreachable error when calling go-eCharger API: ${error}`);
+					this.wallboxInfoList[iWB].Firmware = `EHostUnreach`;
+				} else {
+					this.log.error(`Error in calling go-e charger ${iWB} API: ${error}`);
+				}
+				this.log.error(`Please verify IP address of charger ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} !!!`);
 			});
 	}
 
@@ -735,9 +695,9 @@ class go_e_charger extends utils.Adapter {
 				void this.ParseStatusAPIV2(result, iWB);
 			})
 			.catch(error => {
-				this.log.warn(
-					`Error reading charger ${iWB} API V2 (${this.config.wallBoxList[iWB].ipAddress}): ${error} - if hardware gen 3+, ensure API V2 is enabled in go-e app`,
-				);
+				this.log.error(`Error in calling go-e charger ${iWB} API V2: ${error}`);
+				this.log.warn(`If you have a charger minimum hardware version 3: please enable API V2 for charger ${iWB},
+						IP: ${this.config.wallBoxList[iWB].ipAddress}`);
 			});
 	}
 
