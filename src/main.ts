@@ -357,10 +357,10 @@ class go_e_charger extends utils.Adapter {
 			switch (this.wallboxInfoList[iWB].Firmware) {
 				case "0":
 				case "EHostUnreach":
-					// no charger found - stop adapter - only on first run
-					this.log.error(`No charger detected on given IP address for charger ${iWB} - shutting down adapter.`);
+					this.log.warn(
+						`Charger ${iWB} not reachable at startup (${this.config.wallBoxList[iWB].ipAddress}) - marked disconnected, will retry in StateMachine.`,
+					);
 					await this.setState(`Wallbox_${iWB}.info.connection`, { val: false, ack: true });
-					this.stop;
 					break;
 				case "033":
 				case "040":
@@ -503,13 +503,8 @@ class go_e_charger extends utils.Adapter {
 				void this.ParseStatusAPIV1(result, iWB);
 			})
 			.catch(error => {
-				if (error.message && error.message.includes("EHOSTUNREACH")) {
-					this.log.error(`Charger unreachable error when calling go-eCharger API: ${error}`);
-					this.wallboxInfoList[iWB].Firmware = `EHostUnreach`;
-				} else {
-					this.log.error(`Error in calling go-e charger ${iWB} API: ${error}`);
-				}
-				this.log.error(`Please verify IP address of charger ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} !!!`);
+				this.log.error(`Error reading charger ${iWB} API V1 (${this.config.wallBoxList[iWB].ipAddress}): ${error}`);
+				this.wallboxInfoList[iWB].Firmware = `EHostUnreach`;
 			});
 	}
 
