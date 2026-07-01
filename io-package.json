@@ -1,223 +1,223 @@
 {
-	"common": {
-		"name": "go-e-charger",
-		"version": "1.0.1",
-		"news": {
-			"1.0.1": {
-				"en": "fix total stats\nfix adapter checker findings\nfix docu\nfix tsconfig",
-				"de": "Gesamtstatistiken korrigieren\nBeheben Sie die Ergebnisse der Adapterprüfung\nDoku reparieren\ntsconfig reparieren",
-				"ru": "исправить общую статистику\nисправить результаты проверки адаптера\nисправить документ\nисправить цконфиг",
-				"pt": "corrigir estatísticas totais\ncorrigir descobertas do verificador de adaptador\ncorrigir documento\ncorrigir tsconfig",
-				"nl": "totale statistieken corrigeren\nbevindingen van de adaptercontrole oplossen\ndocument repareren\ntsconfig repareren",
-				"fr": "corriger les statistiques totales\ncorriger les résultats du vérificateur d'adaptateur\nréparer le document\nréparer tsconfig",
-				"it": "correggere le statistiche totali\ncorreggere i risultati del controllo dell'adattatore\ncorreggere il documento\ncorretto tsconfig",
-				"es": "arreglar estadísticas totales\narreglar los hallazgos del verificador del adaptador\narreglar documento\narreglar tsconfig",
-				"pl": "napraw statystyki całkowite\nnapraw wyniki sprawdzania adaptera\nnapraw dokument\nnapraw tsconfig",
-				"uk": "виправити загальну статистику\nвиправити висновки перевірки адаптера\nвиправити док\nвиправити tsconfig",
-				"zh-cn": "修复总统计数据\n修复适配器检查器结果\n修复文档\n修复 tsconfig"
-			},
-			"1.0.0": {
-				"en": "BREAKING: switched to multi charger support (#801), (#807)\nBREAKING: adapter needs node 22 now\nadapter requires admin >=7.6.20 now\nupdated typescript from 5.9.3 to 6.0.3\nadded RFID info (name, id, consumption) (#802)",
-				"de": "BREAKING: auf Multi-Ladegerät-Unterstützung umgestellt (#801), (#807)\nBREAKING: Der Adapter benötigt jetzt node 22\nDer Adapter erfordert jetzt admin >=7.6.20\nAktualisiertes Typeskript von 5.9.3 auf 6.0.3\nRFID-Info hinzugefügt (Name, ID, Verbrauch) (#802)",
-				"ru": "СРОЧНО: переключено на поддержку нескольких зарядных устройств (#801), (#807).\nСРОЧНО: адаптеру теперь нужен узел 22\nадаптеру сейчас требуется администратор >=7.6.20\nобновлен машинописный текст с 5.9.3 до 6.0.3\nдобавлена информация RFID (имя, идентификатор, потребление) (#802)",
-				"pt": "QUEBRANDO: mudou para suporte a vários carregadores (#801), (#807)\nQUEBRANDO: o adaptador precisa do nó 22 agora\nadaptador requer admin >=7.6.20 agora\ntexto datilografado atualizado de 5.9.3 para 6.0.3\nadicionadas informações RFID (nome, id, consumo) (#802)",
-				"nl": "BREAKING: overgeschakeld naar ondersteuning voor meerdere opladers (#801), (#807)\nBREAKING: adapter heeft nu knooppunt 22 nodig\nadapter vereist nu admin >=7.6.20\nbijgewerkt typoscript van 5.9.3 naar 6.0.3\nRFID-info toegevoegd (naam, id, verbruik) (#802)",
-				"fr": "RUPTURE : passage au support multi-chargeurs (#801), (#807)\nRUPTURE : l'adaptateur a besoin du nœud 22 maintenant\nl'adaptateur nécessite un administrateur >=7.6.20 maintenant\ndactylographié mis à jour de 5.9.3 à 6.0.3\najout d'informations RFID (nom, identifiant, consommation) (#802)",
-				"it": "ROTTURA: passato al supporto per caricabatterie multipli (#801), (#807)\nBREAKING: l'adattatore necessita ora del nodo 22\nl'adattatore richiede ora l'amministratore >=7.6.20\ndattiloscritto aggiornato da 5.9.3 a 6.0.3\naggiunte informazioni RFID (nome, ID, consumo) (#802)",
-				"es": "ÚLTIMA HORA: cambiado a soporte de cargador múltiple (#801), (#807)\nÚLTIMA HORA: el adaptador necesita el nodo 22 ahora\nEl adaptador requiere administrador >=7.6.20 ahora\nmecanografiado actualizado de 5.9.3 a 6.0.3\ninformación RFID agregada (nombre, identificación, consumo) (#802)",
-				"pl": "ŁAMANIE: przełączono na obsługę wielu ładowarek (#801), (#807)\nŁAMANIE: adapter potrzebuje teraz węzła 22\nadapter wymaga teraz administratora >=7.6.20\nzaktualizowano maszynopis z wersji 5.9.3 do 6.0.3\ndodano informacje RFID (nazwa, identyfikator, zużycie) (#802)",
-				"uk": "ПОЛИМКА: переведено на підтримку кількох зарядних пристроїв (#801), (#807)\nПОРУШЕННЯ: адаптеру зараз потрібен вузол 22\nдля адаптера потрібен адміністратор >=7.6.20\nоновлено машинопис з 5.9.3 до 6.0.3\nдодана інформація RFID (ім'я, ідентифікатор, споживання) (#802)",
-				"zh-cn": "突破：切换到多充电器支持 (#801)、(#807)\n中断：适配器现在需要节点 22\n适配器现在需要 admin >=7.6.20\n将打字稿从 5.9.3 更新到 6.0.3\n添加了 RFID 信息（名称、ID、消费）(#802)"
-			},
-			"0.21.4": {
-				"en": "prepare multi-charger support\nupdate axios\nupdate iobroker/testing (#765)\nswitch to ES2023 code\nfix vulnerabilities\nupdate dependencies",
-				"de": "Unterstützung für mehrere Ladegeräte vorbereitet\nAxios aktualisiert\niobroker/testing aktualisiert (#765)\nWechsel zu ES2023-Code\nSchwachstellen behoben\nAbhängigkeiten aktualisiert",
-				"ru": "подготовить поддержку нескольких зарядных устройств\nобновить аксиомы\nобновить iobroker/тестирование (#765)\nперейти на код ES2023\nисправить уязвимости\nобновить зависимости",
-				"pt": "preparar suporte para vários carregadores\natualizar eixos\natualizar iobroker/teste (#765)\nmudar para o código ES2023\ncorrigir vulnerabilidades\natualizar dependências",
-				"nl": "ondersteuning voor meerdere laders voorbereiden\naxio's bijwerken\nupdate iobroker/testen (#765)\nschakel over naar ES2023-code\nkwetsbaarheden oplossen\nafhankelijkheden bijwerken",
-				"fr": "préparer le support multi-chargeurs\nmettre à jour axios\nmettre à jour iobroker/testing (#765)\npasser au code ES2023\ncorriger les vulnérabilités\nmettre à jour les dépendances",
-				"it": "preparare il supporto multi-caricatore\naggiornare gli assi\naggiorna iobroker/test (#765)\npassare al codice ES2023\ncorreggere le vulnerabilità\naggiornare le dipendenze",
-				"es": "preparar soporte multicargador\nactualizar axios\nactualizar iobroker/pruebas (#765)\ncambiar al código ES2023\narreglar vulnerabilidades\nactualizar dependencias",
-				"pl": "przygotować obsługę wielu ładowarek\nzaktualizować osie\nzaktualizuj iobroker/testowanie (#765)\nprzejdź na kod ES2023\nnaprawić luki\nzaktualizować zależności",
-				"uk": "підготуйте підтримку кількох зарядних пристроїв\nоновити axios\nоновлення iobroker/тестування (#765)\nперейти на код ES2023\nвиправити вразливості\nоновити залежності",
-				"zh-cn": "准备多充电器支持\n更新 axios\n更新 iobroker/测试 (#765)\n切换到ES2023代码\n修复漏洞\n更新依赖关系"
-			},
-			"0.21.3": {
-				"en": "added support for firmware V60.0, V60.1, V60.2\nyear 2026 changes\nupdate axios\nupdate iobroker/testing (#759)",
-				"de": "Unterstützung für Firmware V60.0, V60.1, V60.2 hinzugefügt\nDas Jahr 2026 ändert sich\nAxios aktualisieren\niobroker/testing aktualisieren (#759)",
-				"ru": "добавлена поддержка прошивок V60.0, V60.1, V60.2\nизменения 2026 года\nобновить аксиомы\nобновить iobroker/тестирование (#759)",
-				"pt": "suporte adicional para firmware V60.0, V60.1, V60.2\nmudanças no ano de 2026\natualizar eixos\natualizar iobroker/teste (#759)",
-				"nl": "Ondersteuning toegevoegd voor firmware V60.0, V60.1, V60.2\njaar 2026 verandert\naxio's bijwerken\nupdate iobroker/testen (#759)",
-				"fr": "Prise en charge supplémentaire du firmware V60.0, V60.1, V60.2\nchangements de l'année 2026\nmettre à jour axios\nmettre à jour iobroker/testing (#759)",
-				"it": "aggiunto supporto per firmware V60.0, V60.1, V60.2\nanno 2026 cambia\naggiornare gli assi\naggiorna iobroker/test (#759)",
-				"es": "Soporte adicional para firmware V60.0, V60.1, V60.2\naño 2026 cambios\nactualizar axios\nactualizar iobroker/pruebas (#759)",
-				"pl": "dodano obsługę oprogramowania sprzętowego V60.0, V60.1, V60.2\nzmiany roku 2026\nzaktualizować osie\nzaktualizuj iobroker/testowanie (#759)",
-				"uk": "додана підтримка мікропрограм V60.0, V60.1, V60.2\n2026 рік зміни\nоновити axios\nоновлення iobroker/тестування (#759)",
-				"zh-cn": "添加了对固件 V60.0、V60.1、V60.2 的支持\n2026年的变化\n更新 axios\n更新 iobroker/测试 (#759)"
-			},
-			"0.21.2": {
-				"en": "update NPM deployment system\ncode optimizations\nupdate dependencies",
-				"de": "Aktualisieren Sie das NPM-Bereitstellungssystem\nCodeoptimierungen\nAbhängigkeiten aktualisieren",
-				"ru": "обновить систему развертывания NPM\nоптимизация кода\nобновить зависимости",
-				"pt": "atualizar o sistema de implantação NPM\notimizações de código\natualizar dependências",
-				"nl": "update het NPM-implementatiesysteem\ncode-optimalisaties\nafhankelijkheden bijwerken",
-				"fr": "mettre à jour le système de déploiement NPM\noptimisations de code\nmettre à jour les dépendances",
-				"it": "aggiornare il sistema di distribuzione NPM\nottimizzazioni del codice\naggiornare le dipendenze",
-				"es": "actualizar el sistema de implementación de NPM\noptimizaciones de código\nactualizar dependencias",
-				"pl": "zaktualizuj system wdrażania NPM\noptymalizacje kodu\nzaktualizować zależności",
-				"uk": "оновити систему розгортання NPM\nоптимізація коду\nоновити залежності",
-				"zh-cn": "更新NPM部署系统\n代码优化\n更新依赖项"
-			},
-			"0.21.1": {
-				"en": "update adapter-core\nupdate adapter-dev (#742)\nupdate chai system (#729)\nfix vulnerability with axios\nbump dependencies",
-				"de": "Aktualisieren Sie Adapter-Core\nAdapter-dev aktualisieren (#742)\nAktualisieren Sie das Chai -System (#729)\nBeheben der Verwundbarkeit mit Axios\nBeuleabhängigkeiten",
-				"ru": "Обновление адаптер-ядер\nОбновление адаптер-DEV (#742)\nОбновить систему Chai (#729)\nисправить уязвимость с помощью Axios\nУдар зависимости",
-				"pt": "Atualize o adaptador-core\nAtualizar adaptador-Dev (#742)\nAtualizar sistema chai (#729)\nCorrija a vulnerabilidade com axios\nBump dependências",
-				"nl": "Update adapter-core\nUpdate Adapter-Dev (#742)\nUpdate Chai System (#729)\nVergelijk de kwetsbaarheid met Axios\nBump -afhankelijkheden",
-				"fr": "Mettre à jour l'adaptateur-noyau\nMettre à jour l'adaptateur-DEV (# 742)\nMettre à jour le système Chai (# 729)\nFixer la vulnérabilité avec Axios\ndépendances",
-				"it": "Aggiorna l'adattatore-core\nAggiorna Adapter-Dev (#742)\nAggiorna il sistema Chai (#729)\nRisolvi la vulnerabilità con gli assios\ndipendenze bump",
-				"es": "Actualizar el núcleo adaptador\nActualizar adaptador-dev (#742)\nActualizar el sistema Chai (#729)\nArreglar la vulnerabilidad con Axios\ndependencias de la protuberancia",
-				"pl": "Zaktualizuj adapter\nAktualizacja adaptera-dev (#742)\nAktualizacja systemu Chai (#729)\nnaprawić podatność na AxiOS\nzależności od wypukłości",
-				"uk": "Оновіть адаптер-ямочко\nОновити адаптер-DEV (#742)\nОновити систему Chai (#729)\nвиправити вразливість за допомогою Axios\nзалежності від удару",
-				"zh-cn": "更新适配器核\n更新适配器-DEV（＃742）\n更新柴系统（＃729）\n用Axios修复漏洞\n凸起依赖性"
-			},
-			"0.21.0": {
-				"en": "BREAKING dropped Node.js 18 support\nBREAKING dropped js-controller 5 support\nAdd tests for Node 24\nRemove tests for Node 18\nFix vulnerability\nBump dependencies",
-				"de": "BREAKING Unterstützung für Node.js 18 eingestellt\nBREAKING Unterstützung für js-controller 5 eingestellt\nTests für Node 24 hinzugefügt\nTests für Node 18 entfernt\nSicherheitslücke behoben\nAbhängigkeiten aktualisiert",
-				"ru": "Прекращена поддержка Node.js 18\nПрекращена поддержка js-controller 5\nДобавлены тесты для Node 24\nУдалены тесты для Node 18\nИсправлена уязвимость\nОбновлены зависимости",
-				"pt": "Suporte ao Node.js 18 encerrado\nSuporte ao js-controller 5 encerrado\nAdicionados testes para Node 24\nRemovidos testes para Node 18\nCorrigida vulnerabilidade\nAtualizadas dependências",
-				"nl": "Ondersteuning voor Node.js 18 stopgezet\nOndersteuning voor js-controller 5 stopgezet\nTests toegevoegd voor Node 24\nTests verwijderd voor Node 18\nKwetsbaarheid opgelost\nAfhankelijkheden bijgewerkt",
-				"fr": "Abandon du support de Node.js 18\nAbandon du support de js-controller 5\nAjout de tests pour Node 24\nSuppression des tests pour Node 18\nCorrection de vulnérabilité\nMise à jour des dépendances",
-				"it": "Supporto per Node.js 18 interrotto\nSupporto per js-controller 5 interrotto\nAggiunti test per Node 24\nRimossi test per Node 18\nCorretta vulnerabilità\nAggiornate dipendenze",
-				"es": "Finalizado el soporte para Node.js 18\nFinalizado el soporte para js-controller 5\nAñadidas pruebas para Node 24\nEliminadas pruebas para Node 18\nCorregida vulnerabilidad\nActualizadas dependencias",
-				"pl": "Zakończono wsparcie dla Node.js 18\nZakończono wsparcie dla js-controller 5\nDodano testy dla Node 24\nUsunięto testy dla Node 18\nNaprawiono podatność\nZaktualizowano zależności",
-				"uk": "Припинено підтримку Node.js 18\nПрипинено підтримку js-controller 5\nДодано тести для Node 24\nВидалено тести для Node 18\nВиправлено вразливість\nОновлено залежності",
-				"zh-cn": "停止支持 Node.js 18\n停止支持 js-controller 5\n为 Node 24 添加测试\n移除 Node 18 的测试\n修复漏洞\n更新依赖项"
-			}
-		},
-		"titleLang": {
-			"en": "go-eCharger",
-			"de": "go-eCharger",
-			"ru": "go-eCharger",
-			"pt": "go-eCharger",
-			"nl": "go-eCharger",
-			"fr": "go-eCharger",
-			"it": "go-eCharger",
-			"es": "go-eCharger",
-			"pl": "go-eCharger",
-			"uk": "go-eCharger",
-			"zh-cn": "导 言"
-		},
-		"desc": {
-			"en": "Adapter for reading go-eCharger data",
-			"de": "Adapter zum Lesen von go-eCharger-Daten",
-			"ru": "Адаптер для чтения данных go-eCharger",
-			"pt": "Adaptador para leitura de dados do go-eCharger",
-			"nl": "Adapter voor het lezen van go-eCharger-gegevens",
-			"fr": "Adaptateur pour lire les données de go-eCharger",
-			"it": "Adattatore per la lettura di dati go-eCharger",
-			"es": "Adaptador para leer datos de go-eCharger",
-			"pl": "Adapter do odczytu danych go-eCharger",
-			"uk": "Адаптер для читання даних go-eCharger",
-			"zh-cn": "用于读取go-eCharger数据的适配器"
-		},
-		"authors": [
-			"Christian Hombach <go-eCharger@homba.ch>"
-		],
-		"keywords": [
-			"go-e",
-			"go-eCharger",
-			"wallbox",
-			"solar-power"
-		],
-		"licenseInformation": {
-			"license": "MIT",
-			"type": "free"
-		},
-		"platform": "Javascript/Node.js",
-		"icon": "go-eCharger.png",
-		"enabled": true,
-		"extIcon": "https://raw.githubusercontent.com/Hombach/ioBroker.go-e-charger/master/admin/go-eCharger.png",
-		"readme": "https://github.com/Hombach/ioBroker.go-e-charger/blob/master/README.md",
-		"loglevel": "info",
-		"tier": 3,
-		"mode": "daemon",
-		"type": "vehicle",
-		"compact": true,
-		"connectionType": "local",
-		"dataSource": "poll",
-		"adminUI": {
-			"config": "json"
-		},
-		"dependencies": [
-			{
-				"js-controller": ">=6.0.11"
-			}
-		],
-		"globalDependencies": [
-			{
-				"admin": ">=7.6.20"
-			}
-		],
-		"plugins": {
-			"sentry": {
-				"dsn": "https://dfd724bd663388712aefb1ea16cef06a@o415875.ingest.sentry.io/4506252607684608"
-			}
-		},
-		"supportCustoms": false
-	},
-	"native": {
-		"polltimelive": 10000,
-		"StateHomeBatSoc": "",
-		"StateHomeSolarPower": "",
-		"StateHomePowerConsumption": "",
-		"SubtractSelfConsumption": true
-	},
-	"objects": [],
-	"instanceObjects": [
-		{
-			"_id": "info",
-			"type": "channel",
-			"common": {
-				"name": "Information"
-			},
-			"native": {}
-		},
-		{
-			"_id": "info.connection",
-			"type": "state",
-			"common": {
-				"role": "indicator.connected",
-				"name": "Device or service connected",
-				"type": "boolean",
-				"read": true,
-				"write": false,
-				"def": false
-			},
-			"native": {}
-		},
-		{
-			"_id": "Settings",
-			"type": "channel",
-			"common": {
-				"name": "states to dynamically adjust adapter behavior",
-				"icon": "go-eCharger.png"
-			},
-			"native": {}
-		},
-		{
-			"_id": "Settings.Setpoint_HomeBatSoC",
-			"type": "state",
-			"common": {
-				"role": "level",
-				"name": "Setpoint for home battery state of charge",
-				"type": "number",
-				"unit": "%",
-				"read": true,
-				"write": true,
-				"def": 70
-			},
-			"native": {}
-		}
-	]
+  "common": {
+    "name": "go-e-charger",
+    "version": "1.0.2",
+    "news": {
+      "1.0.2": {
+        "en": "fix RFID data readout for gen 3+ chargers via API V2 (#802)\nprepared for beta repo\neliminate yarn\nupgraded adapter-core\nupdated axios\nupdated dependencies",
+        "de": "RFID-Datenauslesung für Ladegeräte der 3. Generation und höher über API V2 beheben (#802)\nFür das Beta-Repository vorbereitet\nGarn entfernen\naufgerüsteter Adapterkern\naktualisiertes Axios\naktualisierte Abhängigkeiten",
+        "ru": "Исправлена ошибка считывания данных RFID для зарядных устройств 3-го поколения и выше через API V2 (#802)\nподготовлено для бета-версии репозитория\nубрать пряжу\nмодернизированный адаптер-ядро\nобновленные аксиосы\nобновленные зависимости",
+        "pt": "Correção da leitura de dados RFID para carregadores de geração 3+ via API V2 (#802)\npreparado para repositório beta\neliminar fios\nnúcleo do adaptador atualizado\naxios atualizado\ndependências atualizadas",
+        "nl": "Het uitlezen van RFID-gegevens voor laders van de derde generatie en later via API V2 (#802) corrigeren.\nvoorbereid voor bèta-repository\ngaren verwijderen\nverbeterde adapterkern\naxios bijgewerkt\nbijgewerkte afhankelijkheden",
+        "fr": "Correction de la lecture des données RFID pour les chargeurs de 3e génération et plus via l'API V2 (#802)\npréparé pour le dépôt bêta\néliminer le fil\ncarte réseau améliorée\naxios mis à jour\ndépendances mises à jour",
+        "it": "Correzione della lettura dei dati RFID per i caricabatterie di terza generazione e successivi tramite API V2 (#802)\npreparato per il repository beta\neliminare il filato\nadattatore-core aggiornato\naxios aggiornato\ndipendenze aggiornate",
+        "es": "Corregir la lectura de datos RFID para cargadores de tercera generación o posteriores mediante la API V2 (#802)\npreparado para el repositorio beta\neliminar hilo\nnúcleo del adaptador actualizado\nAxios actualizado\ndependencias actualizadas",
+        "pl": "naprawa odczytu danych RFID dla ładowarek generacji 3+ za pomocą API V2 (#802)\nprzygotowane do repozytorium beta\nwyeliminować przędzę\nulepszony rdzeń adaptera\nzaktualizowane aksjomaty\nzaktualizowane zależności",
+        "uk": "виправлено зчитування даних RFID для зарядних пристроїв покоління 3+ через API V2 (#802)\nпідготовлено до бета-репозиторію\nвиключити пряжу\nоновлений адаптер-ядро\nоновлений Axios\nоновлені залежності",
+        "zh-cn": "修复第三代及以上充电器通过 API V2 读取 RFID 数据的问题 (#802)\n已准备好用于 beta 版本库\n消除纱线\n升级后的适配器核心\n更新后的 axios\n更新依赖项"
+      },
+      "1.0.1": {
+        "en": "fix total stats\nfix adapter checker findings\nfix docu\nfix tsconfig",
+        "de": "Gesamtstatistiken korrigieren\nBeheben Sie die Ergebnisse der Adapterprüfung\nDoku reparieren\ntsconfig reparieren",
+        "ru": "исправить общую статистику\nисправить результаты проверки адаптера\nисправить документ\nисправить цконфиг",
+        "pt": "corrigir estatísticas totais\ncorrigir descobertas do verificador de adaptador\ncorrigir documento\ncorrigir tsconfig",
+        "nl": "totale statistieken corrigeren\nbevindingen van de adaptercontrole oplossen\ndocument repareren\ntsconfig repareren",
+        "fr": "corriger les statistiques totales\ncorriger les résultats du vérificateur d'adaptateur\nréparer le document\nréparer tsconfig",
+        "it": "correggere le statistiche totali\ncorreggere i risultati del controllo dell'adattatore\ncorreggere il documento\ncorretto tsconfig",
+        "es": "arreglar estadísticas totales\narreglar los hallazgos del verificador del adaptador\narreglar documento\narreglar tsconfig",
+        "pl": "napraw statystyki całkowite\nnapraw wyniki sprawdzania adaptera\nnapraw dokument\nnapraw tsconfig",
+        "uk": "виправити загальну статистику\nвиправити висновки перевірки адаптера\nвиправити док\nвиправити tsconfig",
+        "zh-cn": "修复总统计数据\n修复适配器检查器结果\n修复文档\n修复 tsconfig"
+      },
+      "1.0.0": {
+        "en": "BREAKING: switched to multi charger support (#801), (#807)\nBREAKING: adapter needs node 22 now\nadapter requires admin >=7.6.20 now\nupdated typescript from 5.9.3 to 6.0.3\nadded RFID info (name, id, consumption) (#802)",
+        "de": "BREAKING: auf Multi-Ladegerät-Unterstützung umgestellt (#801), (#807)\nBREAKING: Der Adapter benötigt jetzt node 22\nDer Adapter erfordert jetzt admin >=7.6.20\nAktualisiertes Typeskript von 5.9.3 auf 6.0.3\nRFID-Info hinzugefügt (Name, ID, Verbrauch) (#802)",
+        "ru": "СРОЧНО: переключено на поддержку нескольких зарядных устройств (#801), (#807).\nСРОЧНО: адаптеру теперь нужен узел 22\nадаптеру сейчас требуется администратор >=7.6.20\nобновлен машинописный текст с 5.9.3 до 6.0.3\nдобавлена информация RFID (имя, идентификатор, потребление) (#802)",
+        "pt": "QUEBRANDO: mudou para suporte a vários carregadores (#801), (#807)\nQUEBRANDO: o adaptador precisa do nó 22 agora\nadaptador requer admin >=7.6.20 agora\ntexto datilografado atualizado de 5.9.3 para 6.0.3\nadicionadas informações RFID (nome, id, consumo) (#802)",
+        "nl": "BREAKING: overgeschakeld naar ondersteuning voor meerdere opladers (#801), (#807)\nBREAKING: adapter heeft nu knooppunt 22 nodig\nadapter vereist nu admin >=7.6.20\nbijgewerkt typoscript van 5.9.3 naar 6.0.3\nRFID-info toegevoegd (naam, id, verbruik) (#802)",
+        "fr": "RUPTURE : passage au support multi-chargeurs (#801), (#807)\nRUPTURE : l'adaptateur a besoin du nœud 22 maintenant\nl'adaptateur nécessite un administrateur >=7.6.20 maintenant\ndactylographié mis à jour de 5.9.3 à 6.0.3\najout d'informations RFID (nom, identifiant, consommation) (#802)",
+        "it": "ROTTURA: passato al supporto per caricabatterie multipli (#801), (#807)\nBREAKING: l'adattatore necessita ora del nodo 22\nl'adattatore richiede ora l'amministratore >=7.6.20\ndattiloscritto aggiornato da 5.9.3 a 6.0.3\naggiunte informazioni RFID (nome, ID, consumo) (#802)",
+        "es": "ÚLTIMA HORA: cambiado a soporte de cargador múltiple (#801), (#807)\nÚLTIMA HORA: el adaptador necesita el nodo 22 ahora\nEl adaptador requiere administrador >=7.6.20 ahora\nmecanografiado actualizado de 5.9.3 a 6.0.3\ninformación RFID agregada (nombre, identificación, consumo) (#802)",
+        "pl": "ŁAMANIE: przełączono na obsługę wielu ładowarek (#801), (#807)\nŁAMANIE: adapter potrzebuje teraz węzła 22\nadapter wymaga teraz administratora >=7.6.20\nzaktualizowano maszynopis z wersji 5.9.3 do 6.0.3\ndodano informacje RFID (nazwa, identyfikator, zużycie) (#802)",
+        "uk": "ПОЛИМКА: переведено на підтримку кількох зарядних пристроїв (#801), (#807)\nПОРУШЕННЯ: адаптеру зараз потрібен вузол 22\nдля адаптера потрібен адміністратор >=7.6.20\nоновлено машинопис з 5.9.3 до 6.0.3\nдодана інформація RFID (ім'я, ідентифікатор, споживання) (#802)",
+        "zh-cn": "突破：切换到多充电器支持 (#801)、(#807)\n中断：适配器现在需要节点 22\n适配器现在需要 admin >=7.6.20\n将打字稿从 5.9.3 更新到 6.0.3\n添加了 RFID 信息（名称、ID、消费）(#802)"
+      },
+      "0.21.4": {
+        "en": "prepare multi-charger support\nupdate axios\nupdate iobroker/testing (#765)\nswitch to ES2023 code\nfix vulnerabilities\nupdate dependencies",
+        "de": "Unterstützung für mehrere Ladegeräte vorbereitet\nAxios aktualisiert\niobroker/testing aktualisiert (#765)\nWechsel zu ES2023-Code\nSchwachstellen behoben\nAbhängigkeiten aktualisiert",
+        "ru": "подготовить поддержку нескольких зарядных устройств\nобновить аксиомы\nобновить iobroker/тестирование (#765)\nперейти на код ES2023\nисправить уязвимости\nобновить зависимости",
+        "pt": "preparar suporte para vários carregadores\natualizar eixos\natualizar iobroker/teste (#765)\nmudar para o código ES2023\ncorrigir vulnerabilidades\natualizar dependências",
+        "nl": "ondersteuning voor meerdere laders voorbereiden\naxio's bijwerken\nupdate iobroker/testen (#765)\nschakel over naar ES2023-code\nkwetsbaarheden oplossen\nafhankelijkheden bijwerken",
+        "fr": "préparer le support multi-chargeurs\nmettre à jour axios\nmettre à jour iobroker/testing (#765)\npasser au code ES2023\ncorriger les vulnérabilités\nmettre à jour les dépendances",
+        "it": "preparare il supporto multi-caricatore\naggiornare gli assi\naggiorna iobroker/test (#765)\npassare al codice ES2023\ncorreggere le vulnerabilità\naggiornare le dipendenze",
+        "es": "preparar soporte multicargador\nactualizar axios\nactualizar iobroker/pruebas (#765)\ncambiar al código ES2023\narreglar vulnerabilidades\nactualizar dependencias",
+        "pl": "przygotować obsługę wielu ładowarek\nzaktualizować osie\nzaktualizuj iobroker/testowanie (#765)\nprzejdź na kod ES2023\nnaprawić luki\nzaktualizować zależności",
+        "uk": "підготуйте підтримку кількох зарядних пристроїв\nоновити axios\nоновлення iobroker/тестування (#765)\nперейти на код ES2023\nвиправити вразливості\nоновити залежності",
+        "zh-cn": "准备多充电器支持\n更新 axios\n更新 iobroker/测试 (#765)\n切换到ES2023代码\n修复漏洞\n更新依赖关系"
+      },
+      "0.21.3": {
+        "en": "added support for firmware V60.0, V60.1, V60.2\nyear 2026 changes\nupdate axios\nupdate iobroker/testing (#759)",
+        "de": "Unterstützung für Firmware V60.0, V60.1, V60.2 hinzugefügt\nDas Jahr 2026 ändert sich\nAxios aktualisieren\niobroker/testing aktualisieren (#759)",
+        "ru": "добавлена поддержка прошивок V60.0, V60.1, V60.2\nизменения 2026 года\nобновить аксиомы\nобновить iobroker/тестирование (#759)",
+        "pt": "suporte adicional para firmware V60.0, V60.1, V60.2\nmudanças no ano de 2026\natualizar eixos\natualizar iobroker/teste (#759)",
+        "nl": "Ondersteuning toegevoegd voor firmware V60.0, V60.1, V60.2\njaar 2026 verandert\naxio's bijwerken\nupdate iobroker/testen (#759)",
+        "fr": "Prise en charge supplémentaire du firmware V60.0, V60.1, V60.2\nchangements de l'année 2026\nmettre à jour axios\nmettre à jour iobroker/testing (#759)",
+        "it": "aggiunto supporto per firmware V60.0, V60.1, V60.2\nanno 2026 cambia\naggiornare gli assi\naggiorna iobroker/test (#759)",
+        "es": "Soporte adicional para firmware V60.0, V60.1, V60.2\naño 2026 cambios\nactualizar axios\nactualizar iobroker/pruebas (#759)",
+        "pl": "dodano obsługę oprogramowania sprzętowego V60.0, V60.1, V60.2\nzmiany roku 2026\nzaktualizować osie\nzaktualizuj iobroker/testowanie (#759)",
+        "uk": "додана підтримка мікропрограм V60.0, V60.1, V60.2\n2026 рік зміни\nоновити axios\nоновлення iobroker/тестування (#759)",
+        "zh-cn": "添加了对固件 V60.0、V60.1、V60.2 的支持\n2026年的变化\n更新 axios\n更新 iobroker/测试 (#759)"
+      },
+      "0.21.2": {
+        "en": "update NPM deployment system\ncode optimizations\nupdate dependencies",
+        "de": "Aktualisieren Sie das NPM-Bereitstellungssystem\nCodeoptimierungen\nAbhängigkeiten aktualisieren",
+        "ru": "обновить систему развертывания NPM\nоптимизация кода\nобновить зависимости",
+        "pt": "atualizar o sistema de implantação NPM\notimizações de código\natualizar dependências",
+        "nl": "update het NPM-implementatiesysteem\ncode-optimalisaties\nafhankelijkheden bijwerken",
+        "fr": "mettre à jour le système de déploiement NPM\noptimisations de code\nmettre à jour les dépendances",
+        "it": "aggiornare il sistema di distribuzione NPM\nottimizzazioni del codice\naggiornare le dipendenze",
+        "es": "actualizar el sistema de implementación de NPM\noptimizaciones de código\nactualizar dependencias",
+        "pl": "zaktualizuj system wdrażania NPM\noptymalizacje kodu\nzaktualizować zależności",
+        "uk": "оновити систему розгортання NPM\nоптимізація коду\nоновити залежності",
+        "zh-cn": "更新NPM部署系统\n代码优化\n更新依赖项"
+      },
+      "0.21.1": {
+        "en": "update adapter-core\nupdate adapter-dev (#742)\nupdate chai system (#729)\nfix vulnerability with axios\nbump dependencies",
+        "de": "Aktualisieren Sie Adapter-Core\nAdapter-dev aktualisieren (#742)\nAktualisieren Sie das Chai -System (#729)\nBeheben der Verwundbarkeit mit Axios\nBeuleabhängigkeiten",
+        "ru": "Обновление адаптер-ядер\nОбновление адаптер-DEV (#742)\nОбновить систему Chai (#729)\nисправить уязвимость с помощью Axios\nУдар зависимости",
+        "pt": "Atualize o adaptador-core\nAtualizar adaptador-Dev (#742)\nAtualizar sistema chai (#729)\nCorrija a vulnerabilidade com axios\nBump dependências",
+        "nl": "Update adapter-core\nUpdate Adapter-Dev (#742)\nUpdate Chai System (#729)\nVergelijk de kwetsbaarheid met Axios\nBump -afhankelijkheden",
+        "fr": "Mettre à jour l'adaptateur-noyau\nMettre à jour l'adaptateur-DEV (# 742)\nMettre à jour le système Chai (# 729)\nFixer la vulnérabilité avec Axios\ndépendances",
+        "it": "Aggiorna l'adattatore-core\nAggiorna Adapter-Dev (#742)\nAggiorna il sistema Chai (#729)\nRisolvi la vulnerabilità con gli assios\ndipendenze bump",
+        "es": "Actualizar el núcleo adaptador\nActualizar adaptador-dev (#742)\nActualizar el sistema Chai (#729)\nArreglar la vulnerabilidad con Axios\ndependencias de la protuberancia",
+        "pl": "Zaktualizuj adapter\nAktualizacja adaptera-dev (#742)\nAktualizacja systemu Chai (#729)\nnaprawić podatność na AxiOS\nzależności od wypukłości",
+        "uk": "Оновіть адаптер-ямочко\nОновити адаптер-DEV (#742)\nОновити систему Chai (#729)\nвиправити вразливість за допомогою Axios\nзалежності від удару",
+        "zh-cn": "更新适配器核\n更新适配器-DEV（＃742）\n更新柴系统（＃729）\n用Axios修复漏洞\n凸起依赖性"
+      }
+    },
+    "titleLang": {
+      "en": "go-eCharger",
+      "de": "go-eCharger",
+      "ru": "go-eCharger",
+      "pt": "go-eCharger",
+      "nl": "go-eCharger",
+      "fr": "go-eCharger",
+      "it": "go-eCharger",
+      "es": "go-eCharger",
+      "pl": "go-eCharger",
+      "uk": "go-eCharger",
+      "zh-cn": "导 言"
+    },
+    "desc": {
+      "en": "Adapter for reading go-eCharger data",
+      "de": "Adapter zum Lesen von go-eCharger-Daten",
+      "ru": "Адаптер для чтения данных go-eCharger",
+      "pt": "Adaptador para leitura de dados do go-eCharger",
+      "nl": "Adapter voor het lezen van go-eCharger-gegevens",
+      "fr": "Adaptateur pour lire les données de go-eCharger",
+      "it": "Adattatore per la lettura di dati go-eCharger",
+      "es": "Adaptador para leer datos de go-eCharger",
+      "pl": "Adapter do odczytu danych go-eCharger",
+      "uk": "Адаптер для читання даних go-eCharger",
+      "zh-cn": "用于读取go-eCharger数据的适配器"
+    },
+    "authors": [
+      "Christian Hombach <go-eCharger@homba.ch>"
+    ],
+    "keywords": [
+      "go-e",
+      "go-eCharger",
+      "wallbox",
+      "solar-power"
+    ],
+    "licenseInformation": {
+      "license": "MIT",
+      "type": "free"
+    },
+    "platform": "Javascript/Node.js",
+    "icon": "go-eCharger.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/Hombach/ioBroker.go-e-charger/master/admin/go-eCharger.png",
+    "readme": "https://github.com/Hombach/ioBroker.go-e-charger/blob/master/README.md",
+    "loglevel": "info",
+    "tier": 3,
+    "mode": "daemon",
+    "type": "vehicle",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "dependencies": [
+      {
+        "js-controller": ">=6.0.11"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=7.6.20"
+      }
+    ],
+    "plugins": {
+      "sentry": {
+        "dsn": "https://dfd724bd663388712aefb1ea16cef06a@o415875.ingest.sentry.io/4506252607684608"
+      }
+    },
+    "supportCustoms": false
+  },
+  "native": {
+    "polltimelive": 10000,
+    "StateHomeBatSoc": "",
+    "StateHomeSolarPower": "",
+    "StateHomePowerConsumption": "",
+    "SubtractSelfConsumption": true
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": "Information"
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "role": "indicator.connected",
+        "name": "Device or service connected",
+        "type": "boolean",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    },
+    {
+      "_id": "Settings",
+      "type": "channel",
+      "common": {
+        "name": "states to dynamically adjust adapter behavior",
+        "icon": "go-eCharger.png"
+      },
+      "native": {}
+    },
+    {
+      "_id": "Settings.Setpoint_HomeBatSoC",
+      "type": "state",
+      "common": {
+        "role": "level",
+        "name": "Setpoint for home battery state of charge",
+        "type": "number",
+        "unit": "%",
+        "read": true,
+        "write": true,
+        "def": 70
+      },
+      "native": {}
+    }
+  ]
 }

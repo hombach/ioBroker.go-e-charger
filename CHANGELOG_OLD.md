@@ -16,59 +16,89 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 
 ## Changelog - OLD CHANGES
 
-### 0.20.1 (2025-03-05)
+## 0.21.2 (2025-10-19)
+
+- (hombach) update NPM deployment system
+- (hombach) code optimizations
+
+## 0.21.1 (2025-09-26)
+
+- (hombach) update adapter-core
+- (hombach) update adapter-dev (#742)
+- (hombach) update chai system (#729)
+- (hombach) fix vulnerability with axios
+
+## 0.21.0 (2025-08-17)
+
+- (hombach) BREAKING: dropped node.js 18 support
+- (hombach) BREAKING: dropped js-controller 5 support
+- (hombach) add tests for node 24
+- (hombach) remove tests for node 18
+- (hombach) fix vulnerability
+
+## 0.20.3 (2025-07-17)
+
+- (hombach) add state for unlocked by (#634)
+- (hombach) added support for firmware V59.4 (#716)
+
+## 0.20.2 (2025-03-20)
+
+- (hombach) fix error in statechange recognition (#637)
+- (hombach) fix axios
+
+## 0.20.1 (2025-03-05)
 
 - (hombach) bump dependencies
 
-### 0.20.0 (2025-02-23)
+## 0.20.0 (2025-02-23)
 
 - (hombach) change to admin 7.4.10 as recommended by ioBroker
 
-### 0.19.8 (2025-01-28)
+## 0.19.8 (2025-01-28)
 
 - (hombach) roll back bad ioBroker.testing
 - (hombach) added support for firmware V57.0 (#659)
 - (hombach) added support for firmware V57.1 (#660)
 
-### 0.19.7 (2025-01-25)
+## 0.19.7 (2025-01-25)
 
 - (hombach) added support for firmware V56.11 (#658)
 
-### 0.19.6 (2025-01-23)
+## 0.19.6 (2025-01-23)
 
 - (hombach) added support for firmware V56.9 (#657)
 - (hombach) ported adapter to TypeScript
 - (hombach) switch to ES2022
 - (hombach) fixed chai
 
-### 0.19.5 (2025-01-01)
+## 0.19.5 (2025-01-01)
 
 - (hombach) harmonize tests, add tests for node 22
 - (hombach) fix bug in state subscription
 - (hombach) replace deprecated async state access
 - (hombach) year 2025 changes
 
-### 0.19.4 (2024-08-14)
+## 0.19.4 (2024-08-14)
 
 - (hombach) fixed vulnerability in dependency
 
-### 0.19.3 (2024-08-03)
+## 0.19.3 (2024-08-03)
 
 - (hombach) added support for firmware V56.8
 
-### 0.19.2 (2024-08-03)
+## 0.19.2 (2024-08-03)
 
 - (hombach) added support for firmware V56.2
 
-### 0.19.1 (2024-06-11)
+## 0.19.1 (2024-06-11)
 
 - (hombach) fixed known vulnerability in dependency
 
-### 0.19.0 (2024-05-30)
+## 0.19.0 (2024-05-30)
 
 - (hombach) intruduced possibility to not subtract charger power from homeconsumption
 
-### 0.18.1 (2024-05-28)
+## 0.18.1 (2024-05-28)
 
 - (hombach) change test procedure to ioBroker standard
 - (hombach) revert eslint to 8.57
@@ -76,187 +106,187 @@ Adapter for reading go-eCharger data. Adapter creates some states and updates se
 - (hombach) add node 21 tests
 - (hombach) handle not reachable chargers (#563)
 
-### 0.18.0 (2024-04-19)
+## 0.18.0 (2024-04-19)
 
 - (hombach) BREAKING: dropped support for node.js 16 (#558)
 - (hombach) BREAKING: js-controller >= 5 is required (#559)
 - (hombach) updated adapter-core to 3.1.4
 
-### 0.17.5 (2024-03-27)
+## 0.17.5 (2024-03-27)
 
 - (hombach) smaller logo
 - (hombach) corrected io-package.json according to new schema
 
-### 0.17.4 (2024-03-27)
+## 0.17.4 (2024-03-27)
 
 - (hombach) added support for firmware V56.1
 
-### 0.17.3 (2024-03-27)
+## 0.17.3 (2024-03-27)
 
 - (hombach) Update github workflows
 - (hombach) update adapter-core to 3.0.6
 
-### 0.17.2 (2024-01-16)
+## 0.17.2 (2024-01-16)
 
 - (hombach) Fix error in calling API V2 on old HW
 
-### 0.17.1 (2024-01-10)
+## 0.17.1 (2024-01-10)
 
 - (hombach) Fix phases calculation error (#533)
 
-### 0.17.0 (2024-01-10)
+## 0.17.0 (2024-01-10)
 
 - (hombach) BREAKING: dropped support for js-controller 3.x
 - (hombach) Implement API V2 to get and switch charging phases
 - (hombach) optimized sentry logging
 
-### 0.16.3 (2023-12-23)
+## 0.16.3 (2023-12-23)
 
 - (hombach) add support for V055.8
 - (hombach) year 2024 changes
 
-### 0.16.2 (2023-11-19)
+## 0.16.2 (2023-11-19)
 
 - (hombach) add support for V055.5 & V055.7
 - (hombach) Change Sentry logging to new project
 
-### 0.16.1 (2023-11-19)
+## 0.16.1 (2023-11-19)
 
 - (hombach) Add support for V054.11
 
-### 0.16.0 (2023-11-18)
+## 0.16.0 (2023-11-18)
 
 - (HombachC) replaced got by axios
 
-### 0.15.5 (2023-11-18)
+## 0.15.5 (2023-11-18)
 
 - (HombachC) Add support for V054.7, code cleanup
 
-### 0.15.4 (2023-10-01)
+## 0.15.4 (2023-10-01)
 
 - (HombachC) Several dependency updates, bump adapter-core to 3.x
 
-### 0.15.3 (2023-06-29)
+## 0.15.3 (2023-06-29)
 
 - (HombachC) acknowledge settings states after adoption
 
-### 0.15.2 (2023-06-26)
+## 0.15.2 (2023-06-26)
 
 - (HombachC) Changed config screen to ioBroker.admin 5 version
 
-### 0.15.1 (2023-06-19)
+## 0.15.1 (2023-06-19)
 
 - (HombachC) removed travis
 
-### 0.15.0 (2023-06-15)
+## 0.15.0 (2023-06-15)
 
 - (HombachC) BREAKING: dropped node.js 14 support
 - (HombachC) Add tests for node.js 20, removed for node.js 14, bumped dependencies
 - (HombachC) BREAKING: dropped ioBroker.admin 4 support
 
-### 0.14.4 (2023-04-09)
+## 0.14.4 (2023-04-09)
 
 - (HombachC) bumped dependencies
 
-### 0.14.3 (2022-12-29)
+## 0.14.3 (2022-12-29)
 
 - (HombachC) year 2023 changes
 
-### 0.14.2 (2022-06-27)
+## 0.14.2 (2022-06-27)
 
 - (HombachC) bumped dependencies because of security vulnerability
 
-### 0.14.1 (2022-06-05)
+## 0.14.1 (2022-06-05)
 
 - (HombachC) small code tweaks, removed gulp
 
-### 0.14.0 (2022-05-08)
+## 0.14.0 (2022-05-08)
 
 - (HombachC) BREAKING: dropped node.js 12 support
 - (HombachC) Add tests for node.js 18, removed for node.js 12
 - (HombachC) bumped dependencies to non node.js 12 support
 
-### 0.13.0 (2022-05-06)
+## 0.13.0 (2022-05-06)
 
 - (HombachC) introducing read-only mode
 
-### 0.12.0 (2022-03-13)
+## 0.12.0 (2022-03-13)
 
 - (HombachC) optimize system load
 
-### 0.11.3 (2022-03-13)
+## 0.11.3 (2022-03-13)
 
 - (HombachC) fix sentry error
 
-### 0.11.2 (2022-01-28)
+## 0.11.2 (2022-01-28)
 
 - (HombachC) small docu tweaks
 
-### 0.11.1 (2022-01-02)
+## 0.11.1 (2022-01-02)
 
 - (HombachC) year 2022 changes
 
-### 0.11.0 (2021-12-17)
+## 0.11.0 (2021-12-17)
 
 - (HombachC) dropped node.js 10 support, bumped dependencies
 
-### 0.10.2 (2021-11-14)
+## 0.10.2 (2021-11-14)
 
 - (HombachC) sentry finding: added unknown firmware 040; prior only 040.0 included
 
-### 0.10.1 (2021-10-24)
+## 0.10.1 (2021-10-24)
 
 - (HombachC) fixing error in adapter start-up
 - (HombachC) changed error with unsupported firmware to warning - run adapter also with this firmwares
 
-### 0.10.0 (2021-10-24)
+## 0.10.0 (2021-10-24)
 
 - (HombachC) added sentry.io support
 
-### 0.9.2 (2021-10-17)
+## 0.9.2 (2021-10-17)
 
 - (HombachC) fixed error in charger state feedback
 
-### 0.9.0 (2021-10-04)
+## 0.9.0 (2021-10-04)
 
 - (HombachC) support for firmware 041.0
 
-### 0.8.0 (2021-05-09)
+## 0.8.0 (2021-05-09)
 
 - (HombachC) added gridphase correction to charge logic
 
-### 0.7.5 (2021-05-09)
+## 0.7.5 (2021-05-09)
 
 - (HombachC) added tests for node.js 16
 
-### 0.7.0 (2021-04-11)
+## 0.7.0 (2021-04-11)
 
 - (HombachC) added measured maximum current
 
-### 0.6.0 (2021-03-15)
+## 0.6.0 (2021-03-15)
 
 - (HombachC) fix error in foreign state popup
 
-### 0.5.0 (2020-12-20)
+## 0.5.0 (2020-12-20)
 
 - (HombachC) introduces selectable external states for charge control
 
-### 0.4.0 (2020-12-11)
+## 0.4.0 (2020-12-11)
 
 - (HombachC) added use of amx (non persistent set of charge current) to protect hardware (firmware 040 only)
 
-### 0.3.3 (2020-12-08)
+## 0.3.3 (2020-12-08)
 
 - (HombachC) added check of firmware version
 
-### 0.3.2 (2020-12-08)
+## 0.3.2 (2020-12-08)
 
 - (HombachC) added poll of firmware version, fixed error in CarStateString
 
-### 0.2.0 (2020-09-11)
+## 0.2.0 (2020-09-11)
 
 - (HombachC) changed type to vehicle
 
-### 0.0.1 (2020-06-27)
+## 0.0.1 (2020-06-27)
 
 - (HombachC) initial release

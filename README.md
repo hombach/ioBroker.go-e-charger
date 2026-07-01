@@ -52,8 +52,7 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.2 (2026-07-01)
 
 - (hombach) fix RFID data readout for gen 3+ chargers via API V2 (#802)
 - (hombach) prepared for beta repo
@@ -93,40 +92,6 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
 - (hombach) year 2026 changes
 - (hombach) update axios
 - (hombach) update iobroker/testing (#759)
-
-### 0.21.2 (2025-10-19)
-
-- (hombach) update NPM deployment system
-- (hombach) code optimizations
-- (hombach) update dependencies
-
-### 0.21.1 (2025-09-26)
-
-- (hombach) update adapter-core
-- (hombach) update adapter-dev (#742)
-- (hombach) update chai system (#729)
-- (hombach) fix vulnerability with axios
-- (hombach) bump dependencies
-
-### 0.21.0 (2025-08-17)
-
-- (hombach) BREAKING: dropped node.js 18 support
-- (hombach) BREAKING: dropped js-controller 5 support
-- (hombach) add tests for node 24
-- (hombach) remove tests for node 18
-- (hombach) fix vulnerability
-- (hombach) bump dependencies
-
-### 0.20.3 (2025-07-17)
-
-- (hombach) add state for unlocked by (#634)
-- (hombach) added support for firmware V59.4 (#716)
-- (hombach) bump dependencies
-
-### 0.20.2 (2025-03-20)
-
-- (hombach) fix error in statechange recognition (#637)
-- (hombach) fix axios
 
 ### Old Changes see [CHANGELOG OLD](CHANGELOG_OLD.md)
 
