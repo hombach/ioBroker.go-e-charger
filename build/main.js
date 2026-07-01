@@ -173,7 +173,7 @@ class go_e_charger extends utils.Adapter {
             this.timeoutList = this.timeoutList.filter(t => t !== this.pendingStateMachine);
             this.pendingStateMachine = null;
         }
-        this.pendingStateMachine = this.setTimeout(this.StateMachine.bind(this), 0) ?? null;
+        this.pendingStateMachine = this.setTimeout(this.StateMachine.bind(this), 500) ?? null;
         if (this.pendingStateMachine != null) {
             this.timeoutList.push(this.pendingStateMachine);
         }
