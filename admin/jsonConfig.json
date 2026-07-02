@@ -1,11 +1,11 @@
 {
 	"i18n": true,
 	"type": "tabs",
-	"items":  {
-	    "_StandardTab": {
-       		"type": "panel",
-		"label": "Standard settings",
-	        "items": {
+	"items": {
+		"_StandardTab": {
+			"type": "panel",
+			"label": "Standard settings",
+			"items": {
 				"cycleTime": {
 					"type": "number",
 					"label": "LBL_cycleTime",
@@ -105,6 +105,6 @@
 					]
 				}
 			}
-	    }
+		}
 	}
 }
