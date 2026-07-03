@@ -15,12 +15,6 @@ Thumbs.db
 # i18n intermediate files
 admin/i18n/flat.txt
 admin/i18n/*/flat.txt
-# yarn v2
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
 
 # ioBroker dev-server
 .dev-server/
@@ -28,4 +22,4 @@ admin/i18n/*/flat.txt
 # Visual Studio cache/options directory
 .vs/
 
-.commitinfo 
+.commitinfo
