@@ -56,7 +56,7 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
 ### **WORK IN PROGRESS**
 
 - (hombach) added translations
-- (hombach) fixed state role
+- (hombach) fixed state roles
 
 ### 1.0.2 (2026-07-01)
 

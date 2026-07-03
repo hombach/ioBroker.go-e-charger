@@ -562,27 +562,27 @@ class go_e_charger extends utils.Adapter {
 			"h",
 			"value",
 		);
-		void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.carState`, Number(status.car), "State of connected car", "", "value");
+		void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.carState`, Number(status.car), `State of connected car`, "", "value");
 		switch (status.car) {
 			case "1":
-				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, "Wallbox ready, no car", "State of connected car", "value");
+				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Wallbox ready, no car`, `State of connected car`, "text");
 				break;
 			case "2":
-				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, "Charging...", "State of connected car", "value");
+				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Charging...`, `State of connected car`, "text");
 				break;
 			case "3":
-				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, "Wait for car", "State of connected car", "value");
+				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Wait for car`, `State of connected car`, "text");
 				break;
 			case "4":
 				await this.projectUtils.checkAndSetValue(
 					`${basePath}.info.carStateString`,
 					`Charge finished, car still connected`,
-					"State of connected car",
-					"value",
+					`State of connected car`,
+					"text",
 				);
 				break;
 			default:
-				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, "Error", `State of connected car`, "value");
+				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Error`, `State of connected car`, `text`);
 		}
 
 		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrent`, Number(status.amp), `Charge current output`, "A", "value.current");
@@ -869,7 +869,7 @@ class go_e_charger extends utils.Adapter {
 		);
 		this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
 		this.wallboxInfoList[iWB].Hardware = status.typ;
-		void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, "value");
+		void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, `info.hardware`);
 		await this.parseAndSetRFIDData(status, basePath);
 		this.log.debug(`got and parsed go-e charger ${iWB} data with API V2`);
 	}
