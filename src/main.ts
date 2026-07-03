@@ -118,7 +118,7 @@ class go_e_charger extends utils.Adapter {
 					this.wallboxInfoList[iWB].MinAmp,
 					`charge current output`,
 					"A",
-					"value.current",
+					"level.current",
 					true,
 					false,
 					true,
@@ -584,7 +584,7 @@ class go_e_charger extends utils.Adapter {
 				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Error`, `State of connected car`, `text`);
 		}
 
-		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrent`, Number(status.amp), `Charge current output`, "A", "value.current");
+		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrent`, Number(status.amp), `Charge current output`, "A", "level.current");
 		void this.projectUtils.checkAndSetValueNumber(
 			`${basePath}.Power.ChargeCurrentVolatile`,
 			Number(status.amx),
@@ -922,7 +922,7 @@ class go_e_charger extends utils.Adapter {
 							Number(result.amp),
 							`Charge current output`,
 							"A",
-							"value.current",
+							"level.current",
 						);
 						switch (result.alw) {
 							case "0":
@@ -954,7 +954,7 @@ class go_e_charger extends utils.Adapter {
 							Number(result.amp),
 							`Charge current output`,
 							"A",
-							"value.current",
+							"level.current",
 						);
 						switch (result.alw) {
 							case "0":
