@@ -43,7 +43,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 
 ## Donate
 
-<a href="https://www.paypal.com/donate/?hosted_button_id=76GBRV9BX5US8"><img src="https://raw.githubusercontent.com/Hombach/ioBroker.go-e-charger/master/docu/bluePayPal.svg" height="40"></a>  
+<a href="https://www.paypal.com/donate/?hosted_button_id=76GBRV9BX5US8"><img src="https://raw.githubusercontent.com/Hombach/ioBroker.go-e-charger/master/docu/bluePayPal.svg" height="40"></a>
 If you enjoyed this project � or just feeling generous, consider buying me a beer. Cheers! :beers:
 
 ## Changelog
@@ -52,6 +52,11 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+- (hombach) added translations
+
 ### 1.0.2 (2026-07-01)
 
 - (hombach) fix RFID data readout for gen 3+ chargers via API V2 (#802)
