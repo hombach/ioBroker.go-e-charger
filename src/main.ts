@@ -90,7 +90,6 @@ class go_e_charger extends utils.Adapter {
 			for (const [iWB, wallBox] of this.config.wallBoxList.entries()) {
 				this.log.debug(`Setting up Wallbox ${iWB} with IP ${wallBox.ipAddress} in config`);
 				if (!wallBox.ipAddress) {
-					//if (!this.config.wallBoxList[iWB].ipAddress) {
 					throw new Error(`Wallbox ${iWB} - IP address not set - stopping adapter`);
 				}
 
