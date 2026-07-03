@@ -399,7 +399,6 @@ class go_e_charger extends utils.Adapter {
 			} else if (this.wallboxInfoList[iWB].ChargeManager) {
 				// Charge-Manager is enabled
 				batSoC = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeBatSoc);
-				// WiP batSoC = await this.asyncGetForeignStateVal(this.config.StateHomeBatSoc);
 				this.log.debug(`Got external state of battery SoC: ${batSoC}%`);
 				if (batSoC >= minHomeBatVal) {
 					// SoC of home battery is sufficient
@@ -625,18 +624,12 @@ class go_e_charger extends utils.Adapter {
 			"value.current",
 		);
 		this.wallboxInfoList[iWB].Firmware = status.fwv;
-		void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`);
-		// WiP 634
-		// uby - uint8_t - unlocked_by: Nummer der RFID Karte, die den jetzigen Ladevorgang freigeschalten hat
+		void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`, `info.firmware`);
 		void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
-		// WiP 634
 
-		// WiP 802 - RFID Karten: nur bei API V1 only Chargern (Gen 1/2), Gen 3+ nutzt API V2
 		if (!this.wallboxInfoList[iWB].HardwareMin3) {
 			await this.parseAndSetRFIDData(status, basePath);
 		}
-		// WiP 802
-
 		this.log.debug(`got and parsed go-e charger ${iWB} data`);
 	}
 

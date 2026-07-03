@@ -428,7 +428,7 @@ class go_e_charger extends utils.Adapter {
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.Charge`, status.nrg[11] * 10, `actual charging-power`, "W", "value.power");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.MeasuredMaxPhaseCurrent`, Math.max(...status.nrg.slice(4, 7)) / 10, `Measured max. current of grid phases`, "A", "value.current");
         this.wallboxInfoList[iWB].Firmware = status.fwv;
-        void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`);
+        void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`, `info.firmware`);
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
         if (!this.wallboxInfoList[iWB].HardwareMin3) {
             await this.parseAndSetRFIDData(status, basePath);
