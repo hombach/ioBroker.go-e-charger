@@ -12,8 +12,6 @@ let batSoC = 0;
 let solarPower = 0;
 let houseConsumption = 0;
 let totalChargeEnergy = 0;
-//ToDo let totalChargePower = 0;
-//ToDo let totalMeasuredChargeCurrent = 0;
 
 class go_e_charger extends utils.Adapter {
 	private projectUtils = new ProjectUtils(this);
@@ -597,10 +595,10 @@ class go_e_charger extends utils.Adapter {
 		);
 		switch (status.alw) {
 			case "0":
-				await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, false, `Charging allowed`, "switch.mode.manual");
+				await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, false, `Charging allowed`, "indicator");
 				break;
 			case "1":
-				await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, true, `Charging allowed`, "switch.mode.manual");
+				await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, true, `Charging allowed`, "indicator");
 				break;
 		}
 		this.wallboxInfoList[iWB].GridPhases = ((32 & status.pha) >> 5) + ((16 & status.pha) >> 4) + ((8 & status.pha) >> 3);
@@ -935,20 +933,10 @@ class go_e_charger extends utils.Adapter {
 						);
 						switch (result.alw) {
 							case "0":
-								await this.projectUtils.checkAndSetValueBoolean(
-									`${basePath}.Power.ChargingAllowed`,
-									false,
-									`Charging allowed`,
-									"switch.mode.manual",
-								);
+								await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, false, `Charging allowed`, `indicator`);
 								break;
 							case "1":
-								await this.projectUtils.checkAndSetValueBoolean(
-									`${basePath}.Power.ChargingAllowed`,
-									true,
-									`Charging allowed`,
-									"switch.mode.manual",
-								);
+								await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, true, `Charging allowed`, `indicator`);
 								break;
 						}
 					})
@@ -977,20 +965,10 @@ class go_e_charger extends utils.Adapter {
 						);
 						switch (result.alw) {
 							case "0":
-								await this.projectUtils.checkAndSetValueBoolean(
-									`${basePath}.Power.ChargingAllowed`,
-									false,
-									`Charging allowed`,
-									"switch.mode.manual",
-								);
+								await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, false, `Charging allowed`, `indicator`);
 								break;
 							case "1":
-								await this.projectUtils.checkAndSetValueBoolean(
-									`${basePath}.Power.ChargingAllowed`,
-									true,
-									`Charging allowed`,
-									"switch.mode.manual",
-								);
+								await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, true, `Charging allowed`, `indicator`);
 								break;
 						}
 					})
