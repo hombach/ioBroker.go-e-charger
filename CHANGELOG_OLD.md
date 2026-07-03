@@ -15,6 +15,14 @@
 Adapter for reading go-eCharger data. Adapter creates some states and updates sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your car. Working with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1.
 
 ## Changelog - OLD CHANGES
+## 0.21.3 (2026-01-01)
+
+- (hombach) added support for firmware V60.0
+- (hombach) added support for firmware V60.1
+- (hombach) added support for firmware V60.2
+- (hombach) year 2026 changes
+- (hombach) update axios
+- (hombach) update iobroker/testing (#759)
 
 ## 0.21.2 (2025-10-19)
 

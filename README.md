@@ -52,8 +52,7 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.3 (2026-07-03)
 
 - (hombach) added translations
 - (hombach) fixed state roles
@@ -89,15 +88,6 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
 - (hombach) switch to ES2023 code
 - (hombach) fix vulnerabilities
 - (hombach) update dependencies
-
-### 0.21.3 (2026-01-01)
-
-- (hombach) added support for firmware V60.0
-- (hombach) added support for firmware V60.1
-- (hombach) added support for firmware V60.2
-- (hombach) year 2026 changes
-- (hombach) update axios
-- (hombach) update iobroker/testing (#759)
 
 ### Old Changes see [CHANGELOG OLD](CHANGELOG_OLD.md)
 

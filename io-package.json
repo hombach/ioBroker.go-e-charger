@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "news": {
+      "1.0.3": {
+        "en": "added translations\nfixed state roles",
+        "de": "hinzugefügte Übersetzungen\nfeste Statusrollen",
+        "ru": "добавлены переводы\nфиксированные роли состояния",
+        "pt": "traduções adicionadas\nfunções de estado fixas",
+        "nl": "toegevoegde vertalingen\nvaste statusrollen",
+        "fr": "traductions ajoutées\nrôles d'état fixes",
+        "it": "traduzioni aggiunte\nruoli di stato fissi",
+        "es": "Se agregaron traducciones\nroles de estado fijo",
+        "pl": "dodano tłumaczenia\nstałe role państwowe",
+        "uk": "додані переклади\nролі фіксованого стану",
+        "zh-cn": "新增翻译\n固定状态角色"
+      },
       "1.0.2": {
         "en": "fix RFID data readout for gen 3+ chargers via API V2 (#802)\nprepared for beta repo\neliminate yarn\nupgraded adapter-core\nupdated axios\nupdated dependencies",
         "de": "RFID-Datenauslesung für Ladegeräte der 3. Generation und höher über API V2 beheben (#802)\nFür das Beta-Repository vorbereitet\nGarn entfernen\naufgerüsteter Adapterkern\naktualisiertes Axios\naktualisierte Abhängigkeiten",
@@ -80,19 +93,6 @@
         "pl": "zaktualizuj system wdrażania NPM\noptymalizacje kodu\nzaktualizować zależności",
         "uk": "оновити систему розгортання NPM\nоптимізація коду\nоновити залежності",
         "zh-cn": "更新NPM部署系统\n代码优化\n更新依赖项"
-      },
-      "0.21.1": {
-        "en": "update adapter-core\nupdate adapter-dev (#742)\nupdate chai system (#729)\nfix vulnerability with axios\nbump dependencies",
-        "de": "Aktualisieren Sie Adapter-Core\nAdapter-dev aktualisieren (#742)\nAktualisieren Sie das Chai -System (#729)\nBeheben der Verwundbarkeit mit Axios\nBeuleabhängigkeiten",
-        "ru": "Обновление адаптер-ядер\nОбновление адаптер-DEV (#742)\nОбновить систему Chai (#729)\nисправить уязвимость с помощью Axios\nУдар зависимости",
-        "pt": "Atualize o adaptador-core\nAtualizar adaptador-Dev (#742)\nAtualizar sistema chai (#729)\nCorrija a vulnerabilidade com axios\nBump dependências",
-        "nl": "Update adapter-core\nUpdate Adapter-Dev (#742)\nUpdate Chai System (#729)\nVergelijk de kwetsbaarheid met Axios\nBump -afhankelijkheden",
-        "fr": "Mettre à jour l'adaptateur-noyau\nMettre à jour l'adaptateur-DEV (# 742)\nMettre à jour le système Chai (# 729)\nFixer la vulnérabilité avec Axios\ndépendances",
-        "it": "Aggiorna l'adattatore-core\nAggiorna Adapter-Dev (#742)\nAggiorna il sistema Chai (#729)\nRisolvi la vulnerabilità con gli assios\ndipendenze bump",
-        "es": "Actualizar el núcleo adaptador\nActualizar adaptador-dev (#742)\nActualizar el sistema Chai (#729)\nArreglar la vulnerabilidad con Axios\ndependencias de la protuberancia",
-        "pl": "Zaktualizuj adapter\nAktualizacja adaptera-dev (#742)\nAktualizacja systemu Chai (#729)\nnaprawić podatność na AxiOS\nzależności od wypukłości",
-        "uk": "Оновіть адаптер-ямочко\nОновити адаптер-DEV (#742)\nОновити систему Chai (#729)\nвиправити вразливість за допомогою Axios\nзалежності від удару",
-        "zh-cn": "更新适配器核\n更新适配器-DEV（＃742）\n更新柴系统（＃729）\n用Axios修复漏洞\n凸起依赖性"
       }
     },
     "titleLang": {
