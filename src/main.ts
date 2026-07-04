@@ -163,11 +163,11 @@ class go_e_charger extends utils.Adapter {
 		// init global statistics channel and states
 		await this.projectUtils.checkAndSetChannel(`statisticsGlobal`, `statistical data sum of all chargers`, `go-eCharger.png`, true);
 		await this.projectUtils.checkAndSetValueNumber(
-			`statisticsGlobal.charged`,
+			`statisticsGlobal.chargedEnergy`,
 			totalChargeEnergy,
 			`Totally charged sum of all go-e in lifetime`,
 			"kWh",
-			"value",
+			"value.energy.consumed",
 			false,
 			true,
 		);

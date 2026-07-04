@@ -9,6 +9,14 @@ export interface IWallboxInfo {
 	 */
 	ID: number;
 	/**
+	 * IP address of the charger
+	 */
+	ipAddress: string;
+	/**
+	 * Read-only mode - no control commands are sent to this charger
+	 */
+	readOnlyMode: boolean;
+	/**
 	 * Firmware version
 	 */
 	Firmware: string;

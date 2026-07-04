@@ -147,7 +147,7 @@ class go_e_charger extends utils.Adapter {
             return;
         }
         await this.projectUtils.checkAndSetChannel(`statisticsGlobal`, `statistical data sum of all chargers`, `go-eCharger.png`, true);
-        await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.charged`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh", "value", false, true);
+        await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.chargedEnergy`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh", "value.energy.consumed", false, true);
         if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
             const sentryInstance = this.getPluginInstance("sentry");
             if (sentryInstance) {
