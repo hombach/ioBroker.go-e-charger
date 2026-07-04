@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "news": {
+      "1.0.4": {
+        "en": "harmonized i18n files\nimproved README and English texts\nreworked translations in all languages\nadded 5s timeout to all HTTP requests to chargers\nfixed adapter stop when no charger is reachable at startup; warn per unreachable charger\nfixed German fallback text for RFID card channel names\nadded upper bound validation for cycle time\nadded link to manufacturer's website\ncode optimizations",
+        "de": "harmonisierte i18n-Dateien\nverbesserte README- und englische Texte\nüberarbeitete Übersetzungen in allen Sprachen\nAllen HTTP-Anfragen an Ladegeräte wurde ein Timeout von 5 Sekunden hinzugefügt.\nBehobene Adapterabschaltung, wenn beim Start kein Ladegerät erreichbar ist; Warnung bei nicht erreichbarem Ladegerät\nKorrigierter deutscher Ausweichtext für RFID-Kartenkanalnamen\nValidierung der oberen Grenze für die Zykluszeit hinzugefügt\nLink zur Website des Herstellers hinzugefügt.\nCodeoptimierungen",
+        "ru": "гармонизированные файлы i18n\nУлучшены файлы README и английский текст.\nПереработаны переводы на все языки.\nДобавлен 5-секундный таймаут ко всем HTTP-запросам к зарядным устройствам.\nАдаптер автоматически отключается при запуске, если зарядное устройство недоступно; при каждой недоступности зарядного устройства выдается предупреждение.\nИсправлен немецкий резервный текст для названий каналов RFID-карт.\nДобавлена проверка верхней границы времени цикла.\nДобавлена ссылка на сайт производителя.\nоптимизация кода",
+        "pt": "Arquivos i18n harmonizados\nArquivo README e textos em inglês aprimorados.\nTraduções revisadas em todos os idiomas\nAdicionado um tempo limite de 5 segundos a todas as solicitações HTTP para carregadores.\nO adaptador fixo para de funcionar quando nenhum carregador está disponível na inicialização; exibe um aviso para cada carregador inacessível.\nTexto alternativo em alemão corrigido para nomes de canais de cartões RFID.\nAdicionada validação de limite superior para o tempo de ciclo.\nAdicionado link para o site do fabricante.\notimizações de código",
+        "nl": "geharmoniseerde i18n-bestanden\nVerbeterde README en Engelse teksten\nHerziene vertalingen in alle talen\nEr is een time-out van 5 seconden toegevoegd aan alle HTTP-verzoeken aan opladers.\nDe vaste adapter stopt wanneer er bij het opstarten geen oplader bereikbaar is; er wordt een waarschuwing gegeven wanneer de oplader niet bereikbaar is.\nDe Duitse fallback-tekst voor RFID-kaartkanaalnamen is gecorrigeerd.\nValidatie van de bovengrens voor de cyclustijd toegevoegd.\nLink naar de website van de fabrikant toegevoegd\ncode-optimalisaties",
+        "fr": "fichiers i18n harmonisés\nAmélioration du fichier README et des textes en anglais\ntraductions retravaillées dans toutes les langues\nAjout d'un délai d'attente de 5 secondes à toutes les requêtes HTTP adressées aux chargeurs.\nArrêt automatique de l'adaptateur secteur si aucun chargeur n'est accessible au démarrage ; avertissement en cas de chargeur inaccessible\nTexte de repli allemand corrigé pour les noms de canaux de cartes RFID\nAjout d'une validation de limite supérieure pour le temps de cycle\najout d'un lien vers le site web du fabricant\noptimisations de code",
+        "it": "file i18n armonizzati\nFile README e testi in inglese migliorati.\ntraduzioni rielaborate in tutte le lingue\naggiunto un timeout di 5 secondi a tutte le richieste HTTP ai caricabatterie\nArresto fisso dell'adattatore quando nessun caricabatterie è raggiungibile all'avvio; avviso per ogni caricabatterie irraggiungibile\nTesto di fallback tedesco fisso per i nomi dei canali delle schede RFID\naggiunta la convalida del limite superiore per il tempo di ciclo\naggiunto il link al sito web del produttore\nottimizzazioni del codice",
+        "es": "Archivos i18n armonizados\nREADME y textos en inglés mejorados\nTraducciones revisadas en todos los idiomas\nSe agregó un tiempo de espera de 5 segundos a todas las solicitudes HTTP a los cargadores.\nEl adaptador fijo se detiene cuando no hay ningún cargador disponible al encenderse; avisa cuando no hay ningún cargador disponible.\nSe corrigió el texto alternativo en alemán para los nombres de los canales de las tarjetas RFID.\nSe agregó validación de límite superior para el tiempo de ciclo.\nSe agregó un enlace al sitio web del fabricante.\noptimizaciones de código",
+        "pl": "zharmonizowane pliki i18n\nulepszone pliki README i teksty w języku angielskim\nprzerobione tłumaczenia we wszystkich językach\ndodano 5-sekundowy limit czasu do wszystkich żądań HTTP do ładowarek\nstałe zatrzymanie adaptera, gdy podczas uruchamiania nie można uzyskać dostępu do ładowarki; ostrzeżenie w przypadku braku dostępu do ładowarki\nnaprawiono niemiecki tekst zastępczy dla nazw kanałów kart RFID\ndodano walidację górnej granicy czasu cyklu\ndodano link do strony producenta\noptymalizacje kodu",
+        "uk": "гармонізовані файли i18n\nпокращений README та англійський текст\nперероблені переклади всіма мовами\nдодано 5-секундний тайм-аут для всіх HTTP-запитів до зарядних пристроїв\nвиправлено зупинку адаптера, коли зарядний пристрій недоступний під час запуску; попередження про кожен недоступний зарядний пристрій\nвиправлено резервний текст німецькою мовою для назв каналів RFID-карт\nдодано перевірку верхньої межі для часу циклу\nдодано посилання на сайт виробника\nоптимізації коду",
+        "zh-cn": "统一的 i18n 文件\n改进了README文件和英文文本\n对所有语言的翻译进行了重新润色\n对所有发往充电器的HTTP请求增加5秒超时时间\n启动时，如果充电器无法连接，则固定适配器停止工作；对每个无法连接的充电器发出警告。\n修复了 RFID 卡通道名称的德语备用文本\n增加了周期时间的上限验证\n添加了制造商网站的链接\n代码优化"
+      },
       "1.0.3": {
         "en": "added translations\nfixed state roles",
         "de": "hinzugefügte Übersetzungen\nfeste Statusrollen",
@@ -80,19 +93,6 @@
         "pl": "dodano obsługę oprogramowania sprzętowego V60.0, V60.1, V60.2\nzmiany roku 2026\nzaktualizować osie\nzaktualizuj iobroker/testowanie (#759)",
         "uk": "додана підтримка мікропрограм V60.0, V60.1, V60.2\n2026 рік зміни\nоновити axios\nоновлення iobroker/тестування (#759)",
         "zh-cn": "添加了对固件 V60.0、V60.1、V60.2 的支持\n2026年的变化\n更新 axios\n更新 iobroker/测试 (#759)"
-      },
-      "0.21.2": {
-        "en": "update NPM deployment system\ncode optimizations\nupdate dependencies",
-        "de": "Aktualisieren Sie das NPM-Bereitstellungssystem\nCodeoptimierungen\nAbhängigkeiten aktualisieren",
-        "ru": "обновить систему развертывания NPM\nоптимизация кода\nобновить зависимости",
-        "pt": "atualizar o sistema de implantação NPM\notimizações de código\natualizar dependências",
-        "nl": "update het NPM-implementatiesysteem\ncode-optimalisaties\nafhankelijkheden bijwerken",
-        "fr": "mettre à jour le système de déploiement NPM\noptimisations de code\nmettre à jour les dépendances",
-        "it": "aggiornare il sistema di distribuzione NPM\nottimizzazioni del codice\naggiornare le dipendenze",
-        "es": "actualizar el sistema de implementación de NPM\noptimizaciones de código\nactualizar dependencias",
-        "pl": "zaktualizuj system wdrażania NPM\noptymalizacje kodu\nzaktualizować zależności",
-        "uk": "оновити систему розгортання NPM\nоптимізація коду\nоновити залежності",
-        "zh-cn": "更新NPM部署系统\n代码优化\n更新依赖项"
       }
     },
     "titleLang": {

@@ -81,8 +81,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.4 (2026-07-04)
 
 - (hombach) harmonized i18n files
 - (hombach) improved README and English texts
@@ -122,14 +121,6 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) adapter requires admin >=7.6.20 now
 - (hombach) updated typescript from 5.9.3 to 6.0.3
 - (hombach) added RFID info (name, id, consumption) (#802)
-
-### 0.21.4 (2026-04-19)
-
-- (hombach) prepare multi-charger support
-- (hombach) update axios
-- (hombach) switch to ES2023 code
-- (hombach) fix vulnerabilities
-- (hombach) update dependencies
 
 ### Old Changes see [CHANGELOG OLD](CHANGELOG_OLD.md)
 
