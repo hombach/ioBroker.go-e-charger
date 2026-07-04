@@ -1,12 +1,12 @@
 {
 	"LBL_standardSettings": "Impostazioni standard",
-	"LBL_cycleTime": "Tempo tra sondaggi di dati dal caricatore [ms]",
-	"LBL_stateHomeSolarPower": "ID oggetto per l'energia solare attualmente disponibile [W]",
-	"LBL_stateHomeBatSoc": "object-id per l'attuale stato di carica della batteria domestica [%]",
-	"LBL_stateHomePowerConsumption": "object-id per il consumo energetico domestico corrente [W]",
-	"LBL_subtractSelfConsumption": "Il consumo del caricabatterie è incluso nel valore del consumo energetico domestico",
-	"LBL_wallBoxList": "Elenco delle cassette a muro",
-	"LBL_chargerName": "Nome del caricabatterie",
-	"LBL_ipAddress": "Indirizzo IP di go-eCharger",
-	"LBL_readOnlyMode": "modalità di sola lettura - il rilascio della carica non viene inviato al caricabatterie (per utilizzare tag RFID)"
+	"LBL_cycleTime": "Intervallo tra le letture dei dati dalla wallbox [ms]",
+	"LBL_stateHomeSolarPower": "ID oggetto per la potenza solare attualmente disponibile [W]",
+	"LBL_stateHomeBatSoc": "ID oggetto per l'attuale stato di carica della batteria domestica [%]",
+	"LBL_stateHomePowerConsumption": "ID oggetto per il consumo elettrico domestico attuale [W]",
+	"LBL_subtractSelfConsumption": "Il consumo della wallbox è incluso nel valore del consumo elettrico domestico",
+	"LBL_wallBoxList": "Elenco delle wallbox",
+	"LBL_chargerName": "Nome della wallbox",
+	"LBL_ipAddress": "Indirizzo IP del go-eCharger",
+	"LBL_readOnlyMode": "Modalità di sola lettura - l'autorizzazione alla ricarica non viene inviata alla wallbox (per l'uso di tag RFID)"
 }

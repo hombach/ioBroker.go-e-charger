@@ -1,12 +1,12 @@
 {
 	"LBL_standardSettings": "Ustawienia standardowe",
-	"LBL_cycleTime": "Czas między sondażami danych z ładowarki [ms]",
-	"LBL_stateHomeSolarPower": "id obiektu dla aktualnie dostępnej energii słonecznej [W]",
-	"LBL_stateHomeBatSoc": "id obiektu dla aktualnego stanu naładowania akumulatora w domu [%]",
-	"LBL_stateHomePowerConsumption": "id obiektu dla bieżącego zużycia energii w domu [W]",
+	"LBL_cycleTime": "Czas między odczytami danych z ładowarki [ms]",
+	"LBL_stateHomeSolarPower": "ID obiektu dla aktualnie dostępnej mocy solarnej [W]",
+	"LBL_stateHomeBatSoc": "ID obiektu dla aktualnego stanu naładowania baterii domowej [%]",
+	"LBL_stateHomePowerConsumption": "ID obiektu dla aktualnego zużycia energii w domu [W]",
 	"LBL_subtractSelfConsumption": "Zużycie ładowarki jest uwzględnione w wartości zużycia energii w domu",
-	"LBL_wallBoxList": "Lista Wallboxów",
+	"LBL_wallBoxList": "Lista wallboxów",
 	"LBL_chargerName": "Nazwa ładowarki",
 	"LBL_ipAddress": "Adres IP go-eCharger",
-	"LBL_readOnlyMode": "tryb tylko do odczytu - zwolnienie ładunku nie jest wysyłane do ładowarki (w celu użycia tagów RFID)"
+	"LBL_readOnlyMode": "Tryb tylko do odczytu - zezwolenie na ładowanie nie jest wysyłane do ładowarki (do użycia z tagami RFID)"
 }

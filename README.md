@@ -84,6 +84,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 - (hombach) harmonized i18n files
 - (hombach) improved README and English texts
+- (hombach) reworked translations in all languages
 
 ### 1.0.3 (2026-07-03)
 
