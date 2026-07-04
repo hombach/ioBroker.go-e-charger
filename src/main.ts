@@ -59,6 +59,11 @@ class go_e_charger extends utils.Adapter {
 		this.log.debug(`Initial value for Setpoint HomeBatSoC: ${minHomeBatVal}%`);
 
 		const wallBoxList = Array.isArray(this.config.wallBoxList) ? this.config.wallBoxList : [];
+		// normalize the config to the guarded array so all later accesses (firstStart, StateMachine,
+		// onUnload, ...) see a valid array even if the config is missing or not an array.
+		// Cast needed because the generated config type declares wallBoxList as a non-empty tuple,
+		// while at runtime the admin UI may deliver an empty array.
+		this.config.wallBoxList = wallBoxList as typeof this.config.wallBoxList;
 		if (!wallBoxList.length) {
 			this.log.warn("No wallBoxList configured or wallBoxList is not an array. Charger setup will be skipped.");
 		} else {
@@ -92,8 +97,12 @@ class go_e_charger extends utils.Adapter {
 		this.subscribeStates(`Settings.*`); //all states changes inside the adapters settings namespace are subscribed
 		this.subscribeStates(`Wallbox_*.Settings.*`); //all states changes inside the adapters settings namespace are subscribed
 
+		// NOTE for later review: the runtime wallboxInfoList is built above via wallBoxList.map() and the
+		// config list is re-iterated here. This double-iteration could be merged into a single loop.
+		// Iterate the guarded local `wallBoxList` (not this.config.wallBoxList) so a non-array config is
+		// handled consistently with the map() above and does not throw on .entries().
 		try {
-			for (const [iWB, wallBox] of this.config.wallBoxList.entries()) {
+			for (const [iWB, wallBox] of wallBoxList.entries()) {
 				this.log.debug(`Setting up Wallbox ${iWB} with IP ${wallBox.ipAddress} in config`);
 				if (!wallBox.ipAddress) {
 					throw new Error(`Wallbox ${iWB} - IP address not set - stopping adapter`);
@@ -772,12 +781,16 @@ class go_e_charger extends utils.Adapter {
 					transformResponse: r => r,
 				},
 			)
-			.then(response => {
+			.then(async response => {
 				//.status == 200
 				const result = JSON.parse(response.data);
 				this.log.debug(`Read charger ${iWB} API V2: ${response.data}`);
 				this.wallboxInfoList[iWB].HardwareMin3 = true;
-				void this.ParseStatusAPIV2(result, iWB);
+				try {
+					await this.ParseStatusAPIV2(result, iWB);
+				} catch (error) {
+					this.log.error(`Error parsing go-e charger ${iWB} API V2 response: ${error as Error}`);
+				}
 			})
 			.catch(error => {
 				this.log.error(`Error in calling go-e charger ${iWB} API V2: ${error}`);
@@ -915,6 +928,7 @@ class go_e_charger extends utils.Adapter {
 	async Charge_Config(Allow: string, Ampere: number, LogMessage: string, iWB: number): Promise<void> {
 		this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
 		const basePath = `Wallbox_${iWB}`;
+		// read-only mode only suppresses the charge release (alw); charging current and phase switching are still sent
 		if (!this.config.wallBoxList[iWB].readOnlyMode) {
 			await axiosInstance
 				.get(`http://${this.config.wallBoxList[iWB].ipAddress}/mqtt?payload=alw=${Allow}`, { transformResponse: r => r }) // activate charging

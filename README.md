@@ -92,6 +92,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) fixed German fallback text for RFID card channel names
 - (hombach) added upper bound validation for cycle time
 - (hombach) added link to manufacturer's website
+- (hombach) code optimizations
 
 ### 1.0.3 (2026-07-03)
 

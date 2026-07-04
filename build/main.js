@@ -79,6 +79,7 @@ class go_e_charger extends utils.Adapter {
         minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC");
         this.log.debug(`Initial value for Setpoint HomeBatSoC: ${minHomeBatVal}%`);
         const wallBoxList = Array.isArray(this.config.wallBoxList) ? this.config.wallBoxList : [];
+        this.config.wallBoxList = wallBoxList;
         if (!wallBoxList.length) {
             this.log.warn("No wallBoxList configured or wallBoxList is not an array. Charger setup will be skipped.");
         }
@@ -112,7 +113,7 @@ class go_e_charger extends utils.Adapter {
         this.subscribeStates(`Settings.*`);
         this.subscribeStates(`Wallbox_*.Settings.*`);
         try {
-            for (const [iWB, wallBox] of this.config.wallBoxList.entries()) {
+            for (const [iWB, wallBox] of wallBoxList.entries()) {
                 this.log.debug(`Setting up Wallbox ${iWB} with IP ${wallBox.ipAddress} in config`);
                 if (!wallBox.ipAddress) {
                     throw new Error(`Wallbox ${iWB} - IP address not set - stopping adapter`);
@@ -483,11 +484,16 @@ class go_e_charger extends utils.Adapter {
             .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,uby,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`, {
             transformResponse: r => r,
         })
-            .then(response => {
+            .then(async (response) => {
             const result = JSON.parse(response.data);
             this.log.debug(`Read charger ${iWB} API V2: ${response.data}`);
             this.wallboxInfoList[iWB].HardwareMin3 = true;
-            void this.ParseStatusAPIV2(result, iWB);
+            try {
+                await this.ParseStatusAPIV2(result, iWB);
+            }
+            catch (error) {
+                this.log.error(`Error parsing go-e charger ${iWB} API V2 response: ${error}`);
+            }
         })
             .catch(error => {
             this.log.error(`Error in calling go-e charger ${iWB} API V2: ${error}`);
