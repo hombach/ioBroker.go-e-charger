@@ -102,6 +102,19 @@ export class ProjectUtils {
 	}
 
 	/**
+	 * Replaces all characters not allowed in ioBroker object IDs with an underscore.
+	 *
+	 * Use this whenever a segment of an object ID is built from external data,
+	 * e.g. names or IDs received from a device API.
+	 *
+	 * @param text - The raw text to be used as part of an object ID.
+	 * @returns The sanitized text, safe for use in object IDs.
+	 */
+	sanitizeIdSegment(text: string): string {
+		return text.replace(this.adapter.FORBIDDEN_CHARS, "_").trim();
+	}
+
+	/**
 	 * Retrieves the value of a given state by its name.
 	 *
 	 * @param stateName - A string representing the name of the state to retrieve.

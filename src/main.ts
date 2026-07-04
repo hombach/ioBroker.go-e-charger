@@ -3,7 +3,7 @@ import * as utils from "@iobroker/adapter-core";
 import axios from "axios";
 import { ProjectUtils, type IWallboxInfo } from "./lib/projectUtils";
 const axiosInstance = axios.create({
-	//timeout: 5000, //by default
+	timeout: 5000, // ms - prevents a hanging request from blocking the state machine
 });
 
 // variables
@@ -46,6 +46,12 @@ class go_e_charger extends utils.Adapter {
 		if (!this.config.cycleTime) {
 			this.log.warn(`Cycletime not configured or zero - will be set to 10 seconds`);
 			this.config.cycleTime = 10000;
+		} else if (this.config.cycleTime < 3000) {
+			this.log.warn(`Cycletime configured too small (${this.config.cycleTime} ms) - will be set to 3 seconds`);
+			this.config.cycleTime = 3000;
+		} else if (this.config.cycleTime > 3600000) {
+			this.log.warn(`Cycletime configured too large (${this.config.cycleTime} ms) - will be set to 1 hour`);
+			this.config.cycleTime = 3600000;
 		}
 		this.log.info(`Cycletime set to: ${this.config.cycleTime / 1000} seconds`);
 
@@ -182,7 +188,9 @@ class go_e_charger extends utils.Adapter {
 			}
 		}
 
-		await this.firstStart();
+		if (!(await this.firstStart())) {
+			return;
+		}
 		this.log.debug(`Start init done, launching state machine interval`);
 		void this.setState(`info.connection`, { val: true, ack: true });
 
@@ -316,21 +324,21 @@ class go_e_charger extends utils.Adapter {
 	 * Handles the initial startup check for all configured go-e Chargers.
 	 *
 	 * Checks the detected firmware version of each wallbox and performs the following:
-	 * - Logs an error and stops the adapter if no charger is reachable.
-	 * - Sets the connection state accordingly.
+	 * - Logs a warning for each unreachable charger and sets its connection state to false.
+	 * - Stops the adapter if none of the configured chargers is reachable.
 	 * - Logs a warning and reports unknown firmware versions via Sentry (if available).
 	 *
+	 * @returns false if the adapter was stopped because no charger is reachable, true otherwise.
 	 */
-	private async firstStart(): Promise<void> {
+	private async firstStart(): Promise<boolean> {
+		let reachableChargers = 0;
 		for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
 			this.log.debug(`Initial ReadCharger done, detected charger ${iWB} firmware ${this.wallboxInfoList[iWB].Firmware}`);
 			switch (this.wallboxInfoList[iWB].Firmware) {
 				case "0":
 				case "EHostUnreach":
-					// no charger found - stop adapter - only on first run
-					this.log.error(`No charger detected on given IP address for charger ${iWB} - shutting down adapter.`);
+					this.log.warn(`No charger detected on IP address ${this.config.wallBoxList[iWB].ipAddress} for charger ${iWB}`);
 					await this.setState(`Wallbox_${iWB}.info.connection`, { val: false, ack: true });
-					this.stop;
 					break;
 				case "033":
 				case "040":
@@ -354,10 +362,12 @@ class go_e_charger extends utils.Adapter {
 				case "60.2":
 					this.log.debug(`Init done, launching state machine`);
 					await this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
+					reachableChargers++;
 					break;
 				default:
 					this.log.warn(`Not explicitly supported firmware ${this.wallboxInfoList[iWB].Firmware} for charger ${iWB} found!!!`);
 					await this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
+					reachableChargers++;
 					// sentry.io send firmware version
 					if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
 						const sentryInstance = this.getPluginInstance("sentry");
@@ -373,6 +383,13 @@ class go_e_charger extends utils.Adapter {
 					}
 			}
 		} // next charger
+
+		if (reachableChargers === 0) {
+			this.log.error(`No charger reachable on any configured IP address - stopping adapter.`);
+			await this.stop?.({ exitCode: 11, reason: `no charger detected` });
+			return false;
+		}
+		return true;
 	}
 
 	/*****************************************************************************************/
@@ -718,8 +735,11 @@ class go_e_charger extends utils.Adapter {
 			}
 
 			const cardNumber = i + 1;
+			// The channel ID is built from the numeric card index and is therefore safe.
+			// If channels were ever created from external data instead (e.g. the card name),
+			// the segment MUST be sanitized first: this.projectUtils.sanitizeIdSegment(cardName)
 			const channelPath = `${basePath}.statistics.RFID${cardNumber}`;
-			await this.projectUtils.checkAndSetChannel(channelPath, cardName || `Karte ${cardNumber}`);
+			await this.projectUtils.checkAndSetChannel(channelPath, cardName || `Card ${cardNumber}`);
 			await this.projectUtils.checkAndSetValueNumber(
 				`${channelPath}.chargedEnergy`,
 				Number(energyRaw) / 10 || 0,

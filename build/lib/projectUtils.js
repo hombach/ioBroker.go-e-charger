@@ -6,6 +6,9 @@ class ProjectUtils {
     constructor(adapter) {
         this.adapter = adapter;
     }
+    sanitizeIdSegment(text) {
+        return text.replace(this.adapter.FORBIDDEN_CHARS, "_").trim();
+    }
     async getStateValue(stateName) {
         try {
             const stateObject = await this.getState(stateName);

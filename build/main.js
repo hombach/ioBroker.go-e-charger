@@ -39,7 +39,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const utils = __importStar(require("@iobroker/adapter-core"));
 const axios_1 = __importDefault(require("axios"));
 const projectUtils_1 = require("./lib/projectUtils");
-const axiosInstance = axios_1.default.create({});
+const axiosInstance = axios_1.default.create({
+    timeout: 5000,
+});
 let minHomeBatVal = 87;
 let batSoC = 0;
 let solarPower = 0;
@@ -64,6 +66,14 @@ class go_e_charger extends utils.Adapter {
         if (!this.config.cycleTime) {
             this.log.warn(`Cycletime not configured or zero - will be set to 10 seconds`);
             this.config.cycleTime = 10000;
+        }
+        else if (this.config.cycleTime < 3000) {
+            this.log.warn(`Cycletime configured too small (${this.config.cycleTime} ms) - will be set to 3 seconds`);
+            this.config.cycleTime = 3000;
+        }
+        else if (this.config.cycleTime > 3600000) {
+            this.log.warn(`Cycletime configured too large (${this.config.cycleTime} ms) - will be set to 1 hour`);
+            this.config.cycleTime = 3600000;
         }
         this.log.info(`Cycletime set to: ${this.config.cycleTime / 1000} seconds`);
         minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC");
@@ -152,7 +162,9 @@ class go_e_charger extends utils.Adapter {
                     });
             }
         }
-        await this.firstStart();
+        if (!(await this.firstStart())) {
+            return;
+        }
         this.log.debug(`Start init done, launching state machine interval`);
         void this.setState(`info.connection`, { val: true, ack: true });
         const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
@@ -267,14 +279,14 @@ class go_e_charger extends utils.Adapter {
         }
     }
     async firstStart() {
+        let reachableChargers = 0;
         for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
             this.log.debug(`Initial ReadCharger done, detected charger ${iWB} firmware ${this.wallboxInfoList[iWB].Firmware}`);
             switch (this.wallboxInfoList[iWB].Firmware) {
                 case "0":
                 case "EHostUnreach":
-                    this.log.error(`No charger detected on given IP address for charger ${iWB} - shutting down adapter.`);
+                    this.log.warn(`No charger detected on IP address ${this.config.wallBoxList[iWB].ipAddress} for charger ${iWB}`);
                     await this.setState(`Wallbox_${iWB}.info.connection`, { val: false, ack: true });
-                    this.stop;
                     break;
                 case "033":
                 case "040":
@@ -298,10 +310,12 @@ class go_e_charger extends utils.Adapter {
                 case "60.2":
                     this.log.debug(`Init done, launching state machine`);
                     await this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
+                    reachableChargers++;
                     break;
                 default:
                     this.log.warn(`Not explicitly supported firmware ${this.wallboxInfoList[iWB].Firmware} for charger ${iWB} found!!!`);
                     await this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
+                    reachableChargers++;
                     if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
                         const sentryInstance = this.getPluginInstance("sentry");
                         if (sentryInstance) {
@@ -316,6 +330,12 @@ class go_e_charger extends utils.Adapter {
                     }
             }
         }
+        if (reachableChargers === 0) {
+            this.log.error(`No charger reachable on any configured IP address - stopping adapter.`);
+            await this.stop?.({ exitCode: 11, reason: `no charger detected` });
+            return false;
+        }
+        return true;
     }
     async StateMachine() {
         this.log.debug(`StateMachine cycle start`);
@@ -448,7 +468,7 @@ class go_e_charger extends utils.Adapter {
             }
             const cardNumber = i + 1;
             const channelPath = `${basePath}.statistics.RFID${cardNumber}`;
-            await this.projectUtils.checkAndSetChannel(channelPath, cardName || `Karte ${cardNumber}`);
+            await this.projectUtils.checkAndSetChannel(channelPath, cardName || `Card ${cardNumber}`);
             await this.projectUtils.checkAndSetValueNumber(`${channelPath}.chargedEnergy`, Number(energyRaw) / 10 || 0, `Charged energy for RFID chip ${cardNumber}`, "kWh", "value.energy.consumed");
             if (cardId !== "n/a") {
                 await this.projectUtils.checkAndSetValue(`${channelPath}.cardId`, cardId, `RFID Card ID ${cardNumber}`);

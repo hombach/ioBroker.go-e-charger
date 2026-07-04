@@ -30,6 +30,8 @@
 
 This adapter integrates one or more go-e Charger wallboxes into your ioBroker home automation. It cyclically polls each wallbox via its local HTTP API, provides all relevant data as ioBroker states, and lets you control charging directly from your smart home.
 
+For more information about the go-e Charger hardware, visit the manufacturer's website: [go-e GmbH](https://go-e.com).
+
 ### Features
 
 - supports multiple go-e Chargers within a single adapter instance
@@ -85,6 +87,11 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) harmonized i18n files
 - (hombach) improved README and English texts
 - (hombach) reworked translations in all languages
+- (hombach) added 5s timeout to all HTTP requests to chargers
+- (hombach) fixed adapter stop when no charger is reachable at startup; warn per unreachable charger
+- (hombach) fixed German fallback text for RFID card channel names
+- (hombach) added upper bound validation for cycle time
+- (hombach) added link to manufacturer's website
 
 ### 1.0.3 (2026-07-03)
 
