@@ -52,6 +52,11 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+- (hombach) harmonized i18n files
+
 ### 1.0.3 (2026-07-03)
 
 - (hombach) added translations

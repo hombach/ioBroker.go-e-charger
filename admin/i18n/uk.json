@@ -1,12 +1,12 @@
 {
-	"LBL_chargerName": "Назва зарядного пристрою",
-	"LBL_cycleTime": "Час між опитуваннями даних із зарядного пристрою [мс]",
-	"LBL_ipAddress": "IP-адреса go-eCharger",
-	"LBL_readOnlyMode": "режим тільки читання - зняття заряду не надсилається на зарядний пристрій (для використання RFID-міток)",
 	"LBL_standardSettings": "Стандартні налаштування",
+	"LBL_cycleTime": "Час між опитуваннями даних із зарядного пристрою [мс]",
+	"LBL_stateHomeSolarPower": "object-id для доступної на даний момент сонячної енергії [Вт]",
 	"LBL_stateHomeBatSoc": "object-id для поточного рівня заряду домашньої батареї [%]",
 	"LBL_stateHomePowerConsumption": "object-id для поточного домашнього енергоспоживання [Вт]",
-	"LBL_stateHomeSolarPower": "object-id для доступної на даний момент сонячної енергії [Вт]",
 	"LBL_subtractSelfConsumption": "Споживання зарядного пристрою включено в значення домашнього споживання електроенергії",
-	"LBL_wallBoxList": "Список Wallbox"
+	"LBL_wallBoxList": "Список Wallbox",
+	"LBL_chargerName": "Назва зарядного пристрою",
+	"LBL_ipAddress": "IP-адреса go-eCharger",
+	"LBL_readOnlyMode": "режим тільки читання - зняття заряду не надсилається на зарядний пристрій (для використання RFID-міток)"
 }
