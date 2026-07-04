@@ -26,16 +26,43 @@
 
 [![NPM](https://nodei.co/npm/iobroker.go-e-charger.png?downloads=true)](https://nodei.co/npm/iobroker.go-e-charger/)
 
-## Adapter for reading data for multiple go-eCharger for iOBroker
+## ioBroker adapter for go-e Charger EV wallboxes
 
-Adapter for reading the data of multiple go-eCharger. Adapter creates some states and updates them sequentially. Adapter is connectable to PV-system to make use of surplus solar power for charging your cars. Working with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1, V56.2, V56.8, V56.9, V56.11, V57.0, V57.1, V59.4, V60.0, V60.1, V60.2.
+This adapter integrates one or more go-e Charger wallboxes into your ioBroker home automation. It cyclically polls each wallbox via its local HTTP API, provides all relevant data as ioBroker states, and lets you control charging directly from your smart home.
 
-For use with hardware generation 3 & 4 you have to enable "HTTP API v1" in your go-e APP.
-For use with phase switching you need hardware generation 3 or 4 and additionally you have to enable "HTTP API v2" in your go-e APP.
+### Features
+
+- supports multiple go-e Chargers within a single adapter instance
+- monitoring of car state, charging power, charging current, grid phases, and energy statistics
+- **ChargeNOW** – start charging immediately at a configurable current
+- **ChargeManager** – automatic PV surplus charging: the charging current is continuously adjusted to the available solar power, taking house consumption and the state of charge of your home battery into account. Charging of your EV can be delayed until the home battery has reached a configurable minimum state of charge.
+
+    > **Note:** PV surplus charging is currently designed for controlling a **single** charger. When ChargeManager is enabled on multiple chargers at the same time, the charging currents are not coordinated between them and the solar surplus calculation will produce incorrect values. An extension with coordinated multi-charger load management will be available soon.
+
+- switching between 1-phase and 3-phase charging (hardware generation 3 and newer)
+- energy statistics per RFID card (card name, ID, and charged energy)
+- read-only mode per wallbox – monitor a charger without sending any control commands (e.g. when access is managed via RFID tags)
+
+Tested with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1, V56.2, V56.8, V56.9, V56.11, V57.0, V57.1, V59.4, V60.0, V60.1, V60.2.
+
+### Requirements
+
+- For hardware generation 3 and 4 you have to enable "HTTP API v1" in your go-e app.
+- For phase switching you additionally have to enable "HTTP API v2" in your go-e app (hardware generation 3 and newer).
 
 ## Configuration
 
-To connect a go-e charger add a new line and enter its IP-address in the config.
+Add one entry per go-e Charger to the wallbox list and enter its IP address. Optionally assign a name to each charger and enable read-only mode if the adapter should not send any control commands to it.
+
+For PV surplus charging with ChargeManager, configure the object IDs of the following states from your PV system:
+
+- currently available solar power [W]
+- current home power consumption [W]
+- current state of charge of your home battery [%]
+
+If the power consumption of the wallbox is already included in your home power consumption value, enable the corresponding checkbox so the adapter can correctly calculate the available surplus.
+
+The poll cycle time defines how often the adapter reads data from the chargers and adjusts the charging current (minimum 3 seconds, default 10 seconds).
 
 ## Sentry
 
@@ -44,7 +71,7 @@ This adapter employs Sentry libraries to automatically report exceptions and cod
 ## Donate
 
 <a href="https://www.paypal.com/donate/?hosted_button_id=76GBRV9BX5US8"><img src="https://raw.githubusercontent.com/Hombach/ioBroker.go-e-charger/master/docu/bluePayPal.svg" height="40"></a>
-If you enjoyed this project � or just feeling generous, consider buying me a beer. Cheers! :beers:
+If you enjoyed this project – or are just feeling generous – consider buying me a beer. Cheers! :beers:
 
 ## Changelog
 
@@ -56,6 +83,7 @@ If you enjoyed this project � or just feeling generous, consider buying me a b
 ### **WORK IN PROGRESS**
 
 - (hombach) harmonized i18n files
+- (hombach) improved README and English texts
 
 ### 1.0.3 (2026-07-03)
 
