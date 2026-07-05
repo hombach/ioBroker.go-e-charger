@@ -124,6 +124,8 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 ### Old Changes see [CHANGELOG OLD](CHANGELOG_OLD.md)
 
+[Older changelogs can be found there](CHANGELOG_OLD.md)
+
 ## License
 
 MIT License
