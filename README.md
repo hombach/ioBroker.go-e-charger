@@ -126,7 +126,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) updated typescript from 5.9.3 to 6.0.3
 - (hombach) added RFID info (name, id, consumption) (#802)
 
-### Old Changes see [CHANGELOG OLD](CHANGELOG_OLD.md)
+[Older changelogs can be found there](CHANGELOG_OLD.md)
 
 ## License
 
