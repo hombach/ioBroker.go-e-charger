@@ -83,6 +83,11 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+- (hombach) removed chai-based unit test dependencies; modernized test harness to Node.js assert (fixes Appveyor, #836)
+
 ### 1.1.0 (2026-07-05)
 
 - (hombach) fixed reading of "unlocked by RFID" (uby) on gen 3+ chargers via API V2
