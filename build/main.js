@@ -450,7 +450,9 @@ class go_e_charger extends utils.Adapter {
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.MeasuredMaxPhaseCurrent`, Math.max(...status.nrg.slice(4, 7)) / 10, `Measured max. current of grid phases`, "A", "value.current");
         this.wallboxInfoList[iWB].Firmware = status.fwv;
         void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`, `info.firmware`);
-        void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
+        if (status.uby !== undefined && status.uby !== null) {
+            void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
+        }
         if (!this.wallboxInfoList[iWB].HardwareMin3) {
             await this.parseAndSetRFIDData(status, basePath);
         }
@@ -517,11 +519,18 @@ class go_e_charger extends utils.Adapter {
         this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
         this.wallboxInfoList[iWB].Hardware = status.typ;
         void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, `info.hardware`);
+        if (status.uby !== undefined && status.uby !== null) {
+            void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
+        }
         await this.parseAndSetRFIDData(status, basePath);
         this.log.debug(`got and parsed go-e charger ${iWB} data with API V2`);
     }
     async Switch_3Phases(Charge3Phase, iWB) {
         if (!this.wallboxInfoList[iWB].HardwareMin3) {
+            return;
+        }
+        if (this.config.wallBoxList[iWB].readOnlyMode) {
+            this.log.debug(`Charger ${iWB} is in read-only mode - skipping phase switching`);
             return;
         }
         const psm = Charge3Phase ? 2 : 1;
@@ -538,17 +547,19 @@ class go_e_charger extends utils.Adapter {
     async Charge_Config(Allow, Ampere, LogMessage, iWB) {
         this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
         const basePath = `Wallbox_${iWB}`;
-        if (!this.config.wallBoxList[iWB].readOnlyMode) {
-            await axiosInstance
-                .get(`http://${this.config.wallBoxList[iWB].ipAddress}/mqtt?payload=alw=${Allow}`, { transformResponse: r => r })
-                .then(response => {
-                this.log.debug(`Sent to charger ${iWB}: ${response.data}`);
-            })
-                .catch(error => {
-                this.log.warn(`Error: ${error} by writing to wallbox ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} alw=${Allow}`);
-                this.log.error(`Please verify IP address of wallbox ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} !!!`);
-            });
+        if (this.config.wallBoxList[iWB].readOnlyMode) {
+            this.log.debug(`Charger ${iWB} is in read-only mode - skipping charge config write`);
+            return;
         }
+        await axiosInstance
+            .get(`http://${this.config.wallBoxList[iWB].ipAddress}/mqtt?payload=alw=${Allow}`, { transformResponse: r => r })
+            .then(response => {
+            this.log.debug(`Sent to charger ${iWB}: ${response.data}`);
+        })
+            .catch(error => {
+            this.log.warn(`Error: ${error} by writing to wallbox ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} alw=${Allow}`);
+            this.log.error(`Please verify IP address of wallbox ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} !!!`);
+        });
         switch (this.wallboxInfoList[iWB].Firmware) {
             case "033":
                 await axiosInstance

@@ -650,7 +650,10 @@ class go_e_charger extends utils.Adapter {
 		);
 		this.wallboxInfoList[iWB].Firmware = status.fwv;
 		void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`, `info.firmware`);
-		void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
+		// only write when present - on gen 3+ hardware the V1 API may omit uby, then it is read via API V2 instead
+		if (status.uby !== undefined && status.uby !== null) {
+			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
+		}
 
 		if (!this.wallboxInfoList[iWB].HardwareMin3) {
 			await this.parseAndSetRFIDData(status, basePath);
@@ -805,6 +808,7 @@ class go_e_charger extends utils.Adapter {
 	 * @param status - The API V2 status object returned by the wallbox.
 	 * @param status.psm - Phase switching mode (1 = single-phase, 2 = three-phase).
 	 * @param status.typ - Hardware version or type identifier.
+	 * @param status.uby - Unlocked by RFID number
 	 * @param status.rca - RFID card 1 ID
 	 * @param status.rcr - RFID card 2 ID
 	 * @param status.rcd - RFID card 3 ID
@@ -841,6 +845,7 @@ class go_e_charger extends utils.Adapter {
 		status: {
 			psm: number;
 			typ: string;
+			uby?: any;
 			rca?: string;
 			rcr?: string;
 			rcd?: string;
@@ -895,6 +900,10 @@ class go_e_charger extends utils.Adapter {
 		this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
 		this.wallboxInfoList[iWB].Hardware = status.typ;
 		void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, `info.hardware`);
+		// on gen 3+ hardware the V1 API may omit uby, so read the current session RFID chip via API V2 here
+		if (status.uby !== undefined && status.uby !== null) {
+			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
+		}
 		await this.parseAndSetRFIDData(status, basePath);
 		this.log.debug(`got and parsed go-e charger ${iWB} data with API V2`);
 	}
@@ -909,6 +918,11 @@ class go_e_charger extends utils.Adapter {
 	 */
 	async Switch_3Phases(Charge3Phase: boolean, iWB: number): Promise<void> {
 		if (!this.wallboxInfoList[iWB].HardwareMin3) {
+			return;
+		}
+		// in read-only mode no control commands are sent to the charger (here: phase switching)
+		if (this.config.wallBoxList[iWB].readOnlyMode) {
+			this.log.debug(`Charger ${iWB} is in read-only mode - skipping phase switching`);
 			return;
 		}
 		const psm = Charge3Phase ? 2 : 1;
@@ -928,19 +942,22 @@ class go_e_charger extends utils.Adapter {
 	async Charge_Config(Allow: string, Ampere: number, LogMessage: string, iWB: number): Promise<void> {
 		this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
 		const basePath = `Wallbox_${iWB}`;
-		// read-only mode only suppresses the charge release (alw); charging current and phase switching are still sent
-		if (!this.config.wallBoxList[iWB].readOnlyMode) {
-			await axiosInstance
-				.get(`http://${this.config.wallBoxList[iWB].ipAddress}/mqtt?payload=alw=${Allow}`, { transformResponse: r => r }) // activate charging
-				.then(response => {
-					//.status == 200
-					this.log.debug(`Sent to charger ${iWB}: ${response.data}`);
-				})
-				.catch(error => {
-					this.log.warn(`Error: ${error} by writing to wallbox ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} alw=${Allow}`);
-					this.log.error(`Please verify IP address of wallbox ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} !!!`);
-				});
+		// in read-only mode no control commands are sent to the charger (neither charge release nor charging current)
+		if (this.config.wallBoxList[iWB].readOnlyMode) {
+			this.log.debug(`Charger ${iWB} is in read-only mode - skipping charge config write`);
+			return;
 		}
+
+		await axiosInstance
+			.get(`http://${this.config.wallBoxList[iWB].ipAddress}/mqtt?payload=alw=${Allow}`, { transformResponse: r => r }) // activate charging
+			.then(response => {
+				//.status == 200
+				this.log.debug(`Sent to charger ${iWB}: ${response.data}`);
+			})
+			.catch(error => {
+				this.log.warn(`Error: ${error} by writing to wallbox ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} alw=${Allow}`);
+				this.log.error(`Please verify IP address of wallbox ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} !!!`);
+			});
 
 		switch (this.wallboxInfoList[iWB].Firmware) {
 			case "033":

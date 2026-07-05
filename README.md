@@ -43,7 +43,7 @@ For more information about the go-e Charger hardware, visit the manufacturer's w
 
 - switching between 1-phase and 3-phase charging (hardware generation 3 and newer)
 - energy statistics per RFID card (card name, ID, and charged energy)
-- read-only mode per wallbox – monitor a charger without sending any control commands (e.g. when access is managed via RFID tags)
+- read-only mode per wallbox – monitor a charger purely, without sending **any** control commands to it (no charge release, no charging current, no phase switching), e.g. when charging is controlled elsewhere or access is managed via RFID tags
 
 Tested with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1, V56.2, V56.8, V56.9, V56.11, V57.0, V57.1, V59.4, V60.0, V60.1, V60.2.
 
@@ -54,7 +54,9 @@ Tested with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055
 
 ## Configuration
 
-Add one entry per go-e Charger to the wallbox list and enter its IP address. Optionally assign a name to each charger and enable read-only mode if the adapter should not send any control commands to it.
+Add one entry per go-e Charger to the wallbox list and enter its IP address. Optionally assign a name to each charger.
+
+Enable **read-only mode** for a charger if the adapter should only read its data and never write to it. In read-only mode the adapter sends no control commands at all – neither the charge release, nor the charging current, nor phase switching. The ChargeNOW and ChargeManager states can still be toggled, but they have no effect on a read-only charger. Use this mode when the charging of that wallbox is controlled by another system or managed locally via RFID tags.
 
 For PV surplus charging with ChargeManager, configure the object IDs of the following states from your PV system:
 
@@ -83,6 +85,9 @@ If you enjoyed this project – or are just feeling generous – consider buying
 -->
 
 ### **WORK IN PROGRESS**
+
+- (hombach) fixed reading of "unlocked by RFID" (uby) on gen 3+ chargers via API V2
+- (hombach) read-only mode now suppresses all control commands (charge release, charging current, phase switching)
 - (ioBroker-Bot) Adapter requires admin >= 7.8.23 now.
 
 ### 1.0.4 (2026-07-04)
