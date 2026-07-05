@@ -82,6 +82,9 @@ If you enjoyed this project – or are just feeling generous – consider buying
   ### **WORK IN PROGRESS**
 -->
 
+### **WORK IN PROGRESS**
+- (ioBroker-Bot) Adapter requires admin >= 7.8.23 now.
+
 ### 1.0.4 (2026-07-04)
 
 - (hombach) harmonized i18n files
