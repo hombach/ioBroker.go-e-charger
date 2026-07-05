@@ -83,8 +83,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.1.0 (2026-07-05)
 
 - (hombach) fixed reading of "unlocked by RFID" (uby) on gen 3+ chargers via API V2
 - (hombach) read-only mode now suppresses all control commands (charge release, charging current, phase switching)
@@ -122,14 +121,6 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) fix adapter checker findings
 - (hombach) fix docu
 - (hombach) fix tsconfig
-
-### 1.0.0 (2026-05-17)
-
-- (hombach) BREAKING: switched to multi charger support (#801), (#807)
-- (hombach) BREAKING: adapter needs node 22 now
-- (hombach) adapter requires admin >=7.6.20 now
-- (hombach) updated typescript from 5.9.3 to 6.0.3
-- (hombach) added RFID info (name, id, consumption) (#802)
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

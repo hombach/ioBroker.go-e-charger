@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "1.0.4",
+    "version": "1.1.0",
     "news": {
+      "1.1.0": {
+        "en": "fixed reading of \"unlocked by RFID\" (uby) on gen 3+ chargers via API V2\nread-only mode now suppresses all control commands (charge release, charging current, phase switching)\nAdapter requires admin >= 7.8.23 now.",
+        "de": "Behobene Lesefunktion für „per RFID entsperrt“ (uby) bei Ladegeräten der 3. Generation und höher über API V2\nIm Nur-Lese-Modus werden nun alle Steuerbefehle unterdrückt (Ladungsfreigabe, Ladestrom, Phasenumschaltung).\nDer Adapter benötigt jetzt Administratorrechte ab Version 7.8.23.",
+        "ru": "Исправлено считывание сигнала \"разблокировано по RFID\" (uby) на зарядных устройствах 3-го поколения и выше через API V2.\nВ режиме только для чтения теперь подавляются все команды управления (разрядка, зарядный ток, переключение фаз).\nДля работы адаптера теперь требуется версия admin >= 7.8.23.",
+        "pt": "Correção na leitura de \"desbloqueado por RFID\" (uby) em carregadores de 3ª geração ou posteriores via API V2.\nO modo somente leitura agora suprime todos os comandos de controle (liberação de carga, corrente de carga, comutação de fase).\nO adaptador agora requer o admin versão >= 7.8.23.",
+        "nl": "Vaste uitlezing van \"ontgrendeld door RFID\" (uby) op laders van de derde generatie en later via API V2.\nDe alleen-lezen-modus onderdrukt nu alle besturingscommando's (ontlading, laadstroom, faseschakeling).\nDe adapter vereist nu admin >= 7.8.23.",
+        "fr": "Correction de la lecture de « déverrouillé par RFID » (uby) sur les chargeurs de 3e génération et plus via l'API V2\nLe mode lecture seule supprime désormais toutes les commandes de contrôle (libération de charge, courant de charge, commutation de phase).\nL'adaptateur nécessite désormais une version d'administrateur supérieure ou égale à 7.8.23.",
+        "it": "Lettura corretta di \"sbloccato tramite RFID\" (uby) sui caricabatterie di terza generazione e successive tramite API V2\nLa modalità di sola lettura ora sopprime tutti i comandi di controllo (rilascio della carica, corrente di carica, commutazione di fase)\nL'adattatore ora richiede admin >= 7.8.23.",
+        "es": "Lectura corregida de \"desbloqueado por RFID\" (uby) en cargadores de tercera generación o superiores a través de la API V2.\nEl modo de solo lectura ahora suprime todos los comandos de control (liberación de carga, corriente de carga, conmutación de fase).\nEl adaptador ahora requiere admin >= 7.8.23.",
+        "pl": "naprawiono odczyt „odblokowano przez RFID” (uby) na ładowarkach gen. 3+ za pośrednictwem API V2\ntryb tylko do odczytu teraz blokuje wszystkie polecenia sterujące (zwolnienie ładowania, prąd ładowania, przełączanie faz)\nAdapter wymaga teraz uprawnień administratora >= 7.8.23.",
+        "uk": "виправлено зчитування напису \"розблоковано RFID\" (uby) на зарядних пристроях покоління 3+ через API V2\nрежим лише для читання тепер пригнічує всі команди керування (відключення заряду, струм зарядки, перемикання фаз)\nАдаптер тепер вимагає адміністратора версії >= 7.8.23.",
+        "zh-cn": "通过 API V2 对第三代及以上充电器进行“RFID 解锁”（uby）的固定读取\n只读模式现在会抑制所有控制命令（充电释放、充电电流、相位切换）\n适配器现在需要管理员版本 >= 7.8.23。"
+      },
       "1.0.4": {
         "en": "harmonized i18n files\nimproved README and English texts\nreworked translations in all languages\nadded 5s timeout to all HTTP requests to chargers\nfixed adapter stop when no charger is reachable at startup; warn per unreachable charger\nfixed German fallback text for RFID card channel names\nadded upper bound validation for cycle time\nadded link to manufacturer's website\ncode optimizations",
         "de": "harmonisierte i18n-Dateien\nverbesserte README- und englische Texte\nüberarbeitete Übersetzungen in allen Sprachen\nAllen HTTP-Anfragen an Ladegeräte wurde ein Timeout von 5 Sekunden hinzugefügt.\nBehobene Adapterabschaltung, wenn beim Start kein Ladegerät erreichbar ist; Warnung bei nicht erreichbarem Ladegerät\nKorrigierter deutscher Ausweichtext für RFID-Kartenkanalnamen\nValidierung der oberen Grenze für die Zykluszeit hinzugefügt\nLink zur Website des Herstellers hinzugefügt.\nCodeoptimierungen",
@@ -80,19 +93,6 @@
         "pl": "przygotować obsługę wielu ładowarek\nzaktualizować osie\nzaktualizuj iobroker/testowanie (#765)\nprzejdź na kod ES2023\nnaprawić luki\nzaktualizować zależności",
         "uk": "підготуйте підтримку кількох зарядних пристроїв\nоновити axios\nоновлення iobroker/тестування (#765)\nперейти на код ES2023\nвиправити вразливості\nоновити залежності",
         "zh-cn": "准备多充电器支持\n更新 axios\n更新 iobroker/测试 (#765)\n切换到ES2023代码\n修复漏洞\n更新依赖关系"
-      },
-      "0.21.3": {
-        "en": "added support for firmware V60.0, V60.1, V60.2\nyear 2026 changes\nupdate axios\nupdate iobroker/testing (#759)",
-        "de": "Unterstützung für Firmware V60.0, V60.1, V60.2 hinzugefügt\nDas Jahr 2026 ändert sich\nAxios aktualisieren\niobroker/testing aktualisieren (#759)",
-        "ru": "добавлена поддержка прошивок V60.0, V60.1, V60.2\nизменения 2026 года\nобновить аксиомы\nобновить iobroker/тестирование (#759)",
-        "pt": "suporte adicional para firmware V60.0, V60.1, V60.2\nmudanças no ano de 2026\natualizar eixos\natualizar iobroker/teste (#759)",
-        "nl": "Ondersteuning toegevoegd voor firmware V60.0, V60.1, V60.2\njaar 2026 verandert\naxio's bijwerken\nupdate iobroker/testen (#759)",
-        "fr": "Prise en charge supplémentaire du firmware V60.0, V60.1, V60.2\nchangements de l'année 2026\nmettre à jour axios\nmettre à jour iobroker/testing (#759)",
-        "it": "aggiunto supporto per firmware V60.0, V60.1, V60.2\nanno 2026 cambia\naggiornare gli assi\naggiorna iobroker/test (#759)",
-        "es": "Soporte adicional para firmware V60.0, V60.1, V60.2\naño 2026 cambios\nactualizar axios\nactualizar iobroker/pruebas (#759)",
-        "pl": "dodano obsługę oprogramowania sprzętowego V60.0, V60.1, V60.2\nzmiany roku 2026\nzaktualizować osie\nzaktualizuj iobroker/testowanie (#759)",
-        "uk": "додана підтримка мікропрограм V60.0, V60.1, V60.2\n2026 рік зміни\nоновити axios\nоновлення iobroker/тестування (#759)",
-        "zh-cn": "添加了对固件 V60.0、V60.1、V60.2 的支持\n2026年的变化\n更新 axios\n更新 iobroker/测试 (#759)"
       }
     },
     "titleLang": {
