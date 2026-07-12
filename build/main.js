@@ -47,6 +47,7 @@ let batSoC = 0;
 let solarPower = 0;
 let houseConsumption = 0;
 let totalChargeEnergy = 0;
+let totalChargePower = 0;
 class go_e_charger extends utils.Adapter {
     projectUtils = new projectUtils_1.ProjectUtils(this);
     timeoutList;
@@ -149,6 +150,7 @@ class go_e_charger extends utils.Adapter {
         }
         await this.projectUtils.checkAndSetChannel(`statisticsGlobal`, `statistical data sum of all chargers`, `go-eCharger.png`, true);
         await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.chargedEnergy`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh", "value.energy.consumed", false, true);
+        await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.chargePower`, totalChargePower, `Current charging power sum of all chargers`, "W", "value.power", false, true);
         if (this.supportsFeature && this.supportsFeature("PLUGINS")) {
             const sentryInstance = this.getPluginInstance("sentry");
             if (sentryInstance) {
@@ -341,6 +343,7 @@ class go_e_charger extends utils.Adapter {
     async StateMachine() {
         this.log.debug(`StateMachine cycle start`);
         totalChargeEnergy = 0;
+        totalChargePower = 0;
         for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
             if (this.wallboxInfoList[iWB].ChargeNOW || this.wallboxInfoList[iWB].ChargeManager) {
                 await this.Read_ChargerAPIV1(iWB);
@@ -386,8 +389,10 @@ class go_e_charger extends utils.Adapter {
                 }
             }
             totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.chargedEnergy`)) || 0;
+            totalChargePower += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`)) || 0;
         }
         await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.chargedEnergy`, totalChargeEnergy, `Totally charged sum of all go-e in lifetime`, "kWh", "value.energy.consumed");
+        await this.projectUtils.checkAndSetValueNumber(`statisticsGlobal.chargePower`, totalChargePower, `Current charging power sum of all chargers`, "W", "value.power");
         const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
         if (stateMachine != null) {
             this.timeoutList.push(stateMachine);

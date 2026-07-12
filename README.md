@@ -86,6 +86,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 ### **WORK IN PROGRESS**
 
+- (hombach) added statisticsGlobal.chargePower state with the current total charging power of all chargers
 - (hombach) removed chai-based unit test dependencies; modernized test harness to Node.js assert (fixes Appveyor, #836)
 
 ### 1.1.0 (2026-07-05)

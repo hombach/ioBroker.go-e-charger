@@ -12,6 +12,7 @@ let batSoC = 0;
 let solarPower = 0;
 let houseConsumption = 0;
 let totalChargeEnergy = 0;
+let totalChargePower = 0;
 
 class go_e_charger extends utils.Adapter {
 	private projectUtils = new ProjectUtils(this);
@@ -177,6 +178,15 @@ class go_e_charger extends utils.Adapter {
 			`Totally charged sum of all go-e in lifetime`,
 			"kWh",
 			"value.energy.consumed",
+			false,
+			true,
+		);
+		await this.projectUtils.checkAndSetValueNumber(
+			`statisticsGlobal.chargePower`,
+			totalChargePower,
+			`Current charging power sum of all chargers`,
+			"W",
+			"value.power",
 			false,
 			true,
 		);
@@ -405,6 +415,7 @@ class go_e_charger extends utils.Adapter {
 	async StateMachine(): Promise<void> {
 		this.log.debug(`StateMachine cycle start`);
 		totalChargeEnergy = 0; // reset total charge energy at the beginning of each cycle, will be accumulated from all chargers in the loop below
+		totalChargePower = 0; // reset total charge power at the beginning of each cycle, will be accumulated from all chargers in the loop below
 		for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
 			if (this.wallboxInfoList[iWB].ChargeNOW || this.wallboxInfoList[iWB].ChargeManager) {
 				// Charge-NOW or Charge-Manager is enabled
@@ -455,6 +466,7 @@ class go_e_charger extends utils.Adapter {
 				}
 			}
 			totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.chargedEnergy`)) || 0; // accumulate total charged energy of all chargers
+			totalChargePower += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`)) || 0; // accumulate current charging power of all chargers
 		} // next wallbox
 
 		// global statistics
@@ -464,6 +476,13 @@ class go_e_charger extends utils.Adapter {
 			`Totally charged sum of all go-e in lifetime`,
 			"kWh",
 			"value.energy.consumed",
+		);
+		await this.projectUtils.checkAndSetValueNumber(
+			`statisticsGlobal.chargePower`,
+			totalChargePower,
+			`Current charging power sum of all chargers`,
+			"W",
+			"value.power",
 		);
 
 		const stateMachine = this.setTimeout(this.StateMachine.bind(this), Number(this.config.cycleTime));
