@@ -83,8 +83,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.2.0 (2026-07-12)
 
 - (hombach) added statisticsGlobal.chargePower state with the current total charging power of all chargers
 - (hombach) removed chai-based unit test dependencies; modernized test harness to Node.js assert (fixes Appveyor, #836)
@@ -120,13 +119,6 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) upgraded adapter-core
 - (hombach) updated axios
 - (hombach) updated dependencies
-
-### 1.0.1 (2026-05-17)
-
-- (hombach) fix total stats
-- (hombach) fix adapter checker findings
-- (hombach) fix docu
-- (hombach) fix tsconfig
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

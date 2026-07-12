@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "news": {
+      "1.2.0": {
+        "en": "added statisticsGlobal.chargePower state with the current total charging power of all chargers\nremoved chai-based unit test dependencies; modernized test harness to Node.js assert (fixes Appveyor, #836)",
+        "de": "Der Status „Global.chargePower“ wurde um die aktuelle Gesamtladeleistung aller Ladegeräte erweitert.\nChai-basierte Unit-Test-Abhängigkeiten entfernt; Test-Framework auf Node.js-Assert modernisiert (behebt Appveyor, #836)",
+        "ru": "Добавлено состояние statisticsGlobal.chargePower с текущей суммарной мощностью зарядки всех зарядных устройств.\nУдалены зависимости модульных тестов на основе Chai; модернизирована тестовая среда для использования утверждений Node.js (исправляет Appveyor, #836)",
+        "pt": "Adicionadas estatísticas: Global.chargePower mostra o estado com a potência total de carregamento atual de todos os carregadores.\nRemovidas as dependências de testes unitários baseados em Chai; modernizada a estrutura de testes para assert do Node.js (corrige o Appveyor, #836)",
+        "nl": "De status van statisticsGlobal.chargePower met het huidige totale laadvermogen van alle laders is toegevoegd.\nVerwijderde afhankelijkheden van op Chai gebaseerde unit tests; moderniseerde testharness naar Node.js assert (verhelpt Appveyor, #836)",
+        "fr": "Ajout de la statistique Global.chargePower, indiquant la puissance de charge totale actuelle de tous les chargeurs.\nSuppression des dépendances des tests unitaires basés sur Chai ; modernisation du framework de test avec Node.js assert (correction d’Appveyor, #836)",
+        "it": "aggiunta la statistica Global.chargePower con lo stato attuale della potenza di carica totale di tutti i caricabatterie\nRimossi i test unitari basati su Chai; modernizzato il framework di test per l'asserzione Node.js (corregge Appveyor, #836)",
+        "es": "Se agregó el estado statisticsGlobal.chargePower con la potencia de carga total actual de todos los cargadores.\nSe eliminaron las dependencias de pruebas unitarias basadas en chai; se modernizó el entorno de pruebas para usar assert de Node.js (soluciona Appveyor, #836).",
+        "pl": "dodano statystykiGlobal.chargePower stan z aktualną całkowitą mocą ładowania wszystkich ładowarek\nusunięto zależności testów jednostkowych oparte na chai; zmodernizowano zestaw testów do Node.js assert (naprawiono Appveyor, #836)",
+        "uk": "додано статистикуGlobal.chargeСтан зарядки з поточною загальною потужністю зарядки всіх зарядних пристроїв\nвидалено залежності модульних тестів на основі chai; модернізовано інтеграцію тестів з Node.js assert (виправлення Appveyor, #836)",
+        "zh-cn": "添加了统计信息 Global.chargePower 状态，其中包含所有充电器的当前总充电功率。\n移除了基于 Chai 的单元测试依赖项；将测试框架现代化为 Node.js assert（修复了 Appveyor，#836）"
+      },
       "1.1.0": {
         "en": "fixed reading of \"unlocked by RFID\" (uby) on gen 3+ chargers via API V2\nread-only mode now suppresses all control commands (charge release, charging current, phase switching)\nAdapter requires admin >= 7.8.23 now.",
         "de": "Behobene Lesefunktion für „per RFID entsperrt“ (uby) bei Ladegeräten der 3. Generation und höher über API V2\nIm Nur-Lese-Modus werden nun alle Steuerbefehle unterdrückt (Ladungsfreigabe, Ladestrom, Phasenumschaltung).\nDer Adapter benötigt jetzt Administratorrechte ab Version 7.8.23.",
@@ -80,19 +93,6 @@
         "pl": "ŁAMANIE: przełączono na obsługę wielu ładowarek (#801), (#807)\nŁAMANIE: adapter potrzebuje teraz węzła 22\nadapter wymaga teraz administratora >=7.6.20\nzaktualizowano maszynopis z wersji 5.9.3 do 6.0.3\ndodano informacje RFID (nazwa, identyfikator, zużycie) (#802)",
         "uk": "ПОЛИМКА: переведено на підтримку кількох зарядних пристроїв (#801), (#807)\nПОРУШЕННЯ: адаптеру зараз потрібен вузол 22\nдля адаптера потрібен адміністратор >=7.6.20\nоновлено машинопис з 5.9.3 до 6.0.3\nдодана інформація RFID (ім'я, ідентифікатор, споживання) (#802)",
         "zh-cn": "突破：切换到多充电器支持 (#801)、(#807)\n中断：适配器现在需要节点 22\n适配器现在需要 admin >=7.6.20\n将打字稿从 5.9.3 更新到 6.0.3\n添加了 RFID 信息（名称、ID、消费）(#802)"
-      },
-      "0.21.4": {
-        "en": "prepare multi-charger support\nupdate axios\nupdate iobroker/testing (#765)\nswitch to ES2023 code\nfix vulnerabilities\nupdate dependencies",
-        "de": "Unterstützung für mehrere Ladegeräte vorbereitet\nAxios aktualisiert\niobroker/testing aktualisiert (#765)\nWechsel zu ES2023-Code\nSchwachstellen behoben\nAbhängigkeiten aktualisiert",
-        "ru": "подготовить поддержку нескольких зарядных устройств\nобновить аксиомы\nобновить iobroker/тестирование (#765)\nперейти на код ES2023\nисправить уязвимости\nобновить зависимости",
-        "pt": "preparar suporte para vários carregadores\natualizar eixos\natualizar iobroker/teste (#765)\nmudar para o código ES2023\ncorrigir vulnerabilidades\natualizar dependências",
-        "nl": "ondersteuning voor meerdere laders voorbereiden\naxio's bijwerken\nupdate iobroker/testen (#765)\nschakel over naar ES2023-code\nkwetsbaarheden oplossen\nafhankelijkheden bijwerken",
-        "fr": "préparer le support multi-chargeurs\nmettre à jour axios\nmettre à jour iobroker/testing (#765)\npasser au code ES2023\ncorriger les vulnérabilités\nmettre à jour les dépendances",
-        "it": "preparare il supporto multi-caricatore\naggiornare gli assi\naggiorna iobroker/test (#765)\npassare al codice ES2023\ncorreggere le vulnerabilità\naggiornare le dipendenze",
-        "es": "preparar soporte multicargador\nactualizar axios\nactualizar iobroker/pruebas (#765)\ncambiar al código ES2023\narreglar vulnerabilidades\nactualizar dependencias",
-        "pl": "przygotować obsługę wielu ładowarek\nzaktualizować osie\nzaktualizuj iobroker/testowanie (#765)\nprzejdź na kod ES2023\nnaprawić luki\nzaktualizować zależności",
-        "uk": "підготуйте підтримку кількох зарядних пристроїв\nоновити axios\nоновлення iobroker/тестування (#765)\nперейти на код ES2023\nвиправити вразливості\nоновити залежності",
-        "zh-cn": "准备多充电器支持\n更新 axios\n更新 iobroker/测试 (#765)\n切换到ES2023代码\n修复漏洞\n更新依赖关系"
       }
     },
     "titleLang": {
