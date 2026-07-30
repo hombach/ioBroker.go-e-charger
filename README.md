@@ -58,15 +58,104 @@ Add one entry per go-e Charger to the wallbox list and enter its IP address. Opt
 
 Enable **read-only mode** for a charger if the adapter should only read its data and never write to it. In read-only mode the adapter sends no control commands at all – neither the charge release, nor the charging current, nor phase switching. The ChargeNOW and ChargeManager states can still be toggled, but they have no effect on a read-only charger. Use this mode when the charging of that wallbox is controlled by another system or managed locally via RFID tags.
 
-For PV surplus charging with ChargeManager, configure the object IDs of the following states from your PV system:
+The poll cycle time defines how often the adapter reads data from the chargers and adjusts the charging current (minimum 3 seconds, default 10 seconds).
+
+### PV surplus charging with ChargeManager
+
+ChargeManager calculates the charging current from numeric ioBroker states supplied by an energy-management, inverter, meter, or user-created data source. It does not depend on a particular vendor, but the selected states must represent the quantities described below.
+
+Configure the object IDs of the following states:
 
 - currently available solar power [W]
 - current home power consumption [W]
 - current state of charge of your home battery [%]
 
-If the power consumption of the wallbox is already included in your home power consumption value, enable the corresponding checkbox so the adapter can correctly calculate the available surplus.
+#### Input requirements
 
-The poll cycle time defines how often the adapter reads data from the chargers and adjusts the charging current (minimum 3 seconds, default 10 seconds).
+| Input | Expected value | Unit | Sign |
+| --- | --- | --- | --- |
+| Solar power | Total current PV generation | W | Positive generation |
+| Home power consumption | Total current household demand | W | Positive consumption |
+| Home battery state of charge | Current battery charge level | % | 0 to 100 |
+
+All three states must contain numeric values. Power values in kW must be converted to W before they are selected. A grid import/export state cannot be used directly because ChargeManager currently expects separate generation and consumption values.
+
+If no home battery is installed, create a numeric helper state with a constant value of `100` and select it as the battery state of charge. Keep `Settings.Setpoint_HomeBatSoC` below `100`, for example at its default value of `70`.
+
+#### Wallbox consumption in the home-consumption value
+
+Enable **Charger consumption is included in the home power consumption value** when the selected home-consumption state rises by approximately the charging power after charging starts. ChargeManager then adds the measured wallbox power back before calculating the available surplus. This prevents the controller from treating its own charging load as additional household demand.
+
+Leave the option disabled when the selected state already excludes wallbox consumption.
+
+#### Calculation
+
+ChargeManager uses the following calculation once per poll cycle:
+
+```text
+available power =
+    solar power
+  - home power consumption
+  + wallbox power, if it is included in home power consumption
+  - 100 W reserve
+  + battery SoC offset
+
+target current = floor(available power / 230 V / active phases)
+```
+
+The battery offset is zero when the battery is exactly at the configured minimum state of charge and increases up to 2,000 W as the battery approaches 100%. Below `Settings.Setpoint_HomeBatSoC`, EV charging is disabled so that the home battery has priority.
+
+The calculated current is limited to a maximum of 16 A. The internal current target changes by at most 1 A per poll cycle to reduce sudden changes.
+
+#### Enabling ChargeManager
+
+After the adapter has started, use the writable states below. Replace instance `0` and wallbox number `0` where necessary.
+
+| State | Purpose |
+| --- | --- |
+| `go-e-charger.0.Settings.Setpoint_HomeBatSoC` | Minimum home-battery SoC before surplus charging is allowed |
+| `go-e-charger.0.Wallbox_0.Settings.ChargeManager` | Enables or disables PV surplus control |
+| `go-e-charger.0.Wallbox_0.Settings.ChargeNOW` | Overrides ChargeManager and forces charging |
+| `go-e-charger.0.Wallbox_0.Settings.ChargeCurrent` | Current used by ChargeNOW |
+| `go-e-charger.0.Wallbox_0.Settings.Charge3Phase` | Selects one-phase or three-phase charging on supported hardware |
+
+For surplus charging, set `ChargeNOW` to `false` and `ChargeManager` to `true`. When both are enabled, ChargeNOW takes precedence and uses the configured `ChargeCurrent` without considering the available surplus.
+
+#### One-phase and three-phase charging
+
+ChargeManager does not automatically switch between one and three phases according to the available surplus. On hardware generation 3 and newer, `Charge3Phase` selects the phase mode:
+
+- `false`: one-phase charging
+- `true`: three-phase charging
+
+Because the current implementation starts charging when its internal target exceeds 9 A, the effective starting point is 10 A. This requires approximately 2.3 kW in one-phase mode or 6.9 kW in three-phase mode after the reserve and battery adjustments. One-phase mode therefore provides a wider operating range for smaller PV systems or variable weather.
+
+#### Operating modes
+
+| ChargeNOW | ChargeManager | Result |
+| --- | --- | --- |
+| `false` | `false` | Charging is disabled |
+| `false` | `true` | Charging follows the calculated PV surplus |
+| `true` | `false` | Forced charging at `ChargeCurrent` |
+| `true` | `true` | ChargeNOW takes precedence |
+
+In read-only mode, these states can still be changed but no resulting control command is sent to the charger.
+
+#### Verification and troubleshooting
+
+Before relying on automatic charging, verify the selected input states in the ioBroker object view:
+
+1. Solar power is close to zero at night and follows current generation during the day.
+2. Home power consumption remains positive and reacts plausibly when household loads are switched on.
+3. Battery state of charge remains between 0 and 100.
+4. All power values are expressed in W rather than kW.
+5. The wallbox-consumption option matches whether charging power is included in the selected home-consumption value.
+6. `Wallbox_0.info.connection` is `true`.
+7. `Wallbox_0.Power.Charge`, `Wallbox_0.Power.GridPhases`, and, on supported hardware, `Wallbox_0.Power.EnabledPhases` contain plausible values.
+
+Charging may take several poll cycles to start because the internal target increases by only 1 A per cycle. With the default 10-second cycle and an initial target of 0 A, reaching the 10 A starting point can take approximately 100 seconds.
+
+ChargeManager is currently intended to control one charger. Enabling it for multiple chargers at the same time results in each charger independently using the same surplus and can cause incorrect allocation.
 
 ## Sentry
 
