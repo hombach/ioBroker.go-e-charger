@@ -72,15 +72,15 @@ Configure the object IDs of the following states:
 
 #### Input requirements
 
-| Input | Expected value | Unit | Sign |
-| --- | --- | --- | --- |
-| Solar power | Total current PV generation | W | Positive generation |
-| Home power consumption | Total current household demand | W | Positive consumption |
-| Home battery state of charge | Current battery charge level | % | 0 to 100 |
+| Input                        | Expected value                 | Unit | Sign                 |
+| ---------------------------- | ------------------------------ | ---- | -------------------- |
+| Solar power                  | Total current PV generation    | W    | Positive generation  |
+| Home power consumption       | Total current household demand | W    | Positive consumption |
+| Home battery state of charge | Current battery charge level   | %    | 0 to 100             |
 
 All three states must contain numeric values. Power values in kW must be converted to W before they are selected. A grid import/export state cannot be used directly because ChargeManager currently expects separate generation and consumption values.
 
-If no home battery is installed, create a numeric helper state with a constant value of `100` and select it as the battery state of charge. Keep `Settings.Setpoint_HomeBatSoC` below `100`, for example at its default value of `70`.
+If no home battery is installed, create a numeric helper state and select it as the battery state of charge. Set this helper to the **same constant value** as `Settings.Setpoint_HomeBatSoC` (for example `70` for both). This keeps the battery offset at zero, so ChargeManager charges purely from the available PV surplus.
 
 #### Wallbox consumption in the home-consumption value
 
@@ -111,13 +111,13 @@ The calculated current is limited to a maximum of 16 A. The internal current tar
 
 After the adapter has started, use the writable states below. Replace instance `0` and wallbox number `0` where necessary.
 
-| State | Purpose |
-| --- | --- |
-| `go-e-charger.0.Settings.Setpoint_HomeBatSoC` | Minimum home-battery SoC before surplus charging is allowed |
-| `go-e-charger.0.Wallbox_0.Settings.ChargeManager` | Enables or disables PV surplus control |
-| `go-e-charger.0.Wallbox_0.Settings.ChargeNOW` | Overrides ChargeManager and forces charging |
-| `go-e-charger.0.Wallbox_0.Settings.ChargeCurrent` | Current used by ChargeNOW |
-| `go-e-charger.0.Wallbox_0.Settings.Charge3Phase` | Selects one-phase or three-phase charging on supported hardware |
+| State                                             | Purpose                                                         |
+| ------------------------------------------------- | --------------------------------------------------------------- |
+| `go-e-charger.0.Settings.Setpoint_HomeBatSoC`     | Minimum home-battery SoC before surplus charging is allowed     |
+| `go-e-charger.0.Wallbox_0.Settings.ChargeManager` | Enables or disables PV surplus control                          |
+| `go-e-charger.0.Wallbox_0.Settings.ChargeNOW`     | Overrides ChargeManager and forces charging                     |
+| `go-e-charger.0.Wallbox_0.Settings.ChargeCurrent` | Current used by ChargeNOW                                       |
+| `go-e-charger.0.Wallbox_0.Settings.Charge3Phase`  | Selects one-phase or three-phase charging on supported hardware |
 
 For surplus charging, set `ChargeNOW` to `false` and `ChargeManager` to `true`. When both are enabled, ChargeNOW takes precedence and uses the configured `ChargeCurrent` without considering the available surplus.
 
@@ -132,12 +132,12 @@ Because the current implementation starts charging when its internal target exce
 
 #### Operating modes
 
-| ChargeNOW | ChargeManager | Result |
-| --- | --- | --- |
-| `false` | `false` | Charging is disabled |
-| `false` | `true` | Charging follows the calculated PV surplus |
-| `true` | `false` | Forced charging at `ChargeCurrent` |
-| `true` | `true` | ChargeNOW takes precedence |
+| ChargeNOW | ChargeManager | Result                                     |
+| --------- | ------------- | ------------------------------------------ |
+| `false`   | `false`       | Charging is disabled                       |
+| `false`   | `true`        | Charging follows the calculated PV surplus |
+| `true`    | `false`       | Forced charging at `ChargeCurrent`         |
+| `true`    | `true`        | ChargeNOW takes precedence                 |
 
 In read-only mode, these states can still be changed but no resulting control command is sent to the charger.
 
@@ -172,6 +172,13 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+- (typhosj) added ChargeManager PV surplus configuration guide (#842)
+- (hombach) corrected no-battery helper-state recommendation for ChargeManager
+- (hombach) updated dependencies
+
 ### 1.2.0 (2026-07-12)
 
 - (hombach) added statisticsGlobal.chargePower state with the current total charging power of all chargers
