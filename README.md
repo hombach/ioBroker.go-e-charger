@@ -45,7 +45,7 @@ For more information about the go-e Charger hardware, visit the manufacturer's w
 - energy statistics per RFID card (card name, ID, and charged energy)
 - read-only mode per wallbox – monitor a charger purely, without sending **any** control commands to it (no charge release, no charging current, no phase switching), e.g. when charging is controlled elsewhere or access is managed via RFID tags
 
-Tested with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1, V56.2, V56.8, V56.9, V56.11, V57.0, V57.1, V59.4, V60.0, V60.1, V60.2 and with up to 3 chargers operated in parallel.
+Tested with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1, V56.2, V56.8, V56.9, V56.11, V57.0, V57.1, V59.4, V60.0, V60.1, V60.2, V60.5, V60.6 and with up to 3 chargers operated in parallel.
 
 ### Requirements
 
@@ -175,6 +175,8 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 ### **WORK IN PROGRESS**
 
+- (typhosj) made ChargeManager surplus control more fail-safe: input validation, current clamped to 0-16 A, resilience of state-machine loop (#841)
+- (hombach) added support for firmware V60.5 (#800) and V60.6 (#844)
 - (typhosj) added ChargeManager PV surplus configuration guide (#842)
 - (hombach) corrected no-battery helper-state recommendation for ChargeManager
 - (hombach) updated dependencies
