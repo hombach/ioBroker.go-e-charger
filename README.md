@@ -172,8 +172,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.2.1 (2026-07-31)
 
 - (typhosj) made ChargeManager surplus control more fail-safe: input validation, current clamped to 0-16 A, resilience of state-machine loop (#841)
 - (hombach) added support for firmware V60.5 (#800) and V60.6 (#844)
@@ -208,15 +207,6 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 - (hombach) added translations
 - (hombach) fixed state roles
-
-### 1.0.2 (2026-07-01)
-
-- (hombach) fix RFID data readout for gen 3+ chargers via API V2 (#802)
-- (hombach) prepared for beta repo
-- (hombach) eliminate yarn
-- (hombach) upgraded adapter-core
-- (hombach) updated axios
-- (hombach) updated dependencies
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

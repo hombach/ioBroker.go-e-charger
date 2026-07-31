@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "news": {
+      "1.2.1": {
+        "en": "made ChargeManager surplus control more fail-safe: input validation, current clamped to 0-16 A, resilience of state-machine loop (#841)\nadded support for firmware V60.5 (#800) and V60.6 (#844)\nadded ChargeManager PV surplus configuration guide (#842)\ncorrected no-battery helper-state recommendation for ChargeManager\nupdated dependencies",
+        "de": "machte ChargeManager Überschusskontrolle ausfallsicherer: Eingangsvalidierung, Strom auf 0-16 A geklemmt, Widerstandsfähigkeit der State-Machine-Schleife (#841)\nzusätzliche Unterstützung für Firmware V60.5 (#800) und V60.6 (#844)\nzusätzliches ChargeManager PV Überschusskonfigurationshandbuch (#842)\nkorrigierte No-Battery-Helfer-State-Empfehlung für ChargeManager\naktualisierte abhängigkeiten",
+        "ru": "сделал избыточный контроль ChargeManager более отказоустойчивым: валидация входа, ток, зажатый до 0-16 А, устойчивость петли государственной машины (#841)\nдобавлена поддержка прошивки V60.5 (#800) и V60.6 (#844)\nруководство по конфигурации излишков зарядного устройства ChargeManager PV (#842)\nисправлена рекомендация штата без батареи для ChargeManager\nобновленные зависимости",
+        "pt": "feito ChargeManager superávit controle mais fail-safe: validação de entrada, corrente fixada a 0-16 A, resiliência do estado-máquina loop (#841)\nsuporte adicionado para firmware V60.5 (# 800) e V60.6 (# 844)\nguia de configuração do excedente PV do ChargeManager (# 842)\nrecomendação de estado de ajuda não-bateria corrigida para ChargeManager\ndependências atualizadas",
+        "nl": "chargeManager overtollige controle meer fail-safe: input validatie, stroom geklemd op 0-16 A, veerkracht van state-machine loop (#841)\ntoegevoegde ondersteuning voor firmware V60.5 (#800) en V60,6 (#844)\ntoegevoegde ChargeManager PV surplus configuratie gids (#842)\ngecorrigeerde no-battery helper-state aanbeveling voor ChargeManager\nbijgewerkte afhankelijkheden",
+        "fr": "made ChargeManager contrôle de surplus plus sûr-échec: validation d'entrée, courant serré à 0-16 A, résilience de la boucle de machine d'état (#841)\nsoutien supplémentaire au firmware V60.5 (#800) et V60.6 (#844)\najouté ChargeManager PV surplus guide de configuration (#842)\ncorrection de la recommandation de l'aide sans batterie pour ChargeManager\ndépendances actualisées",
+        "it": "ha reso ChargeManager il controllo in eccesso più sicuro: la validazione dell'ingresso, la corrente bloccata a 0-16 A, la resilienza del loop della macchina statale (#841)\nsupporto aggiunto per firmware V60.5 (#800) e V60.6 (#844)\naggiunto ChargeManager PV surplus di configurazione guida (#842)\nraccomandazione corretto no-battery helper-stato per ChargeManager\ndipendenze aggiornate",
+        "es": "hecho ChargeManager control de excedentes más seguro de fallo: validación de entrada, corriente sujeta a 0-16 A, resiliencia del bucle de máquina de estado (#841)\nsoporte añadido para firmware V60.5 (#800) y V60.6 (#844)\nañadido ChargeManager PV guía de configuración sobrante (#842)\ncorregido recomendación de estado-ayuda de no-batería para ChargeManager\ndependencias actualizadas",
+        "pl": "sprawiła, że kontrola nadmiaru ChargeManager była bardziej bezpieczna: walidacja wejścia, prąd zaciśnięty do 0-16 A, odporność pętli state- machine (# 841)\ndodane wsparcie dla firmware V60.5 (# 800) i V60.6 (# 844)\ndodany poradnik konfiguracji nadwyżek PV ChargeManager (# 842)\npoprawiona rekomendacja dla ChargeManager\nzaktualizowane zależności",
+        "uk": "зроблено ChargeManager надлишок управління більш небезпечним: вентиляція введення, затисканий до 0-16 А, стійкість петля державного двигуна (#841)\nдодана підтримка прошивки V60.5 (#800) і V60.6 (#844)\nдоданий контролер для налаштування Surplus ChargeManager PV (#842)\nвиправлено no-battery helper-state рекомендації для ChargeManager\nоновлені залежності",
+        "zh-cn": "使充电管理器剩余控制更安全:输入验证,当前被夹到0-16 A,国家机器循环的弹性(# 841)\n添加对固件 V60.5 (# 800) 和 V60.6 (# 844)的支持\n添加充电管理器 PV 剩余配置指南 (# 842)\n纠正关于充电管理器的无电池助手状态建议\n更新的依赖关系"
+      },
       "1.2.0": {
         "en": "added statisticsGlobal.chargePower state with the current total charging power of all chargers\nremoved chai-based unit test dependencies; modernized test harness to Node.js assert (fixes Appveyor, #836)",
         "de": "Der Status „Global.chargePower“ wurde um die aktuelle Gesamtladeleistung aller Ladegeräte erweitert.\nChai-basierte Unit-Test-Abhängigkeiten entfernt; Test-Framework auf Node.js-Assert modernisiert (behebt Appveyor, #836)",
@@ -80,19 +93,6 @@
         "pl": "napraw statystyki całkowite\nnapraw wyniki sprawdzania adaptera\nnapraw dokument\nnapraw tsconfig",
         "uk": "виправити загальну статистику\nвиправити висновки перевірки адаптера\nвиправити док\nвиправити tsconfig",
         "zh-cn": "修复总统计数据\n修复适配器检查器结果\n修复文档\n修复 tsconfig"
-      },
-      "1.0.0": {
-        "en": "BREAKING: switched to multi charger support (#801), (#807)\nBREAKING: adapter needs node 22 now\nadapter requires admin >=7.6.20 now\nupdated typescript from 5.9.3 to 6.0.3\nadded RFID info (name, id, consumption) (#802)",
-        "de": "BREAKING: auf Multi-Ladegerät-Unterstützung umgestellt (#801), (#807)\nBREAKING: Der Adapter benötigt jetzt node 22\nDer Adapter erfordert jetzt admin >=7.6.20\nAktualisiertes Typeskript von 5.9.3 auf 6.0.3\nRFID-Info hinzugefügt (Name, ID, Verbrauch) (#802)",
-        "ru": "СРОЧНО: переключено на поддержку нескольких зарядных устройств (#801), (#807).\nСРОЧНО: адаптеру теперь нужен узел 22\nадаптеру сейчас требуется администратор >=7.6.20\nобновлен машинописный текст с 5.9.3 до 6.0.3\nдобавлена информация RFID (имя, идентификатор, потребление) (#802)",
-        "pt": "QUEBRANDO: mudou para suporte a vários carregadores (#801), (#807)\nQUEBRANDO: o adaptador precisa do nó 22 agora\nadaptador requer admin >=7.6.20 agora\ntexto datilografado atualizado de 5.9.3 para 6.0.3\nadicionadas informações RFID (nome, id, consumo) (#802)",
-        "nl": "BREAKING: overgeschakeld naar ondersteuning voor meerdere opladers (#801), (#807)\nBREAKING: adapter heeft nu knooppunt 22 nodig\nadapter vereist nu admin >=7.6.20\nbijgewerkt typoscript van 5.9.3 naar 6.0.3\nRFID-info toegevoegd (naam, id, verbruik) (#802)",
-        "fr": "RUPTURE : passage au support multi-chargeurs (#801), (#807)\nRUPTURE : l'adaptateur a besoin du nœud 22 maintenant\nl'adaptateur nécessite un administrateur >=7.6.20 maintenant\ndactylographié mis à jour de 5.9.3 à 6.0.3\najout d'informations RFID (nom, identifiant, consommation) (#802)",
-        "it": "ROTTURA: passato al supporto per caricabatterie multipli (#801), (#807)\nBREAKING: l'adattatore necessita ora del nodo 22\nl'adattatore richiede ora l'amministratore >=7.6.20\ndattiloscritto aggiornato da 5.9.3 a 6.0.3\naggiunte informazioni RFID (nome, ID, consumo) (#802)",
-        "es": "ÚLTIMA HORA: cambiado a soporte de cargador múltiple (#801), (#807)\nÚLTIMA HORA: el adaptador necesita el nodo 22 ahora\nEl adaptador requiere administrador >=7.6.20 ahora\nmecanografiado actualizado de 5.9.3 a 6.0.3\ninformación RFID agregada (nombre, identificación, consumo) (#802)",
-        "pl": "ŁAMANIE: przełączono na obsługę wielu ładowarek (#801), (#807)\nŁAMANIE: adapter potrzebuje teraz węzła 22\nadapter wymaga teraz administratora >=7.6.20\nzaktualizowano maszynopis z wersji 5.9.3 do 6.0.3\ndodano informacje RFID (nazwa, identyfikator, zużycie) (#802)",
-        "uk": "ПОЛИМКА: переведено на підтримку кількох зарядних пристроїв (#801), (#807)\nПОРУШЕННЯ: адаптеру зараз потрібен вузол 22\nдля адаптера потрібен адміністратор >=7.6.20\nоновлено машинопис з 5.9.3 до 6.0.3\nдодана інформація RFID (ім'я, ідентифікатор, споживання) (#802)",
-        "zh-cn": "突破：切换到多充电器支持 (#801)、(#807)\n中断：适配器现在需要节点 22\n适配器现在需要 admin >=7.6.20\n将打字稿从 5.9.3 更新到 6.0.3\n添加了 RFID 信息（名称、ID、消费）(#802)"
       }
     },
     "titleLang": {
