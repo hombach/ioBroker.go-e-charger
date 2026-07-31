@@ -1,5 +1,7 @@
 export const MIN_CHARGE_CURRENT = 6;
 export const MAX_CHARGE_CURRENT = 16;
+export const START_CHARGE_CURRENT = 10;
+export const SHUTDOWN_DELAY_CYCLES = 12;
 
 /** Inputs used by the current surplus calculation. */
 export interface ChargeCalculationInput {
@@ -17,6 +19,38 @@ export interface ChargeCalculationInput {
 	minBatterySoc: number;
 	/** Number of active charging phases */
 	phases: number;
+}
+
+/** Internal state carried between ChargeManager control cycles. */
+export interface ChargeManagerState {
+	/** Current ramped charging-current target */
+	currentAmp: number;
+	/** Number of consecutive cycles below the minimum charging current */
+	shutdownDelay: number;
+}
+
+/** Inputs required for one deterministic ChargeManager control decision. */
+export interface ChargeManagerControllerInput extends ChargeCalculationInput {
+	/** Internal state from the previous control cycle */
+	state: ChargeManagerState;
+}
+
+/** Transport action requested by the ChargeManager controller. */
+export type ChargeManagerAction = "enable" | "disable" | "hold";
+
+/** Stable explanation for a ChargeManager control decision. */
+export type ChargeManagerReason = "charging-current" | "hysteresis" | "insufficient-surplus" | "invalid-input" | "shutdown-delay";
+
+/** Result of one deterministic ChargeManager control cycle. */
+export interface ChargeManagerDecision {
+	/** Charger transport action; `hold` sends no command */
+	action: ChargeManagerAction;
+	/** Explanation for the selected action */
+	reason: ChargeManagerReason;
+	/** Newly calculated current before applying the one-ampere ramp */
+	optimalCurrent: number | null;
+	/** Internal state to retain for the next control cycle */
+	nextState: ChargeManagerState;
 }
 
 /** One validated go-e API command. */
@@ -86,6 +120,67 @@ export function updateShutdownDelay(current: number, minimum: number, previousDe
 	}
 	const safePreviousDelay = Number.isFinite(previousDelay) ? Math.max(0, Math.trunc(previousDelay)) : 0;
 	return safePreviousDelay + 1;
+}
+
+/**
+ * Produces the complete ChargeManager decision for one control cycle without
+ * reading ioBroker states or sending charger commands.
+ *
+ * The function intentionally preserves the existing controller behavior:
+ * current changes by at most 1 A per cycle, charging starts at 10 A, and an
+ * insufficient-surplus shutdown happens after 12 completed delay cycles.
+ *
+ * @param input Current measurements and previous controller state
+ * @returns Requested transport action and state for the next cycle
+ */
+export function decideChargeManager(input: ChargeManagerControllerInput): ChargeManagerDecision {
+	const optimalCurrent = calculateOptimalChargeCurrent(input);
+	if (optimalCurrent === null) {
+		return {
+			action: "disable",
+			reason: "invalid-input",
+			optimalCurrent: null,
+			nextState: { currentAmp: 0, shutdownDelay: 0 },
+		};
+	}
+
+	const currentAmp = stepChargeCurrent(input.state.currentAmp, optimalCurrent);
+	let shutdownDelay = updateShutdownDelay(currentAmp, MIN_CHARGE_CURRENT, input.state.shutdownDelay);
+
+	if (currentAmp >= START_CHARGE_CURRENT) {
+		return {
+			action: "enable",
+			reason: "charging-current",
+			optimalCurrent,
+			nextState: { currentAmp, shutdownDelay },
+		};
+	}
+
+	if (currentAmp < MIN_CHARGE_CURRENT) {
+		if (shutdownDelay > SHUTDOWN_DELAY_CYCLES) {
+			shutdownDelay = 0;
+			return {
+				action: "disable",
+				reason: "insufficient-surplus",
+				optimalCurrent,
+				nextState: { currentAmp, shutdownDelay },
+			};
+		}
+
+		return {
+			action: "hold",
+			reason: "shutdown-delay",
+			optimalCurrent,
+			nextState: { currentAmp, shutdownDelay },
+		};
+	}
+
+	return {
+		action: "hold",
+		reason: "hysteresis",
+		optimalCurrent,
+		nextState: { currentAmp, shutdownDelay },
+	};
 }
 
 /**
