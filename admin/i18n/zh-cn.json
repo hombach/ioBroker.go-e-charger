@@ -1,12 +1,12 @@
 {
-	"LBL_standardSettings": "标准设置",
+	"LBL_chargerName": "充电桩名称",
 	"LBL_cycleTime": "从充电桩轮询数据的时间间隔 [ms]",
-	"LBL_stateHomeSolarPower": "当前可用太阳能功率的对象ID [W]",
+	"LBL_ipAddress": "go-eCharger 的 IP 地址",
+	"LBL_readOnlyMode": "只读模式 - 充电许可不会发送到充电桩（用于 RFID 标签）",
+	"LBL_standardSettings": "标准设置",
 	"LBL_stateHomeBatSoc": "家庭电池当前充电状态的对象ID [%]",
 	"LBL_stateHomePowerConsumption": "家庭当前用电量的对象ID [W]",
+	"LBL_stateHomeSolarPower": "当前可用太阳能功率的对象ID [W]",
 	"LBL_subtractSelfConsumption": "充电桩的耗电量已包含在家庭用电量数值中",
-	"LBL_wallBoxList": "充电桩列表",
-	"LBL_chargerName": "充电桩名称",
-	"LBL_ipAddress": "go-eCharger 的 IP 地址",
-	"LBL_readOnlyMode": "只读模式 - 充电许可不会发送到充电桩（用于 RFID 标签）"
+	"LBL_wallBoxList": "充电桩列表"
 }

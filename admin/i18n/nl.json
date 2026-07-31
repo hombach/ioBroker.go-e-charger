@@ -1,12 +1,12 @@
 {
-	"LBL_standardSettings": "Standaardinstellingen",
+	"LBL_chargerName": "Naam van de wallbox",
 	"LBL_cycleTime": "Tijd tussen gegevensopvragingen van de wallbox [ms]",
-	"LBL_stateHomeSolarPower": "Object-ID voor het momenteel beschikbare zonnevermogen [W]",
+	"LBL_ipAddress": "IP-adres van de go-eCharger",
+	"LBL_readOnlyMode": "Alleen-lezen modus - laadvrijgave wordt niet naar de wallbox gestuurd (voor gebruik met RFID-tags)",
+	"LBL_standardSettings": "Standaardinstellingen",
 	"LBL_stateHomeBatSoc": "Object-ID voor de huidige laadtoestand van de thuisbatterij [%]",
 	"LBL_stateHomePowerConsumption": "Object-ID voor het huidige stroomverbruik van de woning [W]",
+	"LBL_stateHomeSolarPower": "Object-ID voor het momenteel beschikbare zonnevermogen [W]",
 	"LBL_subtractSelfConsumption": "Het verbruik van de wallbox is inbegrepen in het stroomverbruik van de woning",
-	"LBL_wallBoxList": "Wallbox-lijst",
-	"LBL_chargerName": "Naam van de wallbox",
-	"LBL_ipAddress": "IP-adres van de go-eCharger",
-	"LBL_readOnlyMode": "Alleen-lezen modus - laadvrijgave wordt niet naar de wallbox gestuurd (voor gebruik met RFID-tags)"
+	"LBL_wallBoxList": "Wallbox-lijst"
 }

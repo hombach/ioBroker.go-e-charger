@@ -1,12 +1,12 @@
 {
-	"LBL_standardSettings": "Paramètres standard",
+	"LBL_chargerName": "Nom de la borne",
 	"LBL_cycleTime": "Intervalle entre les interrogations de données de la borne [ms]",
-	"LBL_stateHomeSolarPower": "ID d'objet pour la puissance solaire actuellement disponible [W]",
+	"LBL_ipAddress": "Adresse IP du go-eCharger",
+	"LBL_readOnlyMode": "Mode lecture seule - l'autorisation de charge n'est pas envoyée à la borne (pour l'utilisation de badges RFID)",
+	"LBL_standardSettings": "Paramètres standard",
 	"LBL_stateHomeBatSoc": "ID d'objet pour l'état de charge actuel de la batterie domestique [%]",
 	"LBL_stateHomePowerConsumption": "ID d'objet pour la consommation électrique actuelle du domicile [W]",
+	"LBL_stateHomeSolarPower": "ID d'objet pour la puissance solaire actuellement disponible [W]",
 	"LBL_subtractSelfConsumption": "La consommation de la borne est incluse dans la valeur de consommation électrique du domicile",
-	"LBL_wallBoxList": "Liste des wallbox",
-	"LBL_chargerName": "Nom de la borne",
-	"LBL_ipAddress": "Adresse IP du go-eCharger",
-	"LBL_readOnlyMode": "Mode lecture seule - l'autorisation de charge n'est pas envoyée à la borne (pour l'utilisation de badges RFID)"
+	"LBL_wallBoxList": "Liste des wallbox"
 }

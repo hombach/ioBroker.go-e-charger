@@ -1,12 +1,12 @@
 {
-	"LBL_standardSettings": "Configuración estándar",
+	"LBL_chargerName": "Nombre del cargador",
 	"LBL_cycleTime": "Tiempo entre consultas de datos del cargador [ms]",
-	"LBL_stateHomeSolarPower": "ID de objeto para la potencia solar disponible actualmente [W]",
+	"LBL_ipAddress": "Dirección IP del go-eCharger",
+	"LBL_readOnlyMode": "Modo de solo lectura - la autorización de carga no se envía al cargador (para usar etiquetas RFID)",
+	"LBL_standardSettings": "Configuración estándar",
 	"LBL_stateHomeBatSoc": "ID de objeto para el estado de carga actual de la batería doméstica [%]",
 	"LBL_stateHomePowerConsumption": "ID de objeto para el consumo eléctrico actual del hogar [W]",
+	"LBL_stateHomeSolarPower": "ID de objeto para la potencia solar disponible actualmente [W]",
 	"LBL_subtractSelfConsumption": "El consumo del cargador está incluido en el valor del consumo eléctrico del hogar",
-	"LBL_wallBoxList": "Lista de wallboxes",
-	"LBL_chargerName": "Nombre del cargador",
-	"LBL_ipAddress": "Dirección IP del go-eCharger",
-	"LBL_readOnlyMode": "Modo de solo lectura - la autorización de carga no se envía al cargador (para usar etiquetas RFID)"
+	"LBL_wallBoxList": "Lista de wallboxes"
 }
