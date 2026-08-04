@@ -172,6 +172,11 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+- (hombach) updated dependencies
+
 ### 1.2.1 (2026-07-31)
 
 - (typhosj) made ChargeManager surplus control more fail-safe: input validation, current clamped to 0-16 A, resilience of state-machine loop (#841)
