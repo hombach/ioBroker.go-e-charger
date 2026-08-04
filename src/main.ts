@@ -566,22 +566,24 @@ class go_e_charger extends utils.Adapter {
 	 * @param status.nrg - Energy states array
 	 * @param status.fwv - Firmware version
 	 * @param status.uby - Unlocked by RFID number
+	 * @param status.ast - Access control state
 	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
 	 */
 
 	async ParseStatusAPIV1(
 		status: {
-			rbc: any;
+			rbc: string | number;
 			rbt: number;
-			car: any;
-			amp: any;
-			amx: any;
-			alw: any;
+			car: string;
+			amp: string | number;
+			amx: string | number;
+			alw: string;
 			pha: number;
 			eto: number;
 			nrg: number[];
 			fwv: string;
-			uby: any;
+			uby: string | number;
+			ast?: string | number;
 
 			rca?: string;
 			rcr?: string;
@@ -701,6 +703,10 @@ class go_e_charger extends utils.Adapter {
 		// only write when present - on gen 3+ hardware the V1 API may omit uby, then it is read via API V2 instead
 		if (status.uby !== undefined && status.uby !== null) {
 			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
+		}
+		// access control: 0 = open, 1 = RFID/App required, 2 = electricity price/automatic
+		if (status.ast !== undefined && status.ast !== null) {
+			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
 		}
 
 		if (!this.wallboxInfoList[iWB].HardwareMin3) {
@@ -827,7 +833,7 @@ class go_e_charger extends utils.Adapter {
 	async Read_ChargerAPIV2(iWB: number): Promise<void> {
 		await axiosInstance
 			.get(
-				`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,uby,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`,
+				`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,uby,ast,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`,
 				{
 					transformResponse: r => r,
 				},
@@ -857,6 +863,7 @@ class go_e_charger extends utils.Adapter {
 	 * @param status.psm - Phase switching mode (1 = single-phase, 2 = three-phase).
 	 * @param status.typ - Hardware version or type identifier.
 	 * @param status.uby - Unlocked by RFID number
+	 * @param status.ast - Access control state
 	 * @param status.rca - RFID card 1 ID
 	 * @param status.rcr - RFID card 2 ID
 	 * @param status.rcd - RFID card 3 ID
@@ -893,7 +900,8 @@ class go_e_charger extends utils.Adapter {
 		status: {
 			psm: number;
 			typ: string;
-			uby?: any;
+			uby?: string | number;
+			ast?: string | number;
 			rca?: string;
 			rcr?: string;
 			rcd?: string;
@@ -951,6 +959,10 @@ class go_e_charger extends utils.Adapter {
 		// on gen 3+ hardware the V1 API may omit uby, so read the current session RFID chip via API V2 here
 		if (status.uby !== undefined && status.uby !== null) {
 			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
+		}
+		// access control: 0 = open, 1 = RFID/App required, 2 = electricity price/automatic
+		if (status.ast !== undefined && status.ast !== null) {
+			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
 		}
 		await this.parseAndSetRFIDData(status, basePath);
 		this.log.debug(`got and parsed go-e charger ${iWB} data with API V2`);

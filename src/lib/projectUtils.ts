@@ -484,23 +484,30 @@ export class ProjectUtils {
 	 * @param context - A string providing context for where the error occurred.
 	 * @returns A string representing the formatted error message.
 	 */
-	public generateErrorMessage(error: any, context: string): string {
+	public generateErrorMessage(error: unknown, context: string): string {
 		let errorMessages = "";
+		// narrow the unknown error to the optional shape we read from
+		const err = (error ?? {}) as {
+			errors?: { message?: string }[];
+			message?: string;
+			statusMessage?: string;
+			statusText?: string;
+		};
 		// Check if error object has an 'errors' property that is an array
-		if (error.errors && Array.isArray(error.errors)) {
+		if (err.errors && Array.isArray(err.errors)) {
 			// Iterate over the array of errors and concatenate their messages
-			for (const err of error.errors) {
+			for (const e of err.errors) {
 				if (errorMessages) {
 					errorMessages += ", ";
 				}
-				errorMessages += err.message;
+				errorMessages += e.message;
 			}
-		} else if (error.message) {
-			errorMessages = error.message; // If 'errors' array is not present, use the 'message' property of the error object
+		} else if (err.message) {
+			errorMessages = err.message; // If 'errors' array is not present, use the 'message' property of the error object
 		} else {
 			errorMessages = "Unknown error"; // If no 'errors' or 'message' property is found, default to "Unknown error"
 		}
 		// Construct the final error message string with status, context, and error messages
-		return `Error (${error.statusMessage || error.statusText || "Unknown Status"}) occurred during: -${context}- : ${errorMessages}`;
+		return `Error (${err.statusMessage || err.statusText || "Unknown Status"}) occurred during: -${context}- : ${errorMessages}`;
 	}
 }

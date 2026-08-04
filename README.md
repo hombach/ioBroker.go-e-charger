@@ -175,6 +175,8 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 ### **WORK IN PROGRESS**
 
+- (hombach) added info.accessControlState (go-e access_state: 0 = open, 1 = RFID/App required, 2 = price/automatic) (#634)
+- (hombach) tightened TypeScript types for go-e API response fields (removed any)
 - (hombach) updated dependencies
 
 ### 1.2.1 (2026-07-31)

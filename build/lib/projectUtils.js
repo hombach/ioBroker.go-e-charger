@@ -213,21 +213,22 @@ class ProjectUtils {
     }
     generateErrorMessage(error, context) {
         let errorMessages = "";
-        if (error.errors && Array.isArray(error.errors)) {
-            for (const err of error.errors) {
+        const err = (error ?? {});
+        if (err.errors && Array.isArray(err.errors)) {
+            for (const e of err.errors) {
                 if (errorMessages) {
                     errorMessages += ", ";
                 }
-                errorMessages += err.message;
+                errorMessages += e.message;
             }
         }
-        else if (error.message) {
-            errorMessages = error.message;
+        else if (err.message) {
+            errorMessages = err.message;
         }
         else {
             errorMessages = "Unknown error";
         }
-        return `Error (${error.statusMessage || error.statusText || "Unknown Status"}) occurred during: -${context}- : ${errorMessages}`;
+        return `Error (${err.statusMessage || err.statusText || "Unknown Status"}) occurred during: -${context}- : ${errorMessages}`;
     }
 }
 exports.ProjectUtils = ProjectUtils;
