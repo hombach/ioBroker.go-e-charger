@@ -172,8 +172,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.3.0 (2026-08-04)
 
 - (hombach) added info.accessControlState (go-e access_state: 0 = open, 1 = RFID/App required, 2 = price/automatic) (#634)
 - (hombach) tightened TypeScript types for go-e API response fields (removed any)
@@ -209,11 +208,6 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) added upper bound validation for cycle time
 - (hombach) added link to manufacturer's website
 - (hombach) code optimizations
-
-### 1.0.3 (2026-07-03)
-
-- (hombach) added translations
-- (hombach) fixed state roles
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 
