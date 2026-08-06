@@ -833,7 +833,7 @@ class go_e_charger extends utils.Adapter {
 	async Read_ChargerAPIV2(iWB: number): Promise<void> {
 		await axiosInstance
 			.get(
-				`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,uby,ast,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`,
+				`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,trx,ast,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`,
 				{
 					transformResponse: r => r,
 				},
@@ -862,7 +862,7 @@ class go_e_charger extends utils.Adapter {
 	 * @param status - The API V2 status object returned by the wallbox.
 	 * @param status.psm - Phase switching mode (1 = single-phase, 2 = three-phase).
 	 * @param status.typ - Hardware version or type identifier.
-	 * @param status.uby - Unlocked by RFID number
+	 * @param status.trx - Transaction: null = none, 0 = without card, otherwise cardIndex + 1 (API V2 equivalent of V1 uby)
 	 * @param status.ast - Access control state
 	 * @param status.rca - RFID card 1 ID
 	 * @param status.rcr - RFID card 2 ID
@@ -900,7 +900,7 @@ class go_e_charger extends utils.Adapter {
 		status: {
 			psm: number;
 			typ: string;
-			uby?: string | number;
+			trx?: number | null;
 			ast?: string | number;
 			rca?: string;
 			rcr?: string;
@@ -956,9 +956,14 @@ class go_e_charger extends utils.Adapter {
 		this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
 		this.wallboxInfoList[iWB].Hardware = status.typ;
 		void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, `info.hardware`);
-		// on gen 3+ hardware the V1 API may omit uby, so read the current session RFID chip via API V2 here
-		if (status.uby !== undefined && status.uby !== null) {
-			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
+		// API V2 exposes the authorizing card as "trx" (not "uby"): null = no transaction, 0 = without card,
+		// otherwise cardIndex + 1 - which matches the 1-based RFID{n} channel numbering and the V1 uby semantics
+		if (status.trx !== undefined) {
+			void this.projectUtils.checkAndSetValueNumber(
+				`${basePath}.info.unlockedByRFIDNo`,
+				status.trx === null ? 0 : Number(status.trx),
+				`Number of current session RFID chip`,
+			);
 		}
 		// access control: 0 = open, 1 = RFID/App required, 2 = electricity price/automatic
 		if (status.ast !== undefined && status.ast !== null) {
