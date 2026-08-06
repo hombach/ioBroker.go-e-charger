@@ -432,12 +432,11 @@ class go_e_charger extends utils.Adapter {
 			totalChargeEnergy = 0; // reset total charge energy at the beginning of each cycle, will be accumulated from all chargers in the loop below
 			totalChargePower = 0; // reset total charge power at the beginning of each cycle, will be accumulated from all chargers in the loop below
 			for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
-				if (this.wallboxInfoList[iWB].ChargeNOW || this.wallboxInfoList[iWB].ChargeManager) {
-					// Charge-NOW or Charge-Manager is enabled
-					await this.Read_ChargerAPIV1(iWB);
-					if (this.wallboxInfoList[iWB].HardwareMin3) {
-						await this.Read_ChargerAPIV2(iWB);
-					}
+				// always refresh live data each cycle so states stay current in every mode,
+				// including pure monitoring / read-only where the adapter controls no charging
+				await this.Read_ChargerAPIV1(iWB);
+				if (this.wallboxInfoList[iWB].HardwareMin3) {
+					await this.Read_ChargerAPIV2(iWB);
 				}
 
 				if (this.wallboxInfoList[iWB].ChargeNOW) {
@@ -470,20 +469,10 @@ class go_e_charger extends utils.Adapter {
 						await this.stopChargeManager(`Charging home battery until ${minHomeBatVal}%`, iWB);
 					}
 				} else {
-					// only if Power.ChargingAllowed is still set: switch OFF; set to min. current;
+					// both modes off: if the adapter previously enabled charging, switch it off again
 					if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
-						// Set to false only if still true
-						await this.Read_ChargerAPIV1(iWB);
-						if (this.wallboxInfoList[iWB].HardwareMin3) {
-							await this.Read_ChargerAPIV2(iWB);
-						}
 						this.wallboxInfoList[iWB].SetAmp = 0;
 						await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `Deactivate go-eCharger`, iWB);
-					} else if (Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`)) > 0) {
-						await this.Read_ChargerAPIV1(iWB);
-						if (this.wallboxInfoList[iWB].HardwareMin3) {
-							await this.Read_ChargerAPIV2(iWB);
-						}
 					}
 				}
 				totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.chargedEnergy`)) || 0; // accumulate total charged energy of all chargers
@@ -850,9 +839,10 @@ class go_e_charger extends utils.Adapter {
 				}
 			})
 			.catch(error => {
-				this.log.error(`Error in calling go-e charger ${iWB} API V2: ${error}`);
-				this.log.warn(`If you have a charger minimum hardware version 3: please enable API V2 for charger ${iWB},
-						IP: ${this.config.wallBoxList[iWB].ipAddress}`);
+				// API V2 is optional - failing is normal on hardware gen 1/2 which only offers API V1
+				this.log.warn(
+					`API V2 not reachable for charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}) - normal for hardware gen 1/2; on gen 3+ enable "HTTP API v2" for phase switching and RFID session info. (${error})`,
+				);
 			});
 	}
 

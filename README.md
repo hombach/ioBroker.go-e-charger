@@ -176,6 +176,8 @@ If you enjoyed this project – or are just feeling generous – consider buying
 ### **WORK IN PROGRESS**
 
 - (hombach) fixed "unlocked by RFID" always 0 on gen 3+ chargers: API V2 uses the "trx" key instead of "uby" (#634)
+- (hombach) live data is now refreshed every cycle in all modes, so read-only monitoring stays up to date
+- (hombach) API V2 not being reachable is now a single warning instead of an error (normal on hardware gen 1/2)
 - (typhosj) use generic go-e brand logo as adapter icon (#843)
 
 ### 1.3.0 (2026-08-04)

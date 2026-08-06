@@ -362,11 +362,9 @@ class go_e_charger extends utils.Adapter {
             totalChargeEnergy = 0;
             totalChargePower = 0;
             for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
-                if (this.wallboxInfoList[iWB].ChargeNOW || this.wallboxInfoList[iWB].ChargeManager) {
-                    await this.Read_ChargerAPIV1(iWB);
-                    if (this.wallboxInfoList[iWB].HardwareMin3) {
-                        await this.Read_ChargerAPIV2(iWB);
-                    }
+                await this.Read_ChargerAPIV1(iWB);
+                if (this.wallboxInfoList[iWB].HardwareMin3) {
+                    await this.Read_ChargerAPIV2(iWB);
                 }
                 if (this.wallboxInfoList[iWB].ChargeNOW) {
                     await this.Charge_Config("1", this.wallboxInfoList[iWB].ChargeCurrent, `activate go-eCharger for forced charging`, iWB);
@@ -397,18 +395,8 @@ class go_e_charger extends utils.Adapter {
                 }
                 else {
                     if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
-                        await this.Read_ChargerAPIV1(iWB);
-                        if (this.wallboxInfoList[iWB].HardwareMin3) {
-                            await this.Read_ChargerAPIV2(iWB);
-                        }
                         this.wallboxInfoList[iWB].SetAmp = 0;
                         await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `Deactivate go-eCharger`, iWB);
-                    }
-                    else if (Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`)) > 0) {
-                        await this.Read_ChargerAPIV1(iWB);
-                        if (this.wallboxInfoList[iWB].HardwareMin3) {
-                            await this.Read_ChargerAPIV2(iWB);
-                        }
                     }
                 }
                 totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.chargedEnergy`)) || 0;
@@ -539,9 +527,7 @@ class go_e_charger extends utils.Adapter {
             }
         })
             .catch(error => {
-            this.log.error(`Error in calling go-e charger ${iWB} API V2: ${error}`);
-            this.log.warn(`If you have a charger minimum hardware version 3: please enable API V2 for charger ${iWB},
-						IP: ${this.config.wallBoxList[iWB].ipAddress}`);
+            this.log.warn(`API V2 not reachable for charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}) - normal for hardware gen 1/2; on gen 3+ enable "HTTP API v2" for phase switching and RFID session info. (${error})`);
         });
     }
     async ParseStatusAPIV2(status, iWB) {
