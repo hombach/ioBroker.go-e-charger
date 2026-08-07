@@ -1,7 +1,7 @@
 ﻿// The adapter-core module gives you access to the core ioBroker functions you need to create an adapter
 import * as utils from "@iobroker/adapter-core";
 import axios from "axios";
-import { buildChargerCommands, calculateOptimalChargeCurrent, stepChargeCurrent, updateShutdownDelay } from "./lib/chargeManagerUtils";
+import { buildChargerCommands, decideChargeManager } from "./lib/chargeManagerUtils";
 import { ProjectUtils, type IWallboxInfo } from "./lib/projectUtils";
 const axiosInstance = axios.create({
 	timeout: 5000, // ms - prevents a hanging request from blocking the state machine
@@ -1084,7 +1084,7 @@ class go_e_charger extends utils.Adapter {
 				? this.wallboxInfoList[iWB].EnabledPhases
 				: this.wallboxInfoList[iWB].GridPhases;
 
-		const optimalCurrent = calculateOptimalChargeCurrent({
+		const decision = decideChargeManager({
 			solarPower,
 			houseConsumption,
 			chargerPower: this.wallboxInfoList[iWB].ChargePower,
@@ -1092,33 +1092,30 @@ class go_e_charger extends utils.Adapter {
 			batterySoc: batSoC,
 			minBatterySoc: minHomeBatVal,
 			phases: Phases,
+			state: {
+				currentAmp: this.wallboxInfoList[iWB].SetAmp,
+				shutdownDelay: this.wallboxInfoList[iWB].DelayOff,
+			},
 		});
-		if (optimalCurrent === null) {
+		if (decision.optimalCurrent === null) {
 			this.log.warn(`ChargeManager inputs are invalid for charger ${iWB}; charging will be disabled`);
 			await this.stopChargeManager(`Invalid ChargeManager input`, iWB);
 			return;
 		}
-		this.wallboxInfoList[iWB].SetOptAmp = optimalCurrent;
+		this.wallboxInfoList[iWB].SetOptAmp = decision.optimalCurrent;
 		this.log.debug(`Optimal charging current would be: ${this.wallboxInfoList[iWB].SetOptAmp} A`);
 
-		this.wallboxInfoList[iWB].SetAmp = stepChargeCurrent(this.wallboxInfoList[iWB].SetAmp, this.wallboxInfoList[iWB].SetOptAmp);
+		this.wallboxInfoList[iWB].SetAmp = decision.nextState.currentAmp;
+		this.wallboxInfoList[iWB].DelayOff = decision.nextState.shutdownDelay;
 
 		this.log.debug(
 			`ZielAmpere: ${this.wallboxInfoList[iWB].SetAmp} A; Solar: ${solarPower} W; House: ${houseConsumption} W; Charger: ${this.wallboxInfoList[iWB].ChargePower} W`,
 		);
 
-		this.wallboxInfoList[iWB].DelayOff = updateShutdownDelay(
-			this.wallboxInfoList[iWB].SetAmp,
-			this.wallboxInfoList[iWB].MinAmp,
-			this.wallboxInfoList[iWB].DelayOff,
-		);
-		if (this.wallboxInfoList[iWB].SetAmp > 5 + 4) {
+		if (decision.action === "enable") {
 			await this.Charge_Config("1", this.wallboxInfoList[iWB].SetAmp, `Charging current: ${this.wallboxInfoList[iWB].SetAmp} A`, iWB);
-		} else if (this.wallboxInfoList[iWB].SetAmp < this.wallboxInfoList[iWB].MinAmp) {
-			if (this.wallboxInfoList[iWB].DelayOff > 12) {
-				await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `Insufficient surplus`, iWB);
-				this.wallboxInfoList[iWB].DelayOff = 0;
-			}
+		} else if (decision.action === "disable") {
+			await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `Insufficient surplus`, iWB);
 		}
 	} // END Charge_Manager
 
