@@ -689,19 +689,36 @@ class go_e_charger extends utils.Adapter {
 		);
 		this.wallboxInfoList[iWB].Firmware = status.fwv;
 		void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`, `info.firmware`);
-		// only write when present - on gen 3+ hardware the V1 API may omit uby, then it is read via API V2 instead
-		if (status.uby !== undefined && status.uby !== null) {
-			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
-		}
 		// access control: 0 = open, 1 = RFID/App required, 2 = electricity price/automatic
 		if (status.ast !== undefined && status.ast !== null) {
 			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
 		}
 
+		// on gen 1/2 the RFID data (incl. the authorizing card) comes from API V1; gen 3+ uses API V2 instead
 		if (!this.wallboxInfoList[iWB].HardwareMin3) {
 			await this.parseAndSetRFIDData(status, basePath);
+			if (status.uby !== undefined && status.uby !== null) {
+				await this.setUnlockedByRFID(Number(status.uby), basePath);
+			}
 		}
 		this.log.debug(`got and parsed go-e charger ${iWB} data`);
+	}
+
+	/**
+	 * Writes info.unlockedByRFIDNo and the parallel info.unlockedByRFIDName for the RFID card that
+	 * authorized the current charging session. The name is read from statistics.RFID{no}.cardName.
+	 * A card number of 0 means "no card" and clears the name.
+	 *
+	 * @param cardNo - 1-based RFID card number of the current session (0 = none)
+	 * @param basePath - base object path of the wallbox (e.g. "Wallbox_0")
+	 */
+	private async setUnlockedByRFID(cardNo: number, basePath: string): Promise<void> {
+		await this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, cardNo, `Number of current session RFID chip`);
+		let cardName = "";
+		if (cardNo > 0) {
+			cardName = (await this.projectUtils.getStateValue(`${basePath}.statistics.RFID${cardNo}.cardName`)) || "";
+		}
+		await this.projectUtils.checkAndSetValue(`${basePath}.info.unlockedByRFIDName`, cardName, `Name of current session RFID chip`, "text");
 	}
 
 	/**
@@ -946,20 +963,16 @@ class go_e_charger extends utils.Adapter {
 		this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
 		this.wallboxInfoList[iWB].Hardware = status.typ;
 		void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, `info.hardware`);
-		// API V2 exposes the authorizing card as "trx" (not "uby"): null = no transaction, 0 = without card,
-		// otherwise cardIndex + 1 - which matches the 1-based RFID{n} channel numbering and the V1 uby semantics
-		if (status.trx !== undefined) {
-			void this.projectUtils.checkAndSetValueNumber(
-				`${basePath}.info.unlockedByRFIDNo`,
-				status.trx === null ? 0 : Number(status.trx),
-				`Number of current session RFID chip`,
-			);
-		}
 		// access control: 0 = open, 1 = RFID/App required, 2 = electricity price/automatic
 		if (status.ast !== undefined && status.ast !== null) {
 			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
 		}
 		await this.parseAndSetRFIDData(status, basePath);
+		// API V2 exposes the authorizing card as "trx" (not "uby"): null = no transaction, 0 = without card,
+		// otherwise cardIndex + 1 - matching the 1-based RFID{n} channel numbering
+		if (status.trx !== undefined) {
+			await this.setUnlockedByRFID(status.trx === null ? 0 : Number(status.trx), basePath);
+		}
 		this.log.debug(`got and parsed go-e charger ${iWB} data with API V2`);
 	}
 

@@ -476,16 +476,24 @@ class go_e_charger extends utils.Adapter {
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.MeasuredMaxPhaseCurrent`, Math.max(...status.nrg.slice(4, 7)) / 10, `Measured max. current of grid phases`, "A", "value.current");
         this.wallboxInfoList[iWB].Firmware = status.fwv;
         void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`, `info.firmware`);
-        if (status.uby !== undefined && status.uby !== null) {
-            void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, Number(status.uby), `Number of current session RFID chip`);
-        }
         if (status.ast !== undefined && status.ast !== null) {
             void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
         }
         if (!this.wallboxInfoList[iWB].HardwareMin3) {
             await this.parseAndSetRFIDData(status, basePath);
+            if (status.uby !== undefined && status.uby !== null) {
+                await this.setUnlockedByRFID(Number(status.uby), basePath);
+            }
         }
         this.log.debug(`got and parsed go-e charger ${iWB} data`);
+    }
+    async setUnlockedByRFID(cardNo, basePath) {
+        await this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, cardNo, `Number of current session RFID chip`);
+        let cardName = "";
+        if (cardNo > 0) {
+            cardName = (await this.projectUtils.getStateValue(`${basePath}.statistics.RFID${cardNo}.cardName`)) || "";
+        }
+        await this.projectUtils.checkAndSetValue(`${basePath}.info.unlockedByRFIDName`, cardName, `Name of current session RFID chip`, "text");
     }
     async parseAndSetRFIDData(status, basePath) {
         const rfidIds = ["rca", "rcr", "rcd", "rc4", "rc5", "rc6", "rc7", "rc8", "rc9", "rc1"];
@@ -546,13 +554,13 @@ class go_e_charger extends utils.Adapter {
         this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
         this.wallboxInfoList[iWB].Hardware = status.typ;
         void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, `info.hardware`);
-        if (status.trx !== undefined) {
-            void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.unlockedByRFIDNo`, status.trx === null ? 0 : Number(status.trx), `Number of current session RFID chip`);
-        }
         if (status.ast !== undefined && status.ast !== null) {
             void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
         }
         await this.parseAndSetRFIDData(status, basePath);
+        if (status.trx !== undefined) {
+            await this.setUnlockedByRFID(status.trx === null ? 0 : Number(status.trx), basePath);
+        }
         this.log.debug(`got and parsed go-e charger ${iWB} data with API V2`);
     }
     async Switch_3Phases(Charge3Phase, iWB) {
