@@ -95,7 +95,7 @@ class ProjectUtils {
                 write: writeable,
             };
             await (forceMode
-                ? this.adapter.setObject(stateName, { type: "state", common: commonObj, native: {} })
+                ? this.adapter.extendObject(stateName, { type: "state", common: commonObj, native: {} })
                 : this.adapter.setObjectNotExistsAsync(stateName, { type: "state", common: commonObj, native: {} }));
             if (!dontUpdate || !(await this.adapter.getStateAsync(stateName))) {
                 await this.adapter.setState(stateName, { val: value, ack: true });
@@ -111,16 +111,13 @@ class ProjectUtils {
                 desc: description,
                 read: true,
                 write: writeable,
-                ...((unit ?? undefined) ? { unit } : {}),
-                ...((min ?? undefined) ? { min } : {}),
-                ...((max ?? undefined) ? { max } : {}),
-                ...((step ?? undefined) ? { step } : {}),
+                ...(unit != null ? { unit } : {}),
+                ...(min != null ? { min } : {}),
+                ...(max != null ? { max } : {}),
+                ...(step != null ? { step } : {}),
             };
-            if (unit != null) {
-                commonObj.unit = unit;
-            }
             await (forceMode
-                ? this.adapter.setObject(stateName, { type: "state", common: commonObj, native: {} })
+                ? this.adapter.extendObject(stateName, { type: "state", common: commonObj, native: {} })
                 : this.adapter.setObjectNotExistsAsync(stateName, { type: "state", common: commonObj, native: {} }));
             if (!dontUpdate || !(await this.adapter.getStateAsync(stateName))) {
                 await this.adapter.setState(stateName, { val: value, ack: true });
@@ -138,7 +135,7 @@ class ProjectUtils {
                 write: writeable,
             };
             await (forceMode
-                ? this.adapter.setObject(stateName, { type: "state", common: commonObj, native: {} })
+                ? this.adapter.extendObject(stateName, { type: "state", common: commonObj, native: {} })
                 : this.adapter.setObjectNotExistsAsync(stateName, { type: "state", common: commonObj, native: {} }));
             if (!dontUpdate || !(await this.adapter.getStateAsync(stateName))) {
                 await this.adapter.setState(stateName, { val: value, ack: true });
@@ -155,7 +152,7 @@ class ProjectUtils {
             commonObj.icon = icon;
         }
         await (forceMode
-            ? this.adapter.setObject(folderObjectName, {
+            ? this.adapter.extendObject(folderObjectName, {
                 type: "folder",
                 common: commonObj,
                 native: {},
@@ -180,7 +177,7 @@ class ProjectUtils {
             commonObj.icon = icon;
         }
         await (forceMode
-            ? this.adapter.setObject(deviceObjectName, {
+            ? this.adapter.extendObject(deviceObjectName, {
                 type: "device",
                 common: commonObj,
                 native: {},
@@ -200,7 +197,7 @@ class ProjectUtils {
             commonObj.icon = icon;
         }
         await (forceMode
-            ? this.adapter.setObject(channelObjectName, {
+            ? this.adapter.extendObject(channelObjectName, {
                 type: "channel",
                 common: commonObj,
                 native: {},
