@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "go-e-charger",
-    "version": "1.3.1",
+    "version": "1.4.0",
     "news": {
+      "1.4.0": {
+        "en": "added info.unlockedByRFIDName with the name of the current session's RFID card, in parallel to unlockedByRFIDNo (#634)\nprojectUtils: use extendObject instead of setObject in forceMode so user customizations survive restarts\nprojectUtils: fixed min/max/step value of 0 being dropped from number state definitions\nupdated dependencies",
+        "de": "info.unlockedByRFIDName wurde um den Namen der RFID-Karte der aktuellen Sitzung ergänzt, parallel zu unlockedByRFIDNo (#634).\nprojectUtils: Verwenden Sie in forceMode extendObject anstelle von setObject, damit Benutzeranpassungen auch nach Neustarts erhalten bleiben.\nprojectUtils: Der Fehler, dass der Wert 0 für min/max/step aus den Zahlenzustandsdefinitionen entfernt wurde, wurde behoben.\naktualisierte Abhängigkeiten",
+        "ru": "Добавлена информация info.unlockedByRFIDName с именем RFID-карты текущей сессии, параллельно с unlockedByRFIDNo (#634)\nprojectUtils: используйте extendObject вместо setObject в forceMode, чтобы пользовательские настройки сохранялись после перезапуска.\nprojectUtils: исправлена ошибка, из-за которой значение min/max/step, равное 0, удалялось из определений состояния чисел.\nобновленные зависимости",
+        "pt": "Adicionada a informação unlockedByRFIDName com o nome do cartão RFID da sessão atual, em paralelo com unlockedByRFIDNo (#634)\nprojectUtils: use extendObject em vez de setObject em forceMode para que as personalizações do usuário persistam após reinicializações.\nprojectUtils: corrigiu-se a remoção do valor mínimo/máximo/incremento 0 das definições de estado numérico.\ndependências atualizadas",
+        "nl": "info.unlockedByRFIDName is toegevoegd met de naam van de RFID-kaart van de huidige sessie, parallel aan unlockedByRFIDNo (#634)\nprojectUtils: gebruik extendObject in plaats van setObject in forceMode zodat gebruikersaanpassingen behouden blijven na herstarts\nprojectUtils: vaste min/max/stapwaarde van 0 wordt verwijderd uit definities van numerieke statussen\nbijgewerkte afhankelijkheden",
+        "fr": "Ajout de info.unlockedByRFIDName avec le nom de la carte RFID de la session actuelle, en parallèle de unlockedByRFIDNo (#634)\nprojectUtils : utiliser extendObject au lieu de setObject en mode forcé afin que les personnalisations utilisateur soient conservées après un redémarrage.\nprojectUtils : les valeurs minimales, maximales et d’incrément de 0 sont désormais supprimées des définitions d’état numérique.\ndépendances mises à jour",
+        "it": "aggiunto info.unlockedByRFIDName con il nome della scheda RFID della sessione corrente, in parallelo a unlockedByRFIDNo (#634)\nprojectUtils: utilizzare extendObject invece di setObject in forceMode in modo che le personalizzazioni dell'utente persistano dopo il riavvio\nprojectUtils: il valore minimo/massimo/passo fisso di 0 viene rimosso dalle definizioni dello stato numerico\ndipendenze aggiornate",
+        "es": "Se agregó info.unlockedByRFIDName con el nombre de la tarjeta RFID de la sesión actual, en paralelo a unlockedByRFIDNo (#634).\nprojectUtils: utilice extendObject en lugar de setObject en forceMode para que las personalizaciones del usuario se conserven tras los reinicios.\nprojectUtils: se corrigió el problema por el cual el valor mínimo/máximo/de paso de 0 se eliminaba de las definiciones de estado numérico.\ndependencias actualizadas",
+        "pl": "dodano info.unlockedByRFIDName z nazwą karty RFID bieżącej sesji, równolegle do unlockedByRFIDNo (#634)\nprojectUtils: użyj extendObject zamiast setObject w forceMode, aby dostosowania użytkownika przetrwały ponowne uruchomienia\nprojectUtils: naprawiono usuwanie wartości min./maks./kroku z definicji stanu liczbowego\nzaktualizowane zależności",
+        "uk": "додано info.unlockedByRFIDName з назвою RFID-картки поточного сеансу, паралельно з unlockedByRFIDNo (#634)\nprojectUtils: використано extendObject замість setObject у forceMode, щоб налаштування користувача зберігалися після перезапусків\nprojectUtils: виправлено помилку, через яку значення min/max/step, рівне 0, видалялося з визначень числових станів\nоновлені залежності",
+        "zh-cn": "添加了 info.unlockedByRFIDName，其中包含当前会话的 RFID 卡的名称，与 unlockedByRFIDNo (#634) 并行。\nprojectUtils：在 forceMode 模式下使用 extendObject 而不是 setObject，以便用户自定义设置能够保留在重启后。\nprojectUtils：修复了从数值状态定义中删除最小值/最大值/步长值为 0 的问题\n更新依赖项"
+      },
       "1.3.1": {
         "en": "fixed \"unlocked by RFID\" always 0 on gen 3+ chargers: API V2 uses the \"trx\" key instead of \"uby\" (#634)\nlive data is now refreshed every cycle in all modes, so read-only monitoring stays up to date\nAPI V2 not being reachable is now a single warning instead of an error (normal on hardware gen 1/2)\nuse generic go-e brand logo as adapter icon (#843)",
         "de": "Behoben: „Entsperrt durch RFID“ war bei Ladegeräten der 3. Generation und höher immer 0: API V2 verwendet den Schlüssel „trx“ anstelle von „uby“ (#634)\nDie Live-Daten werden nun in allen Modi in jedem Zyklus aktualisiert, sodass die schreibgeschützte Überwachung stets auf dem neuesten Stand bleibt.\nWenn API V2 nicht erreichbar ist, wird nun eine einzelne Warnung anstelle eines Fehlers ausgegeben (normal auf Hardware der 1. und 2. Generation).\ngenerisches go-e Markenlogo als Adaptersymbol verwenden (#843)",
@@ -80,19 +93,6 @@
         "pl": "zharmonizowane pliki i18n\nulepszone pliki README i teksty w języku angielskim\nprzerobione tłumaczenia we wszystkich językach\ndodano 5-sekundowy limit czasu do wszystkich żądań HTTP do ładowarek\nstałe zatrzymanie adaptera, gdy podczas uruchamiania nie można uzyskać dostępu do ładowarki; ostrzeżenie w przypadku braku dostępu do ładowarki\nnaprawiono niemiecki tekst zastępczy dla nazw kanałów kart RFID\ndodano walidację górnej granicy czasu cyklu\ndodano link do strony producenta\noptymalizacje kodu",
         "uk": "гармонізовані файли i18n\nпокращений README та англійський текст\nперероблені переклади всіма мовами\nдодано 5-секундний тайм-аут для всіх HTTP-запитів до зарядних пристроїв\nвиправлено зупинку адаптера, коли зарядний пристрій недоступний під час запуску; попередження про кожен недоступний зарядний пристрій\nвиправлено резервний текст німецькою мовою для назв каналів RFID-карт\nдодано перевірку верхньої межі для часу циклу\nдодано посилання на сайт виробника\nоптимізації коду",
         "zh-cn": "统一的 i18n 文件\n改进了README文件和英文文本\n对所有语言的翻译进行了重新润色\n对所有发往充电器的HTTP请求增加5秒超时时间\n启动时，如果充电器无法连接，则固定适配器停止工作；对每个无法连接的充电器发出警告。\n修复了 RFID 卡通道名称的德语备用文本\n增加了周期时间的上限验证\n添加了制造商网站的链接\n代码优化"
-      },
-      "1.0.3": {
-        "en": "added translations\nfixed state roles",
-        "de": "hinzugefügte Übersetzungen\nfeste Statusrollen",
-        "ru": "добавлены переводы\nфиксированные роли состояния",
-        "pt": "traduções adicionadas\nfunções de estado fixas",
-        "nl": "toegevoegde vertalingen\nvaste statusrollen",
-        "fr": "traductions ajoutées\nrôles d'état fixes",
-        "it": "traduzioni aggiunte\nruoli di stato fissi",
-        "es": "Se agregaron traducciones\nroles de estado fijo",
-        "pl": "dodano tłumaczenia\nstałe role państwowe",
-        "uk": "додані переклади\nролі фіксованого стану",
-        "zh-cn": "新增翻译\n固定状态角色"
       }
     },
     "titleLang": {
