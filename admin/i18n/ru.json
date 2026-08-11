@@ -15,5 +15,14 @@
 	"LBL_chargeManagerMaxBatteryBonus": "Максимальный бонус батареи, добавляемый к избытку вблизи 100% SoC [Вт]",
 	"LBL_chargeManagerMinCurrent": "Минимальный ток ChargeManager для зарядки от избытка ФЭ [А]",
 	"LBL_maxChargeCurrent": "Максимальный ток зарядки для ChargeManager и ChargeNOW [А]",
-	"LBL_wallBoxList": "Список зарядных станций"
+	"LBL_wallBoxList": "Список зарядных станций",
+	"LBL_batteryMode": "Режим домашней батареи",
+	"LBL_batteryModeDisabled": "Отключено",
+	"LBL_batteryModeDisabledDescription": "Игнорировать домашнюю батарею; состояние SOC не требуется",
+	"LBL_batteryModeMinimumSoc": "Минимальный SOC",
+	"LBL_batteryModeMinimumSocDescription": "Останавливать зарядку автомобиля ниже минимального SOC без добавления мощности батареи",
+	"LBL_batteryModePriority": "Приоритет батареи",
+	"LBL_batteryModePriorityDescription": "Отдавать приоритет батарее и постепенно разрешать настроенный бонус выше минимального SOC",
+	"LBL_batterySocHysteresis": "Гистерезис SOC батареи ниже минимума",
+	"LBL_batterySocMaxAgeSeconds": "Максимальный возраст SOC батареи (0 отключает проверку)"
 }

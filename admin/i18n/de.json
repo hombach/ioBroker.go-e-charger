@@ -15,5 +15,14 @@
 	"LBL_chargeManagerMaxBatteryBonus": "Maximaler Batteriebonus, der dem Überschuss nahe 100% SoC zugerechnet wird [W]",
 	"LBL_chargeManagerMinCurrent": "Minimaler ChargeManager-Strom für PV-Überschussladen [A]",
 	"LBL_maxChargeCurrent": "Maximaler Ladestrom für ChargeManager und ChargeNOW [A]",
-	"LBL_wallBoxList": "Wallbox-Liste"
+	"LBL_wallBoxList": "Wallbox-Liste",
+	"LBL_batteryMode": "Modus der Hausbatterie",
+	"LBL_batteryModeDisabled": "Deaktiviert",
+	"LBL_batteryModeDisabledDescription": "Hausbatterie ignorieren; es ist kein SOC-Datenpunkt erforderlich",
+	"LBL_batteryModeMinimumSoc": "Mindest-SOC",
+	"LBL_batteryModeMinimumSocDescription": "EV-Laden unterhalb des Mindest-SOC stoppen, ohne Batterieleistung hinzuzurechnen",
+	"LBL_batteryModePriority": "Batteriepriorität",
+	"LBL_batteryModePriorityDescription": "Batterie priorisieren und den konfigurierten Bonus oberhalb des Mindest-SOC schrittweise freigeben",
+	"LBL_batterySocHysteresis": "Batterie-SOC-Hysterese unterhalb des Mindestwerts",
+	"LBL_batterySocMaxAgeSeconds": "Maximales Alter des Batterie-SOC (0 deaktiviert die Prüfung)"
 }

@@ -15,5 +15,14 @@
 	"LBL_chargeManagerMaxBatteryBonus": "Bonificación máxima de batería añadida al excedente cerca del 100% de SoC [W]",
 	"LBL_chargeManagerMinCurrent": "Corriente mínima de ChargeManager para carga con excedente FV [A]",
 	"LBL_maxChargeCurrent": "Corriente máxima de carga para ChargeManager y ChargeNOW [A]",
-	"LBL_wallBoxList": "Lista de wallboxes"
+	"LBL_wallBoxList": "Lista de wallboxes",
+	"LBL_batteryMode": "Modo de batería doméstica",
+	"LBL_batteryModeDisabled": "Desactivado",
+	"LBL_batteryModeDisabledDescription": "Ignorar la batería doméstica; no se requiere un estado de SOC",
+	"LBL_batteryModeMinimumSoc": "SOC mínimo",
+	"LBL_batteryModeMinimumSocDescription": "Detener la carga del vehículo por debajo del SOC mínimo sin añadir potencia de batería",
+	"LBL_batteryModePriority": "Prioridad de batería",
+	"LBL_batteryModePriorityDescription": "Priorizar la batería y liberar gradualmente la bonificación configurada por encima del SOC mínimo",
+	"LBL_batterySocHysteresis": "Histéresis del SOC de la batería por debajo del mínimo",
+	"LBL_batterySocMaxAgeSeconds": "Antigüedad máxima del SOC de la batería (0 desactiva la comprobación)"
 }

@@ -4,6 +4,7 @@ import {
 	calculateOptimalChargeCurrent,
 	type ChargeManagerControllerInput,
 	decideChargeManager,
+	evaluateBatteryAvailability,
 	MAX_CHARGE_CURRENT,
 	MIN_CHARGE_CURRENT,
 	SHUTDOWN_DELAY_CYCLES,
@@ -21,6 +22,7 @@ describe("ChargeManager safety helpers", () => {
 			subtractChargerPower: false,
 			batterySoc: 70,
 			minBatterySoc: 70,
+			batteryMode: "priority" as const,
 			reservePower: 100,
 			maximumBatteryBonus: 2000,
 			maximumChargeCurrent: MAX_CHARGE_CURRENT,
@@ -113,6 +115,27 @@ describe("ChargeManager safety helpers", () => {
 			assert.equal(calculateOptimalChargeCurrent({ ...base, maximumBatteryBonus: 2300 }), 10);
 		});
 
+		it("applies the battery bonus only in priority mode", () => {
+			const base = { ...validInput, solarPower: 100, houseConsumption: 0, batterySoc: 100, reservePower: 100 };
+			// priority releases the full 2000 W bonus at 100 % SOC -> 8 A
+			assert.equal(calculateOptimalChargeCurrent({ ...base, batteryMode: "priority" }), 8);
+			// minimumSoc keeps the battery power for the house -> no surplus
+			assert.equal(calculateOptimalChargeCurrent({ ...base, batteryMode: "minimumSoc" }), 0);
+			// disabled needs no SOC at all
+			assert.equal(calculateOptimalChargeCurrent({ ...base, batteryMode: "disabled", batterySoc: null }), 0);
+		});
+
+		it("rejects a missing SOC only in the battery-aware modes", () => {
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, batterySoc: null }), null);
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, batteryMode: "minimumSoc", batterySoc: null }), null);
+			assert.notEqual(calculateOptimalChargeCurrent({ ...validInput, batteryMode: "disabled", batterySoc: null }), null);
+		});
+
+		it("never turns the battery bonus into a penalty below the minimum SOC", () => {
+			// 40 % SOC against a 70 % minimum would give a negative offset without the clamp
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, solarPower: 2400, houseConsumption: 0, reservePower: 0, batterySoc: 40 }), 10);
+		});
+
 		it("rejects a negative grid reserve or battery bonus", () => {
 			assert.equal(calculateOptimalChargeCurrent({ ...validInput, reservePower: -1 }), null);
 			assert.equal(calculateOptimalChargeCurrent({ ...validInput, maximumBatteryBonus: -1 }), null);
@@ -130,6 +153,48 @@ describe("ChargeManager safety helpers", () => {
 		});
 	});
 
+	describe("evaluateBatteryAvailability", () => {
+		const validInput = {
+			mode: "priority" as const,
+			batterySoc: 70,
+			minimumBatterySoc: 70,
+			batterySocAgeMs: 0,
+			maximumAgeSeconds: 300,
+			hysteresis: 2,
+			wasReady: false,
+		};
+
+		it("does not require a battery state in disabled mode", () => {
+			assert.deepEqual(
+				evaluateBatteryAvailability({
+					...validInput,
+					mode: "disabled",
+					batterySoc: null,
+					minimumBatterySoc: Number.NaN,
+					batterySocAgeMs: null,
+				}),
+				{ ready: true, reason: "disabled", batterySoc: null },
+			);
+		});
+
+		it("fails safe for missing and stale battery data", () => {
+			assert.equal(evaluateBatteryAvailability({ ...validInput, batterySoc: null }).reason, "invalid");
+			assert.equal(evaluateBatteryAvailability({ ...validInput, batterySocAgeMs: 300_001 }).reason, "stale");
+		});
+
+		it("retains readiness within the configured SOC hysteresis", () => {
+			assert.equal(evaluateBatteryAvailability({ ...validInput, batterySoc: 69 }).ready, false);
+			assert.equal(evaluateBatteryAvailability({ ...validInput, batterySoc: 70 }).ready, true);
+			assert.equal(evaluateBatteryAvailability({ ...validInput, batterySoc: 68, wasReady: true }).ready, true);
+			assert.equal(evaluateBatteryAvailability({ ...validInput, batterySoc: 67.9, wasReady: true }).ready, false);
+		});
+
+		it("allows disabling the age limit without accepting invalid SOC values", () => {
+			assert.equal(evaluateBatteryAvailability({ ...validInput, batterySocAgeMs: null, maximumAgeSeconds: 0 }).ready, true);
+			assert.equal(evaluateBatteryAvailability({ ...validInput, batterySoc: 101, maximumAgeSeconds: 0 }).reason, "invalid");
+		});
+	});
+
 	describe("decideChargeManager", () => {
 		function inputForTarget(targetCurrent: number, currentAmp = targetCurrent, shutdownDelay = 0, phases = 1): ChargeManagerControllerInput {
 			return {
@@ -139,6 +204,7 @@ describe("ChargeManager safety helpers", () => {
 				subtractChargerPower: false,
 				batterySoc: 70,
 				minBatterySoc: 70,
+				batteryMode: "priority",
 				reservePower: 100,
 				maximumBatteryBonus: 2000,
 				maximumChargeCurrent: MAX_CHARGE_CURRENT,

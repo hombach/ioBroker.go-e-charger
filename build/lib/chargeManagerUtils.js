@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateOptimalChargeCurrent = calculateOptimalChargeCurrent;
 exports.stepChargeCurrent = stepChargeCurrent;
 exports.updateShutdownDelay = updateShutdownDelay;
@@ -12,13 +13,40 @@ exports.START_CHARGE_CURRENT = 10;
 exports.SHUTDOWN_DELAY_CYCLES = 12;
 exports.DEFAULT_RESERVE_POWER = 100;
 exports.DEFAULT_MAXIMUM_BATTERY_BONUS = 2000;
+function evaluateBatteryAvailability(input) {
+    if (input.mode === "disabled") {
+        return { ready: true, reason: "disabled", batterySoc: null };
+    }
+    if (typeof input.batterySoc !== "number" ||
+        !Number.isFinite(input.batterySoc) ||
+        input.batterySoc < 0 ||
+        input.batterySoc > 100 ||
+        typeof input.minimumBatterySoc !== "number" ||
+        !Number.isFinite(input.minimumBatterySoc) ||
+        input.minimumBatterySoc < 0 ||
+        input.minimumBatterySoc > 100) {
+        return { ready: false, reason: "invalid", batterySoc: null };
+    }
+    if (input.maximumAgeSeconds > 0 &&
+        (input.batterySocAgeMs === null ||
+            !Number.isFinite(input.batterySocAgeMs) ||
+            input.batterySocAgeMs < 0 ||
+            input.batterySocAgeMs > input.maximumAgeSeconds * 1000)) {
+        return { ready: false, reason: "stale", batterySoc: input.batterySoc };
+    }
+    const stopThreshold = Math.max(0, input.minimumBatterySoc - input.hysteresis);
+    const ready = input.wasReady ? input.batterySoc >= stopThreshold : input.batterySoc >= input.minimumBatterySoc;
+    return {
+        ready,
+        reason: ready ? "available" : "below-minimum",
+        batterySoc: input.batterySoc,
+    };
+}
 function calculateOptimalChargeCurrent(input) {
     const numericInputs = [
         input.solarPower,
         input.houseConsumption,
         input.chargerPower,
-        input.batterySoc,
-        input.minBatterySoc,
         input.reservePower,
         input.maximumBatteryBonus,
         input.maximumChargeCurrent,
@@ -28,10 +56,6 @@ function calculateOptimalChargeCurrent(input) {
         return null;
     }
     if ((input.phases !== 1 && input.phases !== 3) ||
-        input.batterySoc < 0 ||
-        input.batterySoc > 100 ||
-        input.minBatterySoc < 0 ||
-        input.minBatterySoc > 100 ||
         input.reservePower < 0 ||
         input.maximumBatteryBonus < 0 ||
         !Number.isInteger(input.maximumChargeCurrent) ||
@@ -39,7 +63,19 @@ function calculateOptimalChargeCurrent(input) {
         input.maximumChargeCurrent > exports.MAX_CHARGE_CURRENT) {
         return null;
     }
-    const batteryOffset = input.minBatterySoc < 100 ? (input.maximumBatteryBonus / (100 - input.minBatterySoc)) * (input.batterySoc - input.minBatterySoc) : 0;
+    if (input.batteryMode !== "disabled" &&
+        (input.batterySoc === null ||
+            !Number.isFinite(input.batterySoc) ||
+            input.batterySoc < 0 ||
+            input.batterySoc > 100 ||
+            !Number.isFinite(input.minBatterySoc) ||
+            input.minBatterySoc < 0 ||
+            input.minBatterySoc > 100)) {
+        return null;
+    }
+    const batteryOffset = input.batteryMode === "priority" && input.batterySoc !== null && input.minBatterySoc < 100
+        ? Math.max(0, (input.maximumBatteryBonus / (100 - input.minBatterySoc)) * (input.batterySoc - input.minBatterySoc))
+        : 0;
     const availablePower = input.solarPower - input.houseConsumption + (input.subtractChargerPower ? input.chargerPower : 0) - input.reservePower + batteryOffset;
     const calculatedCurrent = Math.floor(availablePower / 230 / input.phases);
     return Math.max(0, Math.min(calculatedCurrent, input.maximumChargeCurrent));

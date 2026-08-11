@@ -61,6 +61,10 @@ export interface IWallboxInfo {
 	 */
 	MeasuredMaxChargeAmp: number;
 	/**
+	 * Whether the configured battery policy currently permits EV charging
+	 */
+	BatteryReady: boolean;
+	/**
 	 * MinAmp
 	 */
 	MinAmp: number;
@@ -210,7 +214,7 @@ export class ProjectUtils {
 	 * @param stateName - Full path to state, like 0_userdata.0.other.isSummer
 	 * @returns State object: {val: false, ack: true, ts: 1591117034451, …}, or null if error
 	 */
-	private async asyncGetForeignState(stateName: string): Promise<ioBroker.State | null> {
+	async asyncGetForeignState(stateName: string): Promise<ioBroker.State | null> {
 		try {
 			const stateObject = await this.adapter.getForeignObjectAsync(stateName); // Check state existence
 			if (!stateObject) {

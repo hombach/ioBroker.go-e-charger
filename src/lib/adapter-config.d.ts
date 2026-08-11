@@ -13,6 +13,9 @@ declare global {
 			chargeManagerMaxBatteryBonus: number;
 			chargeManagerMinCurrent: number;
 			maxChargeCurrent: number;
+			batteryMode: "disabled" | "minimumSoc" | "priority";
+			batterySocHysteresis: number;
+			batterySocMaxAgeSeconds: number;
 			wallBoxList: [
 				{
 					chargerName: string;

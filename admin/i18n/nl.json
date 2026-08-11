@@ -15,5 +15,14 @@
 	"LBL_chargeManagerMaxBatteryBonus": "Maximale batterijbonus die bij het surplus wordt opgeteld nabij 100% SoC [W]",
 	"LBL_chargeManagerMinCurrent": "Minimale ChargeManager-stroom voor laden met PV-overschot [A]",
 	"LBL_maxChargeCurrent": "Maximale laadstroom voor ChargeManager en ChargeNOW [A]",
-	"LBL_wallBoxList": "Wallbox-lijst"
+	"LBL_wallBoxList": "Wallbox-lijst",
+	"LBL_batteryMode": "Modus thuisbatterij",
+	"LBL_batteryModeDisabled": "Uitgeschakeld",
+	"LBL_batteryModeDisabledDescription": "Negeer de thuisbatterij; er is geen SOC-status vereist",
+	"LBL_batteryModeMinimumSoc": "Minimale SOC",
+	"LBL_batteryModeMinimumSocDescription": "Stop het laden van de auto onder de minimale SOC zonder batterijvermogen toe te voegen",
+	"LBL_batteryModePriority": "Batterijprioriteit",
+	"LBL_batteryModePriorityDescription": "Geef de batterij prioriteit en geef de ingestelde bonus geleidelijk vrij boven de minimale SOC",
+	"LBL_batterySocHysteresis": "SOC-hysterese van de batterij onder het minimum",
+	"LBL_batterySocMaxAgeSeconds": "Maximale leeftijd van batterij-SOC (0 schakelt de controle uit)"
 }

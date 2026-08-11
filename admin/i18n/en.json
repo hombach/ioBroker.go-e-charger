@@ -15,5 +15,14 @@
 	"LBL_wallBoxList": "Wallbox list",
 	"LBL_chargerName": "Charger name",
 	"LBL_ipAddress": "IP address of the go-eCharger",
-	"LBL_readOnlyMode": "Read-only mode - charging release is not sent to the charger (for use with RFID tags)"
+	"LBL_readOnlyMode": "Read-only mode - charging release is not sent to the charger (for use with RFID tags)",
+	"LBL_batteryMode": "Home battery mode",
+	"LBL_batteryModeDisabled": "Disabled",
+	"LBL_batteryModeDisabledDescription": "Ignore the home battery; no SOC state is required",
+	"LBL_batteryModeMinimumSoc": "Minimum SOC",
+	"LBL_batteryModeMinimumSocDescription": "Stop EV charging below the minimum SOC without adding battery power",
+	"LBL_batteryModePriority": "Battery priority",
+	"LBL_batteryModePriorityDescription": "Prioritize the battery and gradually release the configured bonus above the minimum SOC",
+	"LBL_batterySocHysteresis": "Battery SOC hysteresis below the minimum",
+	"LBL_batterySocMaxAgeSeconds": "Maximum battery SOC age (0 disables the check)"
 }

@@ -5,6 +5,40 @@ export const SHUTDOWN_DELAY_CYCLES = 12;
 export const DEFAULT_RESERVE_POWER = 100;
 export const DEFAULT_MAXIMUM_BATTERY_BONUS = 2000;
 
+/** Supported ways of incorporating a home battery into surplus charging. */
+export type BatteryMode = "disabled" | "minimumSoc" | "priority";
+
+/** Input used to decide whether the configured battery permits EV charging. */
+export interface BatteryAvailabilityInput {
+	/** Configured home-battery mode */
+	mode: BatteryMode;
+	/** Untrusted SOC state value */
+	batterySoc: unknown;
+	/** Untrusted minimum SOC state value */
+	minimumBatterySoc: unknown;
+	/** Age of the SOC state in milliseconds */
+	batterySocAgeMs: number | null;
+	/** Maximum accepted SOC age in seconds; zero disables the age check */
+	maximumAgeSeconds: number;
+	/** Configured SOC stop hysteresis */
+	hysteresis: number;
+	/** Whether the battery permitted charging in the previous cycle */
+	wasReady: boolean;
+}
+
+/** Stable explanation for a battery availability decision. */
+export type BatteryAvailabilityReason = "available" | "below-minimum" | "disabled" | "invalid" | "stale";
+
+/** Validated battery state used by the ChargeManager. */
+export interface BatteryAvailabilityDecision {
+	/** Whether surplus charging may continue */
+	ready: boolean;
+	/** Explanation for the battery decision */
+	reason: BatteryAvailabilityReason;
+	/** Validated SOC, or null when unavailable or disabled */
+	batterySoc: number | null;
+}
+
 /** Inputs used by the current surplus calculation. */
 export interface ChargeCalculationInput {
 	/** Current PV generation in watts */
@@ -15,10 +49,12 @@ export interface ChargeCalculationInput {
 	chargerPower: number;
 	/** Whether charger consumption is already part of household consumption */
 	subtractChargerPower: boolean;
-	/** Current home battery state of charge */
-	batterySoc: number;
+	/** Current home battery state of charge, or null when battery handling is disabled */
+	batterySoc: number | null;
 	/** Minimum home battery state of charge */
 	minBatterySoc: number;
+	/** Home-battery handling strategy */
+	batteryMode: BatteryMode;
 	/** Power kept as a grid reserve in watts */
 	reservePower: number;
 	/** Maximum power released by the priority battery curve in watts */
@@ -72,6 +108,51 @@ export interface ChargerCommand {
 }
 
 /**
+ * Validates battery data and applies the configured minimum-SOC hysteresis.
+ *
+ * The hysteresis only widens the range in which an already running controller
+ * keeps charging, so a battery hovering around its minimum SOC does not toggle
+ * the charge release every cycle.
+ *
+ * @param input Battery configuration, measurement, and previous readiness
+ * @returns Whether EV surplus charging may proceed
+ */
+export function evaluateBatteryAvailability(input: BatteryAvailabilityInput): BatteryAvailabilityDecision {
+	if (input.mode === "disabled") {
+		return { ready: true, reason: "disabled", batterySoc: null };
+	}
+	if (
+		typeof input.batterySoc !== "number" ||
+		!Number.isFinite(input.batterySoc) ||
+		input.batterySoc < 0 ||
+		input.batterySoc > 100 ||
+		typeof input.minimumBatterySoc !== "number" ||
+		!Number.isFinite(input.minimumBatterySoc) ||
+		input.minimumBatterySoc < 0 ||
+		input.minimumBatterySoc > 100
+	) {
+		return { ready: false, reason: "invalid", batterySoc: null };
+	}
+	if (
+		input.maximumAgeSeconds > 0 &&
+		(input.batterySocAgeMs === null ||
+			!Number.isFinite(input.batterySocAgeMs) ||
+			input.batterySocAgeMs < 0 ||
+			input.batterySocAgeMs > input.maximumAgeSeconds * 1000)
+	) {
+		return { ready: false, reason: "stale", batterySoc: input.batterySoc };
+	}
+
+	const stopThreshold = Math.max(0, input.minimumBatterySoc - input.hysteresis);
+	const ready = input.wasReady ? input.batterySoc >= stopThreshold : input.batterySoc >= input.minimumBatterySoc;
+	return {
+		ready,
+		reason: ready ? "available" : "below-minimum",
+		batterySoc: input.batterySoc,
+	};
+}
+
+/**
  * Calculates the optimal charging current and keeps the internal controller
  * target within its valid range. A target of 0 A means that charging should be
  * disabled; it must never be sent to the charger as a current setting.
@@ -84,8 +165,6 @@ export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): nu
 		input.solarPower,
 		input.houseConsumption,
 		input.chargerPower,
-		input.batterySoc,
-		input.minBatterySoc,
 		input.reservePower,
 		input.maximumBatteryBonus,
 		input.maximumChargeCurrent,
@@ -96,10 +175,6 @@ export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): nu
 	}
 	if (
 		(input.phases !== 1 && input.phases !== 3) ||
-		input.batterySoc < 0 ||
-		input.batterySoc > 100 ||
-		input.minBatterySoc < 0 ||
-		input.minBatterySoc > 100 ||
 		input.reservePower < 0 ||
 		input.maximumBatteryBonus < 0 ||
 		!Number.isInteger(input.maximumChargeCurrent) ||
@@ -108,8 +183,26 @@ export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): nu
 	) {
 		return null;
 	}
+	// a disabled home battery contributes nothing, so its SOC is allowed to be absent
+	if (
+		input.batteryMode !== "disabled" &&
+		(input.batterySoc === null ||
+			!Number.isFinite(input.batterySoc) ||
+			input.batterySoc < 0 ||
+			input.batterySoc > 100 ||
+			!Number.isFinite(input.minBatterySoc) ||
+			input.minBatterySoc < 0 ||
+			input.minBatterySoc > 100)
+	) {
+		return null;
+	}
 
-	const batteryOffset = input.minBatterySoc < 100 ? (input.maximumBatteryBonus / (100 - input.minBatterySoc)) * (input.batterySoc - input.minBatterySoc) : 0;
+	// only the priority mode releases battery power to the EV; the bonus never turns negative
+	// below the minimum SOC, that range is handled by evaluateBatteryAvailability instead
+	const batteryOffset =
+		input.batteryMode === "priority" && input.batterySoc !== null && input.minBatterySoc < 100
+			? Math.max(0, (input.maximumBatteryBonus / (100 - input.minBatterySoc)) * (input.batterySoc - input.minBatterySoc))
+			: 0;
 	const availablePower =
 		input.solarPower - input.houseConsumption + (input.subtractChargerPower ? input.chargerPower : 0) - input.reservePower + batteryOffset;
 	const calculatedCurrent = Math.floor(availablePower / 230 / input.phases);

@@ -98,13 +98,19 @@ available power =
   - home power consumption
   + wallbox power, if it is included in home power consumption
   - grid reserve
-  + battery SoC offset
+  + battery bonus (Battery priority mode only)
 
 target current = floor(available power / 230 V / active phases)
 ```
 
-Four settings on the standard configuration page tune this calculation:
+Seven settings on the ChargeManager configuration page tune this calculation:
 
+- **Home battery mode** (default _Battery priority_) – how the home battery is taken into account:
+    - _Disabled_ – no home battery is used. No SoC state has to be configured, and no battery power is ever assigned to the car.
+    - _Minimum SOC_ – EV charging is blocked below `Settings.Setpoint_HomeBatSoC`, but the battery never contributes power to the car.
+    - _Battery priority_ – as above, plus the battery bonus described below.
+- **Battery SoC hysteresis** [%] (default 0) – how far the SoC may fall below the minimum before a _running_ controller stops. It keeps a battery hovering around its minimum from toggling the charge release every cycle; starting still requires the full minimum SoC.
+- **Maximum battery SoC age** [s] (default 0 = off) – surplus control stops when the SoC state has not been updated within this time, so a dead helper state cannot silently keep the car charging.
 - **Grid reserve power** [W] (default 100) – power kept free on the grid connection instead of being assigned to the car. Increase it to keep more safety headroom; set it to `0` to hand the full surplus to the car.
 - **Maximum battery bonus** [W] (default 2000) – how much extra power, on top of the pure solar surplus, may be drawn while the home battery is above its minimum state of charge. The bonus is `0` when the battery is exactly at the minimum SoC and grows linearly to this maximum as the battery approaches 100 %, so a fuller battery lets the car charge faster. Set it to `0` to charge purely from the measured solar surplus without ever discharging the home battery into the car.
 - **Minimum ChargeManager current** [A] (default 6) – the surplus charging current below which the charger is switched off after a short delay. This applies to PV surplus charging only.
@@ -112,7 +118,7 @@ Four settings on the standard configuration page tune this calculation:
 
 > **⚠️ Do not set the maximum charging current higher than your go-e Charger hardware and your electrical installation support.** go-e Charger models are rated for different maximum currents (e.g. 16 A or 32 A), and the actual limit also depends on your cable, plug and wiring. Setting a value above the hardware/installation rating can trip protection devices or damage equipment. When in doubt, keep the default of 16 A.
 
-Below `Settings.Setpoint_HomeBatSoC`, EV charging is disabled so that the home battery has priority. Charging starts once the internal target reaches 10 A (or the minimum current if it is set higher). The calculated current is limited to the configured maximum, and the internal current target changes by at most 1 A per poll cycle to reduce sudden changes.
+In the battery-aware modes, EV charging is disabled below `Settings.Setpoint_HomeBatSoC` so that the home battery has priority. Charging starts once the internal target reaches 10 A (or the minimum current if it is set higher). The calculated current is limited to the configured maximum, and the internal current target changes by at most 1 A per poll cycle to reduce sudden changes.
 
 #### Enabling ChargeManager
 
@@ -179,6 +185,11 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+
+- (typhosj) ChargeManager: added home-battery modes (disabled, minimum SoC, battery priority); installations without a home battery no longer need a constant helper state
+- (typhosj) ChargeManager: added a battery SoC hysteresis and an optional maximum SoC age so surplus control stops on stale battery data
+
 ### 1.5.0 (2026-08-25)
 
 - (hombach) ChargeManager: grid reserve power and maximum battery bonus are now configurable (defaults 100 W / 2000 W) (#852)
