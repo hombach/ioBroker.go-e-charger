@@ -628,7 +628,7 @@ class go_e_charger extends utils.Adapter {
         const Phases = this.wallboxInfoList[iWB].HardwareMin3 && this.wallboxInfoList[iWB].EnabledPhases
             ? this.wallboxInfoList[iWB].EnabledPhases
             : this.wallboxInfoList[iWB].GridPhases;
-        const optimalCurrent = (0, chargeManagerUtils_1.calculateOptimalChargeCurrent)({
+        const decision = (0, chargeManagerUtils_1.decideChargeManager)({
             solarPower,
             houseConsumption,
             chargerPower: this.wallboxInfoList[iWB].ChargePower,
@@ -636,25 +636,26 @@ class go_e_charger extends utils.Adapter {
             batterySoc: batSoC,
             minBatterySoc: minHomeBatVal,
             phases: Phases,
+            state: {
+                currentAmp: this.wallboxInfoList[iWB].SetAmp,
+                shutdownDelay: this.wallboxInfoList[iWB].DelayOff,
+            },
         });
-        if (optimalCurrent === null) {
+        if (decision.optimalCurrent === null) {
             this.log.warn(`ChargeManager inputs are invalid for charger ${iWB}; charging will be disabled`);
             await this.stopChargeManager(`Invalid ChargeManager input`, iWB);
             return;
         }
-        this.wallboxInfoList[iWB].SetOptAmp = optimalCurrent;
+        this.wallboxInfoList[iWB].SetOptAmp = decision.optimalCurrent;
         this.log.debug(`Optimal charging current would be: ${this.wallboxInfoList[iWB].SetOptAmp} A`);
-        this.wallboxInfoList[iWB].SetAmp = (0, chargeManagerUtils_1.stepChargeCurrent)(this.wallboxInfoList[iWB].SetAmp, this.wallboxInfoList[iWB].SetOptAmp);
+        this.wallboxInfoList[iWB].SetAmp = decision.nextState.currentAmp;
+        this.wallboxInfoList[iWB].DelayOff = decision.nextState.shutdownDelay;
         this.log.debug(`ZielAmpere: ${this.wallboxInfoList[iWB].SetAmp} A; Solar: ${solarPower} W; House: ${houseConsumption} W; Charger: ${this.wallboxInfoList[iWB].ChargePower} W`);
-        this.wallboxInfoList[iWB].DelayOff = (0, chargeManagerUtils_1.updateShutdownDelay)(this.wallboxInfoList[iWB].SetAmp, this.wallboxInfoList[iWB].MinAmp, this.wallboxInfoList[iWB].DelayOff);
-        if (this.wallboxInfoList[iWB].SetAmp > 5 + 4) {
+        if (decision.action === "enable") {
             await this.Charge_Config("1", this.wallboxInfoList[iWB].SetAmp, `Charging current: ${this.wallboxInfoList[iWB].SetAmp} A`, iWB);
         }
-        else if (this.wallboxInfoList[iWB].SetAmp < this.wallboxInfoList[iWB].MinAmp) {
-            if (this.wallboxInfoList[iWB].DelayOff > 12) {
-                await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `Insufficient surplus`, iWB);
-                this.wallboxInfoList[iWB].DelayOff = 0;
-            }
+        else if (decision.action === "disable") {
+            await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `Insufficient surplus`, iWB);
         }
     }
     isLikeEmpty(inputVar) {

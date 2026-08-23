@@ -175,6 +175,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 ### **WORK IN PROGRESS**
 
+- (typhosj) refactored the ChargeManager control decision into a deterministic, unit-tested function (#846); behavior unchanged
 - (hombach) fixed vulnerabilities
 - (hombach) updated dependencies
 

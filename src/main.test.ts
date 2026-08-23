@@ -2,8 +2,12 @@ import { strict as assert } from "node:assert";
 import {
 	buildChargerCommands,
 	calculateOptimalChargeCurrent,
+	type ChargeManagerControllerInput,
+	decideChargeManager,
 	MAX_CHARGE_CURRENT,
 	MIN_CHARGE_CURRENT,
+	SHUTDOWN_DELAY_CYCLES,
+	START_CHARGE_CURRENT,
 	stepChargeCurrent,
 	updateShutdownDelay,
 } from "./lib/chargeManagerUtils";
@@ -65,6 +69,113 @@ describe("ChargeManager safety helpers", () => {
 				}),
 				16,
 			);
+		});
+
+		it("adds charger consumption when it is included in household consumption", () => {
+			assert.equal(
+				calculateOptimalChargeCurrent({
+					...validInput,
+					solarPower: 100,
+					houseConsumption: 0,
+					chargerPower: 2300,
+					subtractChargerPower: true,
+				}),
+				10,
+			);
+			assert.equal(
+				calculateOptimalChargeCurrent({
+					...validInput,
+					solarPower: 100,
+					houseConsumption: 0,
+					chargerPower: 2300,
+					subtractChargerPower: false,
+				}),
+				0,
+			);
+		});
+	});
+
+	describe("decideChargeManager", () => {
+		function inputForTarget(targetCurrent: number, currentAmp = targetCurrent, shutdownDelay = 0, phases = 1): ChargeManagerControllerInput {
+			return {
+				solarPower: targetCurrent * 230 * phases + 100,
+				houseConsumption: 0,
+				chargerPower: 0,
+				subtractChargerPower: false,
+				batterySoc: 70,
+				minBatterySoc: 70,
+				phases,
+				state: { currentAmp, shutdownDelay },
+			};
+		}
+
+		const boundaryCases = [
+			{ current: 5, action: "hold", reason: "shutdown-delay", delay: 1 },
+			{ current: 6, action: "hold", reason: "hysteresis", delay: 0 },
+			{ current: 9, action: "hold", reason: "hysteresis", delay: 0 },
+			{ current: 10, action: "enable", reason: "charging-current", delay: 0 },
+			{ current: 16, action: "enable", reason: "charging-current", delay: 0 },
+		] as const;
+
+		for (const testCase of boundaryCases) {
+			it(`returns ${testCase.action} at ${testCase.current} A`, () => {
+				const decision = decideChargeManager(inputForTarget(testCase.current));
+
+				assert.equal(decision.action, testCase.action);
+				assert.equal(decision.reason, testCase.reason);
+				assert.equal(decision.optimalCurrent, testCase.current);
+				assert.deepEqual(decision.nextState, {
+					currentAmp: testCase.current,
+					shutdownDelay: testCase.delay,
+				});
+			});
+		}
+
+		it("starts charging when the current ramp reaches 10 A", () => {
+			const decision = decideChargeManager(inputForTarget(16, START_CHARGE_CURRENT - 1));
+
+			assert.equal(decision.action, "enable");
+			assert.equal(decision.reason, "charging-current");
+			assert.equal(decision.optimalCurrent, MAX_CHARGE_CURRENT);
+			assert.equal(decision.nextState.currentAmp, START_CHARGE_CURRENT);
+		});
+
+		it("holds in the hysteresis range while ramping down", () => {
+			const decision = decideChargeManager(inputForTarget(0, START_CHARGE_CURRENT, SHUTDOWN_DELAY_CYCLES));
+
+			assert.equal(decision.action, "hold");
+			assert.equal(decision.reason, "hysteresis");
+			assert.deepEqual(decision.nextState, { currentAmp: START_CHARGE_CURRENT - 1, shutdownDelay: 0 });
+		});
+
+		it("disables after the twelfth completed shutdown-delay cycle", () => {
+			const beforeLimit = decideChargeManager(inputForTarget(5, 5, SHUTDOWN_DELAY_CYCLES - 1));
+			assert.equal(beforeLimit.action, "hold");
+			assert.equal(beforeLimit.nextState.shutdownDelay, SHUTDOWN_DELAY_CYCLES);
+
+			const afterLimit = decideChargeManager(inputForTarget(5, 5, SHUTDOWN_DELAY_CYCLES));
+			assert.equal(afterLimit.action, "disable");
+			assert.equal(afterLimit.reason, "insufficient-surplus");
+			assert.equal(afterLimit.nextState.shutdownDelay, 0);
+		});
+
+		it("calculates the same start threshold for three-phase charging", () => {
+			const decision = decideChargeManager(inputForTarget(START_CHARGE_CURRENT, START_CHARGE_CURRENT, 0, 3));
+
+			assert.equal(decision.optimalCurrent, START_CHARGE_CURRENT);
+			assert.equal(decision.action, "enable");
+		});
+
+		it("requests a fail-safe stop and resets state for invalid inputs", () => {
+			const decision = decideChargeManager({
+				...inputForTarget(START_CHARGE_CURRENT, START_CHARGE_CURRENT, 8),
+				phases: 0,
+			});
+
+			assert.equal(decision.action, "disable");
+			assert.equal(decision.reason, "invalid-input");
+			assert.equal(decision.optimalCurrent, null);
+			assert.deepEqual(decision.nextState, { currentAmp: 0, shutdownDelay: 0 });
 		});
 	});
 
