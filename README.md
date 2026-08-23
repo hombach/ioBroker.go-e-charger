@@ -78,7 +78,7 @@ Configure the object IDs of the following states:
 | Home power consumption       | Total current household demand | W    | Positive consumption |
 | Home battery state of charge | Current battery charge level   | %    | 0 to 100             |
 
-All three states must contain numeric values. Power values in kW must be converted to W before they are selected. A grid import/export state cannot be used directly because ChargeManager currently expects separate generation and consumption values.
+All configured states must contain numeric values. Power values in kW must be converted to W before they are selected. A grid import/export state cannot be used directly because ChargeManager currently expects separate generation and consumption values.
 
 If no home battery is installed, create a numeric helper state and select it as the battery state of charge. Set this helper to the **same constant value** as `Settings.Setpoint_HomeBatSoC` (for example `70` for both). This keeps the battery offset at zero, so ChargeManager charges purely from the available PV surplus.
 
@@ -153,7 +153,7 @@ Before relying on automatic charging, verify the selected input states in the io
 6. `Wallbox_0.info.connection` is `true`.
 7. `Wallbox_0.Power.Charge`, `Wallbox_0.Power.GridPhases`, and, on supported hardware, `Wallbox_0.Power.EnabledPhases` contain plausible values.
 
-Charging may take several poll cycles to start because the internal target increases by only 1 A per cycle. With the default 10-second cycle and an initial target of 0 A, reaching the 10 A starting point can take approximately 100 seconds.
+Charging may take several poll cycles to start because the internal target increases by only 1 A per cycle. With the default 10-second cycle and an initial target of 0 A, reaching the default 10 A starting point can take approximately 100 seconds.
 
 ChargeManager is currently intended to control one charger. Enabling it for multiple chargers at the same time results in each charger independently using the same surplus and can cause incorrect allocation.
 
