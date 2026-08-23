@@ -52,7 +52,7 @@ let totalChargePower = 0;
 let chargeManagerReservePower = chargeManagerUtils_1.DEFAULT_RESERVE_POWER;
 let chargeManagerMaxBatteryBonus = chargeManagerUtils_1.DEFAULT_MAXIMUM_BATTERY_BONUS;
 let chargeManagerMinCurrent = chargeManagerUtils_1.MIN_CHARGE_CURRENT;
-let chargeManagerMaxCurrent = chargeManagerUtils_1.MAX_CHARGE_CURRENT;
+let maxChargeCurrent = chargeManagerUtils_1.MAX_CHARGE_CURRENT;
 class go_e_charger extends utils.Adapter {
     projectUtils = new projectUtils_1.ProjectUtils(this);
     wallboxInfoList = [];
@@ -88,13 +88,13 @@ class go_e_charger extends utils.Adapter {
         chargeManagerMaxBatteryBonus = this.validateNonNegativeConfig(this.config.chargeManagerMaxBatteryBonus, chargeManagerUtils_1.DEFAULT_MAXIMUM_BATTERY_BONUS, "chargeManagerMaxBatteryBonus");
         this.log.debug(`ChargeManager reserve: ${chargeManagerReservePower} W, max battery bonus: ${chargeManagerMaxBatteryBonus} W`);
         chargeManagerMinCurrent = this.validateBoundedIntConfig(this.config.chargeManagerMinCurrent, chargeManagerUtils_1.MIN_CHARGE_CURRENT, chargeManagerUtils_1.MIN_CHARGE_CURRENT, chargeManagerUtils_1.MAX_CHARGE_CURRENT, "chargeManagerMinCurrent");
-        chargeManagerMaxCurrent = this.validateBoundedIntConfig(this.config.chargeManagerMaxCurrent, chargeManagerUtils_1.MAX_CHARGE_CURRENT, chargeManagerUtils_1.START_CHARGE_CURRENT, chargeManagerUtils_1.MAX_CHARGE_CURRENT, "chargeManagerMaxCurrent");
-        if (chargeManagerMinCurrent > chargeManagerMaxCurrent) {
-            this.log.warn(`chargeManagerMinCurrent (${chargeManagerMinCurrent} A) exceeds chargeManagerMaxCurrent (${chargeManagerMaxCurrent} A); using ${chargeManagerUtils_1.MIN_CHARGE_CURRENT}/${chargeManagerUtils_1.MAX_CHARGE_CURRENT} A`);
+        maxChargeCurrent = this.validateBoundedIntConfig(this.config.maxChargeCurrent, chargeManagerUtils_1.MAX_CHARGE_CURRENT, chargeManagerUtils_1.START_CHARGE_CURRENT, chargeManagerUtils_1.MAX_CHARGE_CURRENT, "maxChargeCurrent");
+        if (chargeManagerMinCurrent > maxChargeCurrent) {
+            this.log.warn(`chargeManagerMinCurrent (${chargeManagerMinCurrent} A) exceeds maxChargeCurrent (${maxChargeCurrent} A); using ${chargeManagerUtils_1.MIN_CHARGE_CURRENT}/${chargeManagerUtils_1.MAX_CHARGE_CURRENT} A`);
             chargeManagerMinCurrent = chargeManagerUtils_1.MIN_CHARGE_CURRENT;
-            chargeManagerMaxCurrent = chargeManagerUtils_1.MAX_CHARGE_CURRENT;
+            maxChargeCurrent = chargeManagerUtils_1.MAX_CHARGE_CURRENT;
         }
-        this.log.debug(`ChargeManager current range: ${chargeManagerMinCurrent}-${chargeManagerMaxCurrent} A`);
+        this.log.debug(`ChargeManager current range: ${chargeManagerMinCurrent}-${maxChargeCurrent} A`);
         const wallBoxList = Array.isArray(this.config.wallBoxList) ? this.config.wallBoxList : [];
         this.config.wallBoxList = wallBoxList;
         if (!wallBoxList.length) {
@@ -117,7 +117,7 @@ class go_e_charger extends utils.Adapter {
                 EnabledPhases: 0,
                 MeasuredMaxChargeAmp: 0,
                 MinAmp: 6,
-                MaxAmp: chargeManagerMaxCurrent,
+                MaxAmp: maxChargeCurrent,
                 DelayOff: 0,
                 CurrentHysteresis: 0,
                 SetOptAmp: 5,
@@ -382,7 +382,7 @@ class go_e_charger extends utils.Adapter {
                     await this.Read_ChargerAPIV2(iWB);
                 }
                 if (this.wallboxInfoList[iWB].ChargeNOW) {
-                    const chargeNowCurrent = Math.min(this.wallboxInfoList[iWB].ChargeCurrent, chargeManagerMaxCurrent);
+                    const chargeNowCurrent = Math.min(this.wallboxInfoList[iWB].ChargeCurrent, maxChargeCurrent);
                     await this.Charge_Config("1", chargeNowCurrent, `activate go-eCharger for forced charging`, iWB);
                     await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
                     if (this.wallboxInfoList[iWB].HardwareMin3) {
@@ -673,7 +673,7 @@ class go_e_charger extends utils.Adapter {
             minBatterySoc: minHomeBatVal,
             reservePower: chargeManagerReservePower,
             maximumBatteryBonus: chargeManagerMaxBatteryBonus,
-            maximumChargeCurrent: chargeManagerMaxCurrent,
+            maximumChargeCurrent: maxChargeCurrent,
             minimumChargeCurrent: chargeManagerMinCurrent,
             phases: Phases,
             state: {

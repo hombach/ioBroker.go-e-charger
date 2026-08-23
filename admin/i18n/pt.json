@@ -13,6 +13,6 @@
 	"LBL_chargeManagerReservePower": "Potência de reserva da rede mantida livre em vez de carregar o carro [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Bônus máximo da bateria adicionado ao excedente perto de 100% de SoC [W]",
 	"LBL_chargeManagerMinCurrent": "Corrente mínima do ChargeManager para carregamento com excedente FV [A]",
-	"LBL_chargeManagerMaxCurrent": "Corrente de carga máxima para ChargeManager e ChargeNOW [A]",
+	"LBL_maxChargeCurrent": "Corrente de carga máxima para ChargeManager e ChargeNOW [A]",
 	"LBL_wallBoxList": "Lista de wallboxes"
 }

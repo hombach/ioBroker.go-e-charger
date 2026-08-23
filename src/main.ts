@@ -25,7 +25,7 @@ let totalChargePower = 0;
 let chargeManagerReservePower = DEFAULT_RESERVE_POWER;
 let chargeManagerMaxBatteryBonus = DEFAULT_MAXIMUM_BATTERY_BONUS;
 let chargeManagerMinCurrent = MIN_CHARGE_CURRENT;
-let chargeManagerMaxCurrent = MAX_CHARGE_CURRENT;
+let maxChargeCurrent = MAX_CHARGE_CURRENT;
 
 class go_e_charger extends utils.Adapter {
 	private projectUtils = new ProjectUtils(this);
@@ -86,21 +86,21 @@ class go_e_charger extends utils.Adapter {
 			MAX_CHARGE_CURRENT,
 			"chargeManagerMinCurrent",
 		);
-		chargeManagerMaxCurrent = this.validateBoundedIntConfig(
-			this.config.chargeManagerMaxCurrent,
+		maxChargeCurrent = this.validateBoundedIntConfig(
+			this.config.maxChargeCurrent,
 			MAX_CHARGE_CURRENT,
 			START_CHARGE_CURRENT,
 			MAX_CHARGE_CURRENT,
-			"chargeManagerMaxCurrent",
+			"maxChargeCurrent",
 		);
-		if (chargeManagerMinCurrent > chargeManagerMaxCurrent) {
+		if (chargeManagerMinCurrent > maxChargeCurrent) {
 			this.log.warn(
-				`chargeManagerMinCurrent (${chargeManagerMinCurrent} A) exceeds chargeManagerMaxCurrent (${chargeManagerMaxCurrent} A); using ${MIN_CHARGE_CURRENT}/${MAX_CHARGE_CURRENT} A`,
+				`chargeManagerMinCurrent (${chargeManagerMinCurrent} A) exceeds maxChargeCurrent (${maxChargeCurrent} A); using ${MIN_CHARGE_CURRENT}/${MAX_CHARGE_CURRENT} A`,
 			);
 			chargeManagerMinCurrent = MIN_CHARGE_CURRENT;
-			chargeManagerMaxCurrent = MAX_CHARGE_CURRENT;
+			maxChargeCurrent = MAX_CHARGE_CURRENT;
 		}
-		this.log.debug(`ChargeManager current range: ${chargeManagerMinCurrent}-${chargeManagerMaxCurrent} A`);
+		this.log.debug(`ChargeManager current range: ${chargeManagerMinCurrent}-${maxChargeCurrent} A`);
 
 		const wallBoxList = Array.isArray(this.config.wallBoxList) ? this.config.wallBoxList : [];
 		// normalize the config to the guarded array so all later accesses (firstStart, StateMachine,
@@ -127,7 +127,7 @@ class go_e_charger extends utils.Adapter {
 				EnabledPhases: 0,
 				MeasuredMaxChargeAmp: 0,
 				MinAmp: 6,
-				MaxAmp: chargeManagerMaxCurrent,
+				MaxAmp: maxChargeCurrent,
 				DelayOff: 0,
 				CurrentHysteresis: 0,
 				SetOptAmp: 5,
@@ -486,7 +486,7 @@ class go_e_charger extends utils.Adapter {
 
 				if (this.wallboxInfoList[iWB].ChargeNOW) {
 					// Charge-NOW is enabled - the configured maximum charging current caps ChargeNOW as well
-					const chargeNowCurrent = Math.min(this.wallboxInfoList[iWB].ChargeCurrent, chargeManagerMaxCurrent);
+					const chargeNowCurrent = Math.min(this.wallboxInfoList[iWB].ChargeCurrent, maxChargeCurrent);
 					await this.Charge_Config("1", chargeNowCurrent, `activate go-eCharger for forced charging`, iWB); // keep active charging current!!
 					await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
 					if (this.wallboxInfoList[iWB].HardwareMin3) {
@@ -1194,7 +1194,7 @@ class go_e_charger extends utils.Adapter {
 			minBatterySoc: minHomeBatVal,
 			reservePower: chargeManagerReservePower,
 			maximumBatteryBonus: chargeManagerMaxBatteryBonus,
-			maximumChargeCurrent: chargeManagerMaxCurrent,
+			maximumChargeCurrent: maxChargeCurrent,
 			minimumChargeCurrent: chargeManagerMinCurrent,
 			phases: Phases,
 			state: {

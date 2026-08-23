@@ -12,7 +12,7 @@ declare global {
 			chargeManagerReservePower: number;
 			chargeManagerMaxBatteryBonus: number;
 			chargeManagerMinCurrent: number;
-			chargeManagerMaxCurrent: number;
+			maxChargeCurrent: number;
 			wallBoxList: [
 				{
 					chargerName: string;
