@@ -15,6 +15,10 @@
 This adapter integrates one or more go-e Charger wallboxes into your ioBroker home automation. It cyclically polls each wallbox via its local HTTP API, provides all relevant data as ioBroker states, and lets you control charging directly from your smart home.
 
 ## Changelog - OLD CHANGES
+## 1.2.0 (2026-07-12)
+
+- (hombach) added statisticsGlobal.chargePower state with the current total charging power of all chargers
+- (hombach) removed chai-based unit test dependencies; modernized test harness to Node.js assert (fixes Appveyor, #836)
 
 ## 1.1.0 (2026-07-05)
 

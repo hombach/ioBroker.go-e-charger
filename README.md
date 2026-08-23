@@ -172,8 +172,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.4.1 (2026-08-23)
 
 - (typhosj) refactored the ChargeManager control decision into a deterministic, unit-tested function (#846); behavior unchanged
 - (hombach) fixed vulnerabilities
@@ -206,11 +205,6 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (typhosj) added ChargeManager PV surplus configuration guide (#842)
 - (hombach) corrected no-battery helper-state recommendation for ChargeManager
 - (hombach) updated dependencies
-
-### 1.2.0 (2026-07-12)
-
-- (hombach) added statisticsGlobal.chargePower state with the current total charging power of all chargers
-- (hombach) removed chai-based unit test dependencies; modernized test harness to Node.js assert (fixes Appveyor, #836)
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 
