@@ -6,6 +6,7 @@
 	"LBL_ipAddress": "go-eCharger 的 IP 地址",
 	"LBL_readOnlyMode": "只读模式 - 充电许可不会发送到充电桩（用于 RFID 标签）",
 	"LBL_standardSettings": "标准设置",
+	"LBL_chargeManagerSettings": "ChargeManager 设置",
 	"LBL_stateHomeBatSoc": "家庭电池当前充电状态的对象ID [%]",
 	"LBL_stateHomePowerConsumption": "家庭当前用电量的对象ID [W]",
 	"LBL_stateHomeSolarPower": "当前可用太阳能功率的对象ID [W]",

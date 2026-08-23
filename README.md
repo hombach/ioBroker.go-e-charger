@@ -185,6 +185,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) ChargeManager: grid reserve power and maximum battery bonus are now configurable (defaults 100 W / 2000 W) (#852)
 - (hombach) ChargeManager: minimum and maximum surplus charging current are now configurable, with the maximum raised to up to 32 A (#852)
 - (hombach) the configurable maximum charging current now caps ChargeNOW as well
+- (hombach) admin: moved the ChargeManager settings into their own configuration tab, separate from the standard settings
 - (hombach) updated dependencies
 
 ### 1.4.1 (2026-08-23)

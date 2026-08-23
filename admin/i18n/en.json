@@ -2,6 +2,7 @@
 	"ERR_minCurrentAboveMax": "Minimum current must be less than or equal to maximum current",
 	"ERR_maxCurrentBelowMin": "Maximum current must be greater than or equal to minimum current",
 	"LBL_standardSettings": "Standard settings",
+	"LBL_chargeManagerSettings": "ChargeManager settings",
 	"LBL_cycleTime": "Time between data polls from the charger [ms]",
 	"LBL_stateHomeSolarPower": "Object ID for the currently available solar power [W]",
 	"LBL_stateHomeBatSoc": "Object ID for the current state of charge of the home battery [%]",

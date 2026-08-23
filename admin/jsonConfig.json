@@ -19,7 +19,56 @@
 					"xl": 6,
 					"newLine": true
 				},
-
+				"wallBoxList": {
+					"type": "accordion",
+					"titleAttr": "chargerName",
+					"label": "LBL_wallBoxList",
+					"xs": 12,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12,
+					"items": [
+						{
+							"type": "text",
+							"label": "LBL_chargerName",
+							"attr": "chargerName",
+							"maxLength": 20,
+							"xs": 12,
+							"sm": 12,
+							"md": 6,
+							"lg": 6,
+							"xl": 4
+						},
+						{
+							"type": "text",
+							"label": "LBL_ipAddress",
+							"attr": "ipAddress",
+							"maxLength": 15,
+							"xs": 12,
+							"sm": 12,
+							"md": 6,
+							"lg": 6,
+							"xl": 4
+						},
+						{
+							"type": "checkbox",
+							"label": "LBL_readOnlyMode",
+							"attr": "readOnlyMode",
+							"xs": 12,
+							"sm": 12,
+							"md": 6,
+							"lg": 6,
+							"xl": 4
+						}
+					]
+				}
+			}
+		},
+		"_ChargeManagerTab": {
+			"type": "panel",
+			"label": "LBL_chargeManagerSettings",
+			"items": {
 				"stateHomeSolarPower": {
 					"type": "objectId",
 					"label": "LBL_stateHomeSolarPower",
@@ -40,7 +89,6 @@
 					"xl": 6,
 					"newLine": false
 				},
-
 				"stateHomePowerConsumption": {
 					"type": "objectId",
 					"label": "LBL_stateHomePowerConsumption",
@@ -126,50 +174,6 @@
 					"lg": 6,
 					"xl": 6,
 					"newLine": false
-				},
-				"wallBoxList": {
-					"type": "accordion",
-					"titleAttr": "chargerName",
-					"label": "LBL_wallBoxList",
-					"xs": 12,
-					"sm": 12,
-					"md": 12,
-					"lg": 12,
-					"xl": 12,
-					"items": [
-						{
-							"type": "text",
-							"label": "LBL_chargerName",
-							"attr": "chargerName",
-							"maxLength": 20,
-							"xs": 12,
-							"sm": 12,
-							"md": 6,
-							"lg": 6,
-							"xl": 4
-						},
-						{
-							"type": "text",
-							"label": "LBL_ipAddress",
-							"attr": "ipAddress",
-							"maxLength": 15,
-							"xs": 12,
-							"sm": 12,
-							"md": 6,
-							"lg": 6,
-							"xl": 4
-						},
-						{
-							"type": "checkbox",
-							"label": "LBL_readOnlyMode",
-							"attr": "readOnlyMode",
-							"xs": 12,
-							"sm": 12,
-							"md": 6,
-							"lg": 6,
-							"xl": 4
-						}
-					]
 				}
 			}
 		}

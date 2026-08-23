@@ -6,6 +6,7 @@
 	"LBL_ipAddress": "Adresse IP du go-eCharger",
 	"LBL_readOnlyMode": "Mode lecture seule - l'autorisation de charge n'est pas envoyée à la borne (pour l'utilisation de badges RFID)",
 	"LBL_standardSettings": "Paramètres standard",
+	"LBL_chargeManagerSettings": "Paramètres du ChargeManager",
 	"LBL_stateHomeBatSoc": "ID d'objet pour l'état de charge actuel de la batterie domestique [%]",
 	"LBL_stateHomePowerConsumption": "ID d'objet pour la consommation électrique actuelle du domicile [W]",
 	"LBL_stateHomeSolarPower": "ID d'objet pour la puissance solaire actuellement disponible [W]",

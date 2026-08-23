@@ -6,6 +6,7 @@
 	"LBL_ipAddress": "Indirizzo IP del go-eCharger",
 	"LBL_readOnlyMode": "Modalità di sola lettura - l'autorizzazione alla ricarica non viene inviata alla wallbox (per l'uso di tag RFID)",
 	"LBL_standardSettings": "Impostazioni standard",
+	"LBL_chargeManagerSettings": "Impostazioni ChargeManager",
 	"LBL_stateHomeBatSoc": "ID oggetto per l'attuale stato di carica della batteria domestica [%]",
 	"LBL_stateHomePowerConsumption": "ID oggetto per il consumo elettrico domestico attuale [W]",
 	"LBL_stateHomeSolarPower": "ID oggetto per la potenza solare attualmente disponibile [W]",

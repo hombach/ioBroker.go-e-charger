@@ -6,6 +6,7 @@
 	"LBL_ipAddress": "IP-адрес go-eCharger",
 	"LBL_readOnlyMode": "Режим только для чтения - разрешение на зарядку не отправляется на зарядную станцию (для использования RFID-меток)",
 	"LBL_standardSettings": "Стандартные настройки",
+	"LBL_chargeManagerSettings": "Настройки ChargeManager",
 	"LBL_stateHomeBatSoc": "ID объекта для текущего уровня заряда домашнего аккумулятора [%]",
 	"LBL_stateHomePowerConsumption": "ID объекта для текущего энергопотребления дома [Вт]",
 	"LBL_stateHomeSolarPower": "ID объекта для текущей доступной солнечной мощности [Вт]",
