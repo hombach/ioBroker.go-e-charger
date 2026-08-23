@@ -103,12 +103,16 @@ available power =
 target current = floor(available power / 230 V / active phases)
 ```
 
-Two settings on the standard configuration page tune this calculation:
+Four settings on the standard configuration page tune this calculation:
 
 - **Grid reserve power** [W] (default 100) – power kept free on the grid connection instead of being assigned to the car. Increase it to keep more safety headroom; set it to `0` to hand the full surplus to the car.
 - **Maximum battery bonus** [W] (default 2000) – how much extra power, on top of the pure solar surplus, may be drawn while the home battery is above its minimum state of charge. The bonus is `0` when the battery is exactly at the minimum SoC and grows linearly to this maximum as the battery approaches 100 %, so a fuller battery lets the car charge faster. Set it to `0` to charge purely from the measured solar surplus without ever discharging the home battery into the car.
+- **Minimum ChargeManager current** [A] (default 6) – the surplus charging current below which the charger is switched off after a short delay. This applies to PV surplus charging only.
+- **Maximum charging current** [A] (default 16, up to 32) – the highest current the adapter will ever assign. It caps **both** ChargeManager (PV surplus) **and** ChargeNOW.
 
-Below `Settings.Setpoint_HomeBatSoC`, EV charging is disabled so that the home battery has priority. The calculated current is limited to a maximum of 16 A, and the internal current target changes by at most 1 A per poll cycle to reduce sudden changes.
+> **⚠️ Do not set the maximum charging current higher than your go-e Charger hardware and your electrical installation support.** go-e Charger models are rated for different maximum currents (e.g. 16 A or 32 A), and the actual limit also depends on your cable, plug and wiring. Setting a value above the hardware/installation rating can trip protection devices or damage equipment. When in doubt, keep the default of 16 A.
+
+Below `Settings.Setpoint_HomeBatSoC`, EV charging is disabled so that the home battery has priority. Charging starts once the internal target reaches 10 A (or the minimum current if it is set higher). The calculated current is limited to the configured maximum, and the internal current target changes by at most 1 A per poll cycle to reduce sudden changes.
 
 #### Enabling ChargeManager
 
@@ -175,9 +179,13 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+
 ### **WORK IN PROGRESS**
 
 - (hombach) ChargeManager: grid reserve power and maximum battery bonus are now configurable (defaults 100 W / 2000 W) (#852)
+- (hombach) ChargeManager: minimum and maximum surplus charging current are now configurable, with the maximum raised to up to 32 A (#852)
+- (hombach) the configurable maximum charging current now caps ChargeNOW as well
+- (hombach) updated dependencies
 
 ### 1.4.1 (2026-08-23)
 

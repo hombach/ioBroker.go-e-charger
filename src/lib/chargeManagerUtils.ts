@@ -1,5 +1,5 @@
 export const MIN_CHARGE_CURRENT = 6;
-export const MAX_CHARGE_CURRENT = 16;
+export const MAX_CHARGE_CURRENT = 32;
 export const START_CHARGE_CURRENT = 10;
 export const SHUTDOWN_DELAY_CYCLES = 12;
 export const DEFAULT_RESERVE_POWER = 100;
@@ -23,6 +23,8 @@ export interface ChargeCalculationInput {
 	reservePower: number;
 	/** Maximum power released by the priority battery curve in watts */
 	maximumBatteryBonus: number;
+	/** Highest current the ChargeManager may assign */
+	maximumChargeCurrent: number;
 	/** Number of active charging phases */
 	phases: number;
 }
@@ -37,6 +39,8 @@ export interface ChargeManagerState {
 
 /** Inputs required for one deterministic ChargeManager control decision. */
 export interface ChargeManagerControllerInput extends ChargeCalculationInput {
+	/** Current below which the shutdown delay advances */
+	minimumChargeCurrent: number;
 	/** Internal state from the previous control cycle */
 	state: ChargeManagerState;
 }
@@ -73,7 +77,7 @@ export interface ChargerCommand {
  * disabled; it must never be sent to the charger as a current setting.
  *
  * @param input Current energy-management inputs
- * @returns A target between 0 and 16 A, or `null` if an input is invalid
+ * @returns A target between 0 and the configured maximum, or `null` if an input is invalid
  */
 export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): number | null {
 	const numericInputs = [
@@ -84,6 +88,7 @@ export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): nu
 		input.minBatterySoc,
 		input.reservePower,
 		input.maximumBatteryBonus,
+		input.maximumChargeCurrent,
 		input.phases,
 	];
 	if (!numericInputs.every(value => Number.isFinite(value))) {
@@ -96,7 +101,10 @@ export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): nu
 		input.minBatterySoc < 0 ||
 		input.minBatterySoc > 100 ||
 		input.reservePower < 0 ||
-		input.maximumBatteryBonus < 0
+		input.maximumBatteryBonus < 0 ||
+		!Number.isInteger(input.maximumChargeCurrent) ||
+		input.maximumChargeCurrent < START_CHARGE_CURRENT ||
+		input.maximumChargeCurrent > MAX_CHARGE_CURRENT
 	) {
 		return null;
 	}
@@ -106,7 +114,7 @@ export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): nu
 		input.solarPower - input.houseConsumption + (input.subtractChargerPower ? input.chargerPower : 0) - input.reservePower + batteryOffset;
 	const calculatedCurrent = Math.floor(availablePower / 230 / input.phases);
 
-	return Math.max(0, Math.min(calculatedCurrent, MAX_CHARGE_CURRENT));
+	return Math.max(0, Math.min(calculatedCurrent, input.maximumChargeCurrent));
 }
 
 /**
@@ -114,11 +122,13 @@ export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): nu
  *
  * @param current Previous internal target
  * @param target Newly calculated target
- * @returns A finite target between 0 and 16 A
+ * @param maximum Maximum current allowed by the ChargeManager
+ * @returns A finite target between 0 and the configured maximum
  */
-export function stepChargeCurrent(current: number, target: number): number {
-	const safeCurrent = Number.isFinite(current) ? Math.max(0, Math.min(Math.trunc(current), MAX_CHARGE_CURRENT)) : 0;
-	const safeTarget = Number.isFinite(target) ? Math.max(0, Math.min(Math.trunc(target), MAX_CHARGE_CURRENT)) : 0;
+export function stepChargeCurrent(current: number, target: number, maximum = MAX_CHARGE_CURRENT): number {
+	const safeMaximum = Number.isInteger(maximum) && maximum >= MIN_CHARGE_CURRENT && maximum <= MAX_CHARGE_CURRENT ? maximum : MAX_CHARGE_CURRENT;
+	const safeCurrent = Number.isFinite(current) ? Math.max(0, Math.min(Math.trunc(current), safeMaximum)) : 0;
+	const safeTarget = Number.isFinite(target) ? Math.max(0, Math.min(Math.trunc(target), safeMaximum)) : 0;
 
 	if (safeCurrent < safeTarget) {
 		return safeCurrent + 1;
@@ -159,7 +169,12 @@ export function updateShutdownDelay(current: number, minimum: number, previousDe
  */
 export function decideChargeManager(input: ChargeManagerControllerInput): ChargeManagerDecision {
 	const optimalCurrent = calculateOptimalChargeCurrent(input);
-	if (optimalCurrent === null) {
+	if (
+		optimalCurrent === null ||
+		!Number.isInteger(input.minimumChargeCurrent) ||
+		input.minimumChargeCurrent < MIN_CHARGE_CURRENT ||
+		input.minimumChargeCurrent > input.maximumChargeCurrent
+	) {
 		return {
 			action: "disable",
 			reason: "invalid-input",
@@ -168,10 +183,15 @@ export function decideChargeManager(input: ChargeManagerControllerInput): Charge
 		};
 	}
 
-	const currentAmp = stepChargeCurrent(input.state.currentAmp, optimalCurrent);
-	let shutdownDelay = updateShutdownDelay(currentAmp, MIN_CHARGE_CURRENT, input.state.shutdownDelay);
+	const currentAmp = stepChargeCurrent(input.state.currentAmp, optimalCurrent, input.maximumChargeCurrent);
+	const startChargeCurrent = Math.max(START_CHARGE_CURRENT, input.minimumChargeCurrent);
+	// while ramping up to a raised minimum current the target is briefly below the minimum;
+	// do not count that as an insufficient-surplus cycle
+	const isRampingToRaisedMinimum =
+		input.minimumChargeCurrent > START_CHARGE_CURRENT && optimalCurrent >= input.minimumChargeCurrent && currentAmp < input.minimumChargeCurrent;
+	let shutdownDelay = isRampingToRaisedMinimum ? 0 : updateShutdownDelay(currentAmp, input.minimumChargeCurrent, input.state.shutdownDelay);
 
-	if (currentAmp >= START_CHARGE_CURRENT) {
+	if (currentAmp >= startChargeCurrent) {
 		return {
 			action: "enable",
 			reason: "charging-current",
@@ -180,7 +200,7 @@ export function decideChargeManager(input: ChargeManagerControllerInput): Charge
 		};
 	}
 
-	if (currentAmp < MIN_CHARGE_CURRENT) {
+	if (currentAmp < input.minimumChargeCurrent) {
 		if (shutdownDelay > SHUTDOWN_DELAY_CYCLES) {
 			shutdownDelay = 0;
 			return {

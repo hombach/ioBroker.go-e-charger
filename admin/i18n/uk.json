@@ -1,4 +1,6 @@
 {
+	"ERR_minCurrentAboveMax": "Мінімальний струм має бути меншим або рівним максимальному струму",
+	"ERR_maxCurrentBelowMin": "Максимальний струм має бути більшим або рівним мінімальному струму",
 	"LBL_chargerName": "Назва зарядної станції",
 	"LBL_cycleTime": "Інтервал між опитуваннями даних зарядної станції [мс]",
 	"LBL_ipAddress": "IP-адреса go-eCharger",
@@ -10,5 +12,7 @@
 	"LBL_subtractSelfConsumption": "Споживання зарядної станції включено у значення енергоспоживання будинку",
 	"LBL_chargeManagerReservePower": "Резерв потужності мережі, що лишається вільним замість заряджання авто [Вт]",
 	"LBL_chargeManagerMaxBatteryBonus": "Максимальний бонус батареї, що додається до надлишку біля 100% SoC [Вт]",
+	"LBL_chargeManagerMinCurrent": "Мінімальний струм ChargeManager для заряджання від надлишку ФЕ [А]",
+	"LBL_chargeManagerMaxCurrent": "Максимальний струм заряджання для ChargeManager і ChargeNOW [А]",
 	"LBL_wallBoxList": "Список зарядних станцій"
 }

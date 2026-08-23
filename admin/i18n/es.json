@@ -1,4 +1,6 @@
 {
+	"ERR_minCurrentAboveMax": "La corriente mínima debe ser menor o igual que la corriente máxima",
+	"ERR_maxCurrentBelowMin": "La corriente máxima debe ser mayor o igual que la corriente mínima",
 	"LBL_chargerName": "Nombre del cargador",
 	"LBL_cycleTime": "Tiempo entre consultas de datos del cargador [ms]",
 	"LBL_ipAddress": "Dirección IP del go-eCharger",
@@ -10,5 +12,7 @@
 	"LBL_subtractSelfConsumption": "El consumo del cargador está incluido en el valor del consumo eléctrico del hogar",
 	"LBL_chargeManagerReservePower": "Potencia de reserva de red que se mantiene libre en lugar de cargar el coche [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Bonificación máxima de batería añadida al excedente cerca del 100% de SoC [W]",
+	"LBL_chargeManagerMinCurrent": "Corriente mínima de ChargeManager para carga con excedente FV [A]",
+	"LBL_chargeManagerMaxCurrent": "Corriente máxima de carga para ChargeManager y ChargeNOW [A]",
 	"LBL_wallBoxList": "Lista de wallboxes"
 }

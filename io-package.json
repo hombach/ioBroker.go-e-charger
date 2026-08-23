@@ -173,7 +173,9 @@
     "StateHomePowerConsumption": "",
     "SubtractSelfConsumption": true,
     "chargeManagerReservePower": 100,
-    "chargeManagerMaxBatteryBonus": 2000
+    "chargeManagerMaxBatteryBonus": 2000,
+    "chargeManagerMinCurrent": 6,
+    "chargeManagerMaxCurrent": 16
   },
   "objects": [],
   "instanceObjects": [

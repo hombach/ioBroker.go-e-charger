@@ -11,6 +11,8 @@ declare global {
 			subtractSelfConsumption: boolean;
 			chargeManagerReservePower: number;
 			chargeManagerMaxBatteryBonus: number;
+			chargeManagerMinCurrent: number;
+			chargeManagerMaxCurrent: number;
 			wallBoxList: [
 				{
 					chargerName: string;

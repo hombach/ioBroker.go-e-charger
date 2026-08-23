@@ -1,7 +1,15 @@
 ﻿// The adapter-core module gives you access to the core ioBroker functions you need to create an adapter
 import * as utils from "@iobroker/adapter-core";
 import axios from "axios";
-import { buildChargerCommands, decideChargeManager, DEFAULT_MAXIMUM_BATTERY_BONUS, DEFAULT_RESERVE_POWER } from "./lib/chargeManagerUtils";
+import {
+	buildChargerCommands,
+	decideChargeManager,
+	DEFAULT_MAXIMUM_BATTERY_BONUS,
+	DEFAULT_RESERVE_POWER,
+	MAX_CHARGE_CURRENT,
+	MIN_CHARGE_CURRENT,
+	START_CHARGE_CURRENT,
+} from "./lib/chargeManagerUtils";
 import { ProjectUtils, type IWallboxInfo } from "./lib/projectUtils";
 const axiosInstance = axios.create({
 	timeout: 5000, // ms - prevents a hanging request from blocking the state machine
@@ -16,6 +24,8 @@ let totalChargeEnergy = 0;
 let totalChargePower = 0;
 let chargeManagerReservePower = DEFAULT_RESERVE_POWER;
 let chargeManagerMaxBatteryBonus = DEFAULT_MAXIMUM_BATTERY_BONUS;
+let chargeManagerMinCurrent = MIN_CHARGE_CURRENT;
+let chargeManagerMaxCurrent = MAX_CHARGE_CURRENT;
 
 class go_e_charger extends utils.Adapter {
 	private projectUtils = new ProjectUtils(this);
@@ -68,6 +78,30 @@ class go_e_charger extends utils.Adapter {
 		);
 		this.log.debug(`ChargeManager reserve: ${chargeManagerReservePower} W, max battery bonus: ${chargeManagerMaxBatteryBonus} W`);
 
+		// ChargeManager min/max surplus charging current (separate from the ChargeNOW ChargeCurrent range)
+		chargeManagerMinCurrent = this.validateBoundedIntConfig(
+			this.config.chargeManagerMinCurrent,
+			MIN_CHARGE_CURRENT,
+			MIN_CHARGE_CURRENT,
+			MAX_CHARGE_CURRENT,
+			"chargeManagerMinCurrent",
+		);
+		chargeManagerMaxCurrent = this.validateBoundedIntConfig(
+			this.config.chargeManagerMaxCurrent,
+			MAX_CHARGE_CURRENT,
+			START_CHARGE_CURRENT,
+			MAX_CHARGE_CURRENT,
+			"chargeManagerMaxCurrent",
+		);
+		if (chargeManagerMinCurrent > chargeManagerMaxCurrent) {
+			this.log.warn(
+				`chargeManagerMinCurrent (${chargeManagerMinCurrent} A) exceeds chargeManagerMaxCurrent (${chargeManagerMaxCurrent} A); using ${MIN_CHARGE_CURRENT}/${MAX_CHARGE_CURRENT} A`,
+			);
+			chargeManagerMinCurrent = MIN_CHARGE_CURRENT;
+			chargeManagerMaxCurrent = MAX_CHARGE_CURRENT;
+		}
+		this.log.debug(`ChargeManager current range: ${chargeManagerMinCurrent}-${chargeManagerMaxCurrent} A`);
+
 		const wallBoxList = Array.isArray(this.config.wallBoxList) ? this.config.wallBoxList : [];
 		// normalize the config to the guarded array so all later accesses (firstStart, StateMachine,
 		// onUnload, ...) see a valid array even if the config is missing or not an array.
@@ -93,7 +127,7 @@ class go_e_charger extends utils.Adapter {
 				EnabledPhases: 0,
 				MeasuredMaxChargeAmp: 0,
 				MinAmp: 6,
-				MaxAmp: 16,
+				MaxAmp: chargeManagerMaxCurrent,
 				DelayOff: 0,
 				CurrentHysteresis: 0,
 				SetOptAmp: 5,
@@ -451,8 +485,9 @@ class go_e_charger extends utils.Adapter {
 				}
 
 				if (this.wallboxInfoList[iWB].ChargeNOW) {
-					// Charge-NOW is enabled
-					await this.Charge_Config("1", this.wallboxInfoList[iWB].ChargeCurrent, `activate go-eCharger for forced charging`, iWB); // keep active charging current!!
+					// Charge-NOW is enabled - the configured maximum charging current caps ChargeNOW as well
+					const chargeNowCurrent = Math.min(this.wallboxInfoList[iWB].ChargeCurrent, chargeManagerMaxCurrent);
+					await this.Charge_Config("1", chargeNowCurrent, `activate go-eCharger for forced charging`, iWB); // keep active charging current!!
 					await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
 					if (this.wallboxInfoList[iWB].HardwareMin3) {
 						await this.Read_ChargerAPIV2(iWB);
@@ -526,6 +561,28 @@ class go_e_charger extends utils.Adapter {
 			return fallback;
 		}
 		if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+			this.log.warn(`Config ${name} is invalid (${JSON.stringify(value)}); using ${fallback}`);
+			return fallback;
+		}
+		return value;
+	}
+
+	/**
+	 * Validates an integer config value within [minimum, maximum] and falls back to a default
+	 * when it is missing or invalid (undefined, non-integer, or out of range).
+	 *
+	 * @param value - Raw config value (may be undefined on upgraded instances)
+	 * @param fallback - Default used when the value is missing or invalid
+	 * @param minimum - Lowest accepted value
+	 * @param maximum - Highest accepted value
+	 * @param name - Config key name for the warning log
+	 * @returns The validated value, or the fallback
+	 */
+	private validateBoundedIntConfig(value: unknown, fallback: number, minimum: number, maximum: number, name: string): number {
+		if (value === undefined || value === null) {
+			return fallback;
+		}
+		if (typeof value !== "number" || !Number.isInteger(value) || value < minimum || value > maximum) {
 			this.log.warn(`Config ${name} is invalid (${JSON.stringify(value)}); using ${fallback}`);
 			return fallback;
 		}
@@ -1137,6 +1194,8 @@ class go_e_charger extends utils.Adapter {
 			minBatterySoc: minHomeBatVal,
 			reservePower: chargeManagerReservePower,
 			maximumBatteryBonus: chargeManagerMaxBatteryBonus,
+			maximumChargeCurrent: chargeManagerMaxCurrent,
+			minimumChargeCurrent: chargeManagerMinCurrent,
 			phases: Phases,
 			state: {
 				currentAmp: this.wallboxInfoList[iWB].SetAmp,

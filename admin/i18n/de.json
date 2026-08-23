@@ -1,4 +1,6 @@
 {
+	"ERR_minCurrentAboveMax": "Minimaler Strom muss kleiner oder gleich dem maximalen Strom sein",
+	"ERR_maxCurrentBelowMin": "Maximaler Strom muss größer oder gleich dem minimalen Strom sein",
 	"LBL_chargerName": "Name der Wallbox",
 	"LBL_cycleTime": "Zeit zwischen Datenabfragen von der Wallbox [ms]",
 	"LBL_ipAddress": "IP-Adresse des go-eChargers",
@@ -10,5 +12,7 @@
 	"LBL_subtractSelfConsumption": "Verbrauch der Wallbox ist im Hausstromverbrauch enthalten",
 	"LBL_chargeManagerReservePower": "Netzreserveleistung, die frei bleibt statt das Auto zu laden [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Maximaler Batteriebonus, der dem Überschuss nahe 100% SoC zugerechnet wird [W]",
+	"LBL_chargeManagerMinCurrent": "Minimaler ChargeManager-Strom für PV-Überschussladen [A]",
+	"LBL_chargeManagerMaxCurrent": "Maximaler Ladestrom für ChargeManager und ChargeNOW [A]",
 	"LBL_wallBoxList": "Wallbox-Liste"
 }

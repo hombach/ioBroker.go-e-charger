@@ -23,6 +23,7 @@ describe("ChargeManager safety helpers", () => {
 			minBatterySoc: 70,
 			reservePower: 100,
 			maximumBatteryBonus: 2000,
+			maximumChargeCurrent: MAX_CHARGE_CURRENT,
 			phases: 1,
 		};
 
@@ -63,13 +64,14 @@ describe("ChargeManager safety helpers", () => {
 		});
 
 		it("handles a 100% minimum battery SOC without division by zero", () => {
+			// 6000 - 1000 - 100 W reserve = 4900 W -> floor(4900 / 230) = 21 A (below the 32 A ceiling)
 			assert.equal(
 				calculateOptimalChargeCurrent({
 					...validInput,
 					batterySoc: 100,
 					minBatterySoc: 100,
 				}),
-				16,
+				21,
 			);
 		});
 
@@ -115,6 +117,17 @@ describe("ChargeManager safety helpers", () => {
 			assert.equal(calculateOptimalChargeCurrent({ ...validInput, reservePower: -1 }), null);
 			assert.equal(calculateOptimalChargeCurrent({ ...validInput, maximumBatteryBonus: -1 }), null);
 		});
+
+		it("clamps to the configurable maximum charging current", () => {
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, solarPower: 20_000, maximumChargeCurrent: 10 }), 10);
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, solarPower: 20_000, maximumChargeCurrent: 32 }), 32);
+		});
+
+		it("rejects an invalid maximum charging current", () => {
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, maximumChargeCurrent: START_CHARGE_CURRENT - 1 }), null);
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, maximumChargeCurrent: MAX_CHARGE_CURRENT + 1 }), null);
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, maximumChargeCurrent: 12.5 }), null);
+		});
 	});
 
 	describe("decideChargeManager", () => {
@@ -128,6 +141,8 @@ describe("ChargeManager safety helpers", () => {
 				minBatterySoc: 70,
 				reservePower: 100,
 				maximumBatteryBonus: 2000,
+				maximumChargeCurrent: MAX_CHARGE_CURRENT,
+				minimumChargeCurrent: MIN_CHARGE_CURRENT,
 				phases,
 				state: { currentAmp, shutdownDelay },
 			};
@@ -156,7 +171,7 @@ describe("ChargeManager safety helpers", () => {
 		}
 
 		it("starts charging when the current ramp reaches 10 A", () => {
-			const decision = decideChargeManager(inputForTarget(16, START_CHARGE_CURRENT - 1));
+			const decision = decideChargeManager(inputForTarget(MAX_CHARGE_CURRENT, START_CHARGE_CURRENT - 1));
 
 			assert.equal(decision.action, "enable");
 			assert.equal(decision.reason, "charging-current");
@@ -201,6 +216,29 @@ describe("ChargeManager safety helpers", () => {
 			assert.equal(decision.optimalCurrent, null);
 			assert.deepEqual(decision.nextState, { currentAmp: 0, shutdownDelay: 0 });
 		});
+
+		it("does not count ramp-up to a raised minimum current as insufficient surplus", () => {
+			// minimum 12 A, target 12 A, still ramping through 10 A - must not advance the shutdown delay
+			const decision = decideChargeManager({ ...inputForTarget(12, 9, 8), minimumChargeCurrent: 12 });
+
+			assert.equal(decision.action, "hold");
+			assert.equal(decision.nextState.currentAmp, 10);
+			assert.equal(decision.nextState.shutdownDelay, 0);
+		});
+
+		it("enables once the ramp reaches a raised minimum start current", () => {
+			const decision = decideChargeManager({ ...inputForTarget(12, 11, 0), minimumChargeCurrent: 12 });
+
+			assert.equal(decision.nextState.currentAmp, 12);
+			assert.equal(decision.action, "enable");
+		});
+
+		it("rejects a minimum current above the maximum", () => {
+			const decision = decideChargeManager({ ...inputForTarget(12, 12, 0), minimumChargeCurrent: 20, maximumChargeCurrent: 16 });
+
+			assert.equal(decision.action, "disable");
+			assert.equal(decision.reason, "invalid-input");
+		});
 	});
 
 	describe("stepChargeCurrent", () => {
@@ -216,6 +254,12 @@ describe("ChargeManager safety helpers", () => {
 			assert.equal(stepChargeCurrent(Number.NaN, 10), 1);
 			assert.equal(stepChargeCurrent(-100, 0), 0);
 			assert.equal(stepChargeCurrent(100, 100), MAX_CHARGE_CURRENT);
+		});
+
+		it("respects the configurable maximum", () => {
+			assert.equal(stepChargeCurrent(31, 40, 32), 32); // ramps up, capped at the configured maximum
+			assert.equal(stepChargeCurrent(32, 40, 32), 32); // already at the maximum, stays
+			assert.equal(stepChargeCurrent(10, 40, 20), 11); // steps toward the target bounded by the maximum
 		});
 	});
 
@@ -240,7 +284,7 @@ describe("ChargeManager safety helpers", () => {
 
 		it("rejects invalid currents when enabling", () => {
 			assert.equal(buildChargerCommands(true, 5, "60.2"), null);
-			assert.equal(buildChargerCommands(true, 17, "60.2"), null);
+			assert.equal(buildChargerCommands(true, 33, "60.2"), null);
 			assert.equal(buildChargerCommands(true, 6.5, "60.2"), null);
 			assert.equal(buildChargerCommands(true, Number.NaN, "60.2"), null);
 		});

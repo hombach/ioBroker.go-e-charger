@@ -1,4 +1,6 @@
 {
+	"ERR_minCurrentAboveMax": "La corrente minima deve essere minore o uguale alla corrente massima",
+	"ERR_maxCurrentBelowMin": "La corrente massima deve essere maggiore o uguale alla corrente minima",
 	"LBL_chargerName": "Nome della wallbox",
 	"LBL_cycleTime": "Intervallo tra le letture dei dati dalla wallbox [ms]",
 	"LBL_ipAddress": "Indirizzo IP del go-eCharger",
@@ -10,5 +12,7 @@
 	"LBL_subtractSelfConsumption": "Il consumo della wallbox è incluso nel valore del consumo elettrico domestico",
 	"LBL_chargeManagerReservePower": "Potenza di riserva di rete mantenuta libera invece di caricare l'auto [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Bonus massimo della batteria aggiunto al surplus vicino al 100% di SoC [W]",
+	"LBL_chargeManagerMinCurrent": "Corrente minima del ChargeManager per la carica con surplus FV [A]",
+	"LBL_chargeManagerMaxCurrent": "Corrente di carica massima per ChargeManager e ChargeNOW [A]",
 	"LBL_wallBoxList": "Elenco delle wallbox"
 }

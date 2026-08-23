@@ -1,4 +1,6 @@
 {
+	"ERR_minCurrentAboveMax": "Le courant minimal doit être inférieur ou égal au courant maximal",
+	"ERR_maxCurrentBelowMin": "Le courant maximal doit être supérieur ou égal au courant minimal",
 	"LBL_chargerName": "Nom de la borne",
 	"LBL_cycleTime": "Intervalle entre les interrogations de données de la borne [ms]",
 	"LBL_ipAddress": "Adresse IP du go-eCharger",
@@ -10,5 +12,7 @@
 	"LBL_subtractSelfConsumption": "La consommation de la borne est incluse dans la valeur de consommation électrique du domicile",
 	"LBL_chargeManagerReservePower": "Puissance de réserve réseau gardée libre au lieu de charger la voiture [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Bonus batterie maximal ajouté au surplus proche de 100% de SoC [W]",
+	"LBL_chargeManagerMinCurrent": "Courant minimal du ChargeManager pour la charge sur surplus PV [A]",
+	"LBL_chargeManagerMaxCurrent": "Courant de charge maximal pour ChargeManager et ChargeNOW [A]",
 	"LBL_wallBoxList": "Liste des wallbox"
 }

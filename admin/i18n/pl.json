@@ -1,4 +1,6 @@
 {
+	"ERR_minCurrentAboveMax": "Prąd minimalny musi być mniejszy lub równy prądowi maksymalnemu",
+	"ERR_maxCurrentBelowMin": "Prąd maksymalny musi być większy lub równy prądowi minimalnemu",
 	"LBL_chargerName": "Nazwa ładowarki",
 	"LBL_cycleTime": "Czas między odczytami danych z ładowarki [ms]",
 	"LBL_ipAddress": "Adres IP go-eCharger",
@@ -10,5 +12,7 @@
 	"LBL_subtractSelfConsumption": "Zużycie ładowarki jest uwzględnione w wartości zużycia energii w domu",
 	"LBL_chargeManagerReservePower": "Moc rezerwowa sieci pozostawiona wolna zamiast ładowania auta [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Maksymalny bonus baterii dodawany do nadwyżki blisko 100% SoC [W]",
+	"LBL_chargeManagerMinCurrent": "Minimalny prąd ChargeManager dla ładowania z nadwyżki PV [A]",
+	"LBL_chargeManagerMaxCurrent": "Maksymalny prąd ładowania dla ChargeManager i ChargeNOW [A]",
 	"LBL_wallBoxList": "Lista wallboxów"
 }

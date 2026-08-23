@@ -1,4 +1,6 @@
 {
+	"ERR_minCurrentAboveMax": "Minimum current must be less than or equal to maximum current",
+	"ERR_maxCurrentBelowMin": "Maximum current must be greater than or equal to minimum current",
 	"LBL_standardSettings": "Standard settings",
 	"LBL_cycleTime": "Time between data polls from the charger [ms]",
 	"LBL_stateHomeSolarPower": "Object ID for the currently available solar power [W]",
@@ -7,6 +9,8 @@
 	"LBL_subtractSelfConsumption": "Charger consumption is included in the home power consumption value",
 	"LBL_chargeManagerReservePower": "Grid reserve power kept free instead of charging the car [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Maximum battery bonus added to the surplus near 100% SoC [W]",
+	"LBL_chargeManagerMinCurrent": "Minimum ChargeManager current for PV surplus charging [A]",
+	"LBL_chargeManagerMaxCurrent": "Maximum charging current for ChargeManager and ChargeNOW [A]",
 	"LBL_wallBoxList": "Wallbox list",
 	"LBL_chargerName": "Charger name",
 	"LBL_ipAddress": "IP address of the go-eCharger",

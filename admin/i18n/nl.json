@@ -1,4 +1,6 @@
 {
+	"ERR_minCurrentAboveMax": "Minimale stroom moet kleiner dan of gelijk aan de maximale stroom zijn",
+	"ERR_maxCurrentBelowMin": "Maximale stroom moet groter dan of gelijk aan de minimale stroom zijn",
 	"LBL_chargerName": "Naam van de wallbox",
 	"LBL_cycleTime": "Tijd tussen gegevensopvragingen van de wallbox [ms]",
 	"LBL_ipAddress": "IP-adres van de go-eCharger",
@@ -10,5 +12,7 @@
 	"LBL_subtractSelfConsumption": "Het verbruik van de wallbox is inbegrepen in het stroomverbruik van de woning",
 	"LBL_chargeManagerReservePower": "Netreservevermogen dat vrij blijft in plaats van de auto te laden [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Maximale batterijbonus die bij het surplus wordt opgeteld nabij 100% SoC [W]",
+	"LBL_chargeManagerMinCurrent": "Minimale ChargeManager-stroom voor laden met PV-overschot [A]",
+	"LBL_chargeManagerMaxCurrent": "Maximale laadstroom voor ChargeManager en ChargeNOW [A]",
 	"LBL_wallBoxList": "Wallbox-lijst"
 }
