@@ -175,6 +175,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 ### **WORK IN PROGRESS**
 
+- (hombach) fixed vulnerabilities
 - (hombach) updated dependencies
 
 ### 1.4.0 (2026-08-10)

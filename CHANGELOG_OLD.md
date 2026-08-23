@@ -15,6 +15,7 @@
 This adapter integrates one or more go-e Charger wallboxes into your ioBroker home automation. It cyclically polls each wallbox via its local HTTP API, provides all relevant data as ioBroker states, and lets you control charging directly from your smart home.
 
 ## Changelog - OLD CHANGES
+
 ## 1.1.0 (2026-07-05)
 
 - (hombach) fixed reading of "unlocked by RFID" (uby) on gen 3+ chargers via API V2
@@ -31,7 +32,6 @@ This adapter integrates one or more go-e Charger wallboxes into your ioBroker ho
 - (hombach) fixed German fallback text for RFID card channel names
 - (hombach) added upper bound validation for cycle time
 - (hombach) added link to manufacturer's website
-- (hombach) code optimizations
 
 ## 1.0.3 (2026-07-03)
 
@@ -45,7 +45,6 @@ This adapter integrates one or more go-e Charger wallboxes into your ioBroker ho
 - (hombach) eliminate yarn
 - (hombach) upgraded adapter-core
 - (hombach) updated axios
-- (hombach) updated dependencies
 
 ## 1.0.1 (2026-05-17)
 
