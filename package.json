@@ -69,5 +69,9 @@
 	"bugs": {
 		"url": "https://github.com/Hombach/ioBroker.go-e-charger/issues"
 	},
-	"readmeFilename": "README.md"
+	"readmeFilename": "README.md",
+	"allowScripts": {
+		"esbuild@0.25.10": true,
+		"protobufjs@7.6.5": true
+	}
 }
