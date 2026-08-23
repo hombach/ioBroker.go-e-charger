@@ -21,6 +21,8 @@ describe("ChargeManager safety helpers", () => {
 			subtractChargerPower: false,
 			batterySoc: 70,
 			minBatterySoc: 70,
+			reservePower: 100,
+			maximumBatteryBonus: 2000,
 			phases: 1,
 		};
 
@@ -93,6 +95,26 @@ describe("ChargeManager safety helpers", () => {
 				0,
 			);
 		});
+
+		it("uses the configurable grid reserve", () => {
+			// reserve 0 keeps the full 460 W surplus -> 2 A
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, solarPower: 460, houseConsumption: 0, reservePower: 0 }), 2);
+			// a 460 W reserve cancels a 460 W surplus -> 0 A
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, solarPower: 460, houseConsumption: 0, reservePower: 460 }), 0);
+		});
+
+		it("scales the battery bonus with the configurable maximum", () => {
+			const base = { ...validInput, solarPower: 0, houseConsumption: 0, batterySoc: 100, minBatterySoc: 50, reservePower: 0 };
+			// no bonus -> no battery offset -> 0 A
+			assert.equal(calculateOptimalChargeCurrent({ ...base, maximumBatteryBonus: 0 }), 0);
+			// a 2300 W bonus is fully released at 100 % SOC -> 10 A
+			assert.equal(calculateOptimalChargeCurrent({ ...base, maximumBatteryBonus: 2300 }), 10);
+		});
+
+		it("rejects a negative grid reserve or battery bonus", () => {
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, reservePower: -1 }), null);
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, maximumBatteryBonus: -1 }), null);
+		});
 	});
 
 	describe("decideChargeManager", () => {
@@ -104,6 +126,8 @@ describe("ChargeManager safety helpers", () => {
 				subtractChargerPower: false,
 				batterySoc: 70,
 				minBatterySoc: 70,
+				reservePower: 100,
+				maximumBatteryBonus: 2000,
 				phases,
 				state: { currentAmp, shutdownDelay },
 			};

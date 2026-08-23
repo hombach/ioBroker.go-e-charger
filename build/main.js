@@ -49,6 +49,8 @@ let solarPower = 0;
 let houseConsumption = 0;
 let totalChargeEnergy = 0;
 let totalChargePower = 0;
+let chargeManagerReservePower = chargeManagerUtils_1.DEFAULT_RESERVE_POWER;
+let chargeManagerMaxBatteryBonus = chargeManagerUtils_1.DEFAULT_MAXIMUM_BATTERY_BONUS;
 class go_e_charger extends utils.Adapter {
     projectUtils = new projectUtils_1.ProjectUtils(this);
     wallboxInfoList = [];
@@ -80,6 +82,9 @@ class go_e_charger extends utils.Adapter {
         this.log.info(`Cycletime set to: ${this.config.cycleTime / 1000} seconds`);
         minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC");
         this.log.debug(`Initial value for Setpoint HomeBatSoC: ${minHomeBatVal}%`);
+        chargeManagerReservePower = this.validateNonNegativeConfig(this.config.chargeManagerReservePower, chargeManagerUtils_1.DEFAULT_RESERVE_POWER, "chargeManagerReservePower");
+        chargeManagerMaxBatteryBonus = this.validateNonNegativeConfig(this.config.chargeManagerMaxBatteryBonus, chargeManagerUtils_1.DEFAULT_MAXIMUM_BATTERY_BONUS, "chargeManagerMaxBatteryBonus");
+        this.log.debug(`ChargeManager reserve: ${chargeManagerReservePower} W, max battery bonus: ${chargeManagerMaxBatteryBonus} W`);
         const wallBoxList = Array.isArray(this.config.wallBoxList) ? this.config.wallBoxList : [];
         this.config.wallBoxList = wallBoxList;
         if (!wallBoxList.length) {
@@ -412,6 +417,16 @@ class go_e_charger extends utils.Adapter {
             this.scheduleStateMachine();
         }
     }
+    validateNonNegativeConfig(value, fallback, name) {
+        if (value === undefined || value === null) {
+            return fallback;
+        }
+        if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+            this.log.warn(`Config ${name} is invalid (${JSON.stringify(value)}); using ${fallback}`);
+            return fallback;
+        }
+        return value;
+    }
     async stopChargeManager(reason, iWB) {
         this.wallboxInfoList[iWB].SetAmp = 0;
         this.wallboxInfoList[iWB].DelayOff = 0;
@@ -635,6 +650,8 @@ class go_e_charger extends utils.Adapter {
             subtractChargerPower: this.config.subtractSelfConsumption,
             batterySoc: batSoC,
             minBatterySoc: minHomeBatVal,
+            reservePower: chargeManagerReservePower,
+            maximumBatteryBonus: chargeManagerMaxBatteryBonus,
             phases: Phases,
             state: {
                 currentAmp: this.wallboxInfoList[iWB].SetAmp,

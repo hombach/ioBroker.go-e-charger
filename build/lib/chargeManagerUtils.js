@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.calculateOptimalChargeCurrent = calculateOptimalChargeCurrent;
 exports.stepChargeCurrent = stepChargeCurrent;
 exports.updateShutdownDelay = updateShutdownDelay;
@@ -10,16 +10,33 @@ exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 16;
 exports.START_CHARGE_CURRENT = 10;
 exports.SHUTDOWN_DELAY_CYCLES = 12;
+exports.DEFAULT_RESERVE_POWER = 100;
+exports.DEFAULT_MAXIMUM_BATTERY_BONUS = 2000;
 function calculateOptimalChargeCurrent(input) {
-    const numericInputs = [input.solarPower, input.houseConsumption, input.chargerPower, input.batterySoc, input.minBatterySoc, input.phases];
+    const numericInputs = [
+        input.solarPower,
+        input.houseConsumption,
+        input.chargerPower,
+        input.batterySoc,
+        input.minBatterySoc,
+        input.reservePower,
+        input.maximumBatteryBonus,
+        input.phases,
+    ];
     if (!numericInputs.every(value => Number.isFinite(value))) {
         return null;
     }
-    if ((input.phases !== 1 && input.phases !== 3) || input.batterySoc < 0 || input.batterySoc > 100 || input.minBatterySoc < 0 || input.minBatterySoc > 100) {
+    if ((input.phases !== 1 && input.phases !== 3) ||
+        input.batterySoc < 0 ||
+        input.batterySoc > 100 ||
+        input.minBatterySoc < 0 ||
+        input.minBatterySoc > 100 ||
+        input.reservePower < 0 ||
+        input.maximumBatteryBonus < 0) {
         return null;
     }
-    const batteryOffset = input.minBatterySoc < 100 ? (2000 / (100 - input.minBatterySoc)) * (input.batterySoc - input.minBatterySoc) : 0;
-    const availablePower = input.solarPower - input.houseConsumption + (input.subtractChargerPower ? input.chargerPower : 0) - 100 + batteryOffset;
+    const batteryOffset = input.minBatterySoc < 100 ? (input.maximumBatteryBonus / (100 - input.minBatterySoc)) * (input.batterySoc - input.minBatterySoc) : 0;
+    const availablePower = input.solarPower - input.houseConsumption + (input.subtractChargerPower ? input.chargerPower : 0) - input.reservePower + batteryOffset;
     const calculatedCurrent = Math.floor(availablePower / 230 / input.phases);
     return Math.max(0, Math.min(calculatedCurrent, exports.MAX_CHARGE_CURRENT));
 }

@@ -8,5 +8,7 @@
 	"LBL_stateHomePowerConsumption": "家庭当前用电量的对象ID [W]",
 	"LBL_stateHomeSolarPower": "当前可用太阳能功率的对象ID [W]",
 	"LBL_subtractSelfConsumption": "充电桩的耗电量已包含在家庭用电量数值中",
+	"LBL_chargeManagerReservePower": "电网预留功率，保持空闲而不用于给车充电 [W]",
+	"LBL_chargeManagerMaxBatteryBonus": "接近100% SoC时叠加到盈余的最大电池附加功率 [W]",
 	"LBL_wallBoxList": "充电桩列表"
 }

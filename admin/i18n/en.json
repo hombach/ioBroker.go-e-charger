@@ -5,6 +5,8 @@
 	"LBL_stateHomeBatSoc": "Object ID for the current state of charge of the home battery [%]",
 	"LBL_stateHomePowerConsumption": "Object ID for the current home power consumption [W]",
 	"LBL_subtractSelfConsumption": "Charger consumption is included in the home power consumption value",
+	"LBL_chargeManagerReservePower": "Grid reserve power kept free instead of charging the car [W]",
+	"LBL_chargeManagerMaxBatteryBonus": "Maximum battery bonus added to the surplus near 100% SoC [W]",
 	"LBL_wallBoxList": "Wallbox list",
 	"LBL_chargerName": "Charger name",
 	"LBL_ipAddress": "IP address of the go-eCharger",

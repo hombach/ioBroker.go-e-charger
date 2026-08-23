@@ -8,5 +8,7 @@
 	"LBL_stateHomePowerConsumption": "ID об'єкта для поточного енергоспоживання будинку [Вт]",
 	"LBL_stateHomeSolarPower": "ID об'єкта для поточної доступної сонячної потужності [Вт]",
 	"LBL_subtractSelfConsumption": "Споживання зарядної станції включено у значення енергоспоживання будинку",
+	"LBL_chargeManagerReservePower": "Резерв потужності мережі, що лишається вільним замість заряджання авто [Вт]",
+	"LBL_chargeManagerMaxBatteryBonus": "Максимальний бонус батареї, що додається до надлишку біля 100% SoC [Вт]",
 	"LBL_wallBoxList": "Список зарядних станцій"
 }

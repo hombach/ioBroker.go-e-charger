@@ -97,15 +97,18 @@ available power =
     solar power
   - home power consumption
   + wallbox power, if it is included in home power consumption
-  - 100 W reserve
+  - grid reserve
   + battery SoC offset
 
 target current = floor(available power / 230 V / active phases)
 ```
 
-The battery offset is zero when the battery is exactly at the configured minimum state of charge and increases up to 2,000 W as the battery approaches 100%. Below `Settings.Setpoint_HomeBatSoC`, EV charging is disabled so that the home battery has priority.
+Two settings on the standard configuration page tune this calculation:
 
-The calculated current is limited to a maximum of 16 A. The internal current target changes by at most 1 A per poll cycle to reduce sudden changes.
+- **Grid reserve power** [W] (default 100) – power kept free on the grid connection instead of being assigned to the car. Increase it to keep more safety headroom; set it to `0` to hand the full surplus to the car.
+- **Maximum battery bonus** [W] (default 2000) – how much extra power, on top of the pure solar surplus, may be drawn while the home battery is above its minimum state of charge. The bonus is `0` when the battery is exactly at the minimum SoC and grows linearly to this maximum as the battery approaches 100 %, so a fuller battery lets the car charge faster. Set it to `0` to charge purely from the measured solar surplus without ever discharging the home battery into the car.
+
+Below `Settings.Setpoint_HomeBatSoC`, EV charging is disabled so that the home battery has priority. The calculated current is limited to a maximum of 16 A, and the internal current target changes by at most 1 A per poll cycle to reduce sudden changes.
 
 #### Enabling ChargeManager
 
@@ -172,6 +175,10 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+
+- (hombach) ChargeManager: grid reserve power and maximum battery bonus are now configurable (defaults 100 W / 2000 W) (#852)
+
 ### 1.4.1 (2026-08-23)
 
 - (typhosj) refactored the ChargeManager control decision into a deterministic, unit-tested function (#846); behavior unchanged

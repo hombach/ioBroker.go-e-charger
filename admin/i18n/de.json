@@ -8,5 +8,7 @@
 	"LBL_stateHomePowerConsumption": "Objekt-ID für den aktuellen Hausstromverbrauch [W]",
 	"LBL_stateHomeSolarPower": "Objekt-ID für die aktuell verfügbare Solarleistung [W]",
 	"LBL_subtractSelfConsumption": "Verbrauch der Wallbox ist im Hausstromverbrauch enthalten",
+	"LBL_chargeManagerReservePower": "Netzreserveleistung, die frei bleibt statt das Auto zu laden [W]",
+	"LBL_chargeManagerMaxBatteryBonus": "Maximaler Batteriebonus, der dem Überschuss nahe 100% SoC zugerechnet wird [W]",
 	"LBL_wallBoxList": "Wallbox-Liste"
 }

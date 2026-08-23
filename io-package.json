@@ -171,7 +171,9 @@
     "StateHomeBatSoc": "",
     "StateHomeSolarPower": "",
     "StateHomePowerConsumption": "",
-    "SubtractSelfConsumption": true
+    "SubtractSelfConsumption": true,
+    "chargeManagerReservePower": 100,
+    "chargeManagerMaxBatteryBonus": 2000
   },
   "objects": [],
   "instanceObjects": [

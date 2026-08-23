@@ -61,6 +61,36 @@
 					"xl": 6,
 					"newLine": false
 				},
+				"chargeManagerReservePower": {
+					"type": "number",
+					"label": "LBL_chargeManagerReservePower",
+					"default": 100,
+					"min": 0,
+					"max": 2000,
+					"step": 10,
+					"unit": "W",
+					"xs": 12,
+					"sm": 6,
+					"md": 6,
+					"lg": 6,
+					"xl": 6,
+					"newLine": true
+				},
+				"chargeManagerMaxBatteryBonus": {
+					"type": "number",
+					"label": "LBL_chargeManagerMaxBatteryBonus",
+					"default": 2000,
+					"min": 0,
+					"max": 10000,
+					"step": 100,
+					"unit": "W",
+					"xs": 12,
+					"sm": 6,
+					"md": 6,
+					"lg": 6,
+					"xl": 6,
+					"newLine": false
+				},
 				"wallBoxList": {
 					"type": "accordion",
 					"titleAttr": "chargerName",

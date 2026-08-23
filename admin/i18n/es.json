@@ -8,5 +8,7 @@
 	"LBL_stateHomePowerConsumption": "ID de objeto para el consumo eléctrico actual del hogar [W]",
 	"LBL_stateHomeSolarPower": "ID de objeto para la potencia solar disponible actualmente [W]",
 	"LBL_subtractSelfConsumption": "El consumo del cargador está incluido en el valor del consumo eléctrico del hogar",
+	"LBL_chargeManagerReservePower": "Potencia de reserva de red que se mantiene libre en lugar de cargar el coche [W]",
+	"LBL_chargeManagerMaxBatteryBonus": "Bonificación máxima de batería añadida al excedente cerca del 100% de SoC [W]",
 	"LBL_wallBoxList": "Lista de wallboxes"
 }

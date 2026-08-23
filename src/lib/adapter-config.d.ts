@@ -9,6 +9,8 @@ declare global {
 			stateHomeSolarPower: string;
 			stateHomePowerConsumption: string;
 			subtractSelfConsumption: boolean;
+			chargeManagerReservePower: number;
+			chargeManagerMaxBatteryBonus: number;
 			wallBoxList: [
 				{
 					chargerName: string;

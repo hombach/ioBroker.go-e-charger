@@ -1,7 +1,7 @@
 ﻿// The adapter-core module gives you access to the core ioBroker functions you need to create an adapter
 import * as utils from "@iobroker/adapter-core";
 import axios from "axios";
-import { buildChargerCommands, decideChargeManager } from "./lib/chargeManagerUtils";
+import { buildChargerCommands, decideChargeManager, DEFAULT_MAXIMUM_BATTERY_BONUS, DEFAULT_RESERVE_POWER } from "./lib/chargeManagerUtils";
 import { ProjectUtils, type IWallboxInfo } from "./lib/projectUtils";
 const axiosInstance = axios.create({
 	timeout: 5000, // ms - prevents a hanging request from blocking the state machine
@@ -14,6 +14,8 @@ let solarPower = 0;
 let houseConsumption = 0;
 let totalChargeEnergy = 0;
 let totalChargePower = 0;
+let chargeManagerReservePower = DEFAULT_RESERVE_POWER;
+let chargeManagerMaxBatteryBonus = DEFAULT_MAXIMUM_BATTERY_BONUS;
 
 class go_e_charger extends utils.Adapter {
 	private projectUtils = new ProjectUtils(this);
@@ -56,6 +58,15 @@ class go_e_charger extends utils.Adapter {
 
 		minHomeBatVal = await this.projectUtils.getStateValue("Settings.Setpoint_HomeBatSoC"); // Get desired battery SoC
 		this.log.debug(`Initial value for Setpoint HomeBatSoC: ${minHomeBatVal}%`);
+
+		// ChargeManager: grid reserve and maximum battery bonus - fall back to defaults on missing/invalid config
+		chargeManagerReservePower = this.validateNonNegativeConfig(this.config.chargeManagerReservePower, DEFAULT_RESERVE_POWER, "chargeManagerReservePower");
+		chargeManagerMaxBatteryBonus = this.validateNonNegativeConfig(
+			this.config.chargeManagerMaxBatteryBonus,
+			DEFAULT_MAXIMUM_BATTERY_BONUS,
+			"chargeManagerMaxBatteryBonus",
+		);
+		this.log.debug(`ChargeManager reserve: ${chargeManagerReservePower} W, max battery bonus: ${chargeManagerMaxBatteryBonus} W`);
 
 		const wallBoxList = Array.isArray(this.config.wallBoxList) ? this.config.wallBoxList : [];
 		// normalize the config to the guarded array so all later accesses (firstStart, StateMachine,
@@ -500,6 +511,26 @@ class go_e_charger extends utils.Adapter {
 			this.scheduleStateMachine();
 		}
 	} // END StateMachine
+
+	/**
+	 * Validates a non-negative numeric config value and falls back to a default when it is
+	 * missing or invalid (undefined, non-numeric, non-finite, or negative).
+	 *
+	 * @param value - Raw config value (may be undefined on upgraded instances)
+	 * @param fallback - Default used when the value is missing or invalid
+	 * @param name - Config key name for the warning log
+	 * @returns The validated value, or the fallback
+	 */
+	private validateNonNegativeConfig(value: unknown, fallback: number, name: string): number {
+		if (value === undefined || value === null) {
+			return fallback;
+		}
+		if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+			this.log.warn(`Config ${name} is invalid (${JSON.stringify(value)}); using ${fallback}`);
+			return fallback;
+		}
+		return value;
+	}
 
 	private async stopChargeManager(reason: string, iWB: number): Promise<void> {
 		this.wallboxInfoList[iWB].SetAmp = 0;
@@ -1104,6 +1135,8 @@ class go_e_charger extends utils.Adapter {
 			subtractChargerPower: this.config.subtractSelfConsumption,
 			batterySoc: batSoC,
 			minBatterySoc: minHomeBatVal,
+			reservePower: chargeManagerReservePower,
+			maximumBatteryBonus: chargeManagerMaxBatteryBonus,
 			phases: Phases,
 			state: {
 				currentAmp: this.wallboxInfoList[iWB].SetAmp,
