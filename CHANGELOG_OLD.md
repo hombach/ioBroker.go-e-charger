@@ -15,6 +15,14 @@
 This adapter integrates one or more go-e Charger wallboxes into your ioBroker home automation. It cyclically polls each wallbox via its local HTTP API, provides all relevant data as ioBroker states, and lets you control charging directly from your smart home.
 
 ## Changelog - OLD CHANGES
+## 1.2.1 (2026-07-31)
+
+- (typhosj) made ChargeManager surplus control more fail-safe: input validation, current clamped to 0-16 A, resilience of state-machine loop (#841)
+- (hombach) added support for firmware V60.5 (#800) and V60.6 (#844)
+- (typhosj) added ChargeManager PV surplus configuration guide (#842)
+- (hombach) corrected no-battery helper-state recommendation for ChargeManager
+- (hombach) updated dependencies
+
 ## 1.2.0 (2026-07-12)
 
 - (hombach) added statisticsGlobal.chargePower state with the current total charging power of all chargers
