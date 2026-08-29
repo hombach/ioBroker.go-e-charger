@@ -14,6 +14,7 @@
 	"LBL_chargeManagerReservePower": "Moc rezerwowa sieci pozostawiona wolna zamiast ładowania auta [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Maksymalny bonus baterii dodawany do nadwyżki blisko 100% SoC [W]",
 	"LBL_chargeManagerMinCurrent": "Minimalny prąd ChargeManager dla ładowania z nadwyżki PV [A]",
-	"LBL_maxChargeCurrent": "Maksymalny prąd ładowania dla ChargeManager i ChargeNOW [A]",
+	"LBL_maxChargeCurrent": "Maksymalny prąd ładowania zasilania dla wszystkich wallboxów [A]",
+	"LBL_maxChargeCurrentHelp": "Limit całej instalacji (główny bezpiecznik / zasilanie). Ogranicza ChargeManager (nadwyżka PV) i ChargeNOW dla każdego wallboxa.",
 	"LBL_wallBoxList": "Lista wallboxów"
 }

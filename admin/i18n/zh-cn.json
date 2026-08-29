@@ -14,6 +14,7 @@
 	"LBL_chargeManagerReservePower": "电网预留功率，保持空闲而不用于给车充电 [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "接近100% SoC时叠加到盈余的最大电池附加功率 [W]",
 	"LBL_chargeManagerMinCurrent": "光伏盈余充电的 ChargeManager 最小电流 [A]",
-	"LBL_maxChargeCurrent": "ChargeManager 和 ChargeNOW 的最大充电电流 [A]",
+	"LBL_maxChargeCurrent": "适用于所有充电桩的电源最大充电电流 [A]",
+	"LBL_maxChargeCurrentHelp": "整个电气装置的限制（主断路器/供电）。为每个充电桩限制 ChargeManager（光伏盈余）和 ChargeNOW。",
 	"LBL_wallBoxList": "充电桩列表"
 }

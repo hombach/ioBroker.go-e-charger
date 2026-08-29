@@ -14,6 +14,7 @@
 	"LBL_chargeManagerReservePower": "Netzreserveleistung, die frei bleibt statt das Auto zu laden [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Maximaler Batteriebonus, der dem Überschuss nahe 100% SoC zugerechnet wird [W]",
 	"LBL_chargeManagerMinCurrent": "Minimaler ChargeManager-Strom für PV-Überschussladen [A]",
-	"LBL_maxChargeCurrent": "Maximaler Ladestrom für ChargeManager und ChargeNOW [A]",
+	"LBL_maxChargeCurrent": "Maximaler Ladestrom der Stromversorgung für alle Wallboxen [A]",
+	"LBL_maxChargeCurrentHelp": "Anlagenweites Limit (Hauptsicherung / Stromanschluss). Begrenzt ChargeManager (PV-Überschuss) und ChargeNOW für jede Wallbox.",
 	"LBL_wallBoxList": "Wallbox-Liste"
 }

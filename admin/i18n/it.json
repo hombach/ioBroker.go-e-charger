@@ -14,6 +14,7 @@
 	"LBL_chargeManagerReservePower": "Potenza di riserva di rete mantenuta libera invece di caricare l'auto [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Bonus massimo della batteria aggiunto al surplus vicino al 100% di SoC [W]",
 	"LBL_chargeManagerMinCurrent": "Corrente minima del ChargeManager per la carica con surplus FV [A]",
-	"LBL_maxChargeCurrent": "Corrente di carica massima per ChargeManager e ChargeNOW [A]",
+	"LBL_maxChargeCurrent": "Corrente di carica massima dell'alimentazione per tutte le wallbox [A]",
+	"LBL_maxChargeCurrentHelp": "Limite dell'intero impianto (interruttore principale / alimentazione). Limita ChargeManager (surplus FV) e ChargeNOW per ogni wallbox.",
 	"LBL_wallBoxList": "Elenco delle wallbox"
 }

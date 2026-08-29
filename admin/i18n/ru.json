@@ -14,6 +14,7 @@
 	"LBL_chargeManagerReservePower": "Резерв мощности сети, остающийся свободным вместо зарядки авто [Вт]",
 	"LBL_chargeManagerMaxBatteryBonus": "Максимальный бонус батареи, добавляемый к избытку вблизи 100% SoC [Вт]",
 	"LBL_chargeManagerMinCurrent": "Минимальный ток ChargeManager для зарядки от избытка ФЭ [А]",
-	"LBL_maxChargeCurrent": "Максимальный ток зарядки для ChargeManager и ChargeNOW [А]",
+	"LBL_maxChargeCurrent": "Максимальный ток зарядки электропитания для всех зарядных станций [А]",
+	"LBL_maxChargeCurrentHelp": "Ограничение для всей установки (главный автомат / электропитание). Ограничивает ChargeManager (избыток ФЭ) и ChargeNOW для каждой зарядной станции.",
 	"LBL_wallBoxList": "Список зарядных станций"
 }

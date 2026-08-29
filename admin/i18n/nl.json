@@ -14,6 +14,7 @@
 	"LBL_chargeManagerReservePower": "Netreservevermogen dat vrij blijft in plaats van de auto te laden [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Maximale batterijbonus die bij het surplus wordt opgeteld nabij 100% SoC [W]",
 	"LBL_chargeManagerMinCurrent": "Minimale ChargeManager-stroom voor laden met PV-overschot [A]",
-	"LBL_maxChargeCurrent": "Maximale laadstroom voor ChargeManager en ChargeNOW [A]",
+	"LBL_maxChargeCurrent": "Maximale laadstroom van de voeding voor alle wallboxen [A]",
+	"LBL_maxChargeCurrentHelp": "Installatiebrede limiet (hoofdzekering / voeding). Begrenst ChargeManager (PV-overschot) en ChargeNOW voor elke wallbox.",
 	"LBL_wallBoxList": "Wallbox-lijst"
 }

@@ -14,6 +14,7 @@
 	"LBL_chargeManagerReservePower": "Puissance de réserve réseau gardée libre au lieu de charger la voiture [W]",
 	"LBL_chargeManagerMaxBatteryBonus": "Bonus batterie maximal ajouté au surplus proche de 100% de SoC [W]",
 	"LBL_chargeManagerMinCurrent": "Courant minimal du ChargeManager pour la charge sur surplus PV [A]",
-	"LBL_maxChargeCurrent": "Courant de charge maximal pour ChargeManager et ChargeNOW [A]",
+	"LBL_maxChargeCurrent": "Courant de charge maximal de l'alimentation pour toutes les wallbox [A]",
+	"LBL_maxChargeCurrentHelp": "Limite de l'installation (disjoncteur principal / alimentation). Plafonne ChargeManager (surplus PV) et ChargeNOW pour chaque wallbox.",
 	"LBL_wallBoxList": "Liste des wallbox"
 }

@@ -19,6 +19,25 @@
 					"xl": 6,
 					"newLine": true
 				},
+				"maxChargeCurrent": {
+					"type": "number",
+					"label": "LBL_maxChargeCurrent",
+					"help": "LBL_maxChargeCurrentHelp",
+					"default": 16,
+					"min": 10,
+					"max": 32,
+					"step": 1,
+					"unit": "A",
+					"validator": "data.maxChargeCurrent >= data.chargeManagerMinCurrent",
+					"validatorNoSaveOnError": true,
+					"validatorErrorText": "ERR_maxCurrentBelowMin",
+					"xs": 12,
+					"sm": 6,
+					"md": 6,
+					"lg": 6,
+					"xl": 6,
+					"newLine": false
+				},
 				"wallBoxList": {
 					"type": "accordion",
 					"titleAttr": "chargerName",
@@ -156,24 +175,6 @@
 					"lg": 6,
 					"xl": 6,
 					"newLine": true
-				},
-				"maxChargeCurrent": {
-					"type": "number",
-					"label": "LBL_maxChargeCurrent",
-					"default": 16,
-					"min": 10,
-					"max": 32,
-					"step": 1,
-					"unit": "A",
-					"validator": "data.maxChargeCurrent >= data.chargeManagerMinCurrent",
-					"validatorNoSaveOnError": true,
-					"validatorErrorText": "ERR_maxCurrentBelowMin",
-					"xs": 12,
-					"sm": 6,
-					"md": 6,
-					"lg": 6,
-					"xl": 6,
-					"newLine": false
 				}
 			}
 		}
