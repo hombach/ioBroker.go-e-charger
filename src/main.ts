@@ -10,6 +10,7 @@ import {
 	MAX_CHARGE_CURRENT,
 	evaluateBatteryAvailability,
 	MIN_CHARGE_CURRENT,
+	resolveWallboxCurrentLimits,
 	START_CHARGE_CURRENT,
 } from "./lib/chargeManagerUtils";
 import { ProjectUtils, type IWallboxInfo } from "./lib/projectUtils";
@@ -164,6 +165,24 @@ class go_e_charger extends utils.Adapter {
 				if (!wallBox.ipAddress) {
 					throw new Error(`Wallbox ${iWB} - IP address not set - stopping adapter`);
 				}
+
+				// resolve the per-wallbox current limits from the installation limit and the optional
+				// per-box user overrides (hardware caps are folded in later once the charger is read)
+				const limits = resolveWallboxCurrentLimits({
+					installationMaxCurrent: maxChargeCurrent,
+					configuredMaxCurrent: wallBox.maxAmp,
+					configuredMinCurrent: wallBox.minAmp,
+					hardwareMaxCurrent: null,
+					hardwareMinCurrent: null,
+				});
+				this.wallboxInfoList[iWB].MinAmp = limits.minCurrent;
+				this.wallboxInfoList[iWB].MaxAmp = limits.maxCurrent;
+				if (wallBox.minAmp && wallBox.maxAmp && wallBox.minAmp > wallBox.maxAmp) {
+					this.log.warn(
+						`Wallbox ${iWB}: configured minAmp (${wallBox.minAmp} A) exceeds maxAmp (${wallBox.maxAmp} A); using ${limits.minCurrent}/${limits.maxCurrent} A`,
+					);
+				}
+				this.log.debug(`Wallbox ${iWB} current limits: ${limits.minCurrent}-${limits.maxCurrent} A`);
 
 				// init device
 				await this.projectUtils.checkAndSetDevice(
@@ -501,8 +520,11 @@ class go_e_charger extends utils.Adapter {
 				}
 
 				if (this.wallboxInfoList[iWB].ChargeNOW) {
-					// Charge-NOW is enabled - the configured maximum charging current caps ChargeNOW as well
-					const chargeNowCurrent = Math.min(this.wallboxInfoList[iWB].ChargeCurrent, maxChargeCurrent);
+					// Charge-NOW is enabled - the per-wallbox current limits cap ChargeNOW as well
+					const chargeNowCurrent = Math.min(
+						Math.max(this.wallboxInfoList[iWB].ChargeCurrent, this.wallboxInfoList[iWB].MinAmp),
+						this.wallboxInfoList[iWB].MaxAmp,
+					);
 					await this.Charge_Config("1", chargeNowCurrent, `activate go-eCharger for forced charging`, iWB); // keep active charging current!!
 					await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
 					if (this.wallboxInfoList[iWB].HardwareMin3) {
@@ -1233,8 +1255,8 @@ class go_e_charger extends utils.Adapter {
 			batteryMode: chargeManagerBatteryMode,
 			reservePower: chargeManagerReservePower,
 			maximumBatteryBonus: chargeManagerMaxBatteryBonus,
-			maximumChargeCurrent: maxChargeCurrent,
-			minimumChargeCurrent: chargeManagerMinCurrent,
+			maximumChargeCurrent: this.wallboxInfoList[iWB].MaxAmp,
+			minimumChargeCurrent: Math.min(Math.max(chargeManagerMinCurrent, this.wallboxInfoList[iWB].MinAmp), this.wallboxInfoList[iWB].MaxAmp),
 			phases: Phases,
 			state: {
 				currentAmp: this.wallboxInfoList[iWB].SetAmp,

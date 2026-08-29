@@ -21,6 +21,8 @@ declare global {
 					chargerName: string;
 					ipAddress: string;
 					readOnlyMode: boolean;
+					maxAmp: number;
+					minAmp: number;
 				},
 			];
 		}

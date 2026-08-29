@@ -5,6 +5,69 @@ export const SHUTDOWN_DELAY_CYCLES = 12;
 export const DEFAULT_RESERVE_POWER = 100;
 export const DEFAULT_MAXIMUM_BATTERY_BONUS = 2000;
 
+/** Per-wallbox configuration and optional hardware caps used to resolve its current limits. */
+export interface WallboxLimitInput {
+	/** Installation-wide maximum current (maxChargeCurrent); caps every wallbox */
+	installationMaxCurrent: number;
+	/** User-configured maximum current for this wallbox; 0 (or invalid) means no per-box limit */
+	configuredMaxCurrent: number;
+	/** User-configured minimum current for this wallbox; 0 (or invalid) means the technical floor */
+	configuredMinCurrent: number;
+	/** Maximum current the charger hardware accepts, or null when unknown */
+	hardwareMaxCurrent: number | null;
+	/** Minimum current the charger hardware accepts, or null when unknown */
+	hardwareMinCurrent: number | null;
+}
+
+/** Effective per-wallbox current limits, both integers within [MIN_CHARGE_CURRENT, MAX_CHARGE_CURRENT]. */
+export interface WallboxCurrentLimits {
+	/** Lowest current that may be assigned to this wallbox */
+	minCurrent: number;
+	/** Highest current that may be assigned to this wallbox */
+	maxCurrent: number;
+}
+
+/**
+ * Resolves the effective minimum and maximum charging current for a single wallbox.
+ *
+ * The maximum is the tightest of the installation limit, the user-configured per-box
+ * maximum and the hardware capability; the minimum is the highest of the technical floor,
+ * the user-configured per-box minimum and the hardware minimum. A value of 0 (or any
+ * non-positive / non-finite value) for a configured or hardware bound means "not set" and
+ * is ignored. The minimum can never exceed the resolved maximum, and both results are
+ * clamped to the globally supported [MIN_CHARGE_CURRENT, MAX_CHARGE_CURRENT] range.
+ *
+ * @param input Installation limit, user configuration and optional hardware caps
+ * @returns The effective per-wallbox current limits
+ */
+export function resolveWallboxCurrentLimits(input: WallboxLimitInput): WallboxCurrentLimits {
+	const isUsable = (value: number | null): value is number => typeof value === "number" && Number.isFinite(value) && value > 0;
+
+	const installationMax =
+		Number.isFinite(input.installationMaxCurrent) && input.installationMaxCurrent > 0 ? Math.floor(input.installationMaxCurrent) : MAX_CHARGE_CURRENT;
+
+	const maxCandidates = [installationMax];
+	if (isUsable(input.configuredMaxCurrent)) {
+		maxCandidates.push(Math.floor(input.configuredMaxCurrent));
+	}
+	if (isUsable(input.hardwareMaxCurrent)) {
+		maxCandidates.push(Math.floor(input.hardwareMaxCurrent));
+	}
+	const maxCurrent = Math.min(MAX_CHARGE_CURRENT, Math.max(MIN_CHARGE_CURRENT, Math.min(...maxCandidates)));
+
+	const minCandidates = [MIN_CHARGE_CURRENT];
+	if (isUsable(input.configuredMinCurrent)) {
+		minCandidates.push(Math.floor(input.configuredMinCurrent));
+	}
+	if (isUsable(input.hardwareMinCurrent)) {
+		minCandidates.push(Math.floor(input.hardwareMinCurrent));
+	}
+	// the minimum can never exceed the resolved maximum
+	const minCurrent = Math.min(maxCurrent, Math.max(...minCandidates));
+
+	return { minCurrent, maxCurrent };
+}
+
 /** Supported ways of incorporating a home battery into surplus charging. */
 export type BatteryMode = "disabled" | "minimumSoc" | "priority";
 

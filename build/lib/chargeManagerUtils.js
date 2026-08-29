@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateOptimalChargeCurrent = calculateOptimalChargeCurrent;
 exports.stepChargeCurrent = stepChargeCurrent;
@@ -13,6 +14,27 @@ exports.START_CHARGE_CURRENT = 10;
 exports.SHUTDOWN_DELAY_CYCLES = 12;
 exports.DEFAULT_RESERVE_POWER = 100;
 exports.DEFAULT_MAXIMUM_BATTERY_BONUS = 2000;
+function resolveWallboxCurrentLimits(input) {
+    const isUsable = (value) => typeof value === "number" && Number.isFinite(value) && value > 0;
+    const installationMax = Number.isFinite(input.installationMaxCurrent) && input.installationMaxCurrent > 0 ? Math.floor(input.installationMaxCurrent) : exports.MAX_CHARGE_CURRENT;
+    const maxCandidates = [installationMax];
+    if (isUsable(input.configuredMaxCurrent)) {
+        maxCandidates.push(Math.floor(input.configuredMaxCurrent));
+    }
+    if (isUsable(input.hardwareMaxCurrent)) {
+        maxCandidates.push(Math.floor(input.hardwareMaxCurrent));
+    }
+    const maxCurrent = Math.min(exports.MAX_CHARGE_CURRENT, Math.max(exports.MIN_CHARGE_CURRENT, Math.min(...maxCandidates)));
+    const minCandidates = [exports.MIN_CHARGE_CURRENT];
+    if (isUsable(input.configuredMinCurrent)) {
+        minCandidates.push(Math.floor(input.configuredMinCurrent));
+    }
+    if (isUsable(input.hardwareMinCurrent)) {
+        minCandidates.push(Math.floor(input.hardwareMinCurrent));
+    }
+    const minCurrent = Math.min(maxCurrent, Math.max(...minCandidates));
+    return { minCurrent, maxCurrent };
+}
 function evaluateBatteryAvailability(input) {
     if (input.mode === "disabled") {
         return { ready: true, reason: "disabled", batterySoc: null };

@@ -7,6 +7,7 @@ import {
 	evaluateBatteryAvailability,
 	MAX_CHARGE_CURRENT,
 	MIN_CHARGE_CURRENT,
+	resolveWallboxCurrentLimits,
 	SHUTDOWN_DELAY_CYCLES,
 	START_CHARGE_CURRENT,
 	stepChargeCurrent,
@@ -192,6 +193,58 @@ describe("ChargeManager safety helpers", () => {
 		it("allows disabling the age limit without accepting invalid SOC values", () => {
 			assert.equal(evaluateBatteryAvailability({ ...validInput, batterySocAgeMs: null, maximumAgeSeconds: 0 }).ready, true);
 			assert.equal(evaluateBatteryAvailability({ ...validInput, batterySoc: 101, maximumAgeSeconds: 0 }).reason, "invalid");
+		});
+	});
+
+	describe("resolveWallboxCurrentLimits", () => {
+		const base = {
+			installationMaxCurrent: 32,
+			configuredMaxCurrent: 0,
+			configuredMinCurrent: 0,
+			hardwareMaxCurrent: null,
+			hardwareMinCurrent: null,
+		};
+
+		it("falls back to the installation limit and the technical floor when nothing else is set", () => {
+			assert.deepEqual(resolveWallboxCurrentLimits(base), { minCurrent: MIN_CHARGE_CURRENT, maxCurrent: 32 });
+		});
+
+		it("lets the user throttle a single box below the installation limit", () => {
+			assert.deepEqual(resolveWallboxCurrentLimits({ ...base, configuredMaxCurrent: 10 }), { minCurrent: MIN_CHARGE_CURRENT, maxCurrent: 10 });
+		});
+
+		it("never lets a per-box maximum exceed the installation limit", () => {
+			assert.equal(resolveWallboxCurrentLimits({ ...base, installationMaxCurrent: 16, configuredMaxCurrent: 32 }).maxCurrent, 16);
+		});
+
+		it("takes the tightest of installation, user and hardware maxima", () => {
+			assert.equal(resolveWallboxCurrentLimits({ ...base, installationMaxCurrent: 32, configuredMaxCurrent: 20, hardwareMaxCurrent: 16 }).maxCurrent, 16);
+		});
+
+		it("raises the minimum to the highest of user and hardware minima", () => {
+			assert.equal(resolveWallboxCurrentLimits({ ...base, configuredMinCurrent: 8 }).minCurrent, 8);
+			assert.equal(resolveWallboxCurrentLimits({ ...base, hardwareMinCurrent: 10 }).minCurrent, 10);
+			assert.equal(resolveWallboxCurrentLimits({ ...base, configuredMinCurrent: 8, hardwareMinCurrent: 10 }).minCurrent, 10);
+		});
+
+		it("never lets the minimum exceed the resolved maximum", () => {
+			assert.deepEqual(resolveWallboxCurrentLimits({ ...base, configuredMaxCurrent: 10, configuredMinCurrent: 16 }), { minCurrent: 10, maxCurrent: 10 });
+		});
+
+		it("treats 0 and invalid bounds as not set", () => {
+			assert.deepEqual(resolveWallboxCurrentLimits({ ...base, configuredMaxCurrent: 0, configuredMinCurrent: 0 }), {
+				minCurrent: MIN_CHARGE_CURRENT,
+				maxCurrent: 32,
+			});
+			assert.deepEqual(resolveWallboxCurrentLimits({ ...base, hardwareMaxCurrent: 0, hardwareMinCurrent: -5 }), {
+				minCurrent: MIN_CHARGE_CURRENT,
+				maxCurrent: 32,
+			});
+		});
+
+		it("clamps an out-of-range installation limit to the supported maximum", () => {
+			assert.equal(resolveWallboxCurrentLimits({ ...base, installationMaxCurrent: 99 }).maxCurrent, MAX_CHARGE_CURRENT);
+			assert.equal(resolveWallboxCurrentLimits({ ...base, installationMaxCurrent: 0 }).maxCurrent, MAX_CHARGE_CURRENT);
 		});
 	});
 

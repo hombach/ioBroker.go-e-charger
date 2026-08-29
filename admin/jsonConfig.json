@@ -79,6 +79,39 @@
 							"md": 6,
 							"lg": 6,
 							"xl": 4
+						},
+						{
+							"type": "number",
+							"label": "LBL_wallboxMinAmp",
+							"help": "LBL_wallboxMinAmpHelp",
+							"attr": "minAmp",
+							"default": 0,
+							"min": 0,
+							"max": 32,
+							"step": 1,
+							"unit": "A",
+							"xs": 12,
+							"sm": 6,
+							"md": 6,
+							"lg": 6,
+							"xl": 4,
+							"newLine": true
+						},
+						{
+							"type": "number",
+							"label": "LBL_wallboxMaxAmp",
+							"help": "LBL_wallboxMaxAmpHelp",
+							"attr": "maxAmp",
+							"default": 0,
+							"min": 0,
+							"max": 32,
+							"step": 1,
+							"unit": "A",
+							"xs": 12,
+							"sm": 6,
+							"md": 6,
+							"lg": 6,
+							"xl": 4
 						}
 					]
 				}

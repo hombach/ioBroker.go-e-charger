@@ -60,6 +60,14 @@ Enable **read-only mode** for a charger if the adapter should only read its data
 
 The poll cycle time defines how often the adapter reads data from the chargers and adjusts the charging current (minimum 3 seconds, default 10 seconds).
 
+#### Per-wallbox current limits
+
+Each wallbox can optionally be given its own **minimum** and **maximum charging current** [A]. These apply to **both** ChargeManager (PV surplus) and ChargeNOW, for example to throttle a single charger or to balance the load between several boxes on a shared supply.
+
+- A value of `0` means "not set": the minimum falls back to the technical minimum of 6 A, and the maximum falls back to the installation-wide maximum charging current from the standard settings.
+- A per-box maximum can only lower a charger below the installation limit, never raise it above.
+- If the configured minimum ends up higher than the maximum, the minimum is clamped down to the maximum and a warning is logged.
+
 ### PV surplus charging with ChargeManager
 
 ChargeManager calculates the charging current from numeric ioBroker states supplied by an energy-management, inverter, meter, or user-created data source. It does not depend on a particular vendor, but the selected states must represent the quantities described below.
@@ -188,6 +196,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 -->
 ### **WORK IN PROGRESS**
 
+- (hombach) added optional per-wallbox minimum and maximum charging current, applied to both ChargeManager and ChargeNOW and always kept within the installation-wide maximum
 - (typhosj) ChargeManager: added home-battery modes (disabled, minimum SoC, battery priority); installations without a home battery no longer need a constant helper state
 - (typhosj) ChargeManager: added a battery SoC hysteresis and an optional maximum SoC age so surplus control stops on stale battery data
 - (hombach) admin: moved the maximum charging current to the standard settings tab and clarified that it is an installation-wide limit of the shared power supply, valid for all wallboxes and both charging modes
