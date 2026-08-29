@@ -175,7 +175,10 @@
     "chargeManagerReservePower": 100,
     "chargeManagerMaxBatteryBonus": 2000,
     "chargeManagerMinCurrent": 6,
-    "maxChargeCurrent": 16
+    "maxChargeCurrent": 16,
+    "batteryMode": "priority",
+    "batterySocHysteresis": 0,
+    "batterySocMaxAgeSeconds": 0
   },
   "objects": [],
   "instanceObjects": [

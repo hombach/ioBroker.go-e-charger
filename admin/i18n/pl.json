@@ -16,5 +16,14 @@
 	"LBL_chargeManagerMinCurrent": "Minimalny prąd ChargeManager dla ładowania z nadwyżki PV [A]",
 	"LBL_maxChargeCurrent": "Maksymalny prąd ładowania zasilania dla wszystkich wallboxów [A]",
 	"LBL_maxChargeCurrentHelp": "Limit całej instalacji (główny bezpiecznik / zasilanie). Ogranicza ChargeManager (nadwyżka PV) i ChargeNOW dla każdego wallboxa.",
-	"LBL_wallBoxList": "Lista wallboxów"
+	"LBL_wallBoxList": "Lista wallboxów",
+	"LBL_batteryMode": "Tryb baterii domowej",
+	"LBL_batteryModeDisabled": "Wyłączony",
+	"LBL_batteryModeDisabledDescription": "Ignoruj baterię domową; stan SOC nie jest wymagany",
+	"LBL_batteryModeMinimumSoc": "Minimalny SOC",
+	"LBL_batteryModeMinimumSocDescription": "Zatrzymaj ładowanie pojazdu poniżej minimalnego SOC bez dodawania mocy baterii",
+	"LBL_batteryModePriority": "Priorytet baterii",
+	"LBL_batteryModePriorityDescription": "Nadaj priorytet baterii i stopniowo uwalniaj skonfigurowany bonus powyżej minimalnego SOC",
+	"LBL_batterySocHysteresis": "Histereza SOC baterii poniżej minimum",
+	"LBL_batterySocMaxAgeSeconds": "Maksymalny wiek SOC baterii (0 wyłącza kontrolę)"
 }

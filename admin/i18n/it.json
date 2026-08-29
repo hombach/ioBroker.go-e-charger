@@ -16,5 +16,14 @@
 	"LBL_chargeManagerMinCurrent": "Corrente minima del ChargeManager per la carica con surplus FV [A]",
 	"LBL_maxChargeCurrent": "Corrente di carica massima dell'alimentazione per tutte le wallbox [A]",
 	"LBL_maxChargeCurrentHelp": "Limite dell'intero impianto (interruttore principale / alimentazione). Limita ChargeManager (surplus FV) e ChargeNOW per ogni wallbox.",
-	"LBL_wallBoxList": "Elenco delle wallbox"
+	"LBL_wallBoxList": "Elenco delle wallbox",
+	"LBL_batteryMode": "Modalità batteria domestica",
+	"LBL_batteryModeDisabled": "Disattivata",
+	"LBL_batteryModeDisabledDescription": "Ignora la batteria domestica; non è richiesto uno stato SOC",
+	"LBL_batteryModeMinimumSoc": "SOC minimo",
+	"LBL_batteryModeMinimumSocDescription": "Interrompe la ricarica del veicolo sotto il SOC minimo senza aggiungere potenza dalla batteria",
+	"LBL_batteryModePriority": "Priorità batteria",
+	"LBL_batteryModePriorityDescription": "Dà priorità alla batteria e rilascia gradualmente il bonus configurato sopra il SOC minimo",
+	"LBL_batterySocHysteresis": "Isteresi del SOC della batteria sotto il minimo",
+	"LBL_batterySocMaxAgeSeconds": "Età massima del SOC della batteria (0 disattiva il controllo)"
 }

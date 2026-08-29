@@ -2,11 +2,13 @@
 import * as utils from "@iobroker/adapter-core";
 import axios from "axios";
 import {
+	type BatteryMode,
 	buildChargerCommands,
 	decideChargeManager,
 	DEFAULT_MAXIMUM_BATTERY_BONUS,
 	DEFAULT_RESERVE_POWER,
 	MAX_CHARGE_CURRENT,
+	evaluateBatteryAvailability,
 	MIN_CHARGE_CURRENT,
 	START_CHARGE_CURRENT,
 } from "./lib/chargeManagerUtils";
@@ -17,7 +19,6 @@ const axiosInstance = axios.create({
 
 // variables
 let minHomeBatVal = 87;
-let batSoC = 0;
 let solarPower = 0;
 let houseConsumption = 0;
 let totalChargeEnergy = 0;
@@ -26,6 +27,9 @@ let chargeManagerReservePower = DEFAULT_RESERVE_POWER;
 let chargeManagerMaxBatteryBonus = DEFAULT_MAXIMUM_BATTERY_BONUS;
 let chargeManagerMinCurrent = MIN_CHARGE_CURRENT;
 let maxChargeCurrent = MAX_CHARGE_CURRENT;
+let chargeManagerBatteryMode: BatteryMode = "priority";
+let chargeManagerBatterySocHysteresis = 0;
+let chargeManagerBatterySocMaxAgeSeconds = 0;
 
 class go_e_charger extends utils.Adapter {
 	private projectUtils = new ProjectUtils(this);
@@ -102,6 +106,14 @@ class go_e_charger extends utils.Adapter {
 		}
 		this.log.debug(`ChargeManager current range: ${chargeManagerMinCurrent}-${maxChargeCurrent} A`);
 
+		// ChargeManager: home-battery handling
+		chargeManagerBatteryMode = this.validateBatteryModeConfig(this.config.batteryMode);
+		chargeManagerBatterySocHysteresis = this.validateNonNegativeConfig(this.config.batterySocHysteresis, 0, "batterySocHysteresis");
+		chargeManagerBatterySocMaxAgeSeconds = this.validateBoundedIntConfig(this.config.batterySocMaxAgeSeconds, 0, 0, 86400, "batterySocMaxAgeSeconds");
+		this.log.debug(
+			`ChargeManager battery mode: ${chargeManagerBatteryMode}, SoC hysteresis: ${chargeManagerBatterySocHysteresis}%, max SoC age: ${chargeManagerBatterySocMaxAgeSeconds} s`,
+		);
+
 		const wallBoxList = Array.isArray(this.config.wallBoxList) ? this.config.wallBoxList : [];
 		// normalize the config to the guarded array so all later accesses (firstStart, StateMachine,
 		// onUnload, ...) see a valid array even if the config is missing or not an array.
@@ -126,6 +138,7 @@ class go_e_charger extends utils.Adapter {
 				Charge3Phase: false,
 				EnabledPhases: 0,
 				MeasuredMaxChargeAmp: 0,
+				BatteryReady: false,
 				MinAmp: 6,
 				MaxAmp: maxChargeCurrent,
 				DelayOff: 0,
@@ -477,6 +490,9 @@ class go_e_charger extends utils.Adapter {
 			totalChargeEnergy = 0; // reset total charge energy at the beginning of each cycle, will be accumulated from all chargers in the loop below
 			totalChargePower = 0; // reset total charge power at the beginning of each cycle, will be accumulated from all chargers in the loop below
 			for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
+				if (!this.wallboxInfoList[iWB].ChargeManager || this.wallboxInfoList[iWB].ChargeNOW) {
+					this.wallboxInfoList[iWB].BatteryReady = false;
+				}
 				// always refresh live data each cycle so states stay current in every mode,
 				// including pure monitoring / read-only where the adapter controls no charging
 				await this.Read_ChargerAPIV1(iWB);
@@ -494,25 +510,28 @@ class go_e_charger extends utils.Adapter {
 					}
 				} else if (this.wallboxInfoList[iWB].ChargeManager) {
 					// Charge-Manager is enabled
-					batSoC = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeBatSoc);
-					this.log.debug(`Got external state of battery SoC: ${batSoC}%`);
-					if (
-						typeof batSoC !== "number" ||
-						!Number.isFinite(batSoC) ||
-						batSoC < 0 ||
-						batSoC > 100 ||
-						!Number.isFinite(minHomeBatVal) ||
-						minHomeBatVal < 0 ||
-						minHomeBatVal > 100
-					) {
-						await this.stopChargeManager(`Invalid battery state of charge or setpoint`, iWB);
-					} else if (batSoC >= minHomeBatVal) {
-						// SoC of home battery is sufficient
+					const batteryState =
+						chargeManagerBatteryMode === "disabled" ? null : await this.projectUtils.asyncGetForeignState(this.config.stateHomeBatSoc);
+					const batteryDecision = evaluateBatteryAvailability({
+						mode: chargeManagerBatteryMode,
+						batterySoc: batteryState?.val,
+						minimumBatterySoc: minHomeBatVal,
+						batterySocAgeMs: batteryState ? Date.now() - batteryState.ts : null,
+						maximumAgeSeconds: chargeManagerBatterySocMaxAgeSeconds,
+						hysteresis: chargeManagerBatterySocHysteresis,
+						wasReady: this.wallboxInfoList[iWB].BatteryReady,
+					});
+					this.wallboxInfoList[iWB].BatteryReady = batteryDecision.ready;
+					if (batteryDecision.ready) {
 						await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
-						await this.Charge_Manager(iWB);
-					} else {
+						await this.Charge_Manager(iWB, batteryDecision.batterySoc);
+					} else if (batteryDecision.reason === "stale") {
+						await this.stopChargeManager(`Battery state of charge is stale`, iWB);
+					} else if (batteryDecision.reason === "below-minimum") {
 						// FUTURE: time of day forces emptying of home battery
 						await this.stopChargeManager(`Charging home battery until ${minHomeBatVal}%`, iWB);
+					} else {
+						await this.stopChargeManager(`Invalid battery state of charge or setpoint`, iWB);
 					}
 				} else {
 					// both modes off: if the adapter previously enabled charging, switch it off again
@@ -556,6 +575,23 @@ class go_e_charger extends utils.Adapter {
 	 * @param name - Config key name for the warning log
 	 * @returns The validated value, or the fallback
 	 */
+	/**
+	 * Validates the configured home-battery mode.
+	 *
+	 * @param value - Raw value from the adapter configuration
+	 * @returns The configured mode, or `priority` for a missing or invalid value
+	 */
+	private validateBatteryModeConfig(value: unknown): BatteryMode {
+		if (value === undefined || value === null) {
+			return "priority";
+		}
+		if (value !== "disabled" && value !== "minimumSoc" && value !== "priority") {
+			this.log.warn(`Config batteryMode is invalid (${JSON.stringify(value)}); using priority`);
+			return "priority";
+		}
+		return value;
+	}
+
 	private validateNonNegativeConfig(value: unknown, fallback: number, name: string): number {
 		if (value === undefined || value === null) {
 			return fallback;
@@ -1150,6 +1186,7 @@ class go_e_charger extends utils.Adapter {
 	 *
 	 * @async
 	 * @param iWB - Index of the charger in the configuration list for which to manage charging.
+	 * @param batterySoc - Validated battery SOC, or null when battery handling is disabled.
 	 * @returns Resolves when all state values are retrieved and charging logic is applied.
 	 * @description
 	 * The `Charge_Manager` function continuously evaluates the energy situation and adjusts
@@ -1157,7 +1194,7 @@ class go_e_charger extends utils.Adapter {
 	 * Data sources include:
 	 * - `StateHomeSolarPower`: current solar generation (W)
 	 * - `StateHomePowerConsumption`: total household power demand (W)
-	 * - `StateHomeBatSoc`: battery state of charge (%)
+	 * - `StateHomeBatSoc`: battery state of charge (%) in battery-aware modes
 	 *
 	 * The resulting charging current (`OptAmpere`) is computed based on:
 	 * - Available surplus energy
@@ -1171,13 +1208,14 @@ class go_e_charger extends utils.Adapter {
 	 * - Enables charging if current exceeds 9 A (5 A base + 4 A hysteresis).
 	 * - Disables charging if below 6 A after multiple cycles (`DelayOff` > 12).
 	 */
-	async Charge_Manager(iWB: number): Promise<void> {
+	async Charge_Manager(iWB: number, batterySoc: number | null): Promise<void> {
 		solarPower = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower);
 		this.log.debug(`Got external state of solar power: ${solarPower} W`);
 		houseConsumption = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption);
 		this.log.debug(`Got external state of house power consumption: ${houseConsumption} W`);
-		batSoC = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeBatSoc);
-		this.log.debug(`Got external state of battery SoC: ${batSoC}%`);
+		if (batterySoc !== null) {
+			this.log.debug(`Got external state of battery SoC: ${batterySoc}%`);
+		}
 		this.wallboxInfoList[iWB].ChargePower = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`);
 
 		const Phases =
@@ -1190,8 +1228,9 @@ class go_e_charger extends utils.Adapter {
 			houseConsumption,
 			chargerPower: this.wallboxInfoList[iWB].ChargePower,
 			subtractChargerPower: this.config.subtractSelfConsumption,
-			batterySoc: batSoC,
+			batterySoc,
 			minBatterySoc: minHomeBatVal,
+			batteryMode: chargeManagerBatteryMode,
 			reservePower: chargeManagerReservePower,
 			maximumBatteryBonus: chargeManagerMaxBatteryBonus,
 			maximumChargeCurrent: maxChargeCurrent,

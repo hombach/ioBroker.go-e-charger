@@ -16,5 +16,14 @@
 	"LBL_chargeManagerMinCurrent": "光伏盈余充电的 ChargeManager 最小电流 [A]",
 	"LBL_maxChargeCurrent": "适用于所有充电桩的电源最大充电电流 [A]",
 	"LBL_maxChargeCurrentHelp": "整个电气装置的限制（主断路器/供电）。为每个充电桩限制 ChargeManager（光伏盈余）和 ChargeNOW。",
-	"LBL_wallBoxList": "充电桩列表"
+	"LBL_wallBoxList": "充电桩列表",
+	"LBL_batteryMode": "家庭电池模式",
+	"LBL_batteryModeDisabled": "已禁用",
+	"LBL_batteryModeDisabledDescription": "忽略家庭电池；无需 SOC 状态",
+	"LBL_batteryModeMinimumSoc": "最低 SOC",
+	"LBL_batteryModeMinimumSocDescription": "低于最低 SOC 时停止车辆充电，且不增加电池功率",
+	"LBL_batteryModePriority": "电池优先",
+	"LBL_batteryModePriorityDescription": "优先为电池充电，并在高于最低 SOC 时逐步释放设定的附加功率",
+	"LBL_batterySocHysteresis": "低于最低值的电池 SOC 回差",
+	"LBL_batterySocMaxAgeSeconds": "电池 SOC 最大数据时效（0 表示禁用检查）"
 }
