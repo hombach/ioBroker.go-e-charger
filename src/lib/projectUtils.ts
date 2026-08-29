@@ -73,6 +73,14 @@ export interface IWallboxInfo {
 	 */
 	MaxAmp: number;
 	/**
+	 * Maximum charging current the charger hardware/cable accepts (0 = unknown)
+	 */
+	HardwareMaxAmp: number;
+	/**
+	 * Minimum charging current the charger hardware accepts (0 = unknown)
+	 */
+	HardwareMinAmp: number;
+	/**
 	 * DelayOff
 	 */
 	DelayOff: number;

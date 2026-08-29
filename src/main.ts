@@ -142,6 +142,8 @@ class go_e_charger extends utils.Adapter {
 				BatteryReady: false,
 				MinAmp: 6,
 				MaxAmp: maxChargeCurrent,
+				HardwareMaxAmp: 0,
+				HardwareMinAmp: 0,
 				DelayOff: 0,
 				CurrentHysteresis: 0,
 				SetOptAmp: 5,
@@ -231,6 +233,20 @@ class go_e_charger extends utils.Adapter {
 					await this.Read_ChargerAPIV2(iWB);
 					this.log.info(`IP address charger ${iWB} found in config: ${wallBox.ipAddress}`);
 					void this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
+					// the charger read may have tightened the current limits (hardware/cable) - refresh the ChargeCurrent range
+					await this.projectUtils.checkAndSetValueNumber(
+						`Wallbox_${iWB}.Settings.ChargeCurrent`,
+						this.wallboxInfoList[iWB].MinAmp,
+						`charge current output`,
+						"A",
+						"level.current",
+						true,
+						true,
+						true,
+						this.wallboxInfoList[iWB].MinAmp,
+						this.wallboxInfoList[iWB].MaxAmp,
+						1,
+					);
 				}
 
 				this.wallboxInfoList[iWB].ChargeNOW = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeNOW`); // Get charging override trigger
@@ -598,6 +614,74 @@ class go_e_charger extends utils.Adapter {
 	 * @returns The validated value, or the fallback
 	 */
 	/**
+	 * Re-resolves and stores the effective current limits for a wallbox, folding the hardware
+	 * caps read from the charger on top of the installation limit and the user configuration.
+	 * Safe to call on every cycle so a changed cable limit (cbl) takes effect immediately.
+	 *
+	 * @param iWB - Index of the charger in the configuration list
+	 */
+	private applyWallboxCurrentLimits(iWB: number): void {
+		const wallBox = this.config.wallBoxList[iWB];
+		const limits = resolveWallboxCurrentLimits({
+			installationMaxCurrent: maxChargeCurrent,
+			configuredMaxCurrent: wallBox?.maxAmp ?? 0,
+			configuredMinCurrent: wallBox?.minAmp ?? 0,
+			hardwareMaxCurrent: this.wallboxInfoList[iWB].HardwareMaxAmp || null,
+			hardwareMinCurrent: this.wallboxInfoList[iWB].HardwareMinAmp || null,
+		});
+		this.wallboxInfoList[iWB].MinAmp = limits.minCurrent;
+		this.wallboxInfoList[iWB].MaxAmp = limits.maxCurrent;
+	}
+
+	/**
+	 * Combines the charger's absolute maximum current with the cable current limit into the
+	 * effective hardware maximum. Non-positive values are ignored; the result is 0 when neither
+	 * value is usable.
+	 *
+	 * @param absoluteMax - Absolute maximum current the charger accepts (go-e key `ama`)
+	 * @param cableLimit - Cable current limit (go-e key `cbl`, 0 = no cable coding)
+	 * @returns The tightest usable hardware maximum, or 0 when unknown
+	 */
+	private combineHardwareMax(absoluteMax: number, cableLimit: number): number {
+		const caps = [absoluteMax, cableLimit].filter(value => Number.isFinite(value) && value > 0);
+		return caps.length ? Math.min(...caps) : 0;
+	}
+
+	/**
+	 * Stores the hardware current caps read from a charger, exposes them as info states and
+	 * re-applies the effective per-wallbox current limits. A cap of 0 or a non-positive value
+	 * is treated as "unknown" and leaves the corresponding stored value untouched.
+	 *
+	 * @param iWB - Index of the charger in the configuration list
+	 * @param hardwareMaxAmp - Maximum current the charger/cable accepts, or 0 when unknown
+	 * @param hardwareMinAmp - Minimum current the charger accepts, or 0 when unknown
+	 * @param basePath - State base path of the charger (e.g. `Wallbox_0`)
+	 */
+	private setWallboxHardwareLimits(iWB: number, hardwareMaxAmp: number, hardwareMinAmp: number, basePath: string): void {
+		if (Number.isFinite(hardwareMaxAmp) && hardwareMaxAmp > 0) {
+			this.wallboxInfoList[iWB].HardwareMaxAmp = Math.floor(hardwareMaxAmp);
+			void this.projectUtils.checkAndSetValueNumber(
+				`${basePath}.info.hardwareMaxChargeCurrent`,
+				this.wallboxInfoList[iWB].HardwareMaxAmp,
+				`Maximum charging current the charger hardware/cable accepts`,
+				"A",
+				"value.current",
+			);
+		}
+		if (Number.isFinite(hardwareMinAmp) && hardwareMinAmp > 0) {
+			this.wallboxInfoList[iWB].HardwareMinAmp = Math.floor(hardwareMinAmp);
+			void this.projectUtils.checkAndSetValueNumber(
+				`${basePath}.info.hardwareMinChargeCurrent`,
+				this.wallboxInfoList[iWB].HardwareMinAmp,
+				`Minimum charging current the charger hardware accepts`,
+				"A",
+				"value.current",
+			);
+		}
+		this.applyWallboxCurrentLimits(iWB);
+	}
+
+	/**
 	 * Validates the configured home-battery mode.
 	 *
 	 * @param value - Raw value from the adapter configuration
@@ -702,6 +786,8 @@ class go_e_charger extends utils.Adapter {
 	 * @param status.fwv - Firmware version
 	 * @param status.uby - Unlocked by RFID number
 	 * @param status.ast - Access control state
+	 * @param status.ama - Absolute maximum charging current the charger accepts
+	 * @param status.cbl - Cable current limit (0 = no cable coding)
 	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
 	 */
 
@@ -719,6 +805,8 @@ class go_e_charger extends utils.Adapter {
 			fwv: string;
 			uby: string | number;
 			ast?: string | number;
+			ama?: string | number;
+			cbl?: string | number;
 
 			rca?: string;
 			rcr?: string;
@@ -818,6 +906,8 @@ class go_e_charger extends utils.Adapter {
 			"phase",
 			"value",
 		);
+		// hardware current caps: absolute max (ama) tightened by the cable coding (cbl, 0 = no cable). API V1 has no min charging current.
+		this.setWallboxHardwareLimits(iWB, this.combineHardwareMax(Number(status.ama), Number(status.cbl)), 0, basePath);
 		void this.projectUtils.checkAndSetValueNumber(
 			`${basePath}.statistics.chargedEnergy`,
 			status.eto / 10,
@@ -985,7 +1075,7 @@ class go_e_charger extends utils.Adapter {
 	async Read_ChargerAPIV2(iWB: number): Promise<void> {
 		await axiosInstance
 			.get(
-				`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,trx,ast,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`,
+				`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,trx,ast,ama,cbl,mca,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`,
 				{
 					transformResponse: r => r,
 				},
@@ -1017,6 +1107,9 @@ class go_e_charger extends utils.Adapter {
 	 * @param status.typ - Hardware version or type identifier.
 	 * @param status.trx - Transaction: null = none, 0 = without card, otherwise cardIndex + 1 (API V2 equivalent of V1 uby)
 	 * @param status.ast - Access control state
+	 * @param status.ama - Absolute maximum charging current the charger accepts
+	 * @param status.cbl - Cable current limit (0 = no cable coding)
+	 * @param status.mca - Minimum charging current the charger accepts
 	 * @param status.rca - RFID card 1 ID
 	 * @param status.rcr - RFID card 2 ID
 	 * @param status.rcd - RFID card 3 ID
@@ -1055,6 +1148,9 @@ class go_e_charger extends utils.Adapter {
 			typ: string;
 			trx?: number | null;
 			ast?: string | number;
+			ama?: number;
+			cbl?: number;
+			mca?: number;
 			rca?: string;
 			rcr?: string;
 			rcd?: string;
@@ -1109,6 +1205,8 @@ class go_e_charger extends utils.Adapter {
 		this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
 		this.wallboxInfoList[iWB].Hardware = status.typ;
 		void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, `info.hardware`);
+		// hardware current caps: absolute max (ama) tightened by the cable coding (cbl, 0 = no cable), plus the min charging current (mca)
+		this.setWallboxHardwareLimits(iWB, this.combineHardwareMax(Number(status.ama), Number(status.cbl)), Number(status.mca), basePath);
 		// access control: 0 = open, 1 = RFID/App required, 2 = electricity price/automatic
 		if (status.ast !== undefined && status.ast !== null) {
 			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");

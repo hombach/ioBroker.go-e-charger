@@ -125,6 +125,8 @@ class go_e_charger extends utils.Adapter {
                 BatteryReady: false,
                 MinAmp: 6,
                 MaxAmp: maxChargeCurrent,
+                HardwareMaxAmp: 0,
+                HardwareMinAmp: 0,
                 DelayOff: 0,
                 CurrentHysteresis: 0,
                 SetOptAmp: 5,
@@ -171,6 +173,7 @@ class go_e_charger extends utils.Adapter {
                     await this.Read_ChargerAPIV2(iWB);
                     this.log.info(`IP address charger ${iWB} found in config: ${wallBox.ipAddress}`);
                     void this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
+                    await this.projectUtils.checkAndSetValueNumber(`Wallbox_${iWB}.Settings.ChargeCurrent`, this.wallboxInfoList[iWB].MinAmp, `charge current output`, "A", "level.current", true, true, true, this.wallboxInfoList[iWB].MinAmp, this.wallboxInfoList[iWB].MaxAmp, 1);
                 }
                 this.wallboxInfoList[iWB].ChargeNOW = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeNOW`);
                 this.wallboxInfoList[iWB].ChargeManager = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeManager`);
@@ -457,6 +460,33 @@ class go_e_charger extends utils.Adapter {
             this.scheduleStateMachine();
         }
     }
+    applyWallboxCurrentLimits(iWB) {
+        const wallBox = this.config.wallBoxList[iWB];
+        const limits = (0, chargeManagerUtils_1.resolveWallboxCurrentLimits)({
+            installationMaxCurrent: maxChargeCurrent,
+            configuredMaxCurrent: wallBox?.maxAmp ?? 0,
+            configuredMinCurrent: wallBox?.minAmp ?? 0,
+            hardwareMaxCurrent: this.wallboxInfoList[iWB].HardwareMaxAmp || null,
+            hardwareMinCurrent: this.wallboxInfoList[iWB].HardwareMinAmp || null,
+        });
+        this.wallboxInfoList[iWB].MinAmp = limits.minCurrent;
+        this.wallboxInfoList[iWB].MaxAmp = limits.maxCurrent;
+    }
+    combineHardwareMax(absoluteMax, cableLimit) {
+        const caps = [absoluteMax, cableLimit].filter(value => Number.isFinite(value) && value > 0);
+        return caps.length ? Math.min(...caps) : 0;
+    }
+    setWallboxHardwareLimits(iWB, hardwareMaxAmp, hardwareMinAmp, basePath) {
+        if (Number.isFinite(hardwareMaxAmp) && hardwareMaxAmp > 0) {
+            this.wallboxInfoList[iWB].HardwareMaxAmp = Math.floor(hardwareMaxAmp);
+            void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.hardwareMaxChargeCurrent`, this.wallboxInfoList[iWB].HardwareMaxAmp, `Maximum charging current the charger hardware/cable accepts`, "A", "value.current");
+        }
+        if (Number.isFinite(hardwareMinAmp) && hardwareMinAmp > 0) {
+            this.wallboxInfoList[iWB].HardwareMinAmp = Math.floor(hardwareMinAmp);
+            void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.hardwareMinChargeCurrent`, this.wallboxInfoList[iWB].HardwareMinAmp, `Minimum charging current the charger hardware accepts`, "A", "value.current");
+        }
+        this.applyWallboxCurrentLimits(iWB);
+    }
     validateBatteryModeConfig(value) {
         if (value === undefined || value === null) {
             return "priority";
@@ -546,6 +576,7 @@ class go_e_charger extends utils.Adapter {
         }
         this.wallboxInfoList[iWB].GridPhases = ((32 & status.pha) >> 5) + ((16 & status.pha) >> 4) + ((8 & status.pha) >> 3);
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.GridPhases`, this.wallboxInfoList[iWB].GridPhases, `No of available grid phases`, "phase", "value");
+        this.setWallboxHardwareLimits(iWB, this.combineHardwareMax(Number(status.ama), Number(status.cbl)), 0, basePath);
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.statistics.chargedEnergy`, status.eto / 10, `Totally charged in wallbox lifetime`, "kWh", "value.energy.consumed");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.Charge`, status.nrg[11] * 10, `actual charging-power`, "W", "value.power");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.MeasuredMaxPhaseCurrent`, Math.max(...status.nrg.slice(4, 7)) / 10, `Measured max. current of grid phases`, "A", "value.current");
@@ -595,7 +626,7 @@ class go_e_charger extends utils.Adapter {
     }
     async Read_ChargerAPIV2(iWB) {
         await axiosInstance
-            .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,trx,ast,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`, {
+            .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,trx,ast,ama,cbl,mca,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`, {
             transformResponse: r => r,
         })
             .then(async (response) => {
@@ -629,6 +660,7 @@ class go_e_charger extends utils.Adapter {
         this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
         this.wallboxInfoList[iWB].Hardware = status.typ;
         void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, `info.hardware`);
+        this.setWallboxHardwareLimits(iWB, this.combineHardwareMax(Number(status.ama), Number(status.cbl)), Number(status.mca), basePath);
         if (status.ast !== undefined && status.ast !== null) {
             void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
         }
