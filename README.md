@@ -196,7 +196,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 1.6.0 (2026-08-29)
 
 - (hombach) added optional per-wallbox minimum and maximum charging current, applied to both ChargeManager and ChargeNOW and always kept within the installation-wide maximum
 - (hombach) the per-wallbox current limits now also respect the charger's reported hardware caps (absolute max, cable limit, minimum charging current), published as `info.hardwareMaxChargeCurrent` / `info.hardwareMinChargeCurrent`
@@ -231,12 +231,6 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) live data is now refreshed every cycle in all modes, so read-only monitoring stays up to date
 - (hombach) API V2 not being reachable is now a single warning instead of an error (normal on hardware gen 1/2)
 - (typhosj) use generic go-e brand logo as adapter icon (#843)
-
-### 1.3.0 (2026-08-04)
-
-- (hombach) added info.accessControlState (go-e access_state: 0 = open, 1 = RFID/App required, 2 = price/automatic) (#634)
-- (hombach) tightened TypeScript types for go-e API response fields (removed any)
-- (hombach) updated dependencies
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

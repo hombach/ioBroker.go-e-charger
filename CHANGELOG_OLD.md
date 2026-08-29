@@ -15,6 +15,12 @@
 This adapter integrates one or more go-e Charger wallboxes into your ioBroker home automation. It cyclically polls each wallbox via its local HTTP API, provides all relevant data as ioBroker states, and lets you control charging directly from your smart home.
 
 ## Changelog - OLD CHANGES
+## 1.3.0 (2026-08-04)
+
+- (hombach) added info.accessControlState (go-e access_state: 0 = open, 1 = RFID/App required, 2 = price/automatic) (#634)
+- (hombach) tightened TypeScript types for go-e API response fields (removed any)
+- (hombach) updated dependencies
+
 ## 1.2.1 (2026-07-31)
 
 - (typhosj) made ChargeManager surplus control more fail-safe: input validation, current clamped to 0-16 A, resilience of state-machine loop (#841)
