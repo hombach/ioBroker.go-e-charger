@@ -248,6 +248,139 @@ describe("ChargeManager safety helpers", () => {
 		});
 	});
 
+	describe("resolveWallboxCurrentLimits across multiple wallboxes", () => {
+		// Models several boxes on one shared power supply. The same installation limit and hardware
+		// cap must be respected by every box regardless of its own configuration. This is the basis
+		// for the future total-installation-current management.
+
+		// helper: resolve the effective max for each box against a shared installation limit / hardware cap
+		function resolveMaxima(
+			installationMaxCurrent: number,
+			configuredMaxima: number[],
+			hardwareMaxCurrent: number | null = null,
+			hardwareMinCurrent: number | null = null,
+		): number[] {
+			return configuredMaxima.map(
+				configuredMaxCurrent =>
+					resolveWallboxCurrentLimits({
+						installationMaxCurrent,
+						configuredMaxCurrent,
+						configuredMinCurrent: 0,
+						hardwareMaxCurrent,
+						hardwareMinCurrent,
+					}).maxCurrent,
+			);
+		}
+
+		it("caps every box at the shared installation limit and hardware cap (10/16/20, hw 16, system 15)", () => {
+			// box 1: own 10 A wins; boxes 2 & 3: clamped to the 15 A installation limit (below the 16 A hardware cap)
+			assert.deepEqual(resolveMaxima(15, [10, 16, 20], 16), [10, 15, 15]);
+		});
+
+		it("lets the hardware cap tighten boxes below a generous installation limit (system 32, hw 16)", () => {
+			// installation allows 32 A, but every box only reports 16 A hardware -> all capped at 16
+			assert.deepEqual(resolveMaxima(32, [10, 16, 20], 16), [10, 16, 16]);
+		});
+
+		it("respects the installation limit even when both config and hardware are higher (system 11)", () => {
+			// a 11 A supply (e.g. a shared breaker) caps all boxes, whatever they request
+			assert.deepEqual(resolveMaxima(11, [16, 20, 32], 32), [11, 11, 11]);
+		});
+
+		it("mixes hardware caps per box under a shared installation limit (system 20, hw 16/32/11)", () => {
+			// box A hw 16, box B hw 32, box C hw 11; all under a 20 A installation limit, no user max
+			assert.deepEqual(
+				[
+					resolveWallboxCurrentLimits({
+						installationMaxCurrent: 20,
+						configuredMaxCurrent: 0,
+						configuredMinCurrent: 0,
+						hardwareMaxCurrent: 16,
+						hardwareMinCurrent: null,
+					}).maxCurrent,
+					resolveWallboxCurrentLimits({
+						installationMaxCurrent: 20,
+						configuredMaxCurrent: 0,
+						configuredMinCurrent: 0,
+						hardwareMaxCurrent: 32,
+						hardwareMinCurrent: null,
+					}).maxCurrent,
+					resolveWallboxCurrentLimits({
+						installationMaxCurrent: 20,
+						configuredMaxCurrent: 0,
+						configuredMinCurrent: 0,
+						hardwareMaxCurrent: 11,
+						hardwareMinCurrent: null,
+					}).maxCurrent,
+				],
+				[16, 20, 11],
+			);
+		});
+
+		it("applies independent per-box minima while sharing the installation maximum (system 20)", () => {
+			// box A: user min 8; box B: hardware min 10 (mca); box C: no min -> technical floor
+			assert.deepEqual(
+				resolveWallboxCurrentLimits({
+					installationMaxCurrent: 20,
+					configuredMaxCurrent: 0,
+					configuredMinCurrent: 8,
+					hardwareMaxCurrent: null,
+					hardwareMinCurrent: null,
+				}),
+				{ minCurrent: 8, maxCurrent: 20 },
+			);
+			assert.deepEqual(
+				resolveWallboxCurrentLimits({
+					installationMaxCurrent: 20,
+					configuredMaxCurrent: 0,
+					configuredMinCurrent: 0,
+					hardwareMaxCurrent: null,
+					hardwareMinCurrent: 10,
+				}),
+				{ minCurrent: 10, maxCurrent: 20 },
+			);
+			assert.deepEqual(
+				resolveWallboxCurrentLimits({
+					installationMaxCurrent: 20,
+					configuredMaxCurrent: 0,
+					configuredMinCurrent: 0,
+					hardwareMaxCurrent: null,
+					hardwareMinCurrent: null,
+				}),
+				{ minCurrent: MIN_CHARGE_CURRENT, maxCurrent: 20 },
+			);
+		});
+
+		it("clamps a per-box minimum down when the shared supply is very tight (system 8)", () => {
+			// a tight 8 A supply: a box asking for min 10 A cannot exceed the 8 A cap
+			assert.deepEqual(
+				resolveWallboxCurrentLimits({
+					installationMaxCurrent: 8,
+					configuredMaxCurrent: 0,
+					configuredMinCurrent: 10,
+					hardwareMaxCurrent: 16,
+					hardwareMinCurrent: null,
+				}),
+				{ minCurrent: 8, maxCurrent: 8 },
+			);
+		});
+
+		it("keeps a mix of user throttling and hardware caps consistent (system 25)", () => {
+			// box A throttled to 12 by user; box B capped to 16 by hardware; box C free -> installation 25
+			assert.deepEqual(resolveMaxima(25, [12, 0, 0], null), [12, 25, 25]);
+			assert.equal(
+				resolveWallboxCurrentLimits({
+					installationMaxCurrent: 25,
+					configuredMaxCurrent: 0,
+					configuredMinCurrent: 0,
+					hardwareMaxCurrent: 16,
+					hardwareMinCurrent: null,
+				}).maxCurrent,
+				16,
+			);
+		});
+	});
+
 	describe("decideChargeManager", () => {
 		function inputForTarget(targetCurrent: number, currentAmp = targetCurrent, shutdownDelay = 0, phases = 1): ChargeManagerControllerInput {
 			return {
