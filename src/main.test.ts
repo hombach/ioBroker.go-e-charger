@@ -4,7 +4,9 @@ import {
 	calculateOptimalChargeCurrent,
 	type ChargeManagerControllerInput,
 	decideChargeManager,
+	decideChargeManagerFleet,
 	evaluateBatteryAvailability,
+	type FleetParticipant,
 	MAX_CHARGE_CURRENT,
 	MIN_CHARGE_CURRENT,
 	resolveWallboxCurrentLimits,
@@ -550,6 +552,120 @@ describe("ChargeManager safety helpers", () => {
 		it("resets after sufficient surplus returns", () => {
 			assert.equal(updateShutdownDelay(MIN_CHARGE_CURRENT, MIN_CHARGE_CURRENT, 12), 0);
 			assert.equal(updateShutdownDelay(10, MIN_CHARGE_CURRENT, 12), 0);
+		});
+	});
+
+	describe("decideChargeManagerFleet", () => {
+		const shared = {
+			solarPower: 11000,
+			houseConsumption: 1000,
+			chargerPower: 0,
+			subtractChargerPower: false,
+			batterySoc: null,
+			minBatterySoc: 70,
+			batteryMode: "disabled" as const,
+			reservePower: 100,
+			maximumBatteryBonus: 2000,
+		};
+		const box = (overrides: Partial<FleetParticipant> = {}): FleetParticipant => ({
+			phases: 3,
+			minimumChargeCurrent: MIN_CHARGE_CURRENT,
+			maximumChargeCurrent: 16,
+			state: { currentAmp: 0, shutdownDelay: 0 },
+			claimsPower: true,
+			...overrides,
+		});
+
+		it("matches the single-wallbox controller exactly", () => {
+			const single = box({ state: { currentAmp: 11, shutdownDelay: 0 } });
+			const expected = decideChargeManager({
+				...shared,
+				maximumChargeCurrent: single.maximumChargeCurrent,
+				minimumChargeCurrent: single.minimumChargeCurrent,
+				phases: single.phases,
+				state: single.state,
+			});
+			assert.deepEqual(decideChargeManagerFleet(shared, [single]), [expected]);
+		});
+
+		it("does not hand the same surplus to two wallboxes", () => {
+			// 9900 W surplus covers ~14 A on three phases - only once, not twice
+			const [first, second] = decideChargeManagerFleet(shared, [
+				box({ state: { currentAmp: 14, shutdownDelay: 0 } }),
+				box({ state: { currentAmp: 14, shutdownDelay: 0 } }),
+			]);
+			assert.equal(first.optimalCurrent, 14);
+			assert.equal(second.optimalCurrent, 0);
+		});
+
+		it("passes the leftover surplus on to the next wallbox", () => {
+			// 13900 W surplus, the first box is capped at 10 A (6900 W), leaving 7000 W for the second
+			const plenty = { ...shared, solarPower: 15000 };
+			const [first, second] = decideChargeManagerFleet(plenty, [box({ maximumChargeCurrent: 10 }), box()]);
+			assert.equal(first.optimalCurrent, 10);
+			assert.equal(second.optimalCurrent, 10);
+		});
+
+		it("serves wallboxes in list order, so the first one has priority", () => {
+			// 4900 W surplus is enough for one box only - whoever comes first takes it
+			const tight = { ...shared, solarPower: 6000 };
+			const [singlePhaseFirst, threePhaseSecond] = decideChargeManagerFleet(tight, [box({ phases: 1 }), box()]);
+			assert.equal(singlePhaseFirst.optimalCurrent, 16);
+			assert.equal(threePhaseSecond.optimalCurrent, 1);
+			// the same two wallboxes in the opposite order hand the surplus to the other one
+			const [threePhaseFirst, singlePhaseSecond] = decideChargeManagerFleet(tight, [box(), box({ phases: 1 })]);
+			assert.equal(threePhaseFirst.optimalCurrent, 7);
+			assert.equal(singlePhaseSecond.optimalCurrent, 0);
+		});
+
+		it("reserves nothing for a wallbox without a connected vehicle", () => {
+			const [idle, waiting] = decideChargeManagerFleet(shared, [box({ claimsPower: false }), box()]);
+			// the empty box still gets its regular decision, but must not starve its neighbour
+			assert.equal(idle.optimalCurrent, 14);
+			assert.equal(waiting.optimalCurrent, 14);
+		});
+
+		it("reserves the target of a wallbox that is still ramping up", () => {
+			// a box at 1 A already claims its full 14 A target, so the second box sees nothing
+			const [, second] = decideChargeManagerFleet(shared, [box({ state: { currentAmp: 1, shutdownDelay: 0 } }), box()]);
+			assert.equal(second.optimalCurrent, 0);
+		});
+
+		it("keeps reserving for a wallbox that is ramping down", () => {
+			// surplus is gone, but the first box still physically draws 10 A while ramping down
+			const gone = { ...shared, solarPower: 1000 };
+			const [first, second] = decideChargeManagerFleet(gone, [box({ state: { currentAmp: 10, shutdownDelay: 0 } }), box()]);
+			assert.equal(first.nextState.currentAmp, 9);
+			assert.equal(second.optimalCurrent, 0);
+		});
+
+		it("splits across different phase counts by power, not by current", () => {
+			// 9900 W: the single-phase box takes 16 A (3680 W), leaving 6220 W = 9 A on three phases
+			const [singlePhase, threePhase] = decideChargeManagerFleet(shared, [box({ phases: 1 }), box()]);
+			assert.equal(singlePhase.optimalCurrent, 16);
+			assert.equal(threePhase.optimalCurrent, 9);
+		});
+
+		it("adds the whole fleet back when the chargers are part of the household consumption", () => {
+			// house includes both chargers drawing 5000 W in total; without adding them back
+			// the fleet would see no surplus at all
+			const included = { ...shared, solarPower: 11000, houseConsumption: 6000, chargerPower: 5000, subtractChargerPower: true };
+			const [first] = decideChargeManagerFleet(included, [box(), box()]);
+			assert.equal(first.optimalCurrent, 14);
+		});
+
+		it("returns one decision per participant and none for an empty fleet", () => {
+			assert.deepEqual(decideChargeManagerFleet(shared, []), []);
+			assert.equal(decideChargeManagerFleet(shared, [box(), box(), box()]).length, 3);
+		});
+
+		it("disables every wallbox when the shared inputs are invalid", () => {
+			const broken = { ...shared, solarPower: Number.NaN };
+			for (const decision of decideChargeManagerFleet(broken, [box(), box()])) {
+				assert.equal(decision.action, "disable");
+				assert.equal(decision.reason, "invalid-input");
+				assert.equal(decision.optimalCurrent, null);
+			}
 		});
 	});
 });

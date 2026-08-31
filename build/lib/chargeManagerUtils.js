@@ -1,12 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateOptimalChargeCurrent = calculateOptimalChargeCurrent;
 exports.stepChargeCurrent = stepChargeCurrent;
 exports.updateShutdownDelay = updateShutdownDelay;
 exports.decideChargeManager = decideChargeManager;
+exports.decideChargeManagerFleet = decideChargeManagerFleet;
 exports.buildChargerCommands = buildChargerCommands;
 exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 32;
@@ -14,6 +15,7 @@ exports.START_CHARGE_CURRENT = 10;
 exports.SHUTDOWN_DELAY_CYCLES = 12;
 exports.DEFAULT_RESERVE_POWER = 100;
 exports.DEFAULT_MAXIMUM_BATTERY_BONUS = 2000;
+exports.PHASE_VOLTAGE = 230;
 function resolveWallboxCurrentLimits(input) {
     const isUsable = (value) => typeof value === "number" && Number.isFinite(value) && value > 0;
     const installationMax = Number.isFinite(input.installationMaxCurrent) && input.installationMaxCurrent > 0 ? Math.floor(input.installationMaxCurrent) : exports.MAX_CHARGE_CURRENT;
@@ -99,7 +101,7 @@ function calculateOptimalChargeCurrent(input) {
         ? Math.max(0, (input.maximumBatteryBonus / (100 - input.minBatterySoc)) * (input.batterySoc - input.minBatterySoc))
         : 0;
     const availablePower = input.solarPower - input.houseConsumption + (input.subtractChargerPower ? input.chargerPower : 0) - input.reservePower + batteryOffset;
-    const calculatedCurrent = Math.floor(availablePower / 230 / input.phases);
+    const calculatedCurrent = Math.floor(availablePower / exports.PHASE_VOLTAGE / input.phases);
     return Math.max(0, Math.min(calculatedCurrent, input.maximumChargeCurrent));
 }
 function stepChargeCurrent(current, target, maximum = exports.MAX_CHARGE_CURRENT) {
@@ -169,6 +171,24 @@ function decideChargeManager(input) {
         optimalCurrent,
         nextState: { currentAmp, shutdownDelay },
     };
+}
+function decideChargeManagerFleet(shared, participants) {
+    let claimedPower = 0;
+    return participants.map(participant => {
+        const decision = decideChargeManager({
+            ...shared,
+            solarPower: shared.solarPower - claimedPower,
+            maximumChargeCurrent: participant.maximumChargeCurrent,
+            minimumChargeCurrent: participant.minimumChargeCurrent,
+            phases: participant.phases,
+            state: participant.state,
+        });
+        if (participant.claimsPower) {
+            const reservedCurrent = Math.max(decision.optimalCurrent ?? 0, decision.nextState.currentAmp);
+            claimedPower += reservedCurrent * exports.PHASE_VOLTAGE * participant.phases;
+        }
+        return decision;
+    });
 }
 function buildChargerCommands(allow, ampere, firmware) {
     if (!allow) {

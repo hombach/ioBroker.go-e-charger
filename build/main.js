@@ -123,6 +123,7 @@ class go_e_charger extends utils.Adapter {
                 EnabledPhases: 0,
                 MeasuredMaxChargeAmp: 0,
                 BatteryReady: false,
+                CarState: 0,
                 MinAmp: 6,
                 MaxAmp: maxChargeCurrent,
                 HardwareMaxAmp: 0,
@@ -407,6 +408,9 @@ class go_e_charger extends utils.Adapter {
                 if (this.wallboxInfoList[iWB].HardwareMin3) {
                     await this.Read_ChargerAPIV2(iWB);
                 }
+            }
+            const chargePlans = await this.planChargeManagerCycle();
+            for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
                 if (this.wallboxInfoList[iWB].ChargeNOW) {
                     const chargeNowCurrent = Math.min(Math.max(this.wallboxInfoList[iWB].ChargeCurrent, this.wallboxInfoList[iWB].MinAmp), this.wallboxInfoList[iWB].MaxAmp);
                     await this.Charge_Config("1", chargeNowCurrent, `activate go-eCharger for forced charging`, iWB);
@@ -416,25 +420,15 @@ class go_e_charger extends utils.Adapter {
                     }
                 }
                 else if (this.wallboxInfoList[iWB].ChargeManager) {
-                    const batteryState = chargeManagerBatteryMode === "disabled" ? null : await this.projectUtils.asyncGetForeignState(this.config.stateHomeBatSoc);
-                    const batteryDecision = (0, chargeManagerUtils_1.evaluateBatteryAvailability)({
-                        mode: chargeManagerBatteryMode,
-                        batterySoc: batteryState?.val,
-                        minimumBatterySoc: minHomeBatVal,
-                        batterySocAgeMs: batteryState ? Date.now() - batteryState.ts : null,
-                        maximumAgeSeconds: chargeManagerBatterySocMaxAgeSeconds,
-                        hysteresis: chargeManagerBatterySocHysteresis,
-                        wasReady: this.wallboxInfoList[iWB].BatteryReady,
-                    });
-                    this.wallboxInfoList[iWB].BatteryReady = batteryDecision.ready;
-                    if (batteryDecision.ready) {
+                    const plan = chargePlans[iWB];
+                    if (plan?.decision) {
                         await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
-                        await this.Charge_Manager(iWB, batteryDecision.batterySoc);
+                        await this.Charge_Manager(iWB, plan.decision);
                     }
-                    else if (batteryDecision.reason === "stale") {
+                    else if (plan?.batteryReason === "stale") {
                         await this.stopChargeManager(`Battery state of charge is stale`, iWB);
                     }
-                    else if (batteryDecision.reason === "below-minimum") {
+                    else if (plan?.batteryReason === "below-minimum") {
                         await this.stopChargeManager(`Charging home battery until ${minHomeBatVal}%`, iWB);
                     }
                     else {
@@ -548,6 +542,7 @@ class go_e_charger extends utils.Adapter {
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.statistics.rebootCounter`, Number(status.rbc), `Counter for system reboot events`, "", "value");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.statistics.rebootTimer`, Math.floor(status.rbt / 1000 / 3600), `Time since last reboot`, "h", "value");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.carState`, Number(status.car), `State of connected car`, "", "value");
+        this.wallboxInfoList[iWB].CarState = Number(status.car) || 0;
         switch (status.car) {
             case "1":
                 await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Wallbox ready, no car`, `State of connected car`, "text");
@@ -724,36 +719,73 @@ class go_e_charger extends utils.Adapter {
             }
         }
     }
-    async Charge_Manager(iWB, batterySoc) {
+    async planChargeManagerCycle() {
+        const plans = new Array(this.config.wallBoxList.length).fill(undefined);
+        const candidates = [...this.config.wallBoxList.keys()].filter(iWB => this.wallboxInfoList[iWB].ChargeManager && !this.wallboxInfoList[iWB].ChargeNOW);
+        if (!candidates.length) {
+            return plans;
+        }
         solarPower = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower);
         this.log.debug(`Got external state of solar power: ${solarPower} W`);
         houseConsumption = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption);
         this.log.debug(`Got external state of house power consumption: ${houseConsumption} W`);
+        const batteryState = chargeManagerBatteryMode === "disabled" ? null : await this.projectUtils.asyncGetForeignState(this.config.stateHomeBatSoc);
+        const batterySocAgeMs = batteryState ? Date.now() - batteryState.ts : null;
+        let batterySoc = null;
+        const participants = [];
+        const served = [];
+        let fleetChargePower = 0;
+        for (const iWB of candidates) {
+            this.wallboxInfoList[iWB].ChargePower = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`);
+            const batteryDecision = (0, chargeManagerUtils_1.evaluateBatteryAvailability)({
+                mode: chargeManagerBatteryMode,
+                batterySoc: batteryState?.val,
+                minimumBatterySoc: minHomeBatVal,
+                batterySocAgeMs,
+                maximumAgeSeconds: chargeManagerBatterySocMaxAgeSeconds,
+                hysteresis: chargeManagerBatterySocHysteresis,
+                wasReady: this.wallboxInfoList[iWB].BatteryReady,
+            });
+            this.wallboxInfoList[iWB].BatteryReady = batteryDecision.ready;
+            if (!batteryDecision.ready) {
+                plans[iWB] = { decision: null, batteryReason: batteryDecision.reason };
+                continue;
+            }
+            batterySoc = batteryDecision.batterySoc;
+            const phases = this.wallboxInfoList[iWB].HardwareMin3 && this.wallboxInfoList[iWB].EnabledPhases
+                ? this.wallboxInfoList[iWB].EnabledPhases
+                : this.wallboxInfoList[iWB].GridPhases;
+            const carState = this.wallboxInfoList[iWB].CarState;
+            participants.push({
+                phases,
+                maximumChargeCurrent: this.wallboxInfoList[iWB].MaxAmp,
+                minimumChargeCurrent: Math.min(Math.max(chargeManagerMinCurrent, this.wallboxInfoList[iWB].MinAmp), this.wallboxInfoList[iWB].MaxAmp),
+                state: { currentAmp: this.wallboxInfoList[iWB].SetAmp, shutdownDelay: this.wallboxInfoList[iWB].DelayOff },
+                claimsPower: carState === 2 || carState === 3,
+            });
+            served.push(iWB);
+            fleetChargePower += this.wallboxInfoList[iWB].ChargePower;
+        }
         if (batterySoc !== null) {
             this.log.debug(`Got external state of battery SoC: ${batterySoc}%`);
         }
-        this.wallboxInfoList[iWB].ChargePower = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`);
-        const Phases = this.wallboxInfoList[iWB].HardwareMin3 && this.wallboxInfoList[iWB].EnabledPhases
-            ? this.wallboxInfoList[iWB].EnabledPhases
-            : this.wallboxInfoList[iWB].GridPhases;
-        const decision = (0, chargeManagerUtils_1.decideChargeManager)({
+        const decisions = (0, chargeManagerUtils_1.decideChargeManagerFleet)({
             solarPower,
             houseConsumption,
-            chargerPower: this.wallboxInfoList[iWB].ChargePower,
+            chargerPower: fleetChargePower,
             subtractChargerPower: this.config.subtractSelfConsumption,
             batterySoc,
             minBatterySoc: minHomeBatVal,
             batteryMode: chargeManagerBatteryMode,
             reservePower: chargeManagerReservePower,
             maximumBatteryBonus: chargeManagerMaxBatteryBonus,
-            maximumChargeCurrent: this.wallboxInfoList[iWB].MaxAmp,
-            minimumChargeCurrent: Math.min(Math.max(chargeManagerMinCurrent, this.wallboxInfoList[iWB].MinAmp), this.wallboxInfoList[iWB].MaxAmp),
-            phases: Phases,
-            state: {
-                currentAmp: this.wallboxInfoList[iWB].SetAmp,
-                shutdownDelay: this.wallboxInfoList[iWB].DelayOff,
-            },
+        }, participants);
+        served.forEach((iWB, index) => {
+            plans[iWB] = { decision: decisions[index], batteryReason: "available" };
         });
+        return plans;
+    }
+    async Charge_Manager(iWB, decision) {
         if (decision.optimalCurrent === null) {
             this.log.warn(`ChargeManager inputs are invalid for charger ${iWB}; charging will be disabled`);
             await this.stopChargeManager(`Invalid ChargeManager input`, iWB);
