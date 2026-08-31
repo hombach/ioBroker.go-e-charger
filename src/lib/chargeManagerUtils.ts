@@ -4,6 +4,8 @@ export const START_CHARGE_CURRENT = 10;
 export const SHUTDOWN_DELAY_CYCLES = 12;
 export const DEFAULT_RESERVE_POWER = 100;
 export const DEFAULT_MAXIMUM_BATTERY_BONUS = 2000;
+/** Nominal voltage per phase used to convert between charging current and power */
+export const PHASE_VOLTAGE = 230;
 
 /** Per-wallbox configuration and optional hardware caps used to resolve its current limits. */
 export interface WallboxLimitInput {
@@ -268,7 +270,7 @@ export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): nu
 			: 0;
 	const availablePower =
 		input.solarPower - input.houseConsumption + (input.subtractChargerPower ? input.chargerPower : 0) - input.reservePower + batteryOffset;
-	const calculatedCurrent = Math.floor(availablePower / 230 / input.phases);
+	const calculatedCurrent = Math.floor(availablePower / PHASE_VOLTAGE / input.phases);
 
 	return Math.max(0, Math.min(calculatedCurrent, input.maximumChargeCurrent));
 }
@@ -381,6 +383,71 @@ export function decideChargeManager(input: ChargeManagerControllerInput): Charge
 		optimalCurrent,
 		nextState: { currentAmp, shutdownDelay },
 	};
+}
+
+/** One wallbox taking part in the shared surplus allocation. */
+export interface FleetParticipant {
+	/** Number of active charging phases */
+	phases: number;
+	/** Lowest current the ChargeManager may assign to this wallbox */
+	minimumChargeCurrent: number;
+	/** Highest current the ChargeManager may assign to this wallbox */
+	maximumChargeCurrent: number;
+	/** Internal controller state from the previous cycle */
+	state: ChargeManagerState;
+	/**
+	 * Whether this wallbox can actually consume power right now (a vehicle is connected).
+	 * A wallbox without a vehicle still gets its regular decision but reserves nothing,
+	 * so it never starves a wallbox that has a car waiting.
+	 */
+	claimsPower: boolean;
+}
+
+/** Shared measurements for one fleet-wide ChargeManager cycle; the per-wallbox parts live in {@link FleetParticipant}. */
+export type FleetSurplusInput = Omit<ChargeCalculationInput, "maximumChargeCurrent" | "phases">;
+
+/**
+ * Splits the available PV surplus across several wallboxes and returns one control
+ * decision per wallbox.
+ *
+ * The surplus is a single shared resource: without coordination every wallbox would
+ * calculate its target from the full surplus and they would collectively draw far more
+ * than is available. Wallboxes are served in list order, so the first entry has the
+ * highest priority and later ones only see what is left over. The power a wallbox is
+ * entitled to is reserved even while it is still ramping up, otherwise the next wallbox
+ * would claim the same watts for one cycle and both would overshoot.
+ *
+ * `chargerPower` in `shared` must be the summed consumption of all coordinated wallboxes,
+ * so that `subtractChargerPower` adds the whole fleet back to the household consumption.
+ *
+ * A single participant receives exactly the result of {@link decideChargeManager}.
+ *
+ * @param shared Measurements and configuration common to every wallbox
+ * @param participants Wallboxes to serve, highest priority first
+ * @returns One decision per participant, in the same order
+ */
+export function decideChargeManagerFleet(shared: FleetSurplusInput, participants: FleetParticipant[]): ChargeManagerDecision[] {
+	let claimedPower = 0;
+
+	return participants.map(participant => {
+		const decision = decideChargeManager({
+			...shared,
+			// later wallboxes only see the surplus the earlier ones did not claim
+			solarPower: shared.solarPower - claimedPower,
+			maximumChargeCurrent: participant.maximumChargeCurrent,
+			minimumChargeCurrent: participant.minimumChargeCurrent,
+			phases: participant.phases,
+			state: participant.state,
+		});
+
+		if (participant.claimsPower) {
+			// reserve the larger of what this wallbox wants and what it still draws while ramping down
+			const reservedCurrent = Math.max(decision.optimalCurrent ?? 0, decision.nextState.currentAmp);
+			claimedPower += reservedCurrent * PHASE_VOLTAGE * participant.phases;
+		}
+
+		return decision;
+	});
 }
 
 /**

@@ -131,6 +131,14 @@ The **maximum charging current** [A] (default 16, up to 32) is configured on the
 
 In the battery-aware modes, EV charging is disabled below `Settings.Setpoint_HomeBatSoC` so that the home battery has priority. Charging starts once the internal target reaches 10 A (or the minimum current if it is set higher). The calculated current is limited to the configured maximum, and the internal current target changes by at most 1 A per poll cycle to reduce sudden changes.
 
+#### Several wallboxes on one PV surplus
+
+The surplus is a single shared resource, so it is split between the wallboxes rather than offered to each of them in full. The wallboxes are served in the **order of the wallbox list**, which is therefore also their priority: the first entry takes as much surplus as it can use, and the following entries only see what is left. Reorder the list to change which car is charged first.
+
+A wallbox only reserves surplus while a vehicle is connected to it. An empty wallbox is skipped, so it cannot hold back surplus that another wallbox could use right now.
+
+The per-wallbox current limits described above still apply to each box individually, which lets you cap a single charger even when it is first in the list.
+
 #### Enabling ChargeManager
 
 After the adapter has started, use the writable states below. Replace instance `0` and wallbox number `0` where necessary.
@@ -196,6 +204,11 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+
+- (typhosj) ChargeManager: the PV surplus is now shared between all wallboxes instead of being offered to each one in full; wallboxes are served in configuration order, so the first entry has priority and later ones only receive the remaining surplus
+- (typhosj) ChargeManager: a wallbox without a connected vehicle no longer reserves surplus and can no longer starve a wallbox that has a car waiting
+
 ### 1.6.0 (2026-08-29)
 
 - (hombach) added optional per-wallbox minimum and maximum charging current, applied to both ChargeManager and ChargeNOW and always kept within the installation-wide maximum
