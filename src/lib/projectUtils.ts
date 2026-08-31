@@ -65,6 +65,10 @@ export interface IWallboxInfo {
 	 */
 	BatteryReady: boolean;
 	/**
+	 * go-e car state (1 = no vehicle, 2 = charging, 3 = waiting for vehicle, 4 = finished; 0 = unknown)
+	 */
+	CarState: number;
+	/**
 	 * MinAmp
 	 */
 	MinAmp: number;
