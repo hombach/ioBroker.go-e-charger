@@ -39,7 +39,7 @@ For more information about the go-e Charger hardware, visit the manufacturer's w
 - **ChargeNOW** – start charging immediately at a configurable current
 - **ChargeManager** – automatic PV surplus charging: the charging current is continuously adjusted to the available solar power, taking house consumption and the state of charge of your home battery into account. Charging of your EV can be delayed until the home battery has reached a configurable minimum state of charge.
 
-    > **Note:** PV surplus charging is currently designed for controlling a **single** charger. When ChargeManager is enabled on multiple chargers at the same time, the charging currents are not coordinated between them and the solar surplus calculation will produce incorrect values. An extension with coordinated multi-charger load management will be available soon.
+    > **Note:** When ChargeManager is enabled on several chargers at the same time, the available surplus is split between them in the order of the wallbox list – see [Several wallboxes on one PV surplus](#several-wallboxes-on-one-pv-surplus).
 
 - switching between 1-phase and 3-phase charging (hardware generation 3 and newer)
 - energy statistics per RFID card (card name, ID, and charged energy)
