@@ -241,7 +241,9 @@ export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): nu
 		input.reservePower < 0 ||
 		input.maximumBatteryBonus < 0 ||
 		!Number.isInteger(input.maximumChargeCurrent) ||
-		input.maximumChargeCurrent < START_CHARGE_CURRENT ||
+		// a per-wallbox limit may legitimately sit below the 10 A start current, e.g. an 8 A
+		// coded cable, so only the technical floor makes a maximum invalid
+		input.maximumChargeCurrent < MIN_CHARGE_CURRENT ||
 		input.maximumChargeCurrent > MAX_CHARGE_CURRENT
 	) {
 		return null;
@@ -340,7 +342,9 @@ export function decideChargeManager(input: ChargeManagerControllerInput): Charge
 	}
 
 	const currentAmp = stepChargeCurrent(input.state.currentAmp, optimalCurrent, input.maximumChargeCurrent);
-	const startChargeCurrent = Math.max(START_CHARGE_CURRENT, input.minimumChargeCurrent);
+	// charging starts at 10 A to keep the release from flapping around the 6 A minimum, but a
+	// wallbox that is capped below that can never reach 10 A - it starts at its own maximum
+	const startChargeCurrent = Math.min(Math.max(START_CHARGE_CURRENT, input.minimumChargeCurrent), input.maximumChargeCurrent);
 	// while ramping up to a raised minimum current the target is briefly below the minimum;
 	// do not count that as an insufficient-surplus cycle
 	const isRampingToRaisedMinimum =

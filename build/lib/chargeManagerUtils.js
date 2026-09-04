@@ -81,7 +81,7 @@ function calculateOptimalChargeCurrent(input) {
         input.reservePower < 0 ||
         input.maximumBatteryBonus < 0 ||
         !Number.isInteger(input.maximumChargeCurrent) ||
-        input.maximumChargeCurrent < exports.START_CHARGE_CURRENT ||
+        input.maximumChargeCurrent < exports.MIN_CHARGE_CURRENT ||
         input.maximumChargeCurrent > exports.MAX_CHARGE_CURRENT) {
         return null;
     }
@@ -135,7 +135,7 @@ function decideChargeManager(input) {
         };
     }
     const currentAmp = stepChargeCurrent(input.state.currentAmp, optimalCurrent, input.maximumChargeCurrent);
-    const startChargeCurrent = Math.max(exports.START_CHARGE_CURRENT, input.minimumChargeCurrent);
+    const startChargeCurrent = Math.min(Math.max(exports.START_CHARGE_CURRENT, input.minimumChargeCurrent), input.maximumChargeCurrent);
     const isRampingToRaisedMinimum = input.minimumChargeCurrent > exports.START_CHARGE_CURRENT && optimalCurrent >= input.minimumChargeCurrent && currentAmp < input.minimumChargeCurrent;
     let shutdownDelay = isRampingToRaisedMinimum ? 0 : updateShutdownDelay(currentAmp, input.minimumChargeCurrent, input.state.shutdownDelay);
     if (currentAmp >= startChargeCurrent) {

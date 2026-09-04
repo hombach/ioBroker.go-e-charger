@@ -196,6 +196,10 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+
+- (typhosj) fixed: a wallbox whose effective maximum charging current is below 10 A - e.g. an 8 A coded cable or a per-wallbox maximum of 8 A - was rejected as invalid ChargeManager input and never charged from PV surplus. Such a wallbox now starts charging at its own maximum
+
 ### 1.6.0 (2026-08-29)
 
 - (hombach) added optional per-wallbox minimum and maximum charging current, applied to both ChargeManager and ChargeNOW and always kept within the installation-wide maximum

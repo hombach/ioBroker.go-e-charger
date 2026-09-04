@@ -148,9 +148,16 @@ describe("ChargeManager safety helpers", () => {
 		});
 
 		it("rejects an invalid maximum charging current", () => {
-			assert.equal(calculateOptimalChargeCurrent({ ...validInput, maximumChargeCurrent: START_CHARGE_CURRENT - 1 }), null);
+			assert.equal(calculateOptimalChargeCurrent({ ...validInput, maximumChargeCurrent: MIN_CHARGE_CURRENT - 1 }), null);
 			assert.equal(calculateOptimalChargeCurrent({ ...validInput, maximumChargeCurrent: MAX_CHARGE_CURRENT + 1 }), null);
 			assert.equal(calculateOptimalChargeCurrent({ ...validInput, maximumChargeCurrent: 12.5 }), null);
+		});
+
+		it("accepts a per-wallbox maximum below the start current", () => {
+			// an 8 A coded cable or a per-box maximum of 8 A is a valid limit, not invalid input
+			for (let maximum = MIN_CHARGE_CURRENT; maximum < START_CHARGE_CURRENT; maximum++) {
+				assert.equal(calculateOptimalChargeCurrent({ ...validInput, solarPower: 20_000, maximumChargeCurrent: maximum }), maximum);
+			}
 		});
 	});
 
@@ -429,6 +436,34 @@ describe("ChargeManager safety helpers", () => {
 			assert.equal(decision.reason, "charging-current");
 			assert.equal(decision.optimalCurrent, MAX_CHARGE_CURRENT);
 			assert.equal(decision.nextState.currentAmp, START_CHARGE_CURRENT);
+		});
+
+		it("starts a wallbox capped below 10 A at its own maximum", () => {
+			// a box limited to 8 A can never reach the 10 A start current
+			const decision = decideChargeManager({ ...inputForTarget(MAX_CHARGE_CURRENT, 7), maximumChargeCurrent: 8 });
+
+			assert.equal(decision.action, "enable");
+			assert.equal(decision.reason, "charging-current");
+			assert.equal(decision.nextState.currentAmp, 8);
+		});
+
+		it("ramps a wallbox capped below 10 A up to charging instead of stalling", () => {
+			// regression: such a box used to hold forever and never enable the charge release
+			let state = { currentAmp: 0, shutdownDelay: 0 };
+			let enabledAt: number | null = null;
+
+			for (let cycle = 0; cycle < SHUTDOWN_DELAY_CYCLES + 5; cycle++) {
+				const decision = decideChargeManager({ ...inputForTarget(MAX_CHARGE_CURRENT), maximumChargeCurrent: 8, state });
+				assert.notEqual(decision.action, "disable");
+				state = decision.nextState;
+				if (enabledAt === null && decision.action === "enable") {
+					enabledAt = cycle;
+				}
+			}
+
+			assert.equal(enabledAt, 7); // one ampere per cycle from 0 A to the 8 A maximum
+			assert.equal(state.currentAmp, 8);
+			assert.equal(state.shutdownDelay, 0);
 		});
 
 		it("holds in the hysteresis range while ramping down", () => {
