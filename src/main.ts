@@ -2,11 +2,14 @@
 import * as utils from "@iobroker/adapter-core";
 import axios from "axios";
 import {
+	type BatteryAvailabilityReason,
 	type BatteryMode,
 	buildChargerCommands,
-	decideChargeManager,
+	type ChargeManagerDecision,
+	decideChargeManagerFleet,
 	DEFAULT_MAXIMUM_BATTERY_BONUS,
 	DEFAULT_RESERVE_POWER,
+	type FleetParticipant,
 	MAX_CHARGE_CURRENT,
 	evaluateBatteryAvailability,
 	MIN_CHARGE_CURRENT,
@@ -14,6 +17,14 @@ import {
 	START_CHARGE_CURRENT,
 } from "./lib/chargeManagerUtils";
 import { ProjectUtils, type IWallboxInfo } from "./lib/projectUtils";
+
+/** What the ChargeManager planned for one charger in the current cycle. */
+interface WallboxChargePlan {
+	/** Control decision, or null when the home-battery policy blocks charging */
+	decision: ChargeManagerDecision | null;
+	/** Why the home-battery policy blocked charging */
+	batteryReason: BatteryAvailabilityReason;
+}
 const axiosInstance = axios.create({
 	timeout: 5000, // ms - prevents a hanging request from blocking the state machine
 });
@@ -140,6 +151,7 @@ class go_e_charger extends utils.Adapter {
 				EnabledPhases: 0,
 				MeasuredMaxChargeAmp: 0,
 				BatteryReady: false,
+				CarState: 0,
 				MinAmp: 6,
 				MaxAmp: maxChargeCurrent,
 				HardwareMaxAmp: 0,
@@ -524,17 +536,25 @@ class go_e_charger extends utils.Adapter {
 			this.log.debug(`StateMachine cycle start`);
 			totalChargeEnergy = 0; // reset total charge energy at the beginning of each cycle, will be accumulated from all chargers in the loop below
 			totalChargePower = 0; // reset total charge power at the beginning of each cycle, will be accumulated from all chargers in the loop below
+			// first pass: refresh live data for every charger, so the surplus allocation below
+			// sees the whole fleet instead of only the chargers processed so far.
+			// This also keeps pure monitoring / read-only setups up to date every cycle.
 			for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
 				if (!this.wallboxInfoList[iWB].ChargeManager || this.wallboxInfoList[iWB].ChargeNOW) {
 					this.wallboxInfoList[iWB].BatteryReady = false;
 				}
-				// always refresh live data each cycle so states stay current in every mode,
-				// including pure monitoring / read-only where the adapter controls no charging
 				await this.Read_ChargerAPIV1(iWB);
 				if (this.wallboxInfoList[iWB].HardwareMin3) {
 					await this.Read_ChargerAPIV2(iWB);
 				}
+			}
 
+			// the PV surplus is a single shared resource - split it across all ChargeManager
+			// chargers in one go before any of them is told what to do
+			const chargePlans = await this.planChargeManagerCycle();
+
+			// second pass: apply the resulting decisions and collect the global statistics
+			for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
 				if (this.wallboxInfoList[iWB].ChargeNOW) {
 					// Charge-NOW is enabled - the per-wallbox current limits cap ChargeNOW as well
 					const chargeNowCurrent = Math.min(
@@ -547,25 +567,14 @@ class go_e_charger extends utils.Adapter {
 						await this.Read_ChargerAPIV2(iWB);
 					}
 				} else if (this.wallboxInfoList[iWB].ChargeManager) {
-					// Charge-Manager is enabled
-					const batteryState =
-						chargeManagerBatteryMode === "disabled" ? null : await this.projectUtils.asyncGetForeignState(this.config.stateHomeBatSoc);
-					const batteryDecision = evaluateBatteryAvailability({
-						mode: chargeManagerBatteryMode,
-						batterySoc: batteryState?.val,
-						minimumBatterySoc: minHomeBatVal,
-						batterySocAgeMs: batteryState ? Date.now() - batteryState.ts : null,
-						maximumAgeSeconds: chargeManagerBatterySocMaxAgeSeconds,
-						hysteresis: chargeManagerBatterySocHysteresis,
-						wasReady: this.wallboxInfoList[iWB].BatteryReady,
-					});
-					this.wallboxInfoList[iWB].BatteryReady = batteryDecision.ready;
-					if (batteryDecision.ready) {
+					// Charge-Manager is enabled - apply the decision planned for this charger
+					const plan = chargePlans[iWB];
+					if (plan?.decision) {
 						await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
-						await this.Charge_Manager(iWB, batteryDecision.batterySoc);
-					} else if (batteryDecision.reason === "stale") {
+						await this.Charge_Manager(iWB, plan.decision);
+					} else if (plan?.batteryReason === "stale") {
 						await this.stopChargeManager(`Battery state of charge is stale`, iWB);
-					} else if (batteryDecision.reason === "below-minimum") {
+					} else if (plan?.batteryReason === "below-minimum") {
 						// FUTURE: time of day forces emptying of home battery
 						await this.stopChargeManager(`Charging home battery until ${minHomeBatVal}%`, iWB);
 					} else {
@@ -860,6 +869,8 @@ class go_e_charger extends utils.Adapter {
 			"value",
 		);
 		void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.carState`, Number(status.car), `State of connected car`, "", "value");
+		// the surplus allocation only reserves power for chargers that actually have a vehicle connected
+		this.wallboxInfoList[iWB].CarState = Number(status.car) || 0;
 		switch (status.car) {
 			case "1":
 				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Wallbox ready, no car`, `State of connected car`, "text");
@@ -1301,66 +1312,114 @@ class go_e_charger extends utils.Adapter {
 	} // END Charge_Config
 
 	/**
-	 * Manages the dynamic charging process based on solar power availability,
-	 * household consumption, and battery state of charge (SoC).
+	 * Plans one ChargeManager cycle for the whole fleet.
+	 *
+	 * Reads the shared energy situation once, checks the home-battery policy per charger and
+	 * splits the resulting PV surplus across all chargers whose battery policy allows charging.
+	 * Chargers appear in configuration order, which is also their priority: the first entry is
+	 * served first and later ones only receive the remaining surplus.
 	 *
 	 * @async
-	 * @param iWB - Index of the charger in the configuration list for which to manage charging.
-	 * @param batterySoc - Validated battery SOC, or null when battery handling is disabled.
-	 * @returns Resolves when all state values are retrieved and charging logic is applied.
-	 * @description
-	 * The `Charge_Manager` function continuously evaluates the energy situation and adjusts
-	 * the charging current (`ZielAmpere`) to optimize self-consumption of solar energy.
-	 * Data sources include:
-	 * - `StateHomeSolarPower`: current solar generation (W)
-	 * - `StateHomePowerConsumption`: total household power demand (W)
-	 * - `StateHomeBatSoc`: battery state of charge (%) in battery-aware modes
-	 *
-	 * The resulting charging current (`OptAmpere`) is computed based on:
-	 * - Available surplus energy
-	 * - Configured self-consumption setting
-	 * - Number of active phases
-	 * - Battery SoC offset for reserve management
-	 *
-	 * **Behavior:**
-	 * - Limits `OptAmpere` to 16 A.
-	 * - Adjusts `ZielAmpere` incrementally to avoid abrupt current changes.
-	 * - Enables charging if current exceeds 9 A (5 A base + 4 A hysteresis).
-	 * - Disables charging if below 6 A after multiple cycles (`DelayOff` > 12).
+	 * @returns One plan per charger, indexed by its position in `wallBoxList`; `undefined` for
+	 *          chargers that are not run by the ChargeManager this cycle.
 	 */
-	async Charge_Manager(iWB: number, batterySoc: number | null): Promise<void> {
+	private async planChargeManagerCycle(): Promise<(WallboxChargePlan | undefined)[]> {
+		const plans: (WallboxChargePlan | undefined)[] = new Array(this.config.wallBoxList.length).fill(undefined);
+		const candidates = [...this.config.wallBoxList.keys()].filter(iWB => this.wallboxInfoList[iWB].ChargeManager && !this.wallboxInfoList[iWB].ChargeNOW);
+		if (!candidates.length) {
+			return plans;
+		}
+
 		solarPower = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower);
 		this.log.debug(`Got external state of solar power: ${solarPower} W`);
 		houseConsumption = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption);
 		this.log.debug(`Got external state of house power consumption: ${houseConsumption} W`);
+
+		// the battery state is identical for every charger, so read it once per cycle
+		const batteryState = chargeManagerBatteryMode === "disabled" ? null : await this.projectUtils.asyncGetForeignState(this.config.stateHomeBatSoc);
+		const batterySocAgeMs = batteryState ? Date.now() - batteryState.ts : null;
+
+		let batterySoc: number | null = null;
+		const participants: FleetParticipant[] = [];
+		const served: number[] = [];
+		let fleetChargePower = 0;
+
+		for (const iWB of candidates) {
+			this.wallboxInfoList[iWB].ChargePower = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`);
+
+			const batteryDecision = evaluateBatteryAvailability({
+				mode: chargeManagerBatteryMode,
+				batterySoc: batteryState?.val,
+				minimumBatterySoc: minHomeBatVal,
+				batterySocAgeMs,
+				maximumAgeSeconds: chargeManagerBatterySocMaxAgeSeconds,
+				hysteresis: chargeManagerBatterySocHysteresis,
+				wasReady: this.wallboxInfoList[iWB].BatteryReady,
+			});
+			this.wallboxInfoList[iWB].BatteryReady = batteryDecision.ready;
+			if (!batteryDecision.ready) {
+				plans[iWB] = { decision: null, batteryReason: batteryDecision.reason };
+				continue;
+			}
+			batterySoc = batteryDecision.batterySoc;
+
+			const phases =
+				this.wallboxInfoList[iWB].HardwareMin3 && this.wallboxInfoList[iWB].EnabledPhases
+					? this.wallboxInfoList[iWB].EnabledPhases
+					: this.wallboxInfoList[iWB].GridPhases;
+
+			// only a charger with a connected vehicle (go-e car state 2 or 3) can turn the
+			// reserved surplus into charging power - the others must not block their neighbours
+			const carState = this.wallboxInfoList[iWB].CarState;
+			participants.push({
+				phases,
+				maximumChargeCurrent: this.wallboxInfoList[iWB].MaxAmp,
+				minimumChargeCurrent: Math.min(Math.max(chargeManagerMinCurrent, this.wallboxInfoList[iWB].MinAmp), this.wallboxInfoList[iWB].MaxAmp),
+				state: { currentAmp: this.wallboxInfoList[iWB].SetAmp, shutdownDelay: this.wallboxInfoList[iWB].DelayOff },
+				claimsPower: carState === 2 || carState === 3,
+			});
+			served.push(iWB);
+			// the whole fleet hides inside the household consumption, so the whole fleet is added back
+			fleetChargePower += this.wallboxInfoList[iWB].ChargePower;
+		}
+
 		if (batterySoc !== null) {
 			this.log.debug(`Got external state of battery SoC: ${batterySoc}%`);
 		}
-		this.wallboxInfoList[iWB].ChargePower = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`);
 
-		const Phases =
-			this.wallboxInfoList[iWB].HardwareMin3 && this.wallboxInfoList[iWB].EnabledPhases
-				? this.wallboxInfoList[iWB].EnabledPhases
-				: this.wallboxInfoList[iWB].GridPhases;
-
-		const decision = decideChargeManager({
-			solarPower,
-			houseConsumption,
-			chargerPower: this.wallboxInfoList[iWB].ChargePower,
-			subtractChargerPower: this.config.subtractSelfConsumption,
-			batterySoc,
-			minBatterySoc: minHomeBatVal,
-			batteryMode: chargeManagerBatteryMode,
-			reservePower: chargeManagerReservePower,
-			maximumBatteryBonus: chargeManagerMaxBatteryBonus,
-			maximumChargeCurrent: this.wallboxInfoList[iWB].MaxAmp,
-			minimumChargeCurrent: Math.min(Math.max(chargeManagerMinCurrent, this.wallboxInfoList[iWB].MinAmp), this.wallboxInfoList[iWB].MaxAmp),
-			phases: Phases,
-			state: {
-				currentAmp: this.wallboxInfoList[iWB].SetAmp,
-				shutdownDelay: this.wallboxInfoList[iWB].DelayOff,
+		const decisions = decideChargeManagerFleet(
+			{
+				solarPower,
+				houseConsumption,
+				chargerPower: fleetChargePower,
+				subtractChargerPower: this.config.subtractSelfConsumption,
+				batterySoc,
+				minBatterySoc: minHomeBatVal,
+				batteryMode: chargeManagerBatteryMode,
+				reservePower: chargeManagerReservePower,
+				maximumBatteryBonus: chargeManagerMaxBatteryBonus,
 			},
+			participants,
+		);
+
+		served.forEach((iWB, index) => {
+			plans[iWB] = { decision: decisions[index], batteryReason: "available" };
 		});
+		return plans;
+	}
+
+	/**
+	 * Applies one planned ChargeManager decision to a single charger.
+	 *
+	 * The energy situation itself is evaluated fleet-wide in {@link planChargeManagerCycle};
+	 * this function only stores the resulting internal state and sends the charger command.
+	 *
+	 * @async
+	 * @param iWB - Index of the charger in the configuration list for which to manage charging.
+	 * @param decision - Control decision planned for this charger in the current cycle.
+	 * @returns Resolves when the charging logic is applied.
+	 */
+	async Charge_Manager(iWB: number, decision: ChargeManagerDecision): Promise<void> {
 		if (decision.optimalCurrent === null) {
 			this.log.warn(`ChargeManager inputs are invalid for charger ${iWB}; charging will be disabled`);
 			await this.stopChargeManager(`Invalid ChargeManager input`, iWB);
