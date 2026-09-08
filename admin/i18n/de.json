@@ -26,6 +26,7 @@
 	"LBL_stateHomeSolarPower": "Objekt-ID der aktuell verfügbaren Solarleistung [W]",
 	"LBL_subtractSelfConsumption": "Wallbox-Verbrauch ist im Hausstromverbrauch enthalten",
 	"LBL_wallBoxList": "Wallbox-Liste",
+	"LBL_wallBoxListHelp": "Der ChargeManager bedient die Wallboxen von oben nach unten: Der erste Eintrag erhält den PV-Überschuss zuerst, spätere Einträge nur noch den Rest. Mit den Pfeiltasten lässt sich die Priorität ändern.",
 	"LBL_wallboxMaxAmp": "Maximaler Ladestrom dieser Wallbox [A] (0 = Anlagenlimit)",
 	"LBL_wallboxMaxAmpHelp": "Höchster Strom für diese Wallbox, z. B. zum Drosseln. 0 nutzt das anlagenweite Maximum und überschreitet nie das Anlagenlimit.",
 	"LBL_wallboxMinAmp": "Minimaler Ladestrom dieser Wallbox [A] (0 = Standard)",

@@ -26,6 +26,7 @@
 	"LBL_stateHomeSolarPower": "当前可用光伏功率的对象 ID [W]",
 	"LBL_subtractSelfConsumption": "家庭用电量中已包含充电桩的耗电",
 	"LBL_wallBoxList": "充电桩列表",
+	"LBL_wallBoxListHelp": "ChargeManager 从上到下依次分配：列表中的第一项优先获得光伏余电，靠后的充电桩只能获得剩余部分。用箭头按钮调整优先级。",
 	"LBL_wallboxMaxAmp": "此充电桩的最大充电电流 [A]（0 = 装置上限）",
 	"LBL_wallboxMaxAmpHelp": "此充电桩的最大电流，例如用于限流。0 表示使用整个装置的最大值，且绝不超过装置上限。",
 	"LBL_wallboxMinAmp": "此充电桩的最小充电电流 [A]（0 = 默认值）",
