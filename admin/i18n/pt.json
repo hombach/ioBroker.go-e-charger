@@ -1,6 +1,8 @@
 {
 	"ERR_maxCurrentBelowMin": "A corrente máxima deve ser maior ou igual à mínima",
 	"ERR_minCurrentAboveMax": "A corrente mínima deve ser menor ou igual à máxima",
+	"LBL_autoPhaseSwitch": "Comutação automática 1/3 fases (hardware ger. 3+)",
+	"LBL_autoPhaseSwitchHelp": "Permite que o ChargeManager alterne esta wallbox entre carregamento monofásico e trifásico conforme o excedente disponível. Apenas para hardware de geração 3 ou mais recente; interrompe brevemente o carregamento a cada comutação.",
 	"LBL_batteryMode": "Modo da bateria doméstica",
 	"LBL_batteryModeDisabled": "Desativado",
 	"LBL_batteryModeDisabledDescription": "Ignora a bateria doméstica; não é necessário um estado de SoC",

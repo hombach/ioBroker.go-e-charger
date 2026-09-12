@@ -23,6 +23,7 @@ declare global {
 					readOnlyMode: boolean;
 					maxAmp: number;
 					minAmp: number;
+					autoPhaseSwitch: boolean;
 				},
 			];
 		}

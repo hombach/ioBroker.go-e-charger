@@ -65,6 +65,10 @@ export interface IWallboxInfo {
 	 */
 	BatteryReady: boolean;
 	/**
+	 * go-e car state (1 = no vehicle, 2 = charging, 3 = waiting for vehicle, 4 = finished; 0 = unknown)
+	 */
+	CarState: number;
+	/**
 	 * MinAmp
 	 */
 	MinAmp: number;
@@ -84,6 +88,10 @@ export interface IWallboxInfo {
 	 * DelayOff
 	 */
 	DelayOff: number;
+	/**
+	 * Consecutive cycles a pending automatic one-/three-phase switch has held (anti-flapping dwell)
+	 */
+	PhaseSwitchDelay: number;
 	/**
 	 * CurrentHysteresis
 	 */

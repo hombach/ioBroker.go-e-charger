@@ -1,6 +1,8 @@
 {
 	"ERR_maxCurrentBelowMin": "Maximalstrom muss größer oder gleich dem Mindeststrom sein",
 	"ERR_minCurrentAboveMax": "Mindeststrom muss kleiner oder gleich dem Maximalstrom sein",
+	"LBL_autoPhaseSwitch": "Automatische 1-/3-phasige Umschaltung (Hardware Gen 3+)",
+	"LBL_autoPhaseSwitchHelp": "Lässt den ChargeManager diese Wallbox je nach verfügbarem Überschuss zwischen 1- und 3-phasigem Laden umschalten. Nur ab Hardware-Generation 3; unterbricht das Laden bei jedem Wechsel kurz.",
 	"LBL_batteryMode": "Modus der Hausbatterie",
 	"LBL_batteryModeDisabled": "Deaktiviert",
 	"LBL_batteryModeDisabledDescription": "Hausbatterie ignorieren; kein SoC-Objekt erforderlich",

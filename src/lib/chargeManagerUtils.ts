@@ -4,6 +4,10 @@ export const START_CHARGE_CURRENT = 10;
 export const SHUTDOWN_DELAY_CYCLES = 12;
 export const DEFAULT_RESERVE_POWER = 100;
 export const DEFAULT_MAXIMUM_BATTERY_BONUS = 2000;
+/** Nominal voltage per phase used to convert between charging current and power */
+export const PHASE_VOLTAGE = 230;
+/** Number of consecutive cycles a phase-switch condition must hold before the phase is actually switched */
+export const PHASE_SWITCH_DELAY_CYCLES = 12;
 
 /** Per-wallbox configuration and optional hardware caps used to resolve its current limits. */
 export interface WallboxLimitInput {
@@ -216,36 +220,16 @@ export function evaluateBatteryAvailability(input: BatteryAvailabilityInput): Ba
 }
 
 /**
- * Calculates the optimal charging current and keeps the internal controller
- * target within its valid range. A target of 0 A means that charging should be
- * disabled; it must never be sent to the charger as a current setting.
+ * Calculates the PV surplus power in watts that may be used for charging, independent of the
+ * phase count. This is the numerator behind {@link calculateOptimalChargeCurrent} and is also
+ * used to decide one-/three-phase switching, where the power - not the current - is the signal.
  *
- * @param input Current energy-management inputs
- * @returns A target between 0 and the configured maximum, or `null` if an input is invalid
+ * @param input Current energy-management inputs without the per-wallbox current and phase count
+ * @returns The available surplus power in watts, or `null` if an input is invalid
  */
-export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): number | null {
-	const numericInputs = [
-		input.solarPower,
-		input.houseConsumption,
-		input.chargerPower,
-		input.reservePower,
-		input.maximumBatteryBonus,
-		input.maximumChargeCurrent,
-		input.phases,
-	];
-	if (!numericInputs.every(value => Number.isFinite(value))) {
-		return null;
-	}
-	if (
-		(input.phases !== 1 && input.phases !== 3) ||
-		input.reservePower < 0 ||
-		input.maximumBatteryBonus < 0 ||
-		!Number.isInteger(input.maximumChargeCurrent) ||
-		// a per-wallbox limit may legitimately sit below the 10 A start current, e.g. an 8 A
-		// coded cable, so only the technical floor makes a maximum invalid
-		input.maximumChargeCurrent < MIN_CHARGE_CURRENT ||
-		input.maximumChargeCurrent > MAX_CHARGE_CURRENT
-	) {
+export function calculateAvailableSurplusPower(input: FleetSurplusInput): number | null {
+	const numericInputs = [input.solarPower, input.houseConsumption, input.chargerPower, input.reservePower, input.maximumBatteryBonus];
+	if (!numericInputs.every(value => Number.isFinite(value)) || input.reservePower < 0 || input.maximumBatteryBonus < 0) {
 		return null;
 	}
 	// a disabled home battery contributes nothing, so its SOC is allowed to be absent
@@ -268,9 +252,35 @@ export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): nu
 		input.batteryMode === "priority" && input.batterySoc !== null && input.minBatterySoc < 100
 			? Math.max(0, (input.maximumBatteryBonus / (100 - input.minBatterySoc)) * (input.batterySoc - input.minBatterySoc))
 			: 0;
-	const availablePower =
-		input.solarPower - input.houseConsumption + (input.subtractChargerPower ? input.chargerPower : 0) - input.reservePower + batteryOffset;
-	const calculatedCurrent = Math.floor(availablePower / 230 / input.phases);
+	return input.solarPower - input.houseConsumption + (input.subtractChargerPower ? input.chargerPower : 0) - input.reservePower + batteryOffset;
+}
+
+/**
+ * Calculates the optimal charging current and keeps the internal controller
+ * target within its valid range. A target of 0 A means that charging should be
+ * disabled; it must never be sent to the charger as a current setting.
+ *
+ * @param input Current energy-management inputs
+ * @returns A target between 0 and the configured maximum, or `null` if an input is invalid
+ */
+export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): number | null {
+	if (
+		!Number.isFinite(input.phases) ||
+		!Number.isFinite(input.maximumChargeCurrent) ||
+		(input.phases !== 1 && input.phases !== 3) ||
+		!Number.isInteger(input.maximumChargeCurrent) ||
+		// a per-wallbox limit may legitimately sit below the 10 A start current, e.g. an 8 A
+		// coded cable, so only the technical floor makes a maximum invalid
+		input.maximumChargeCurrent < MIN_CHARGE_CURRENT ||
+		input.maximumChargeCurrent > MAX_CHARGE_CURRENT
+	) {
+		return null;
+	}
+	const availablePower = calculateAvailableSurplusPower(input);
+	if (availablePower === null) {
+		return null;
+	}
+	const calculatedCurrent = Math.floor(availablePower / PHASE_VOLTAGE / input.phases);
 
 	return Math.max(0, Math.min(calculatedCurrent, input.maximumChargeCurrent));
 }
@@ -385,6 +395,150 @@ export function decideChargeManager(input: ChargeManagerControllerInput): Charge
 		optimalCurrent,
 		nextState: { currentAmp, shutdownDelay },
 	};
+}
+
+/** One wallbox taking part in the shared surplus allocation. */
+export interface FleetParticipant {
+	/** Number of active charging phases */
+	phases: number;
+	/** Lowest current the ChargeManager may assign to this wallbox */
+	minimumChargeCurrent: number;
+	/** Highest current the ChargeManager may assign to this wallbox */
+	maximumChargeCurrent: number;
+	/** Internal controller state from the previous cycle */
+	state: ChargeManagerState;
+	/**
+	 * Whether this wallbox can actually consume power right now (a vehicle is connected).
+	 * A wallbox without a vehicle still gets its regular decision but reserves nothing,
+	 * so it never starves a wallbox that has a car waiting.
+	 */
+	claimsPower: boolean;
+}
+
+/** Shared measurements for one fleet-wide ChargeManager cycle; the per-wallbox parts live in {@link FleetParticipant}. */
+export type FleetSurplusInput = Omit<ChargeCalculationInput, "maximumChargeCurrent" | "phases">;
+
+/** A per-wallbox {@link ChargeManagerDecision} plus the raw surplus power it was offered, for the phase-switch decision. */
+export interface FleetChargeDecision extends ChargeManagerDecision {
+	/** PV surplus power in watts available to this wallbox at its current phase count (0 when the inputs are invalid) */
+	availablePower: number;
+}
+
+/**
+ * Splits the available PV surplus across several wallboxes and returns one control
+ * decision per wallbox.
+ *
+ * The surplus is a single shared resource: without coordination every wallbox would
+ * calculate its target from the full surplus and they would collectively draw far more
+ * than is available. Wallboxes are served in list order, so the first entry has the
+ * highest priority and later ones only see what is left over. The power a wallbox is
+ * entitled to is reserved even while it is still ramping up, otherwise the next wallbox
+ * would claim the same watts for one cycle and both would overshoot.
+ *
+ * `chargerPower` in `shared` must be the summed consumption of all coordinated wallboxes,
+ * so that `subtractChargerPower` adds the whole fleet back to the household consumption.
+ *
+ * A single participant receives exactly the result of {@link decideChargeManager}.
+ *
+ * @param shared Measurements and configuration common to every wallbox
+ * @param participants Wallboxes to serve, highest priority first
+ * @returns One decision per participant, in the same order
+ */
+export function decideChargeManagerFleet(shared: FleetSurplusInput, participants: FleetParticipant[]): FleetChargeDecision[] {
+	let claimedPower = 0;
+
+	return participants.map(participant => {
+		// later wallboxes only see the surplus the earlier ones did not claim
+		const surplus: FleetSurplusInput = { ...shared, solarPower: shared.solarPower - claimedPower };
+		const decision = decideChargeManager({
+			...surplus,
+			maximumChargeCurrent: participant.maximumChargeCurrent,
+			minimumChargeCurrent: participant.minimumChargeCurrent,
+			phases: participant.phases,
+			state: participant.state,
+		});
+		// the raw surplus power offered to this wallbox drives its one-/three-phase decision
+		const availablePower = calculateAvailableSurplusPower(surplus) ?? 0;
+
+		if (participant.claimsPower) {
+			// reserve the larger of what this wallbox wants and what it still draws while ramping down
+			const reservedCurrent = Math.max(decision.optimalCurrent ?? 0, decision.nextState.currentAmp);
+			claimedPower += reservedCurrent * PHASE_VOLTAGE * participant.phases;
+		}
+
+		return { ...decision, availablePower };
+	});
+}
+
+/** Input for the automatic one-/three-phase switching decision of a single wallbox. */
+export interface PhaseSwitchInput {
+	/** Number of phases the wallbox is charging with right now (1 or 3) */
+	currentPhases: number;
+	/** PV surplus power available to this wallbox in watts, independent of the phase count */
+	availablePower: number;
+	/** Lowest current the ChargeManager may assign to this wallbox */
+	minimumChargeCurrent: number;
+	/** Highest current the ChargeManager may assign to this wallbox */
+	maximumChargeCurrent: number;
+	/** Consecutive cycles the pending switch condition has already held */
+	switchDelay: number;
+}
+
+/** Result of the automatic phase-switching decision. */
+export interface PhaseSwitchDecision {
+	/** Phase count the wallbox should charge with (1 or 3); equals the current count until the dwell time elapsed */
+	targetPhases: number;
+	/** Updated consecutive-cycle counter for the pending switch (0 when no switch is pending) */
+	switchDelay: number;
+}
+
+/**
+ * Decides whether a wallbox should switch between one-phase and three-phase charging.
+ *
+ * Three-phase charging raises both the floor (it needs at least `minimumChargeCurrent`
+ * on every phase) and the ceiling, so the decision is driven by the surplus power:
+ * switch up to three phases once one-phase charging is saturated, and back down once the
+ * surplus can no longer sustain the three-phase minimum. The gap between those two
+ * thresholds plus a dwell time of {@link PHASE_SWITCH_DELAY_CYCLES} cycles keeps a wallbox
+ * from flapping between phase modes, which would interrupt charging each time.
+ *
+ * The up threshold is floored at the three-phase minimum, so a wallbox whose one-phase
+ * maximum is already below that minimum still has a stable (non-overlapping) hysteresis band.
+ *
+ * @param input Current phase count, available surplus power and the pending-switch counter
+ * @returns The phase count to use next cycle and the updated dwell counter
+ */
+export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision {
+	if (
+		(input.currentPhases !== 1 && input.currentPhases !== 3) ||
+		!Number.isFinite(input.availablePower) ||
+		!Number.isFinite(input.minimumChargeCurrent) ||
+		!Number.isFinite(input.maximumChargeCurrent)
+	) {
+		return { targetPhases: input.currentPhases, switchDelay: 0 };
+	}
+
+	const threePhaseMinPower = input.minimumChargeCurrent * 3 * PHASE_VOLTAGE;
+	// the up threshold can never be below the three-phase minimum, so the band never inverts
+	const upThreshold = Math.max(input.maximumChargeCurrent * PHASE_VOLTAGE, threePhaseMinPower);
+
+	let targetPhases = input.currentPhases;
+	if (input.currentPhases === 1 && input.availablePower >= upThreshold) {
+		targetPhases = 3;
+	} else if (input.currentPhases === 3 && input.availablePower < threePhaseMinPower) {
+		targetPhases = 1;
+	}
+
+	if (targetPhases === input.currentPhases) {
+		return { targetPhases: input.currentPhases, switchDelay: 0 };
+	}
+
+	const switchDelay = input.switchDelay + 1;
+	if (switchDelay > PHASE_SWITCH_DELAY_CYCLES) {
+		return { targetPhases, switchDelay: 0 };
+	}
+	// condition holds but the dwell time has not elapsed yet - keep the current phase count
+	return { targetPhases: input.currentPhases, switchDelay };
 }
 
 /**
