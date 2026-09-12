@@ -225,6 +225,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) updated axios
 - (hombach) switch to iobroker testing 6.x
 - (hombach) fixed repochecker warnings
+- (hombach) added node 26 tests
 
 ### 1.6.1 (2026-09-04)
 
