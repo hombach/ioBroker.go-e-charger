@@ -224,6 +224,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) docs: clarified the multi-wallbox behaviour (list order = priority) and noted that no combined current limit across wallboxes is enforced yet
 - (hombach) updated axios
 - (hombach) switch to iobroker testing 6.x
+- (hombach) fixed repochecker warnings
 
 ### 1.6.1 (2026-09-04)
 
