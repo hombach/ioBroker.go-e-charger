@@ -26,6 +26,7 @@
 	"LBL_stateHomeSolarPower": "ID obiektu z aktualnie dostępną mocą fotowoltaiki [W]",
 	"LBL_subtractSelfConsumption": "Pobór ładowarki jest wliczony w zużycie energii w domu",
 	"LBL_wallBoxList": "Lista wallboxów",
+	"LBL_wallBoxListHelp": "ChargeManager obsługuje wallboxy od góry do dołu: pierwszy wpis otrzymuje nadwyżkę PV jako pierwszy, kolejne tylko to, co zostanie. Priorytet zmienisz przyciskami strzałek.",
 	"LBL_wallboxMaxAmp": "Maksymalny prąd ładowania dla tego wallboxa [A] (0 = limit instalacji)",
 	"LBL_wallboxMaxAmpHelp": "Najwyższy prąd dla tego wallboxa, np. w celu jego ograniczenia. 0 oznacza maksimum całej instalacji. Nigdy nie przekracza limitu instalacji.",
 	"LBL_wallboxMinAmp": "Minimalny prąd ładowania dla tego wallboxa [A] (0 = domyślny)",

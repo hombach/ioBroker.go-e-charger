@@ -26,6 +26,7 @@
 	"LBL_stateHomeSolarPower": "ID de objeto da potência solar disponível [W]",
 	"LBL_subtractSelfConsumption": "O consumo do carregador já está incluído no consumo da casa",
 	"LBL_wallBoxList": "Lista de wallboxes",
+	"LBL_wallBoxListHelp": "O ChargeManager atende as wallboxes de cima para baixo: a primeira entrada recebe o excedente FV primeiro, as seguintes apenas o que sobra. Altere a prioridade com os botões de seta.",
 	"LBL_wallboxMaxAmp": "Corrente máxima de carga desta wallbox [A] (0 = limite da instalação)",
 	"LBL_wallboxMaxAmpHelp": "Corrente mais alta desta wallbox, p. ex. para limitá-la. 0 usa o máximo de toda a instalação. Nunca excede o limite da instalação.",
 	"LBL_wallboxMinAmp": "Corrente mínima de carga desta wallbox [A] (0 = padrão)",
