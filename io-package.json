@@ -176,6 +176,7 @@
     "chargeManagerMaxBatteryBonus": 2000,
     "chargeManagerMinCurrent": 6,
     "maxChargeCurrent": 16,
+    "maxAmpTotal": 0,
     "batteryMode": "priority",
     "batterySocHysteresis": 0,
     "batterySocMaxAgeSeconds": 0

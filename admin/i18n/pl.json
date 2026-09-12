@@ -19,6 +19,8 @@
 	"LBL_chargerName": "Nazwa ładowarki",
 	"LBL_cycleTime": "Odstęp między odpytaniami danych z ładowarki [ms]",
 	"LBL_ipAddress": "Adres IP go-eCharger",
+	"LBL_maxAmpTotal": "Maksymalny łączny prąd ładowania wszystkich wallboxów [A] (0 = wyłączone)",
+	"LBL_maxAmpTotalHelp": "Budżet prądowy instalacji chroniący bezpiecznik zasilania. Sumaryczny prąd wszystkich wallboxów nigdy go nie przekracza; najpierw obsługiwany jest ChargeNOW, potem ChargeManager według priorytetu. 0 wyłącza limit.",
 	"LBL_maxChargeCurrent": "Maksymalny prąd ładowania zasilania dla wszystkich wallboxów [A]",
 	"LBL_maxChargeCurrentHelp": "Limit całej instalacji (bezpiecznik główny / zasilanie). Ogranicza ChargeManager (nadwyżka PV) i ChargeNOW dla każdego wallboxa.",
 	"LBL_readOnlyMode": "Tryb tylko do odczytu – zezwolenie na ładowanie nie jest wysyłane do ładowarki (do użytku z tagami RFID)",

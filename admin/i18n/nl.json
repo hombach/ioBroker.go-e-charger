@@ -19,6 +19,8 @@
 	"LBL_chargerName": "Naam van de wallbox",
 	"LBL_cycleTime": "Interval tussen data-uitlezingen van de wallbox [ms]",
 	"LBL_ipAddress": "IP-adres van de go-eCharger",
+	"LBL_maxAmpTotal": "Maximale totale laadstroom over alle wallboxen [A] (0 = uitgeschakeld)",
+	"LBL_maxAmpTotalHelp": "Stroombudget van de installatie ter bescherming van de hoofdzekering. De opgetelde stroom van alle wallboxen overschrijdt dit nooit; ChargeNOW wordt eerst bediend, daarna ChargeManager op prioriteit. 0 schakelt de limiet uit.",
 	"LBL_maxChargeCurrent": "Maximale laadstroom van de voeding voor alle wallboxen [A]",
 	"LBL_maxChargeCurrentHelp": "Limiet voor de hele installatie (hoofdzekering / voeding). Begrenst ChargeManager (PV-overschot) en ChargeNOW voor elke wallbox.",
 	"LBL_readOnlyMode": "Alleen-lezen modus - laadvrijgave wordt niet naar de wallbox gestuurd (voor gebruik met RFID-tags)",

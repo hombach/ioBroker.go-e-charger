@@ -19,6 +19,8 @@
 	"LBL_chargerName": "Nome do carregador",
 	"LBL_cycleTime": "Intervalo entre leituras de dados do carregador [ms]",
 	"LBL_ipAddress": "Endereço IP do go-eCharger",
+	"LBL_maxAmpTotal": "Corrente de carga total máxima de todas as wallboxes [A] (0 = desativado)",
+	"LBL_maxAmpTotalHelp": "Orçamento de corrente da instalação para proteger o fusível de alimentação. A corrente somada de todas as wallboxes nunca o excede; o ChargeNOW é servido primeiro, depois o ChargeManager por prioridade. 0 desativa o limite.",
 	"LBL_maxChargeCurrent": "Corrente máxima de carga da alimentação para todas as wallboxes [A]",
 	"LBL_maxChargeCurrentHelp": "Limite de toda a instalação (disjuntor principal / alimentação). Limita o ChargeManager (excedente FV) e o ChargeNOW em cada wallbox.",
 	"LBL_readOnlyMode": "Modo somente leitura - a liberação de carga não é enviada ao carregador (para uso com tags RFID)",

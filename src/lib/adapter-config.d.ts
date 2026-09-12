@@ -13,6 +13,7 @@ declare global {
 			chargeManagerMaxBatteryBonus: number;
 			chargeManagerMinCurrent: number;
 			maxChargeCurrent: number;
+			maxAmpTotal: number;
 			batteryMode: "disabled" | "minimumSoc" | "priority";
 			batterySocHysteresis: number;
 			batterySocMaxAgeSeconds: number;

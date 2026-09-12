@@ -19,6 +19,8 @@
 	"LBL_chargerName": "Charger name",
 	"LBL_cycleTime": "Time between data polls from the charger [ms]",
 	"LBL_ipAddress": "IP address of the go-eCharger",
+	"LBL_maxAmpTotal": "Maximum total charging current across all wallboxes [A] (0 = disabled)",
+	"LBL_maxAmpTotalHelp": "Installation current budget protecting the supply fuse. The summed current of all wallboxes never exceeds it; ChargeNOW is served first, then ChargeManager by priority. 0 disables the limit.",
 	"LBL_maxChargeCurrent": "Maximum charging current of the power supply for all wallboxes [A]",
 	"LBL_maxChargeCurrentHelp": "Installation-wide limit (main breaker / supply). Caps ChargeManager (PV surplus) and ChargeNOW for every wallbox.",
 	"LBL_readOnlyMode": "Read-only mode - charging release is not sent to the charger (for use with RFID tags)",

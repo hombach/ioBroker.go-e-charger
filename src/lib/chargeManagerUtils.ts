@@ -566,3 +566,83 @@ export function buildChargerCommands(allow: boolean, ampere: number, firmware: s
 		{ parameter: "alw", value: 1 },
 	];
 }
+
+/** One wallbox competing for the shared installation current budget. */
+export interface TotalCurrentParticipant {
+	/**
+	 * Current in amps the wallbox would draw this cycle before the budget cap is applied
+	 * (its ChargeNOW current, or the ramped ChargeManager target). Use 0 when the wallbox is
+	 * not charging this cycle, so it neither consumes budget nor is switched on by the cap.
+	 */
+	requestedAmp: number;
+	/** Lowest current the wallbox may run at; a smaller remaining budget switches it off instead of throttling below this. */
+	minAmp: number;
+	/** ChargeNOW wallboxes are served before ChargeManager wallboxes, regardless of list order. */
+	chargeNow: boolean;
+}
+
+/** Granted current for one wallbox after applying the installation current budget. */
+export interface TotalCurrentAllocation {
+	/** Whether the wallbox may charge after the budget cap */
+	allow: boolean;
+	/** Granted current in amps (0 when `allow` is false) */
+	ampere: number;
+}
+
+/**
+ * Caps the summed charging current of all wallboxes to a single installation-wide budget in
+ * amperes, protecting the supply fuse. This is a hard limit applied on top of the PV surplus
+ * allocation ({@link decideChargeManagerFleet}) and of ChargeNOW: watts are irrelevant here, a
+ * 20 A feed carries 20 A whether a wallbox charges one- or three-phase.
+ *
+ * This is the conservative summed-ampere model (variant A): every ampere counts against one
+ * budget regardless of which physical phase it lands on, because the charger does not reliably
+ * report its phase rotation. It never exceeds the fuse rating; it can leave some capacity unused
+ * when the load is spread across phases.
+ *
+ * ChargeNOW wallboxes are served first, then ChargeManager wallboxes in list (priority) order.
+ * A wallbox that no longer fits is throttled to the remaining budget, or switched off when even
+ * its minimum would not fit. ChargeNOW participants must be included with their requested current
+ * even when no vehicle is connected yet: otherwise several idle ChargeNOW wallboxes could all be
+ * plugged in at once and trip the fuse before the next cycle re-plans.
+ *
+ * @param participants Wallboxes competing for the budget, in configuration (priority) order
+ * @param maxAmpTotal Installation current budget in amps; 0 or invalid disables the cap (pass-through)
+ * @returns One allocation per participant, in the same order as the input
+ */
+export function limitTotalCurrent(participants: TotalCurrentParticipant[], maxAmpTotal: number): TotalCurrentAllocation[] {
+	// no valid budget configured - every wallbox keeps exactly what it requested
+	if (!Number.isFinite(maxAmpTotal) || maxAmpTotal <= 0) {
+		return participants.map(p => ({ allow: p.requestedAmp > 0, ampere: p.requestedAmp > 0 ? p.requestedAmp : 0 }));
+	}
+
+	const budget = Math.floor(maxAmpTotal);
+	const allocations: TotalCurrentAllocation[] = participants.map(() => ({ allow: false, ampere: 0 }));
+
+	// ChargeNOW first, then ChargeManager, each group kept in its original (priority) order
+	const order = participants.map((_, index) => index).sort((a, b) => Number(participants[b].chargeNow) - Number(participants[a].chargeNow));
+
+	let used = 0;
+	for (const index of order) {
+		const participant = participants[index];
+		if (participant.requestedAmp <= 0) {
+			continue;
+		}
+		const min = Math.max(MIN_CHARGE_CURRENT, Math.floor(participant.minAmp));
+		// a single wallbox can never draw more than the whole budget
+		const want = Math.min(Math.floor(participant.requestedAmp), budget);
+		const remaining = budget - used;
+
+		if (want <= remaining) {
+			allocations[index] = { allow: true, ampere: want };
+			used += want;
+		} else if (remaining >= min) {
+			// not enough left for the full request, but enough to keep the wallbox charging throttled
+			allocations[index] = { allow: true, ampere: remaining };
+			used += remaining;
+		}
+		// else: even the minimum does not fit - leave the wallbox off and keep the budget for nobody
+	}
+
+	return allocations;
+}

@@ -38,6 +38,22 @@
 					"xl": 6,
 					"newLine": false
 				},
+				"maxAmpTotal": {
+					"type": "number",
+					"label": "LBL_maxAmpTotal",
+					"help": "LBL_maxAmpTotalHelp",
+					"default": 0,
+					"min": 6,
+					"max": 64,
+					"step": 1,
+					"unit": "A",
+					"xs": 12,
+					"sm": 6,
+					"md": 6,
+					"lg": 6,
+					"xl": 6,
+					"newLine": true
+				},
 				"wallBoxList": {
 					"type": "accordion",
 					"titleAttr": "chargerName",

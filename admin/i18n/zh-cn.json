@@ -19,6 +19,8 @@
 	"LBL_chargerName": "充电桩名称",
 	"LBL_cycleTime": "从充电桩读取数据的间隔 [ms]",
 	"LBL_ipAddress": "go-eCharger 的 IP 地址",
+	"LBL_maxAmpTotal": "所有充电桩的最大总充电电流 [A]（0 = 禁用）",
+	"LBL_maxAmpTotalHelp": "用于保护供电保险丝的安装电流预算。所有充电桩的电流总和绝不会超过此值；先分配 ChargeNOW，再按优先级分配 ChargeManager。0 表示禁用该限制。",
 	"LBL_maxChargeCurrent": "供电电源对所有充电桩的最大充电电流 [A]",
 	"LBL_maxChargeCurrentHelp": "整个电气装置的上限（主断路器/供电）。对每个充电桩的 ChargeManager（光伏盈余）和 ChargeNOW 均生效。",
 	"LBL_readOnlyMode": "只读模式——不向充电桩发送充电许可（配合 RFID 标签使用）",

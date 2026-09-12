@@ -13,9 +13,12 @@ import {
 	type FleetParticipant,
 	MAX_CHARGE_CURRENT,
 	evaluateBatteryAvailability,
+	limitTotalCurrent,
 	MIN_CHARGE_CURRENT,
 	resolveWallboxCurrentLimits,
 	START_CHARGE_CURRENT,
+	type TotalCurrentAllocation,
+	type TotalCurrentParticipant,
 } from "./lib/chargeManagerUtils";
 import { ProjectUtils, type IWallboxInfo } from "./lib/projectUtils";
 
@@ -40,6 +43,7 @@ let chargeManagerReservePower = DEFAULT_RESERVE_POWER;
 let chargeManagerMaxBatteryBonus = DEFAULT_MAXIMUM_BATTERY_BONUS;
 let chargeManagerMinCurrent = MIN_CHARGE_CURRENT;
 let maxChargeCurrent = MAX_CHARGE_CURRENT;
+let maxAmpTotal = 0;
 let chargeManagerBatteryMode: BatteryMode = "priority";
 let chargeManagerBatterySocHysteresis = 0;
 let chargeManagerBatterySocMaxAgeSeconds = 0;
@@ -118,6 +122,12 @@ class go_e_charger extends utils.Adapter {
 			maxChargeCurrent = MAX_CHARGE_CURRENT;
 		}
 		this.log.debug(`ChargeManager current range: ${chargeManagerMinCurrent}-${maxChargeCurrent} A`);
+
+		// installation-wide current budget (fuse protection); 0 disables the cap
+		maxAmpTotal = this.validateBoundedIntConfig(this.config.maxAmpTotal, 0, 0, 250, "maxAmpTotal");
+		if (maxAmpTotal > 0) {
+			this.log.debug(`Installation total current budget: ${maxAmpTotal} A`);
+		}
 
 		// ChargeManager: home-battery handling
 		chargeManagerBatteryMode = this.validateBatteryModeConfig(this.config.batteryMode);
@@ -555,25 +565,64 @@ class go_e_charger extends utils.Adapter {
 			// chargers in one go before any of them is told what to do
 			const chargePlans = await this.planChargeManagerCycle();
 
-			// second pass: apply the resulting decisions and collect the global statistics
+			// second pass: apply the resulting decisions and collect the global statistics.
+			// A configured installation current budget (maxAmpTotal > 0) caps the summed current of
+			// all chargers as a hard fuse-protection limit on top of the ChargeNOW / ChargeManager
+			// decisions. When it is disabled the loop behaves exactly as before.
+			const budgetActive = maxAmpTotal > 0;
+			const budgetAllocations = budgetActive ? this.planTotalCurrentBudget(chargePlans) : [];
 			for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
-				if (this.wallboxInfoList[iWB].ChargeNOW) {
-					// Charge-NOW is enabled - the per-wallbox current limits cap ChargeNOW as well
-					const chargeNowCurrent = Math.min(
-						Math.max(this.wallboxInfoList[iWB].ChargeCurrent, this.wallboxInfoList[iWB].MinAmp),
-						this.wallboxInfoList[iWB].MaxAmp,
-					);
-					await this.Charge_Config("1", chargeNowCurrent, `activate go-eCharger for forced charging`, iWB); // keep active charging current!!
-					await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
-					if (this.wallboxInfoList[iWB].HardwareMin3) {
+				const info = this.wallboxInfoList[iWB];
+				// a charger only draws current once a vehicle is connected (go-e car state 2 or 3). With
+				// the budget active, a charger without a vehicle is kept off and reserves nothing, so it
+				// neither trips the fuse when a car is plugged in nor starves a charger that already charges.
+				const hasVehicle = info.CarState === 2 || info.CarState === 3;
+
+				if (info.ChargeNOW) {
+					if (budgetActive) {
+						const alloc = budgetAllocations[iWB];
+						if (hasVehicle && alloc.allow) {
+							await this.Charge_Config("1", alloc.ampere, `activate go-eCharger for forced charging`, iWB);
+						} else {
+							// no vehicle yet, or no budget left after the higher-priority chargers
+							info.SetAmp = 0;
+							const reason = hasVehicle ? `ChargeNOW off: installation current budget exhausted` : `ChargeNOW waiting for vehicle`;
+							await this.Charge_Config("0", info.MinAmp, reason, iWB);
+						}
+					} else {
+						// Charge-NOW is enabled - the per-wallbox current limits cap ChargeNOW as well
+						const chargeNowCurrent = Math.min(Math.max(info.ChargeCurrent, info.MinAmp), info.MaxAmp);
+						await this.Charge_Config("1", chargeNowCurrent, `activate go-eCharger for forced charging`, iWB); // keep active charging current!!
+					}
+					await this.Switch_3Phases(info.Charge3Phase, iWB);
+					if (info.HardwareMin3) {
 						await this.Read_ChargerAPIV2(iWB);
 					}
-				} else if (this.wallboxInfoList[iWB].ChargeManager) {
+				} else if (info.ChargeManager) {
 					// Charge-Manager is enabled - apply the decision planned for this charger
 					const plan = chargePlans[iWB];
 					if (plan?.decision) {
-						await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
-						await this.Charge_Manager(iWB, plan.decision);
+						const decision = plan.decision;
+						await this.Switch_3Phases(info.Charge3Phase, iWB);
+						if (budgetActive && !hasVehicle) {
+							// reserve nothing for a charger without a vehicle; keep it off until one connects
+							await this.stopChargeManager(`No vehicle connected`, iWB);
+						} else if (budgetActive && decision.optimalCurrent !== null && decision.action !== "disable") {
+							// the fleet wants this charger running - cap it to the remaining budget
+							const alloc = budgetAllocations[iWB];
+							if (!alloc.allow) {
+								await this.stopChargeManager(`Installation current budget exhausted`, iWB);
+							} else {
+								if (alloc.ampere < decision.nextState.currentAmp) {
+									// hard fuse cap: throttle the ramped target down to the remaining budget
+									decision.nextState.currentAmp = alloc.ampere;
+									decision.action = "enable";
+								}
+								await this.Charge_Manager(iWB, decision);
+							}
+						} else {
+							await this.Charge_Manager(iWB, decision);
+						}
 					} else if (plan?.batteryReason === "stale") {
 						await this.stopChargeManager(`Battery state of charge is stale`, iWB);
 					} else if (plan?.batteryReason === "below-minimum") {
@@ -1431,6 +1480,40 @@ class go_e_charger extends utils.Adapter {
 			}
 		});
 		return plans;
+	}
+
+	/**
+	 * Builds the installation-wide current allocation for the whole fleet.
+	 *
+	 * Each charger requests the current it would actually draw this cycle - its ChargeNOW current
+	 * or the ramped ChargeManager target - but only while a vehicle is connected, so an idle charger
+	 * reserves nothing and never starves an actively charging one. {@link limitTotalCurrent} then
+	 * caps the summed current to `maxAmpTotal`, serving ChargeNOW before ChargeManager and later
+	 * list entries only from what the higher-priority chargers leave over.
+	 *
+	 * @param chargePlans - Per-charger ChargeManager decisions from {@link planChargeManagerCycle}
+	 * @returns One allocation per charger, indexed by its position in `wallBoxList`
+	 */
+	private planTotalCurrentBudget(chargePlans: (WallboxChargePlan | undefined)[]): TotalCurrentAllocation[] {
+		const participants: TotalCurrentParticipant[] = this.config.wallBoxList.map((_, iWB) => {
+			const info = this.wallboxInfoList[iWB];
+			const hasVehicle = info.CarState === 2 || info.CarState === 3;
+			if (!hasVehicle) {
+				// no vehicle - the charger cannot draw current, so it neither claims budget nor is served
+				return { requestedAmp: 0, minAmp: info.MinAmp, chargeNow: !!info.ChargeNOW };
+			}
+			if (info.ChargeNOW) {
+				const requestedAmp = Math.min(Math.max(info.ChargeCurrent, info.MinAmp), info.MaxAmp);
+				return { requestedAmp, minAmp: info.MinAmp, chargeNow: true };
+			}
+			if (info.ChargeManager) {
+				const decision = chargePlans[iWB]?.decision;
+				const requestedAmp = decision && decision.optimalCurrent !== null && decision.action !== "disable" ? decision.nextState.currentAmp : 0;
+				return { requestedAmp, minAmp: info.MinAmp, chargeNow: false };
+			}
+			return { requestedAmp: 0, minAmp: info.MinAmp, chargeNow: false };
+		});
+		return limitTotalCurrent(participants, maxAmpTotal);
 	}
 
 	/**

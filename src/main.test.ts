@@ -8,8 +8,10 @@ import {
 	decidePhaseSwitch,
 	evaluateBatteryAvailability,
 	type FleetParticipant,
+	limitTotalCurrent,
 	MAX_CHARGE_CURRENT,
 	MIN_CHARGE_CURRENT,
+	type TotalCurrentParticipant,
 	PHASE_SWITCH_DELAY_CYCLES,
 	PHASE_VOLTAGE,
 	resolveWallboxCurrentLimits,
@@ -781,6 +783,88 @@ describe("ChargeManager safety helpers", () => {
 		it("leaves invalid inputs untouched", () => {
 			assert.deepEqual(decidePhaseSwitch(input({ currentPhases: 2, availablePower: 10000 })), { targetPhases: 2, switchDelay: 0 });
 			assert.equal(decidePhaseSwitch(input({ currentPhases: 1, availablePower: Number.NaN, switchDelay: 3 })).targetPhases, 1);
+		});
+	});
+
+	describe("limitTotalCurrent", () => {
+		const box = (requestedAmp: number, minAmp = MIN_CHARGE_CURRENT, chargeNow = false): TotalCurrentParticipant => ({
+			requestedAmp,
+			minAmp,
+			chargeNow,
+		});
+
+		it("passes every request through when the budget is disabled", () => {
+			for (const budget of [0, -5, Number.NaN, Number.POSITIVE_INFINITY]) {
+				assert.deepEqual(limitTotalCurrent([box(16), box(10)], budget), [
+					{ allow: true, ampere: 16 },
+					{ allow: true, ampere: 10 },
+				]);
+			}
+		});
+
+		it("keeps a single wallbox unchanged when it fits the budget", () => {
+			assert.deepEqual(limitTotalCurrent([box(16)], 20), [{ allow: true, ampere: 16 }]);
+		});
+
+		it("caps a single wallbox that alone exceeds the whole budget", () => {
+			assert.deepEqual(limitTotalCurrent([box(32)], 16), [{ allow: true, ampere: 16 }]);
+		});
+
+		it("throttles the wallbox that no longer fits and switches off the one below its minimum", () => {
+			// three boxes want 16 A each against a 25 A budget: 16 fits, 9 throttled, nothing left for the third
+			assert.deepEqual(limitTotalCurrent([box(16), box(16), box(16)], 25), [
+				{ allow: true, ampere: 16 },
+				{ allow: true, ampere: 9 },
+				{ allow: false, ampere: 0 },
+			]);
+		});
+
+		it("respects the per-box minimum when throttling", () => {
+			// 20 A budget, first takes 16, only 4 A left which is below the 6 A minimum -> second off
+			assert.deepEqual(limitTotalCurrent([box(16), box(10)], 20), [
+				{ allow: true, ampere: 16 },
+				{ allow: false, ampere: 0 },
+			]);
+		});
+
+		it("serves ChargeNOW before ChargeManager regardless of list order", () => {
+			// list order is manager-first, but the ChargeNOW box is served first and claims the budget;
+			// only 4 A remain for the manager box, below its 6 A minimum, so it is switched off
+			const result = limitTotalCurrent([box(16, MIN_CHARGE_CURRENT, false), box(16, MIN_CHARGE_CURRENT, true)], 20);
+			assert.deepEqual(result, [
+				{ allow: false, ampere: 0 },
+				{ allow: true, ampere: 16 },
+			]);
+		});
+
+		it("keeps the fuse safe when several idle ChargeNOW boxes are plugged in at once (cold start)", () => {
+			// three ChargeNOW boxes each requesting 16 A against a 20 A feed: total draw must never exceed 20 A
+			const result = limitTotalCurrent([box(16, 6, true), box(16, 6, true), box(16, 6, true)], 20);
+			const totalDraw = result.reduce((sum, r) => sum + r.ampere, 0);
+			assert.ok(totalDraw <= 20, `total draw ${totalDraw} A must stay within the 20 A budget`);
+			assert.deepEqual(result, [
+				{ allow: true, ampere: 16 },
+				{ allow: false, ampere: 0 },
+				{ allow: false, ampere: 0 },
+			]);
+		});
+
+		it("skips wallboxes that are not charging without consuming budget", () => {
+			assert.deepEqual(limitTotalCurrent([box(0), box(16)], 16), [
+				{ allow: false, ampere: 0 },
+				{ allow: true, ampere: 16 },
+			]);
+		});
+
+		it("handles the prepared 10/16/20 A example under a 15 A installation budget", () => {
+			// per-box maxima already resolved to 10/16/20; here they request those, capped to a 15 A total
+			const result = limitTotalCurrent([box(10), box(16), box(20)], 15);
+			assert.deepEqual(result, [
+				{ allow: true, ampere: 10 },
+				{ allow: false, ampere: 0 },
+				{ allow: false, ampere: 0 },
+			]);
+			assert.ok(result.reduce((sum, r) => sum + r.ampere, 0) <= 15);
 		});
 	});
 });

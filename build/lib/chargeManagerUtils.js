@@ -11,6 +11,7 @@ exports.decideChargeManager = decideChargeManager;
 exports.decideChargeManagerFleet = decideChargeManagerFleet;
 exports.decidePhaseSwitch = decidePhaseSwitch;
 exports.buildChargerCommands = buildChargerCommands;
+exports.limitTotalCurrent = limitTotalCurrent;
 exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 32;
 exports.START_CHARGE_CURRENT = 10;
@@ -228,5 +229,32 @@ function buildChargerCommands(allow, ampere, firmware) {
         { parameter: firmware === "033" ? "amp" : "amx", value: ampere },
         { parameter: "alw", value: 1 },
     ];
+}
+function limitTotalCurrent(participants, maxAmpTotal) {
+    if (!Number.isFinite(maxAmpTotal) || maxAmpTotal <= 0) {
+        return participants.map(p => ({ allow: p.requestedAmp > 0, ampere: p.requestedAmp > 0 ? p.requestedAmp : 0 }));
+    }
+    const budget = Math.floor(maxAmpTotal);
+    const allocations = participants.map(() => ({ allow: false, ampere: 0 }));
+    const order = participants.map((_, index) => index).sort((a, b) => Number(participants[b].chargeNow) - Number(participants[a].chargeNow));
+    let used = 0;
+    for (const index of order) {
+        const participant = participants[index];
+        if (participant.requestedAmp <= 0) {
+            continue;
+        }
+        const min = Math.max(exports.MIN_CHARGE_CURRENT, Math.floor(participant.minAmp));
+        const want = Math.min(Math.floor(participant.requestedAmp), budget);
+        const remaining = budget - used;
+        if (want <= remaining) {
+            allocations[index] = { allow: true, ampere: want };
+            used += want;
+        }
+        else if (remaining >= min) {
+            allocations[index] = { allow: true, ampere: remaining };
+            used += remaining;
+        }
+    }
+    return allocations;
 }
 //# sourceMappingURL=chargeManagerUtils.js.map
