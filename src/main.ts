@@ -1456,6 +1456,13 @@ class go_e_charger extends utils.Adapter {
 		served.forEach((iWB, index) => {
 			plans[iWB] = { decision: decisions[index], batteryReason: "available" };
 
+			// surplus-sharing control loop: one concise line per served charger, in priority order
+			const decision = decisions[index];
+			const carState = this.wallboxInfoList[iWB].CarState;
+			this.log.debug(
+				`ChargeManager charger ${iWB}: surplus ${Math.round(decision.availablePower)} W → optimal ${decision.optimalCurrent ?? 0} A, ramp ${decision.nextState.currentAmp} A, action=${decision.action} (${decision.reason}), car=${carState}`,
+			);
+
 			// automatic one-/three-phase switching (opt-in, gen3+ only). The decision uses the phase
 			// count the allocation just ran with; the switch is applied this cycle and the next cycle
 			// allocates with the new phase count.
@@ -1470,6 +1477,10 @@ class go_e_charger extends utils.Adapter {
 				});
 				this.wallboxInfoList[iWB].PhaseSwitchDelay = phaseDecision.switchDelay;
 				const targetThreePhase = phaseDecision.targetPhases === 3;
+				// phase-switch control loop: show the current/target phase and the pending dwell counter
+				this.log.debug(
+					`ChargeManager charger ${iWB} phase: ${this.wallboxInfoList[iWB].EnabledPhases}p now, target ${phaseDecision.targetPhases}p, dwell ${phaseDecision.switchDelay}`,
+				);
 				if (targetThreePhase !== this.wallboxInfoList[iWB].Charge3Phase) {
 					this.wallboxInfoList[iWB].Charge3Phase = targetThreePhase;
 					void this.setState(`Wallbox_${iWB}.Settings.Charge3Phase`, { val: targetThreePhase, ack: true });
@@ -1513,7 +1524,23 @@ class go_e_charger extends utils.Adapter {
 			}
 			return { requestedAmp: 0, minAmp: info.MinAmp, chargeNow: false };
 		});
-		return limitTotalCurrent(participants, maxAmpTotal);
+		const allocations = limitTotalCurrent(participants, maxAmpTotal);
+
+		// total-current control loop: one concise line for the whole fleet (requested -> granted per box)
+		let used = 0;
+		const summary = allocations.map((alloc, iWB) => {
+			used += alloc.ampere;
+			const req = participants[iWB].requestedAmp;
+			if (req <= 0) {
+				return `box${iWB} idle`;
+			}
+			const tag = participants[iWB].chargeNow ? "NOW" : "CM";
+			const state = !alloc.allow ? "off" : alloc.ampere < req ? `${alloc.ampere} A throttled` : `${alloc.ampere} A`;
+			return `box${iWB} ${tag} req ${req}->${state}`;
+		});
+		this.log.debug(`Total current budget ${maxAmpTotal} A: ${summary.join(" | ")} (used ${used}/${maxAmpTotal} A)`);
+
+		return allocations;
 	}
 
 	/**
