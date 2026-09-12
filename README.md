@@ -197,7 +197,7 @@ Before relying on automatic charging, verify the selected input states in the io
 
 Charging may take several poll cycles to start because the internal target increases by only 1 A per cycle. With the default 10-second cycle and an initial target of 0 A, reaching the default 10 A starting point can take approximately 100 seconds.
 
-ChargeManager is currently intended to control one charger. Enabling it for multiple chargers at the same time results in each charger independently using the same surplus and can cause incorrect allocation.
+When ChargeManager runs several wallboxes at once, the PV surplus is shared between them in wallbox-list order, so the first entry has priority and later ones only receive the remaining surplus (see [PV surplus charging with ChargeManager](#pv-surplus-charging-with-chargemanager) above). The adapter does **not** yet enforce a combined current limit across all wallboxes against a shared fuse or supply line, so make sure the sum of the per-wallbox maximum currents stays within your installation's capacity.
 
 ## Sentry
 
@@ -217,13 +217,14 @@ If you enjoyed this project – or are just feeling generous – consider buying
 ### **WORK IN PROGRESS**
 
 - (typhosj) admin: the wallbox list now explains that its order is the ChargeManager priority - the first entry receives the PV surplus first, later entries only the remainder
+- (typhosj) ChargeManager: the PV surplus is now shared between all wallboxes instead of being offered to each one in full; wallboxes are served in configuration order, so the first entry has priority and later ones only receive the remaining surplus
+- (typhosj) ChargeManager: a wallbox without a connected vehicle no longer reserves surplus and can no longer starve a wallbox that has a car waiting
+- (hombach) ChargeManager: optional automatic 1-/3-phase switching per wallbox (gen 3+, off by default) - switches up when one-phase charging saturates and back down when the surplus can no longer sustain three phases, with a dwell time to prevent flapping
+- (hombach) docs: clarified the multi-wallbox behaviour (list order = priority) and noted that no combined current limit across wallboxes is enforced yet
 
 ### 1.6.1 (2026-09-04)
 
 - (typhosj) fixed: a wallbox whose effective maximum charging current is below 10 A - e.g. an 8 A coded cable or a per-wallbox maximum of 8 A - was rejected as invalid ChargeManager input and never charged from PV surplus. Such a wallbox now starts charging at its own maximum
-- (typhosj) ChargeManager: the PV surplus is now shared between all wallboxes instead of being offered to each one in full; wallboxes are served in configuration order, so the first entry has priority and later ones only receive the remaining surplus
-- (typhosj) ChargeManager: a wallbox without a connected vehicle no longer reserves surplus and can no longer starve a wallbox that has a car waiting
-- (hombach) ChargeManager: optional automatic 1-/3-phase switching per wallbox (gen 3+, off by default) - switches up when one-phase charging saturates and back down when the surplus can no longer sustain three phases, with a dwell time to prevent flapping
 
 ### 1.6.0 (2026-08-29)
 
