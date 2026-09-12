@@ -28,6 +28,7 @@
 	"LBL_stateHomeSolarPower": "Object-ID van het beschikbare zonnevermogen [W]",
 	"LBL_subtractSelfConsumption": "Verbruik van de wallbox zit al in het huisverbruik",
 	"LBL_wallBoxList": "Wallboxlijst",
+	"LBL_wallBoxListHelp": "De ChargeManager bedient de wallboxen van boven naar beneden: de eerste vermelding krijgt het PV-overschot als eerste, latere alleen wat overblijft. Wijzig de prioriteit met de pijlknoppen.",
 	"LBL_wallboxMaxAmp": "Maximale laadstroom voor deze wallbox [A] (0 = installatielimiet)",
 	"LBL_wallboxMaxAmpHelp": "Hoogste stroom voor deze wallbox, bijv. om te begrenzen. 0 gebruikt het maximum van de installatie. Overschrijdt nooit de installatielimiet.",
 	"LBL_wallboxMinAmp": "Minimale laadstroom voor deze wallbox [A] (0 = standaard)",

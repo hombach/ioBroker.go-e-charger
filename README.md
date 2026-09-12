@@ -216,6 +216,10 @@ If you enjoyed this project – or are just feeling generous – consider buying
 -->
 ### **WORK IN PROGRESS**
 
+- (typhosj) admin: the wallbox list now explains that its order is the ChargeManager priority - the first entry receives the PV surplus first, later entries only the remainder
+
+### 1.6.1 (2026-09-04)
+
 - (typhosj) fixed: a wallbox whose effective maximum charging current is below 10 A - e.g. an 8 A coded cable or a per-wallbox maximum of 8 A - was rejected as invalid ChargeManager input and never charged from PV surplus. Such a wallbox now starts charging at its own maximum
 - (typhosj) ChargeManager: the PV surplus is now shared between all wallboxes instead of being offered to each one in full; wallboxes are served in configuration order, so the first entry has priority and later ones only receive the remaining surplus
 - (typhosj) ChargeManager: a wallbox without a connected vehicle no longer reserves surplus and can no longer starve a wallbox that has a car waiting
@@ -249,13 +253,6 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) projectUtils: use extendObject instead of setObject in forceMode so user customizations survive restarts
 - (hombach) projectUtils: fixed min/max/step value of 0 being dropped from number state definitions
 - (hombach) updated dependencies
-
-### 1.3.1 (2026-08-06)
-
-- (hombach) fixed "unlocked by RFID" always 0 on gen 3+ chargers: API V2 uses the "trx" key instead of "uby" (#634)
-- (hombach) live data is now refreshed every cycle in all modes, so read-only monitoring stays up to date
-- (hombach) API V2 not being reachable is now a single warning instead of an error (normal on hardware gen 1/2)
-- (typhosj) use generic go-e brand logo as adapter icon (#843)
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

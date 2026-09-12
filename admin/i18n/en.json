@@ -28,6 +28,7 @@
 	"LBL_stateHomeSolarPower": "Object ID for the currently available solar power [W]",
 	"LBL_subtractSelfConsumption": "Charger consumption is included in the home power consumption value",
 	"LBL_wallBoxList": "Wallbox list",
+	"LBL_wallBoxListHelp": "The ChargeManager serves the wallboxes from top to bottom: the first entry receives the PV surplus first, later entries only get what is left over. Use the arrow buttons to change the priority.",
 	"LBL_wallboxMaxAmp": "Maximum charging current for this wallbox [A] (0 = installation limit)",
 	"LBL_wallboxMaxAmpHelp": "Highest current for this wallbox, e.g. to throttle it. 0 uses the installation-wide maximum. Never exceeds the installation limit.",
 	"LBL_wallboxMinAmp": "Minimum charging current for this wallbox [A] (0 = default)",
