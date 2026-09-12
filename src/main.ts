@@ -7,6 +7,7 @@ import {
 	buildChargerCommands,
 	type ChargeManagerDecision,
 	decideChargeManagerFleet,
+	decidePhaseSwitch,
 	DEFAULT_MAXIMUM_BATTERY_BONUS,
 	DEFAULT_RESERVE_POWER,
 	type FleetParticipant,
@@ -157,6 +158,7 @@ class go_e_charger extends utils.Adapter {
 				HardwareMaxAmp: 0,
 				HardwareMinAmp: 0,
 				DelayOff: 0,
+				PhaseSwitchDelay: 0,
 				CurrentHysteresis: 0,
 				SetOptAmp: 5,
 				SetOptAllow: false,
@@ -1404,6 +1406,29 @@ class go_e_charger extends utils.Adapter {
 
 		served.forEach((iWB, index) => {
 			plans[iWB] = { decision: decisions[index], batteryReason: "available" };
+
+			// automatic one-/three-phase switching (opt-in, gen3+ only). The decision uses the phase
+			// count the allocation just ran with; the switch is applied this cycle and the next cycle
+			// allocates with the new phase count.
+			if (this.config.wallBoxList[iWB].autoPhaseSwitch && this.wallboxInfoList[iWB].HardwareMin3) {
+				const participant = participants[index];
+				const phaseDecision = decidePhaseSwitch({
+					currentPhases: this.wallboxInfoList[iWB].EnabledPhases,
+					availablePower: decisions[index].availablePower,
+					minimumChargeCurrent: participant.minimumChargeCurrent,
+					maximumChargeCurrent: participant.maximumChargeCurrent,
+					switchDelay: this.wallboxInfoList[iWB].PhaseSwitchDelay,
+				});
+				this.wallboxInfoList[iWB].PhaseSwitchDelay = phaseDecision.switchDelay;
+				const targetThreePhase = phaseDecision.targetPhases === 3;
+				if (targetThreePhase !== this.wallboxInfoList[iWB].Charge3Phase) {
+					this.wallboxInfoList[iWB].Charge3Phase = targetThreePhase;
+					void this.setState(`Wallbox_${iWB}.Settings.Charge3Phase`, { val: targetThreePhase, ack: true });
+					this.log.info(
+						`ChargeManager: switching charger ${iWB} to ${phaseDecision.targetPhases}-phase charging (surplus ${Math.round(decisions[index].availablePower)} W)`,
+					);
+				}
+			}
 		});
 		return plans;
 	}

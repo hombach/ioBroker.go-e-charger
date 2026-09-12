@@ -5,10 +5,13 @@ import {
 	type ChargeManagerControllerInput,
 	decideChargeManager,
 	decideChargeManagerFleet,
+	decidePhaseSwitch,
 	evaluateBatteryAvailability,
 	type FleetParticipant,
 	MAX_CHARGE_CURRENT,
 	MIN_CHARGE_CURRENT,
+	PHASE_SWITCH_DELAY_CYCLES,
+	PHASE_VOLTAGE,
 	resolveWallboxCurrentLimits,
 	SHUTDOWN_DELAY_CYCLES,
 	START_CHARGE_CURRENT,
@@ -620,7 +623,11 @@ describe("ChargeManager safety helpers", () => {
 				phases: single.phases,
 				state: single.state,
 			});
-			assert.deepEqual(decideChargeManagerFleet(shared, [single]), [expected]);
+			// the fleet result carries the extra availablePower; the decision itself is identical
+			const { availablePower, ...decision } = decideChargeManagerFleet(shared, [single])[0];
+			assert.deepEqual(decision, expected);
+			// 11000 - 1000 house - 100 reserve = 9900 W offered to the only wallbox
+			assert.equal(availablePower, 9900);
 		});
 
 		it("does not hand the same surplus to two wallboxes", () => {
@@ -701,6 +708,79 @@ describe("ChargeManager safety helpers", () => {
 				assert.equal(decision.reason, "invalid-input");
 				assert.equal(decision.optimalCurrent, null);
 			}
+		});
+	});
+
+	describe("decidePhaseSwitch", () => {
+		const threePhaseMinPower = MIN_CHARGE_CURRENT * 3 * PHASE_VOLTAGE; // 4140 W - three phases at the 6 A minimum
+		const onePhaseMaxPower = 32 * PHASE_VOLTAGE; // 7360 W - up threshold for a 32 A box
+		const input = (overrides: Partial<Parameters<typeof decidePhaseSwitch>[0]> = {}): Parameters<typeof decidePhaseSwitch>[0] => ({
+			currentPhases: 1,
+			availablePower: 0,
+			minimumChargeCurrent: MIN_CHARGE_CURRENT,
+			maximumChargeCurrent: 32,
+			switchDelay: 0,
+			...overrides,
+		});
+
+		it("stays in the hysteresis band without switching", () => {
+			// between the three-phase minimum and the one-phase maximum neither direction switches
+			const mid = (threePhaseMinPower + onePhaseMaxPower) / 2;
+			assert.deepEqual(decidePhaseSwitch(input({ currentPhases: 1, availablePower: mid })), { targetPhases: 1, switchDelay: 0 });
+			assert.deepEqual(decidePhaseSwitch(input({ currentPhases: 3, availablePower: mid })), { targetPhases: 3, switchDelay: 0 });
+		});
+
+		it("switches up to three phases only after the dwell time", () => {
+			let state = input({ currentPhases: 1, availablePower: onePhaseMaxPower });
+			for (let cycle = 0; cycle < PHASE_SWITCH_DELAY_CYCLES; cycle++) {
+				const decision = decidePhaseSwitch(state);
+				assert.equal(decision.targetPhases, 1); // still waiting out the dwell
+				assert.equal(decision.switchDelay, cycle + 1);
+				state = { ...state, switchDelay: decision.switchDelay };
+			}
+			const final = decidePhaseSwitch(state);
+			assert.equal(final.targetPhases, 3);
+			assert.equal(final.switchDelay, 0);
+		});
+
+		it("switches down to one phase when the surplus can no longer sustain three phases", () => {
+			let state = input({ currentPhases: 3, availablePower: threePhaseMinPower - 1 });
+			for (let cycle = 0; cycle < PHASE_SWITCH_DELAY_CYCLES; cycle++) {
+				state = { ...state, switchDelay: decidePhaseSwitch(state).switchDelay };
+			}
+			assert.equal(decidePhaseSwitch(state).targetPhases, 1);
+		});
+
+		it("resets the dwell counter when the condition disappears", () => {
+			const pending = decidePhaseSwitch(input({ currentPhases: 1, availablePower: onePhaseMaxPower, switchDelay: 5 }));
+			assert.equal(pending.switchDelay, 6);
+			// surplus falls back into the band before the dwell elapsed
+			assert.deepEqual(decidePhaseSwitch(input({ currentPhases: 1, availablePower: threePhaseMinPower + 1, switchDelay: 6 })), {
+				targetPhases: 1,
+				switchDelay: 0,
+			});
+		});
+
+		it("never inverts the band when the one-phase maximum is below the three-phase minimum", () => {
+			// a 16 A box: one-phase max 3680 W < three-phase min 4140 W -> up threshold floored at 4140 W
+			const smallBox = { minimumChargeCurrent: MIN_CHARGE_CURRENT, maximumChargeCurrent: 16 };
+			// just below the three-phase minimum: no up-switch even with the dwell already elapsed
+			assert.equal(
+				decidePhaseSwitch(input({ ...smallBox, currentPhases: 1, availablePower: threePhaseMinPower - 1, switchDelay: PHASE_SWITCH_DELAY_CYCLES }))
+					.targetPhases,
+				1,
+			);
+			// at the three-phase minimum: the up-switch fires
+			assert.equal(
+				decidePhaseSwitch(input({ ...smallBox, currentPhases: 1, availablePower: threePhaseMinPower, switchDelay: PHASE_SWITCH_DELAY_CYCLES }))
+					.targetPhases,
+				3,
+			);
+		});
+
+		it("leaves invalid inputs untouched", () => {
+			assert.deepEqual(decidePhaseSwitch(input({ currentPhases: 2, availablePower: 10000 })), { targetPhases: 2, switchDelay: 0 });
+			assert.equal(decidePhaseSwitch(input({ currentPhases: 1, availablePower: Number.NaN, switchDelay: 3 })).targetPhases, 1);
 		});
 	});
 });

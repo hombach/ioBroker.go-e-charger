@@ -112,6 +112,18 @@
 							"md": 6,
 							"lg": 6,
 							"xl": 4
+						},
+						{
+							"type": "checkbox",
+							"label": "LBL_autoPhaseSwitch",
+							"help": "LBL_autoPhaseSwitchHelp",
+							"attr": "autoPhaseSwitch",
+							"xs": 12,
+							"sm": 12,
+							"md": 12,
+							"lg": 12,
+							"xl": 12,
+							"newLine": true
 						}
 					]
 				}

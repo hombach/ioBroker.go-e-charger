@@ -1,6 +1,8 @@
 {
 	"ERR_maxCurrentBelowMin": "Maximale stroom mag niet lager zijn dan de minimale stroom",
 	"ERR_minCurrentAboveMax": "Minimale stroom mag niet hoger zijn dan de maximale stroom",
+	"LBL_autoPhaseSwitch": "Automatische 1-/3-fasen-omschakeling (hardware gen 3+)",
+	"LBL_autoPhaseSwitchHelp": "Laat ChargeManager deze wallbox tussen 1- en 3-fasen laden schakelen op basis van het beschikbare overschot. Alleen voor hardwaregeneratie 3 en nieuwer; onderbreekt het laden kort bij elke omschakeling.",
 	"LBL_batteryMode": "Modus thuisbatterij",
 	"LBL_batteryModeDisabled": "Uitgeschakeld",
 	"LBL_batteryModeDisabledDescription": "Negeer de thuisbatterij; er is geen SoC-status nodig",

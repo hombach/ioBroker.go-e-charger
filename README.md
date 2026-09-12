@@ -155,12 +155,22 @@ For surplus charging, set `ChargeNOW` to `false` and `ChargeManager` to `true`. 
 
 #### One-phase and three-phase charging
 
-ChargeManager does not automatically switch between one and three phases according to the available surplus. On hardware generation 3 and newer, `Charge3Phase` selects the phase mode:
+On hardware generation 3 and newer, `Charge3Phase` selects the phase mode:
 
 - `false`: one-phase charging
 - `true`: three-phase charging
 
 Because the current implementation starts charging when its internal target exceeds 9 A, the effective starting point is 10 A. This requires approximately 2.3 kW in one-phase mode or 6.9 kW in three-phase mode after the reserve and battery adjustments. One-phase mode therefore provides a wider operating range for smaller PV systems or variable weather.
+
+##### Automatic phase switching
+
+Enable **automatic 1-/3-phase switching** per wallbox (gen 3+ only, off by default) to let ChargeManager pick the phase mode from the available surplus:
+
+- It switches **up to three phases** once one-phase charging is saturated (the surplus exceeds the one-phase maximum), giving access to the higher three-phase ceiling.
+- It switches **down to one phase** once the surplus can no longer sustain the three-phase minimum (~4.1 kW at 6 A), so a shrinking surplus keeps charging one-phase instead of stopping.
+- The gap between those thresholds plus a dwell time prevents rapid back-and-forth switching, which would interrupt charging each time.
+
+While the option is enabled the adapter controls `Charge3Phase` for that wallbox; leave it disabled to keep selecting the phase mode manually. Because a switch briefly interrupts charging and not every vehicle handles it gracefully, it is opt-in.
 
 #### Operating modes
 
@@ -209,6 +219,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (typhosj) fixed: a wallbox whose effective maximum charging current is below 10 A - e.g. an 8 A coded cable or a per-wallbox maximum of 8 A - was rejected as invalid ChargeManager input and never charged from PV surplus. Such a wallbox now starts charging at its own maximum
 - (typhosj) ChargeManager: the PV surplus is now shared between all wallboxes instead of being offered to each one in full; wallboxes are served in configuration order, so the first entry has priority and later ones only receive the remaining surplus
 - (typhosj) ChargeManager: a wallbox without a connected vehicle no longer reserves surplus and can no longer starve a wallbox that has a car waiting
+- (hombach) ChargeManager: optional automatic 1-/3-phase switching per wallbox (gen 3+, off by default) - switches up when one-phase charging saturates and back down when the surplus can no longer sustain three phases, with a dwell time to prevent flapping
 
 ### 1.6.0 (2026-08-29)
 

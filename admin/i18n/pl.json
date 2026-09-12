@@ -1,6 +1,8 @@
 {
 	"ERR_maxCurrentBelowMin": "Prąd maksymalny musi być większy lub równy prądowi minimalnemu",
 	"ERR_minCurrentAboveMax": "Prąd minimalny musi być mniejszy lub równy prądowi maksymalnemu",
+	"LBL_autoPhaseSwitch": "Automatyczne przełączanie 1/3 fazy (sprzęt gen 3+)",
+	"LBL_autoPhaseSwitchHelp": "Pozwala ChargeManager przełączać ten wallbox między ładowaniem 1- i 3-fazowym w zależności od dostępnej nadwyżki. Tylko dla sprzętu generacji 3 i nowszego; każde przełączenie na chwilę przerywa ładowanie.",
 	"LBL_batteryMode": "Tryb baterii domowej",
 	"LBL_batteryModeDisabled": "Wyłączony",
 	"LBL_batteryModeDisabledDescription": "Pomijaj baterię domową; stan naładowania (SoC) nie jest wymagany",

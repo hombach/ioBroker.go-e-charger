@@ -1,6 +1,8 @@
 {
 	"ERR_maxCurrentBelowMin": "最大电流不得小于最小电流",
 	"ERR_minCurrentAboveMax": "最小电流不得大于最大电流",
+	"LBL_autoPhaseSwitch": "自动 1/3 相切换（硬件第 3 代及以上）",
+	"LBL_autoPhaseSwitchHelp": "让 ChargeManager 根据可用盈余在单相和三相充电之间切换此充电桩。仅适用于第 3 代及以上硬件；每次切换会短暂中断充电。",
 	"LBL_batteryMode": "家庭电池模式",
 	"LBL_batteryModeDisabled": "已禁用",
 	"LBL_batteryModeDisabledDescription": "忽略家庭电池；无需配置电量状态",

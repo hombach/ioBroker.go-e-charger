@@ -89,6 +89,10 @@ export interface IWallboxInfo {
 	 */
 	DelayOff: number;
 	/**
+	 * Consecutive cycles a pending automatic one-/three-phase switch has held (anti-flapping dwell)
+	 */
+	PhaseSwitchDelay: number;
+	/**
 	 * CurrentHysteresis
 	 */
 	CurrentHysteresis: number;
