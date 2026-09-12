@@ -223,6 +223,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) ChargeManager: optional automatic 1-/3-phase switching per wallbox (gen 3+, off by default) - switches up when one-phase charging saturates and back down when the surplus can no longer sustain three phases, with a dwell time to prevent flapping
 - (hombach) docs: clarified the multi-wallbox behaviour (list order = priority) and noted that no combined current limit across wallboxes is enforced yet
 - (hombach) updated axios
+- (hombach) switch to iobroker testing 6.x
 
 ### 1.6.1 (2026-09-04)
 
@@ -263,7 +264,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 MIT License
 
-Copyright (c) 2020-2026 C.Hombach
+Copyright (c) 2020-2026 C.Hombach <go-e-charger@homba.ch>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
