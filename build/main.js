@@ -120,6 +120,7 @@ class go_e_charger extends utils.Adapter {
                 ChargeCurrent: 6,
                 ChargePower: 0,
                 Charge3Phase: false,
+                ManagedCharge3Phase: false,
                 EnabledPhases: 0,
                 MeasuredMaxChargeAmp: 0,
                 BatteryReady: false,
@@ -423,7 +424,9 @@ class go_e_charger extends utils.Adapter {
                 else if (this.wallboxInfoList[iWB].ChargeManager) {
                     const plan = chargePlans[iWB];
                     if (plan?.decision) {
-                        await this.Switch_3Phases(this.wallboxInfoList[iWB].Charge3Phase, iWB);
+                        const useAutoPhase = this.config.wallBoxList[iWB].autoPhaseSwitch && this.wallboxInfoList[iWB].HardwareMin3;
+                        const targetPhase = useAutoPhase ? this.wallboxInfoList[iWB].ManagedCharge3Phase : this.wallboxInfoList[iWB].Charge3Phase;
+                        await this.Switch_3Phases(targetPhase, iWB);
                         await this.Charge_Manager(iWB, plan.decision);
                     }
                     else if (plan?.batteryReason === "stale") {
@@ -793,10 +796,8 @@ class go_e_charger extends utils.Adapter {
                     switchDelay: this.wallboxInfoList[iWB].PhaseSwitchDelay,
                 });
                 this.wallboxInfoList[iWB].PhaseSwitchDelay = phaseDecision.switchDelay;
-                const targetThreePhase = phaseDecision.targetPhases === 3;
-                if (targetThreePhase !== this.wallboxInfoList[iWB].Charge3Phase) {
-                    this.wallboxInfoList[iWB].Charge3Phase = targetThreePhase;
-                    void this.setState(`Wallbox_${iWB}.Settings.Charge3Phase`, { val: targetThreePhase, ack: true });
+                this.wallboxInfoList[iWB].ManagedCharge3Phase = phaseDecision.targetPhases === 3;
+                if (phaseDecision.targetPhases !== this.wallboxInfoList[iWB].EnabledPhases) {
                     this.log.info(`ChargeManager: switching charger ${iWB} to ${phaseDecision.targetPhases}-phase charging (surplus ${Math.round(decisions[index].availablePower)} W)`);
                 }
             }
