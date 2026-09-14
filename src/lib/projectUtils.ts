@@ -49,9 +49,15 @@ export interface IWallboxInfo {
 	 */
 	ChargePower: number;
 	/**
-	 * Charge3Phase
+	 * Manual 1-/3-phase request from `Settings.Charge3Phase`; drives ChargeNOW and ChargeManager
+	 * when automatic phase switching is off. Never written by the automatic switching.
 	 */
 	Charge3Phase: boolean;
+	/**
+	 * Target phase mode the automatic ChargeManager phase switching wants this cycle (true = 3-phase).
+	 * Kept separate from the manual {@link Charge3Phase} request so the automation never overwrites it.
+	 */
+	ManagedCharge3Phase: boolean;
 	/**
 	 * EnabledPhases
 	 */

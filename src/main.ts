@@ -159,6 +159,7 @@ class go_e_charger extends utils.Adapter {
 				ChargeCurrent: 6,
 				ChargePower: 0,
 				Charge3Phase: false,
+				ManagedCharge3Phase: false,
 				EnabledPhases: 0,
 				MeasuredMaxChargeAmp: 0,
 				BatteryReady: false,
@@ -603,7 +604,11 @@ class go_e_charger extends utils.Adapter {
 					const plan = chargePlans[iWB];
 					if (plan?.decision) {
 						const decision = plan.decision;
-						await this.Switch_3Phases(info.Charge3Phase, iWB);
+						// with automatic phase switching the ChargeManager picks the phase itself; otherwise
+						// the user's manual Settings.Charge3Phase request applies
+						const useAutoPhase = this.config.wallBoxList[iWB].autoPhaseSwitch && info.HardwareMin3;
+						const targetPhase = useAutoPhase ? info.ManagedCharge3Phase : info.Charge3Phase;
+						await this.Switch_3Phases(targetPhase, iWB);
 						if (budgetActive && !hasVehicle) {
 							// reserve nothing for a charger without a vehicle; keep it off until one connects
 							await this.stopChargeManager(`No vehicle connected`, iWB);
@@ -1476,14 +1481,14 @@ class go_e_charger extends utils.Adapter {
 					switchDelay: this.wallboxInfoList[iWB].PhaseSwitchDelay,
 				});
 				this.wallboxInfoList[iWB].PhaseSwitchDelay = phaseDecision.switchDelay;
-				const targetThreePhase = phaseDecision.targetPhases === 3;
 				// phase-switch control loop: show the current/target phase and the pending dwell counter
 				this.log.debug(
 					`ChargeManager charger ${iWB} phase: ${this.wallboxInfoList[iWB].EnabledPhases}p now, target ${phaseDecision.targetPhases}p, dwell ${phaseDecision.switchDelay}`,
 				);
-				if (targetThreePhase !== this.wallboxInfoList[iWB].Charge3Phase) {
-					this.wallboxInfoList[iWB].Charge3Phase = targetThreePhase;
-					void this.setState(`Wallbox_${iWB}.Settings.Charge3Phase`, { val: targetThreePhase, ack: true });
+				// the automatic decision is tracked internally and drives the charger via Switch_3Phases;
+				// it must never overwrite the user's manual Settings.Charge3Phase request
+				this.wallboxInfoList[iWB].ManagedCharge3Phase = phaseDecision.targetPhases === 3;
+				if (phaseDecision.targetPhases !== this.wallboxInfoList[iWB].EnabledPhases) {
 					this.log.info(
 						`ChargeManager: switching charger ${iWB} to ${phaseDecision.targetPhases}-phase charging (surplus ${Math.round(decisions[index].availablePower)} W)`,
 					);
