@@ -718,7 +718,10 @@ class go_e_charger extends utils.Adapter {
             this.log.debug(`Charger ${iWB} is in read-only mode - skipping phase switching`);
             return;
         }
-        const psm = Charge3Phase ? 2 : 1;
+        const psm = (0, chargeManagerUtils_1.phaseModeToSend)(Charge3Phase, this.wallboxInfoList[iWB].EnabledPhases);
+        if (psm === null) {
+            return;
+        }
         await axiosInstance
             .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/set?psm=${psm}`, { transformResponse: r => r })
             .then(response => {

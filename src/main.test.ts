@@ -13,6 +13,7 @@ import {
 	MIN_CHARGE_CURRENT,
 	type TotalCurrentParticipant,
 	PHASE_SWITCH_DELAY_CYCLES,
+	phaseModeToSend,
 	PHASE_VOLTAGE,
 	resolveWallboxCurrentLimits,
 	SHUTDOWN_DELAY_CYCLES,
@@ -865,6 +866,25 @@ describe("ChargeManager safety helpers", () => {
 				{ allow: false, ampere: 0 },
 			]);
 			assert.ok(result.reduce((sum, r) => sum + r.ampere, 0) <= 15);
+		});
+	});
+
+	describe("phaseModeToSend", () => {
+		it("sends nothing when the charger already reports the requested mode", () => {
+			assert.equal(phaseModeToSend(false, 1), null);
+			assert.equal(phaseModeToSend(true, 3), null);
+		});
+
+		it("sends the requested mode when the charger reports another one", () => {
+			assert.equal(phaseModeToSend(true, 1), 2);
+			assert.equal(phaseModeToSend(false, 3), 1);
+		});
+
+		it("sends the requested mode when the reported mode is automatic, unknown or invalid", () => {
+			for (const enabledPhases of [0, 2, Number.NaN]) {
+				assert.equal(phaseModeToSend(false, enabledPhases), 1);
+				assert.equal(phaseModeToSend(true, enabledPhases), 2);
+			}
 		});
 	});
 });

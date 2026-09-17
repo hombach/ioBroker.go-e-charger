@@ -542,6 +542,22 @@ export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision 
 }
 
 /**
+ * Returns the go-e phase mode (`psm`: 1 = one phase, 2 = three phases) to send, or `null` when the
+ * charger already reports the requested mode. `psm` is a stored setting, so it is not rewritten
+ * every cycle.
+ *
+ * @param charge3Phase Whether three-phase charging is requested
+ * @param enabledPhases Phase count the charger last reported (1 or 3; 0 = automatic or unknown)
+ * @returns The `psm` value to send, or `null` if nothing needs to be sent
+ */
+export function phaseModeToSend(charge3Phase: boolean, enabledPhases: number): 1 | 2 | null {
+	if (enabledPhases === (charge3Phase ? 3 : 1)) {
+		return null;
+	}
+	return charge3Phase ? 2 : 1;
+}
+
+/**
  * Builds a safe sequence of commands for the go-e Charger.
  *
  * When charging is enabled, the current is configured before the charge
