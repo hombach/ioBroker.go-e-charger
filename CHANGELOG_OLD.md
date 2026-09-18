@@ -15,12 +15,12 @@
 This adapter integrates one or more go-e Charger wallboxes into your ioBroker home automation. It cyclically polls each wallbox via its local HTTP API, provides all relevant data as ioBroker states, and lets you control charging directly from your smart home.
 
 ## Changelog - OLD CHANGES
+
 ## 1.4.0 (2026-08-10)
 
 - (hombach) added info.unlockedByRFIDName with the name of the current session's RFID card, in parallel to unlockedByRFIDNo (#634)
 - (hombach) projectUtils: use extendObject instead of setObject in forceMode so user customizations survive restarts
 - (hombach) projectUtils: fixed min/max/step value of 0 being dropped from number state definitions
-- (hombach) updated dependencies
 
 ## 1.3.1 (2026-08-06)
 
@@ -33,7 +33,6 @@ This adapter integrates one or more go-e Charger wallboxes into your ioBroker ho
 
 - (hombach) added info.accessControlState (go-e access_state: 0 = open, 1 = RFID/App required, 2 = price/automatic) (#634)
 - (hombach) tightened TypeScript types for go-e API response fields (removed any)
-- (hombach) updated dependencies
 
 ## 1.2.1 (2026-07-31)
 
@@ -41,7 +40,6 @@ This adapter integrates one or more go-e Charger wallboxes into your ioBroker ho
 - (hombach) added support for firmware V60.5 (#800) and V60.6 (#844)
 - (typhosj) added ChargeManager PV surplus configuration guide (#842)
 - (hombach) corrected no-battery helper-state recommendation for ChargeManager
-- (hombach) updated dependencies
 
 ## 1.2.0 (2026-07-12)
 
