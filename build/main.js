@@ -446,8 +446,13 @@ class go_e_charger extends utils.Adapter {
                 }
                 else if (info.ChargeManager) {
                     const plan = chargePlans[iWB];
-                    if ((0, chargeManagerUtils_1.isVehicleDisconnected)(info.CarState)) {
-                        await this.stopChargeManager(`No vehicle connected`, iWB);
+                    if ((0, chargeManagerUtils_1.isVehicleDisconnected)(this.wallboxInfoList[iWB].CarState) && plan?.decision && plan.decision.optimalCurrent !== null) {
+                        this.wallboxInfoList[iWB].SetOptAmp = plan.decision.optimalCurrent;
+                        this.wallboxInfoList[iWB].SetAmp = plan.decision.nextState.currentAmp;
+                        this.wallboxInfoList[iWB].DelayOff = plan.decision.nextState.shutdownDelay;
+                        if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
+                            await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `No vehicle connected`, iWB);
+                        }
                     }
                     else if (plan?.decision) {
                         const decision = plan.decision;

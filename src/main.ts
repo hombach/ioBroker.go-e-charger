@@ -606,9 +606,15 @@ class go_e_charger extends utils.Adapter {
 				} else if (info.ChargeManager) {
 					// Charge-Manager is enabled - apply the decision planned for this charger
 					const plan = chargePlans[iWB];
-					if (isVehicleDisconnected(info.CarState)) {
-						// no vehicle: withdraw a remaining release once, then leave the charger alone
-						await this.stopChargeManager(`No vehicle connected`, iWB);
+					if (isVehicleDisconnected(this.wallboxInfoList[iWB].CarState) && plan?.decision && plan.decision.optimalCurrent !== null) {
+						// no vehicle: the controller keeps running, so a vehicle plugged in later starts exactly
+						// as before, but nothing is sent except withdrawing a remaining release once
+						this.wallboxInfoList[iWB].SetOptAmp = plan.decision.optimalCurrent;
+						this.wallboxInfoList[iWB].SetAmp = plan.decision.nextState.currentAmp;
+						this.wallboxInfoList[iWB].DelayOff = plan.decision.nextState.shutdownDelay;
+						if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
+							await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `No vehicle connected`, iWB);
+						}
 					} else if (plan?.decision) {
 						const decision = plan.decision;
 						// with automatic phase switching the ChargeManager picks the phase itself; otherwise
