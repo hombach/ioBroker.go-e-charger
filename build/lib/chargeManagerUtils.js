@@ -11,6 +11,8 @@ exports.decideChargeManager = decideChargeManager;
 exports.decideChargeManagerFleet = decideChargeManagerFleet;
 exports.decidePhaseSwitch = decidePhaseSwitch;
 exports.phaseModeToSend = phaseModeToSend;
+exports.isVehicleDisconnected = isVehicleDisconnected;
+exports.dropUnchangedChargerCommands = dropUnchangedChargerCommands;
 exports.buildChargerCommands = buildChargerCommands;
 exports.limitTotalCurrent = limitTotalCurrent;
 exports.MIN_CHARGE_CURRENT = 6;
@@ -224,6 +226,12 @@ function phaseModeToSend(charge3Phase, enabledPhases) {
         return null;
     }
     return charge3Phase ? 2 : 1;
+}
+function isVehicleDisconnected(carState) {
+    return carState === 1;
+}
+function dropUnchangedChargerCommands(commands, reported) {
+    return commands.filter(command => reported[command.parameter] !== command.value);
 }
 function buildChargerCommands(allow, ampere, firmware) {
     if (!allow) {

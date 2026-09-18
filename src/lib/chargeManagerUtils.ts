@@ -558,6 +558,34 @@ export function phaseModeToSend(charge3Phase: boolean, enabledPhases: number): 1
 }
 
 /**
+ * Whether the charger reports that no vehicle is plugged in (go-e car state 1).
+ *
+ * Unknown or invalid states (0, NaN, out of range) do not count as "no vehicle", so a failed
+ * read never silently withdraws a running charge.
+ *
+ * @param carState go-e car state as reported by the charger
+ * @returns `true` only for car state 1
+ */
+export function isVehicleDisconnected(carState: number): boolean {
+	return carState === 1;
+}
+
+/**
+ * Drops the commands whose value the charger already reports, so an unchanged release or
+ * current is not re-sent every cycle (each write wakes the charger's LEDs).
+ *
+ * The order of the remaining commands is preserved. A parameter without a finite reported
+ * value is always sent.
+ *
+ * @param commands Ordered charger commands from {@link buildChargerCommands}
+ * @param reported Values the charger reported in the last successful read
+ * @returns The commands that change something on the charger
+ */
+export function dropUnchangedChargerCommands(commands: ChargerCommand[], reported: Partial<Record<ChargerCommand["parameter"], number>>): ChargerCommand[] {
+	return commands.filter(command => reported[command.parameter] !== command.value);
+}
+
+/**
  * Builds a safe sequence of commands for the go-e Charger.
  *
  * When charging is enabled, the current is configured before the charge

@@ -8,12 +8,14 @@ import {
 	type ChargeManagerDecision,
 	decideChargeManagerFleet,
 	decidePhaseSwitch,
+	dropUnchangedChargerCommands,
 	DEFAULT_MAXIMUM_BATTERY_BONUS,
 	DEFAULT_RESERVE_POWER,
 	type FleetParticipant,
 	MAX_CHARGE_CURRENT,
 	evaluateBatteryAvailability,
 	limitTotalCurrent,
+	isVehicleDisconnected,
 	MIN_CHARGE_CURRENT,
 	resolveWallboxCurrentLimits,
 	phaseModeToSend,
@@ -171,6 +173,7 @@ class go_e_charger extends utils.Adapter {
 				HardwareMinAmp: 0,
 				DelayOff: 0,
 				PhaseSwitchDelay: 0,
+				Reported: {},
 				CurrentHysteresis: 0,
 				SetOptAmp: 5,
 				SetOptAllow: false,
@@ -603,7 +606,10 @@ class go_e_charger extends utils.Adapter {
 				} else if (info.ChargeManager) {
 					// Charge-Manager is enabled - apply the decision planned for this charger
 					const plan = chargePlans[iWB];
-					if (plan?.decision) {
+					if (isVehicleDisconnected(info.CarState)) {
+						// no vehicle: withdraw a remaining release once, then leave the charger alone
+						await this.stopChargeManager(`No vehicle connected`, iWB);
+					} else if (plan?.decision) {
 						const decision = plan.decision;
 						// with automatic phase switching the ChargeManager picks the phase itself; otherwise
 						// the user's manual Settings.Charge3Phase request applies
@@ -823,6 +829,8 @@ class go_e_charger extends utils.Adapter {
 				await this.ParseStatusAPIV1(result, iWB);
 			})
 			.catch(error => {
+				// without a fresh read every command is sent again
+				this.wallboxInfoList[iWB].Reported = {};
 				if (error.message && error.message.includes("EHOSTUNREACH")) {
 					this.log.error(`Charger unreachable error when calling go-eCharger API: ${error}`);
 					this.wallboxInfoList[iWB].Firmware = `EHostUnreach`;
@@ -958,6 +966,7 @@ class go_e_charger extends utils.Adapter {
 			"A",
 			"value.current",
 		);
+		this.wallboxInfoList[iWB].Reported = { alw: Number(status.alw), amp: Number(status.amp), amx: Number(status.amx) };
 		switch (status.alw) {
 			case "0":
 				await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, false, `Charging allowed`, "indicator");
@@ -1342,7 +1351,7 @@ class go_e_charger extends utils.Adapter {
 			return;
 		}
 
-		for (const command of commands) {
+		for (const command of dropUnchangedChargerCommands(commands, this.wallboxInfoList[iWB].Reported)) {
 			try {
 				const response = await axiosInstance.get(
 					`http://${this.config.wallBoxList[iWB].ipAddress}/mqtt?payload=${command.parameter}=${command.value}`,
@@ -1476,7 +1485,12 @@ class go_e_charger extends utils.Adapter {
 			// automatic one-/three-phase switching (opt-in, gen3+ only). The decision uses the phase
 			// count the allocation just ran with; the switch is applied this cycle and the next cycle
 			// allocates with the new phase count.
-			if (this.config.wallBoxList[iWB].autoPhaseSwitch && this.wallboxInfoList[iWB].HardwareMin3) {
+			// without a vehicle there is nothing to switch for - every phase switch wakes the charger
+			if (
+				this.config.wallBoxList[iWB].autoPhaseSwitch &&
+				this.wallboxInfoList[iWB].HardwareMin3 &&
+				!isVehicleDisconnected(this.wallboxInfoList[iWB].CarState)
+			) {
 				const participant = participants[index];
 				const phaseDecision = decidePhaseSwitch({
 					currentPhases: this.wallboxInfoList[iWB].EnabledPhases,

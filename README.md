@@ -231,6 +231,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) added concise debug logging for the ChargeManager control loops (surplus sharing, phase switching, total current budget)
 - (hombach) docs: documented the total current budget
 - (typhosj) the phase mode (`psm`) is now only written when the charger reports a different mode instead of every cycle, because it is a stored charger setting
+- (typhosj) ChargeManager: no charge release, charging current or phase switch is sent while no vehicle is plugged in, and an unchanged release or current is no longer re-sent every cycle - each write woke the charger's LEDs
 
 ### 1.7.0 (2026-09-18)
 

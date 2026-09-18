@@ -6,9 +6,11 @@ import {
 	decideChargeManager,
 	decideChargeManagerFleet,
 	decidePhaseSwitch,
+	dropUnchangedChargerCommands,
 	evaluateBatteryAvailability,
 	type FleetParticipant,
 	limitTotalCurrent,
+	isVehicleDisconnected,
 	MAX_CHARGE_CURRENT,
 	MIN_CHARGE_CURRENT,
 	type TotalCurrentParticipant,
@@ -582,6 +584,45 @@ describe("ChargeManager safety helpers", () => {
 			assert.equal(buildChargerCommands(true, 33, "60.2"), null);
 			assert.equal(buildChargerCommands(true, 6.5, "60.2"), null);
 			assert.equal(buildChargerCommands(true, Number.NaN, "60.2"), null);
+		});
+	});
+
+	describe("dropUnchangedChargerCommands", () => {
+		const enable = [
+			{ parameter: "amx" as const, value: 10 },
+			{ parameter: "alw" as const, value: 1 },
+		];
+
+		it("sends nothing when the charger already reports the release and the current", () => {
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amx: 10, amp: 16 }), []);
+		});
+
+		it("sends only the changed parameter and keeps the order", () => {
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amx: 11 }), [{ parameter: "amx", value: 10 }]);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 0, amx: 10 }), [{ parameter: "alw", value: 1 }]);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 0, amx: 0 }), enable);
+		});
+
+		it("sends everything without a usable reported value", () => {
+			assert.deepEqual(dropUnchangedChargerCommands(enable, {}), enable);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: Number.NaN, amx: Number.NaN }), enable);
+			assert.deepEqual(dropUnchangedChargerCommands([{ parameter: "alw", value: 0 }], { alw: Number.NaN }), [{ parameter: "alw", value: 0 }]);
+		});
+
+		it("compares the persistent current for firmware 033 against amp, not amx", () => {
+			assert.deepEqual(dropUnchangedChargerCommands([{ parameter: "amp", value: 6 }], { amx: 6, amp: 16 }), [{ parameter: "amp", value: 6 }]);
+		});
+	});
+
+	describe("isVehicleDisconnected", () => {
+		it("is true only for car state 1", () => {
+			assert.equal(isVehicleDisconnected(1), true);
+		});
+
+		it("treats connected, unknown and invalid states as not disconnected", () => {
+			for (const carState of [0, 2, 3, 4, 5, -1, Number.NaN]) {
+				assert.equal(isVehicleDisconnected(carState), false, `car state ${carState}`);
+			}
 		});
 	});
 
