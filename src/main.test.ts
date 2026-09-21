@@ -594,23 +594,31 @@ describe("ChargeManager safety helpers", () => {
 		];
 
 		it("sends nothing when the charger already reports the release and the current", () => {
-			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amx: 10, amp: 16 }), []);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amx: 0, amp: 10 }), []);
 		});
 
 		it("sends only the changed parameter and keeps the order", () => {
-			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amx: 11 }), [{ parameter: "amx", value: 10 }]);
-			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 0, amx: 10 }), [{ parameter: "alw", value: 1 }]);
-			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 0, amx: 0 }), enable);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amp: 11 }), [{ parameter: "amx", value: 10 }]);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 0, amp: 10 }), [{ parameter: "alw", value: 1 }]);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 0, amp: 0 }), enable);
 		});
 
 		it("sends everything without a usable reported value", () => {
 			assert.deepEqual(dropUnchangedChargerCommands(enable, {}), enable);
-			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: Number.NaN, amx: Number.NaN }), enable);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: Number.NaN, amp: Number.NaN }), enable);
 			assert.deepEqual(dropUnchangedChargerCommands([{ parameter: "alw", value: 0 }], { alw: Number.NaN }), [{ parameter: "alw", value: 0 }]);
 		});
 
 		it("compares the persistent current for firmware 033 against amp, not amx", () => {
 			assert.deepEqual(dropUnchangedChargerCommands([{ parameter: "amp", value: 6 }], { amx: 6, amp: 16 }), [{ parameter: "amp", value: 6 }]);
+		});
+
+		it("compares the volatile current against amp, because amx always reads back 0", () => {
+			// firmware 60.6 mirrors a written amx into amp and keeps reporting amx=0
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amx: 0, amp: 10 }), []);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amx: 10, amp: 16 }), [{ parameter: "amx", value: 10 }]);
+			// a charger that does report amx must not fool the comparison either
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amx: 10, amp: 10 }), []);
 		});
 	});
 

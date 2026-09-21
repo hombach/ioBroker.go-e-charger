@@ -230,8 +230,9 @@ function phaseModeToSend(charge3Phase, enabledPhases) {
 function isVehicleDisconnected(carState) {
     return carState === 1;
 }
+const COMMAND_READBACK = { alw: "alw", amp: "amp", amx: "amp" };
 function dropUnchangedChargerCommands(commands, reported) {
-    return commands.filter(command => reported[command.parameter] !== command.value);
+    return commands.filter(command => reported[COMMAND_READBACK[command.parameter]] !== command.value);
 }
 function buildChargerCommands(allow, ampere, firmware) {
     if (!allow) {

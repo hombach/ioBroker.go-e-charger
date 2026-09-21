@@ -1339,11 +1339,10 @@ class go_e_charger extends utils.Adapter {
 
 	/*****************************************************************************************/
 	async Charge_Config(Allow: string, Ampere: number, LogMessage: string, iWB: number): Promise<void> {
-		this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
 		const basePath = `Wallbox_${iWB}`;
 		// in read-only mode no control commands are sent to the charger (neither charge release nor charging current)
 		if (this.config.wallBoxList[iWB].readOnlyMode) {
-			this.log.debug(`Charger ${iWB} is in read-only mode - skipping charge config write`);
+			this.log.debug(`Charger ${iWB} is in read-only mode - skipping charge config write (${LogMessage}  -  ${Ampere} Ampere)`);
 			return;
 		}
 
@@ -1357,7 +1356,14 @@ class go_e_charger extends utils.Adapter {
 			return;
 		}
 
-		for (const command of dropUnchangedChargerCommands(commands, this.wallboxInfoList[iWB].Reported)) {
+		const pending = dropUnchangedChargerCommands(commands, this.wallboxInfoList[iWB].Reported);
+		if (pending.length === 0) {
+			// the charger already is in the requested state - saying so every cycle only floods the log
+			return;
+		}
+		this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
+
+		for (const command of pending) {
 			try {
 				const response = await axiosInstance.get(
 					`http://${this.config.wallBoxList[iWB].ipAddress}/mqtt?payload=${command.parameter}=${command.value}`,

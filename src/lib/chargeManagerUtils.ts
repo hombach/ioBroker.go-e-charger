@@ -571,18 +571,25 @@ export function isVehicleDisconnected(carState: number): boolean {
 }
 
 /**
+ * The status field a written command reads back from. `amx` is write-only on the charger and
+ * always reports 0, while the current it set shows up in `amp` - comparing `amx` against itself
+ * would never match and re-send the current every cycle.
+ */
+const COMMAND_READBACK: Record<ChargerCommand["parameter"], "alw" | "amp"> = { alw: "alw", amp: "amp", amx: "amp" };
+
+/**
  * Drops the commands whose value the charger already reports, so an unchanged release or
  * current is not re-sent every cycle (each write wakes the charger's LEDs).
  *
- * The order of the remaining commands is preserved. A parameter without a finite reported
- * value is always sent.
+ * The order of the remaining commands is preserved. A parameter whose readback field carries
+ * no finite value is always sent.
  *
  * @param commands Ordered charger commands from {@link buildChargerCommands}
  * @param reported Values the charger reported in the last successful read
  * @returns The commands that change something on the charger
  */
 export function dropUnchangedChargerCommands(commands: ChargerCommand[], reported: Partial<Record<ChargerCommand["parameter"], number>>): ChargerCommand[] {
-	return commands.filter(command => reported[command.parameter] !== command.value);
+	return commands.filter(command => reported[COMMAND_READBACK[command.parameter]] !== command.value);
 }
 
 /**

@@ -744,10 +744,9 @@ class go_e_charger extends utils.Adapter {
         });
     }
     async Charge_Config(Allow, Ampere, LogMessage, iWB) {
-        this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
         const basePath = `Wallbox_${iWB}`;
         if (this.config.wallBoxList[iWB].readOnlyMode) {
-            this.log.debug(`Charger ${iWB} is in read-only mode - skipping charge config write`);
+            this.log.debug(`Charger ${iWB} is in read-only mode - skipping charge config write (${LogMessage}  -  ${Ampere} Ampere)`);
             return;
         }
         if (Allow !== "0" && Allow !== "1") {
@@ -759,7 +758,12 @@ class go_e_charger extends utils.Adapter {
             this.log.warn(`Invalid charging current for charger ${iWB}: ${Ampere} A`);
             return;
         }
-        for (const command of (0, chargeManagerUtils_1.dropUnchangedChargerCommands)(commands, this.wallboxInfoList[iWB].Reported)) {
+        const pending = (0, chargeManagerUtils_1.dropUnchangedChargerCommands)(commands, this.wallboxInfoList[iWB].Reported);
+        if (pending.length === 0) {
+            return;
+        }
+        this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
+        for (const command of pending) {
             try {
                 const response = await axiosInstance.get(`http://${this.config.wallBoxList[iWB].ipAddress}/mqtt?payload=${command.parameter}=${command.value}`, { transformResponse: r => r });
                 this.log.debug(`Sent to charger ${iWB}: ${command.parameter}=${command.value}`);
