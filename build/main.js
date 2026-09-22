@@ -686,7 +686,7 @@ class go_e_charger extends utils.Adapter {
     }
     async Read_ChargerAPIV2(iWB) {
         await axiosInstance
-            .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,trx,ast,ama,cbl,mca,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`, {
+            .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,frc,modelStatus,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,trx,ast,ama,cbl,mca,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`, {
             transformResponse: r => r,
         })
             .then(async (response) => {
