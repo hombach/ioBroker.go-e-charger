@@ -646,3 +646,82 @@ export function limitTotalCurrent(participants: TotalCurrentParticipant[], maxAm
 
 	return allocations;
 }
+
+/** Amps the measured draw may fall below the commanded current before a wallbox counts as self-limiting. */
+export const DEMAND_DEADBAND = 1;
+/** Consecutive cycles a wallbox must draw clearly below its commanded current before its unused budget is reclaimed. */
+export const RECLAIM_DELAY_CYCLES = 3;
+/** Headroom in amps offered above the commanded/measured current so a wallbox can demonstrate rising demand. */
+export const DEMAND_HEADROOM = 1;
+
+/** Input for the measured-current demand of a single wallbox. */
+export interface EffectiveDemandInput {
+	/** Current the wallbox was allowed to draw last cycle (its applied SetAmp) */
+	commandedAmp: number;
+	/** Actually measured charging current this cycle (max phase current) */
+	measuredAmp: number;
+	/** Current the wallbox would take if unconstrained (ChargeNOW current or ramped ChargeManager target) */
+	wishAmp: number;
+	/** Lowest current the wallbox may run at */
+	minAmp: number;
+	/** Highest current the wallbox may run at */
+	maxAmp: number;
+	/** Consecutive cycles the wallbox has already drawn clearly below its commanded current */
+	reclaimDelay: number;
+}
+
+/** Result of the measured-current demand calculation. */
+export interface EffectiveDemandResult {
+	/** Current to feed into the installation budget allocation for this wallbox */
+	demand: number;
+	/** Updated consecutive-cycle under-draw counter */
+	reclaimDelay: number;
+}
+
+/**
+ * Turns the raw commanded current into a measured-aware demand for the installation budget.
+ *
+ * The static budget reserves the commanded current even when the vehicle draws less (own lower
+ * limit, tapering near full, temperature derating). This function follows the actual draw: a
+ * wallbox that consumes everything it is given is offered one step more (so it can grow toward its
+ * wish), while a wallbox that keeps drawing clearly less than allowed has its unused budget
+ * reclaimed after a dwell time, freeing it for other wallboxes. A stable hold zone one deadband
+ * wide between the grow and reclaim thresholds prevents flapping around the vehicle's real limit.
+ *
+ * Safety is unaffected: the demand never exceeds the wish or the maximum, and the caller only ever
+ * lowers a wallbox's command to reclaim capacity, so the summed current can never exceed the fuse.
+ *
+ * @param input Last commanded current, measured draw, wish, limits and the dwell counter
+ * @returns The budget demand for this wallbox and the updated dwell counter
+ */
+export function effectiveCurrentDemand(input: EffectiveDemandInput): EffectiveDemandResult {
+	const { commandedAmp, measuredAmp, wishAmp, minAmp, maxAmp, reclaimDelay } = input;
+	if (![commandedAmp, measuredAmp, wishAmp, minAmp, maxAmp, reclaimDelay].every(Number.isFinite)) {
+		return { demand: Number.isFinite(wishAmp) ? Math.max(0, Math.floor(wishAmp)) : 0, reclaimDelay: 0 };
+	}
+
+	const wish = Math.max(0, Math.min(Math.floor(wishAmp), Math.floor(maxAmp)));
+	const measured = Math.floor(measuredAmp);
+	const commanded = Math.floor(commandedAmp);
+	const floor = Math.max(MIN_CHARGE_CURRENT, Math.floor(minAmp));
+
+	// not really charging yet (cold start, or vehicle connected but not drawing): reserve the wish, no reclaim
+	if (measured < MIN_CHARGE_CURRENT) {
+		return { demand: wish, reclaimDelay: 0 };
+	}
+	// drawing everything it is allowed - offer one step more so it can grow toward its wish
+	if (measured >= commanded) {
+		return { demand: Math.min(wish, commanded + DEMAND_HEADROOM), reclaimDelay: 0 };
+	}
+	// within the deadband just below the commanded current: satisfied and stable, hold and keep watching
+	if (measured >= commanded - DEMAND_DEADBAND) {
+		return { demand: Math.min(wish, commanded), reclaimDelay: 0 };
+	}
+	// clearly under-drawing - confirm it is sustained before releasing the unused budget
+	const nextDelay = reclaimDelay + 1;
+	if (nextDelay <= RECLAIM_DELAY_CYCLES) {
+		return { demand: Math.min(wish, commanded), reclaimDelay: nextDelay };
+	}
+	// sustained under-draw: reserve only the measured draw plus headroom, freeing the rest for other wallboxes
+	return { demand: Math.min(wish, Math.max(floor, measured + DEMAND_HEADROOM)), reclaimDelay: nextDelay };
+}

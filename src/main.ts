@@ -10,6 +10,7 @@ import {
 	decidePhaseSwitch,
 	DEFAULT_MAXIMUM_BATTERY_BONUS,
 	DEFAULT_RESERVE_POWER,
+	effectiveCurrentDemand,
 	type FleetParticipant,
 	MAX_CHARGE_CURRENT,
 	evaluateBatteryAvailability,
@@ -170,6 +171,7 @@ class go_e_charger extends utils.Adapter {
 				HardwareMinAmp: 0,
 				DelayOff: 0,
 				PhaseSwitchDelay: 0,
+				ReclaimDelay: 0,
 				CurrentHysteresis: 0,
 				SetOptAmp: 5,
 				SetOptAllow: false,
@@ -572,7 +574,22 @@ class go_e_charger extends utils.Adapter {
 			// decisions. When it is disabled the loop behaves exactly as before.
 			const budgetActive = maxAmpTotal > 0;
 			const budgetAllocations = budgetActive ? this.planTotalCurrentBudget(chargePlans) : [];
-			for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
+
+			// with the budget active, apply current reductions before increases so the summed commanded
+			// current never transiently exceeds the fuse while the go-e commands go out one after another
+			// (the measured loop can free a large chunk from one charger and hand it to another in the same cycle)
+			const applyOrder = [...this.config.wallBoxList.keys()];
+			if (budgetActive) {
+				const targetAmp = (iWB: number): number => {
+					const info = this.wallboxInfoList[iWB];
+					const hasVehicle = info.CarState === 2 || info.CarState === 3;
+					const alloc = budgetAllocations[iWB];
+					return hasVehicle && alloc?.allow ? alloc.ampere : 0;
+				};
+				applyOrder.sort((a, b) => targetAmp(a) - this.wallboxInfoList[a].SetAmp - (targetAmp(b) - this.wallboxInfoList[b].SetAmp));
+			}
+
+			for (const iWB of applyOrder) {
 				const info = this.wallboxInfoList[iWB];
 				// a charger only draws current once a vehicle is connected (go-e car state 2 or 3). With
 				// the budget active, a charger without a vehicle is kept off and reserves nothing, so it
@@ -583,6 +600,7 @@ class go_e_charger extends utils.Adapter {
 					if (budgetActive) {
 						const alloc = budgetAllocations[iWB];
 						if (hasVehicle && alloc.allow) {
+							info.SetAmp = alloc.ampere; // remember the applied current for next cycle's measured loop
 							await this.Charge_Config("1", alloc.ampere, `activate go-eCharger for forced charging`, iWB);
 						} else {
 							// no vehicle yet, or no budget left after the higher-priority chargers
@@ -593,6 +611,7 @@ class go_e_charger extends utils.Adapter {
 					} else {
 						// Charge-NOW is enabled - the per-wallbox current limits cap ChargeNOW as well
 						const chargeNowCurrent = Math.min(Math.max(info.ChargeCurrent, info.MinAmp), info.MaxAmp);
+						info.SetAmp = chargeNowCurrent;
 						await this.Charge_Config("1", chargeNowCurrent, `activate go-eCharger for forced charging`, iWB); // keep active charging current!!
 					}
 					await this.Switch_3Phases(info.Charge3Phase, iWB);
@@ -983,13 +1002,16 @@ class go_e_charger extends utils.Adapter {
 			"value.energy.consumed",
 		);
 		void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.Charge`, status.nrg[11] * 10, `actual charging-power`, "W", "value.power");
+		const measuredMaxPhaseCurrent = Math.max(...status.nrg.slice(4, 7)) / 10;
 		void this.projectUtils.checkAndSetValueNumber(
 			`${basePath}.Power.MeasuredMaxPhaseCurrent`,
-			Math.max(...status.nrg.slice(4, 7)) / 10,
+			measuredMaxPhaseCurrent,
 			`Measured max. current of grid phases`,
 			"A",
 			"value.current",
 		);
+		// actually drawn current, used by the installation budget to reclaim unused capacity (measured loop)
+		this.wallboxInfoList[iWB].MeasuredMaxChargeAmp = Math.round(measuredMaxPhaseCurrent);
 		this.wallboxInfoList[iWB].Firmware = status.fwv;
 		void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`, `info.firmware`);
 		// access control: 0 = open, 1 = RFID/App required, 2 = electricity price/automatic
@@ -1516,18 +1538,38 @@ class go_e_charger extends utils.Adapter {
 			const hasVehicle = info.CarState === 2 || info.CarState === 3;
 			if (!hasVehicle) {
 				// no vehicle - the charger cannot draw current, so it neither claims budget nor is served
+				info.ReclaimDelay = 0;
 				return { requestedAmp: 0, minAmp: info.MinAmp, chargeNow: !!info.ChargeNOW };
 			}
+
+			// the wish is the current the charger would take unconstrained (ChargeNOW current or ramped CM target)
+			let wish = 0;
+			let chargeNow = false;
 			if (info.ChargeNOW) {
-				const requestedAmp = Math.min(Math.max(info.ChargeCurrent, info.MinAmp), info.MaxAmp);
-				return { requestedAmp, minAmp: info.MinAmp, chargeNow: true };
-			}
-			if (info.ChargeManager) {
+				wish = Math.min(Math.max(info.ChargeCurrent, info.MinAmp), info.MaxAmp);
+				chargeNow = true;
+			} else if (info.ChargeManager) {
 				const decision = chargePlans[iWB]?.decision;
-				const requestedAmp = decision && decision.optimalCurrent !== null && decision.action !== "disable" ? decision.nextState.currentAmp : 0;
-				return { requestedAmp, minAmp: info.MinAmp, chargeNow: false };
+				wish = decision && decision.optimalCurrent !== null && decision.action !== "disable" ? decision.nextState.currentAmp : 0;
 			}
-			return { requestedAmp: 0, minAmp: info.MinAmp, chargeNow: false };
+			if (wish <= 0) {
+				info.ReclaimDelay = 0;
+				return { requestedAmp: 0, minAmp: info.MinAmp, chargeNow };
+			}
+
+			// measured loop: follow the actual draw. A charger that under-draws (own limit, tapering, derating)
+			// has its unused budget reclaimed after a dwell, freeing it for other chargers; SetAmp is last
+			// cycle's applied current, MeasuredMaxChargeAmp the current actually drawn under it.
+			const { demand, reclaimDelay } = effectiveCurrentDemand({
+				commandedAmp: info.SetAmp,
+				measuredAmp: info.MeasuredMaxChargeAmp,
+				wishAmp: wish,
+				minAmp: info.MinAmp,
+				maxAmp: info.MaxAmp,
+				reclaimDelay: info.ReclaimDelay,
+			});
+			info.ReclaimDelay = reclaimDelay;
+			return { requestedAmp: demand, minAmp: info.MinAmp, chargeNow };
 		});
 		const allocations = limitTotalCurrent(participants, maxAmpTotal);
 

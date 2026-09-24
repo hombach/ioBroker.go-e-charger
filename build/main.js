@@ -136,6 +136,7 @@ class go_e_charger extends utils.Adapter {
                 HardwareMinAmp: 0,
                 DelayOff: 0,
                 PhaseSwitchDelay: 0,
+                ReclaimDelay: 0,
                 CurrentHysteresis: 0,
                 SetOptAmp: 5,
                 SetOptAllow: false,
@@ -419,13 +420,24 @@ class go_e_charger extends utils.Adapter {
             const chargePlans = await this.planChargeManagerCycle();
             const budgetActive = maxAmpTotal > 0;
             const budgetAllocations = budgetActive ? this.planTotalCurrentBudget(chargePlans) : [];
-            for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
+            const applyOrder = [...this.config.wallBoxList.keys()];
+            if (budgetActive) {
+                const targetAmp = (iWB) => {
+                    const info = this.wallboxInfoList[iWB];
+                    const hasVehicle = info.CarState === 2 || info.CarState === 3;
+                    const alloc = budgetAllocations[iWB];
+                    return hasVehicle && alloc?.allow ? alloc.ampere : 0;
+                };
+                applyOrder.sort((a, b) => targetAmp(a) - this.wallboxInfoList[a].SetAmp - (targetAmp(b) - this.wallboxInfoList[b].SetAmp));
+            }
+            for (const iWB of applyOrder) {
                 const info = this.wallboxInfoList[iWB];
                 const hasVehicle = info.CarState === 2 || info.CarState === 3;
                 if (info.ChargeNOW) {
                     if (budgetActive) {
                         const alloc = budgetAllocations[iWB];
                         if (hasVehicle && alloc.allow) {
+                            info.SetAmp = alloc.ampere;
                             await this.Charge_Config("1", alloc.ampere, `activate go-eCharger for forced charging`, iWB);
                         }
                         else {
@@ -436,6 +448,7 @@ class go_e_charger extends utils.Adapter {
                     }
                     else {
                         const chargeNowCurrent = Math.min(Math.max(info.ChargeCurrent, info.MinAmp), info.MaxAmp);
+                        info.SetAmp = chargeNowCurrent;
                         await this.Charge_Config("1", chargeNowCurrent, `activate go-eCharger for forced charging`, iWB);
                     }
                     await this.Switch_3Phases(info.Charge3Phase, iWB);
@@ -619,7 +632,9 @@ class go_e_charger extends utils.Adapter {
         this.setWallboxHardwareLimits(iWB, this.combineHardwareMax(Number(status.ama), Number(status.cbl)), 0, basePath);
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.statistics.chargedEnergy`, status.eto / 10, `Totally charged in wallbox lifetime`, "kWh", "value.energy.consumed");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.Charge`, status.nrg[11] * 10, `actual charging-power`, "W", "value.power");
-        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.MeasuredMaxPhaseCurrent`, Math.max(...status.nrg.slice(4, 7)) / 10, `Measured max. current of grid phases`, "A", "value.current");
+        const measuredMaxPhaseCurrent = Math.max(...status.nrg.slice(4, 7)) / 10;
+        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.MeasuredMaxPhaseCurrent`, measuredMaxPhaseCurrent, `Measured max. current of grid phases`, "A", "value.current");
+        this.wallboxInfoList[iWB].MeasuredMaxChargeAmp = Math.round(measuredMaxPhaseCurrent);
         this.wallboxInfoList[iWB].Firmware = status.fwv;
         void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`, `info.firmware`);
         if (status.ast !== undefined && status.ast !== null) {
@@ -854,18 +869,33 @@ class go_e_charger extends utils.Adapter {
             const info = this.wallboxInfoList[iWB];
             const hasVehicle = info.CarState === 2 || info.CarState === 3;
             if (!hasVehicle) {
+                info.ReclaimDelay = 0;
                 return { requestedAmp: 0, minAmp: info.MinAmp, chargeNow: !!info.ChargeNOW };
             }
+            let wish = 0;
+            let chargeNow = false;
             if (info.ChargeNOW) {
-                const requestedAmp = Math.min(Math.max(info.ChargeCurrent, info.MinAmp), info.MaxAmp);
-                return { requestedAmp, minAmp: info.MinAmp, chargeNow: true };
+                wish = Math.min(Math.max(info.ChargeCurrent, info.MinAmp), info.MaxAmp);
+                chargeNow = true;
             }
-            if (info.ChargeManager) {
+            else if (info.ChargeManager) {
                 const decision = chargePlans[iWB]?.decision;
-                const requestedAmp = decision && decision.optimalCurrent !== null && decision.action !== "disable" ? decision.nextState.currentAmp : 0;
-                return { requestedAmp, minAmp: info.MinAmp, chargeNow: false };
+                wish = decision && decision.optimalCurrent !== null && decision.action !== "disable" ? decision.nextState.currentAmp : 0;
             }
-            return { requestedAmp: 0, minAmp: info.MinAmp, chargeNow: false };
+            if (wish <= 0) {
+                info.ReclaimDelay = 0;
+                return { requestedAmp: 0, minAmp: info.MinAmp, chargeNow };
+            }
+            const { demand, reclaimDelay } = (0, chargeManagerUtils_1.effectiveCurrentDemand)({
+                commandedAmp: info.SetAmp,
+                measuredAmp: info.MeasuredMaxChargeAmp,
+                wishAmp: wish,
+                minAmp: info.MinAmp,
+                maxAmp: info.MaxAmp,
+                reclaimDelay: info.ReclaimDelay,
+            });
+            info.ReclaimDelay = reclaimDelay;
+            return { requestedAmp: demand, minAmp: info.MinAmp, chargeNow };
         });
         const allocations = (0, chargeManagerUtils_1.limitTotalCurrent)(participants, maxAmpTotal);
         let used = 0;

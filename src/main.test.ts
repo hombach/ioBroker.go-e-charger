@@ -6,11 +6,13 @@ import {
 	decideChargeManager,
 	decideChargeManagerFleet,
 	decidePhaseSwitch,
+	effectiveCurrentDemand,
 	evaluateBatteryAvailability,
 	type FleetParticipant,
 	limitTotalCurrent,
 	MAX_CHARGE_CURRENT,
 	MIN_CHARGE_CURRENT,
+	RECLAIM_DELAY_CYCLES,
 	type TotalCurrentParticipant,
 	PHASE_SWITCH_DELAY_CYCLES,
 	PHASE_VOLTAGE,
@@ -865,6 +867,69 @@ describe("ChargeManager safety helpers", () => {
 				{ allow: false, ampere: 0 },
 			]);
 			assert.ok(result.reduce((sum, r) => sum + r.ampere, 0) <= 15);
+		});
+	});
+
+	describe("effectiveCurrentDemand", () => {
+		const base = { commandedAmp: 16, measuredAmp: 16, wishAmp: 16, minAmp: 6, maxAmp: 16, reclaimDelay: 0 };
+
+		it("reserves the wish while the vehicle is not drawing yet (cold start)", () => {
+			// measured below the technical minimum = not really charging -> keep the full reservation
+			assert.deepEqual(effectiveCurrentDemand({ ...base, commandedAmp: 10, measuredAmp: 0, wishAmp: 16 }), { demand: 16, reclaimDelay: 0 });
+			assert.deepEqual(effectiveCurrentDemand({ ...base, commandedAmp: 10, measuredAmp: 3, wishAmp: 16 }), { demand: 16, reclaimDelay: 0 });
+		});
+
+		it("offers one step more when the vehicle draws everything it is allowed", () => {
+			// drawing 9 at a 9 A command, wants 16 -> offer 10, no reclaim pending
+			assert.deepEqual(effectiveCurrentDemand({ ...base, commandedAmp: 9, measuredAmp: 9, wishAmp: 16 }), { demand: 10, reclaimDelay: 0 });
+		});
+
+		it("never offers more than the wish or the maximum", () => {
+			assert.deepEqual(effectiveCurrentDemand({ ...base, commandedAmp: 16, measuredAmp: 16, wishAmp: 16, maxAmp: 16 }), { demand: 16, reclaimDelay: 0 });
+			assert.deepEqual(effectiveCurrentDemand({ ...base, commandedAmp: 10, measuredAmp: 10, wishAmp: 10 }), { demand: 10, reclaimDelay: 0 });
+		});
+
+		it("holds inside the deadband and resets the dwell counter", () => {
+			// measured one amp below the command = satisfied/stable -> hold, no reclaim
+			assert.deepEqual(effectiveCurrentDemand({ ...base, commandedAmp: 10, measuredAmp: 9, wishAmp: 16, reclaimDelay: 2 }), {
+				demand: 10,
+				reclaimDelay: 0,
+			});
+		});
+
+		it("holds the reservation while confirming a sustained under-draw", () => {
+			// commanded 16, only drawing 8: count up but keep reserving 16 until the dwell elapses
+			let delay = 0;
+			for (let cycle = 1; cycle <= RECLAIM_DELAY_CYCLES; cycle++) {
+				const r = effectiveCurrentDemand({ ...base, commandedAmp: 16, measuredAmp: 8, wishAmp: 16, reclaimDelay: delay });
+				assert.equal(r.demand, 16, `cycle ${cycle} should still reserve the full command`);
+				assert.equal(r.reclaimDelay, cycle);
+				delay = r.reclaimDelay;
+			}
+		});
+
+		it("reclaims to measured + headroom once the under-draw is sustained", () => {
+			// after the dwell, reserve only 8 + 1 = 9 and free the rest
+			const r = effectiveCurrentDemand({ ...base, commandedAmp: 16, measuredAmp: 8, wishAmp: 16, reclaimDelay: RECLAIM_DELAY_CYCLES });
+			assert.equal(r.demand, 9);
+			assert.ok(r.reclaimDelay > RECLAIM_DELAY_CYCLES);
+		});
+
+		it("parks stably at the vehicle limit without flapping", () => {
+			// after reclaiming to 9, the vehicle keeps drawing 8 -> hold at 9 (measured within the deadband), no re-reclaim
+			const r = effectiveCurrentDemand({ ...base, commandedAmp: 9, measuredAmp: 8, wishAmp: 16, reclaimDelay: 0 });
+			assert.deepEqual(r, { demand: 9, reclaimDelay: 0 });
+		});
+
+		it("never reclaims below the per-box minimum", () => {
+			// drawing 4 A (abnormally low) against a 6 A minimum -> floor the demand at the minimum
+			const r = effectiveCurrentDemand({ ...base, commandedAmp: 16, measuredAmp: 4, wishAmp: 16, minAmp: 6, reclaimDelay: RECLAIM_DELAY_CYCLES });
+			// measured 4 is below MIN_CHARGE_CURRENT -> treated as "not drawing", reserves the wish
+			assert.equal(r.demand, 16);
+		});
+
+		it("falls back to the wish on invalid input", () => {
+			assert.deepEqual(effectiveCurrentDemand({ ...base, measuredAmp: Number.NaN, wishAmp: 12 }), { demand: 12, reclaimDelay: 0 });
 		});
 	});
 });

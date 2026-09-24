@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateAvailableSurplusPower = calculateAvailableSurplusPower;
@@ -12,6 +12,7 @@ exports.decideChargeManagerFleet = decideChargeManagerFleet;
 exports.decidePhaseSwitch = decidePhaseSwitch;
 exports.buildChargerCommands = buildChargerCommands;
 exports.limitTotalCurrent = limitTotalCurrent;
+exports.effectiveCurrentDemand = effectiveCurrentDemand;
 exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 32;
 exports.START_CHARGE_CURRENT = 10;
@@ -256,5 +257,32 @@ function limitTotalCurrent(participants, maxAmpTotal) {
         }
     }
     return allocations;
+}
+exports.DEMAND_DEADBAND = 1;
+exports.RECLAIM_DELAY_CYCLES = 3;
+exports.DEMAND_HEADROOM = 1;
+function effectiveCurrentDemand(input) {
+    const { commandedAmp, measuredAmp, wishAmp, minAmp, maxAmp, reclaimDelay } = input;
+    if (![commandedAmp, measuredAmp, wishAmp, minAmp, maxAmp, reclaimDelay].every(Number.isFinite)) {
+        return { demand: Number.isFinite(wishAmp) ? Math.max(0, Math.floor(wishAmp)) : 0, reclaimDelay: 0 };
+    }
+    const wish = Math.max(0, Math.min(Math.floor(wishAmp), Math.floor(maxAmp)));
+    const measured = Math.floor(measuredAmp);
+    const commanded = Math.floor(commandedAmp);
+    const floor = Math.max(exports.MIN_CHARGE_CURRENT, Math.floor(minAmp));
+    if (measured < exports.MIN_CHARGE_CURRENT) {
+        return { demand: wish, reclaimDelay: 0 };
+    }
+    if (measured >= commanded) {
+        return { demand: Math.min(wish, commanded + exports.DEMAND_HEADROOM), reclaimDelay: 0 };
+    }
+    if (measured >= commanded - exports.DEMAND_DEADBAND) {
+        return { demand: Math.min(wish, commanded), reclaimDelay: 0 };
+    }
+    const nextDelay = reclaimDelay + 1;
+    if (nextDelay <= exports.RECLAIM_DELAY_CYCLES) {
+        return { demand: Math.min(wish, commanded), reclaimDelay: nextDelay };
+    }
+    return { demand: Math.min(wish, Math.max(floor, measured + exports.DEMAND_HEADROOM)), reclaimDelay: nextDelay };
 }
 //# sourceMappingURL=chargeManagerUtils.js.map
