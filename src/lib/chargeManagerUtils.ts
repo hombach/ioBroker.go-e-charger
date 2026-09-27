@@ -542,6 +542,108 @@ export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision 
 }
 
 /**
+ * Returns the go-e phase mode (`psm`: 1 = one phase, 2 = three phases) to send, or `null` when the
+ * charger already reports the requested mode. `psm` is a stored setting, so it is not rewritten
+ * every cycle.
+ *
+ * @param charge3Phase Whether three-phase charging is requested
+ * @param enabledPhases Phase count the charger last reported (1 or 3; 0 = automatic or unknown)
+ * @returns The `psm` value to send, or `null` if nothing needs to be sent
+ */
+export function phaseModeToSend(charge3Phase: boolean, enabledPhases: number): 1 | 2 | null {
+	if (enabledPhases === (charge3Phase ? 3 : 1)) {
+		return null;
+	}
+	return charge3Phase ? 2 : 1;
+}
+
+/**
+ * Whether the charger reports that no vehicle is plugged in (go-e car state 1).
+ *
+ * Unknown or invalid states (0, NaN, out of range) do not count as "no vehicle", so a failed
+ * read never silently withdraws a running charge.
+ *
+ * @param carState go-e car state as reported by the charger
+ * @returns `true` only for car state 1
+ */
+export function isVehicleDisconnected(carState: number): boolean {
+	return carState === 1;
+}
+
+/** go-e car state for a vehicle that is plugged in and has finished charging */
+export const CAR_STATE_FINISHED = 4;
+/** Consecutive ignored charge releases that are still retried on every single cycle */
+export const RELEASE_RETRY_LIMIT = 30;
+/** After that many ignored releases, the release is only retried every this many cycles */
+export const RELEASE_RETRY_INTERVAL = 6;
+
+/**
+ * Counts how often in a row the charger kept reporting a charge release other than the one it was
+ * last told to apply.
+ *
+ * The charger answers every write with HTTP 200 and then quietly keeps its own value, so an
+ * ignored release looks exactly like a successful one until the next read. On 2026-09-19 that
+ * produced 291 consecutive ignored writes over 90 minutes.
+ *
+ * @param reportedAllow Charge release the charger reports now (`alw`)
+ * @param requestedAllow Charge release last written to the charger, or `null` if none was
+ * @param previous Consecutive ignored releases so far
+ * @returns The updated count; 0 as soon as the charger agrees or nothing was requested
+ */
+export function updateReleaseRejects(reportedAllow: number, requestedAllow: number | null, previous: number): number {
+	if (requestedAllow === null || !Number.isFinite(reportedAllow) || reportedAllow === requestedAllow) {
+		return 0;
+	}
+	return (Number.isFinite(previous) ? Math.max(0, Math.trunc(previous)) : 0) + 1;
+}
+
+/**
+ * Whether to skip re-sending the charge release this cycle because the charger keeps ignoring it.
+ *
+ * A vehicle that reports it has finished charging does not necessarily refuse the release for
+ * good: in the logged sessions it took it after two to seven consecutive writes, so the repeated
+ * writes are what wakes it, not wasted effort. They are only wasted once the vehicle has ignored
+ * them for a long while - 2026-09-19 has a stretch of 17 minutes with no reaction at all.
+ *
+ * So the release is never given up on. It is retried on every cycle for the first
+ * {@link RELEASE_RETRY_LIMIT} attempts, which covers every wake-up seen so far with a wide margin,
+ * and only then thinned out to every {@link RELEASE_RETRY_INTERVAL} cycles. The vehicle can still
+ * wake up at any time; the worst case is that it does so up to one interval later.
+ *
+ * @param rejects Consecutive ignored releases from {@link updateReleaseRejects}
+ * @param carState go-e car state as reported by the charger
+ * @returns `true` while the release should not be sent this cycle
+ */
+export function holdRejectedRelease(rejects: number, carState: number): boolean {
+	if (carState !== CAR_STATE_FINISHED || !Number.isFinite(rejects) || rejects < RELEASE_RETRY_LIMIT) {
+		return false;
+	}
+	return (Math.trunc(rejects) - RELEASE_RETRY_LIMIT) % RELEASE_RETRY_INTERVAL !== 0;
+}
+
+/**
+ * The status field a written command reads back from. `amx` is write-only on the charger and
+ * always reports 0, while the current it set shows up in `amp` - comparing `amx` against itself
+ * would never match and re-send the current every cycle.
+ */
+const COMMAND_READBACK: Record<ChargerCommand["parameter"], "alw" | "amp"> = { alw: "alw", amp: "amp", amx: "amp" };
+
+/**
+ * Drops the commands whose value the charger already reports, so an unchanged release or
+ * current is not re-sent every cycle (each write wakes the charger's LEDs).
+ *
+ * The order of the remaining commands is preserved. A parameter whose readback field carries
+ * no finite value is always sent.
+ *
+ * @param commands Ordered charger commands from {@link buildChargerCommands}
+ * @param reported Values the charger reported in the last successful read
+ * @returns The commands that change something on the charger
+ */
+export function dropUnchangedChargerCommands(commands: ChargerCommand[], reported: Partial<Record<ChargerCommand["parameter"], number>>): ChargerCommand[] {
+	return commands.filter(command => reported[COMMAND_READBACK[command.parameter]] !== command.value);
+}
+
+/**
  * Builds a safe sequence of commands for the go-e Charger.
  *
  * When charging is enabled, the current is configured before the charge

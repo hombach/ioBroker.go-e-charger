@@ -1,25 +1,33 @@
 import { strict as assert } from "node:assert";
 import {
 	buildChargerCommands,
+	CAR_STATE_FINISHED,
 	calculateOptimalChargeCurrent,
 	type ChargeManagerControllerInput,
 	decideChargeManager,
 	decideChargeManagerFleet,
 	decidePhaseSwitch,
+	dropUnchangedChargerCommands,
 	effectiveCurrentDemand,
 	evaluateBatteryAvailability,
+	holdRejectedRelease,
 	type FleetParticipant,
 	limitTotalCurrent,
+	isVehicleDisconnected,
 	MAX_CHARGE_CURRENT,
 	MIN_CHARGE_CURRENT,
 	RECLAIM_DELAY_CYCLES,
 	type TotalCurrentParticipant,
 	PHASE_SWITCH_DELAY_CYCLES,
+	phaseModeToSend,
 	PHASE_VOLTAGE,
+	RELEASE_RETRY_INTERVAL,
+	RELEASE_RETRY_LIMIT,
 	resolveWallboxCurrentLimits,
 	SHUTDOWN_DELAY_CYCLES,
 	START_CHARGE_CURRENT,
 	stepChargeCurrent,
+	updateReleaseRejects,
 	updateShutdownDelay,
 } from "./lib/chargeManagerUtils";
 
@@ -586,6 +594,53 @@ describe("ChargeManager safety helpers", () => {
 		});
 	});
 
+	describe("dropUnchangedChargerCommands", () => {
+		const enable = [
+			{ parameter: "amx" as const, value: 10 },
+			{ parameter: "alw" as const, value: 1 },
+		];
+
+		it("sends nothing when the charger already reports the release and the current", () => {
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amx: 0, amp: 10 }), []);
+		});
+
+		it("sends only the changed parameter and keeps the order", () => {
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amp: 11 }), [{ parameter: "amx", value: 10 }]);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 0, amp: 10 }), [{ parameter: "alw", value: 1 }]);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 0, amp: 0 }), enable);
+		});
+
+		it("sends everything without a usable reported value", () => {
+			assert.deepEqual(dropUnchangedChargerCommands(enable, {}), enable);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: Number.NaN, amp: Number.NaN }), enable);
+			assert.deepEqual(dropUnchangedChargerCommands([{ parameter: "alw", value: 0 }], { alw: Number.NaN }), [{ parameter: "alw", value: 0 }]);
+		});
+
+		it("compares the persistent current for firmware 033 against amp, not amx", () => {
+			assert.deepEqual(dropUnchangedChargerCommands([{ parameter: "amp", value: 6 }], { amx: 6, amp: 16 }), [{ parameter: "amp", value: 6 }]);
+		});
+
+		it("compares the volatile current against amp, because amx always reads back 0", () => {
+			// firmware 60.6 mirrors a written amx into amp and keeps reporting amx=0
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amx: 0, amp: 10 }), []);
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amx: 10, amp: 16 }), [{ parameter: "amx", value: 10 }]);
+			// a charger that does report amx must not fool the comparison either
+			assert.deepEqual(dropUnchangedChargerCommands(enable, { alw: 1, amx: 10, amp: 10 }), []);
+		});
+	});
+
+	describe("isVehicleDisconnected", () => {
+		it("is true only for car state 1", () => {
+			assert.equal(isVehicleDisconnected(1), true);
+		});
+
+		it("treats connected, unknown and invalid states as not disconnected", () => {
+			for (const carState of [0, 2, 3, 4, 5, -1, Number.NaN]) {
+				assert.equal(isVehicleDisconnected(carState), false, `car state ${carState}`);
+			}
+		});
+	});
+
 	describe("updateShutdownDelay", () => {
 		it("counts consecutive low-current cycles", () => {
 			assert.equal(updateShutdownDelay(5, MIN_CHARGE_CURRENT, 4), 5);
@@ -930,6 +985,91 @@ describe("ChargeManager safety helpers", () => {
 
 		it("falls back to the wish on invalid input", () => {
 			assert.deepEqual(effectiveCurrentDemand({ ...base, measuredAmp: Number.NaN, wishAmp: 12 }), { demand: 12, reclaimDelay: 0 });
+		});
+	});
+
+	describe("phaseModeToSend", () => {
+		it("sends nothing when the charger already reports the requested mode", () => {
+			assert.equal(phaseModeToSend(false, 1), null);
+			assert.equal(phaseModeToSend(true, 3), null);
+		});
+
+		it("sends the requested mode when the charger reports another one", () => {
+			assert.equal(phaseModeToSend(true, 1), 2);
+			assert.equal(phaseModeToSend(false, 3), 1);
+		});
+
+		it("sends the requested mode when the reported mode is automatic, unknown or invalid", () => {
+			for (const enabledPhases of [0, 2, Number.NaN]) {
+				assert.equal(phaseModeToSend(false, enabledPhases), 1);
+				assert.equal(phaseModeToSend(true, enabledPhases), 2);
+			}
+		});
+	});
+
+	describe("updateReleaseRejects / holdRejectedRelease", () => {
+		it("counts only releases the charger did not apply", () => {
+			assert.equal(updateReleaseRejects(0, 1, 0), 1);
+			assert.equal(updateReleaseRejects(0, 1, 4), 5);
+			assert.equal(updateReleaseRejects(1, 1, 4), 0);
+			assert.equal(updateReleaseRejects(0, 0, 4), 0);
+		});
+
+		it("counts nothing without a request or a usable reading", () => {
+			assert.equal(updateReleaseRejects(0, null, 4), 0);
+			assert.equal(updateReleaseRejects(Number.NaN, 1, 4), 0);
+		});
+
+		it("survives a corrupt counter", () => {
+			assert.equal(updateReleaseRejects(0, 1, Number.NaN), 1);
+			assert.equal(updateReleaseRejects(0, 1, -7), 1);
+			assert.equal(updateReleaseRejects(0, 1, 2.6), 3);
+		});
+
+		it("retries every cycle up to the limit, for every car state", () => {
+			// the logged wake-ups happened after 2 to 7 consecutive writes - thinning them out
+			// earlier than that would cut charging off exactly where it was about to start
+			for (let rejects = 0; rejects < RELEASE_RETRY_LIMIT; rejects++) {
+				assert.equal(holdRejectedRelease(rejects, CAR_STATE_FINISHED), false);
+			}
+			for (const carState of [0, 1, 2, 3]) {
+				assert.equal(holdRejectedRelease(RELEASE_RETRY_LIMIT * 10, carState), false);
+			}
+		});
+
+		it("thins the retries out instead of giving up", () => {
+			assert.equal(holdRejectedRelease(RELEASE_RETRY_LIMIT, CAR_STATE_FINISHED), false);
+			for (let offset = 1; offset < RELEASE_RETRY_INTERVAL; offset++) {
+				assert.equal(holdRejectedRelease(RELEASE_RETRY_LIMIT + offset, CAR_STATE_FINISHED), true);
+			}
+			assert.equal(holdRejectedRelease(RELEASE_RETRY_LIMIT + RELEASE_RETRY_INTERVAL, CAR_STATE_FINISHED), false);
+			assert.equal(holdRejectedRelease(RELEASE_RETRY_LIMIT + RELEASE_RETRY_INTERVAL * 100, CAR_STATE_FINISHED), false);
+		});
+
+		it("does not hold on a corrupt counter", () => {
+			assert.equal(holdRejectedRelease(Number.NaN, CAR_STATE_FINISHED), false);
+		});
+
+		it("never stops retrying, so a late wake-up still starts charging", () => {
+			// the 2026-09-19 stretch: 540 cycles of "write alw=1, read back alw=0" at car state 4
+			let rejects = 0;
+			let writes = 0;
+			const writtenAt: number[] = [];
+			for (let cycle = 0; cycle < 540; cycle++) {
+				if (!holdRejectedRelease(rejects, CAR_STATE_FINISHED)) {
+					writes++;
+					writtenAt.push(cycle);
+				}
+				// the charger keeps reporting 0 whether or not this cycle wrote
+				rejects = updateReleaseRejects(0, 1, rejects);
+			}
+			// every one of the logged wake-ups (2 to 7 consecutive writes) is still covered
+			assert.deepEqual(writtenAt.slice(0, 8), [0, 1, 2, 3, 4, 5, 6, 7]);
+			// but the 90 minutes of hammering are cut down by more than half
+			assert.ok(writes < 130, `expected well under 130 writes, got ${writes}`);
+			// and the gap between retries never grows beyond the interval
+			const gaps = writtenAt.slice(1).map((cycle, i) => cycle - writtenAt[i]);
+			assert.equal(Math.max(...gaps), RELEASE_RETRY_INTERVAL);
 		});
 	});
 });

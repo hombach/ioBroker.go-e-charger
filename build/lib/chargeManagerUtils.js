@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateAvailableSurplusPower = calculateAvailableSurplusPower;
@@ -10,6 +10,11 @@ exports.updateShutdownDelay = updateShutdownDelay;
 exports.decideChargeManager = decideChargeManager;
 exports.decideChargeManagerFleet = decideChargeManagerFleet;
 exports.decidePhaseSwitch = decidePhaseSwitch;
+exports.phaseModeToSend = phaseModeToSend;
+exports.isVehicleDisconnected = isVehicleDisconnected;
+exports.updateReleaseRejects = updateReleaseRejects;
+exports.holdRejectedRelease = holdRejectedRelease;
+exports.dropUnchangedChargerCommands = dropUnchangedChargerCommands;
 exports.buildChargerCommands = buildChargerCommands;
 exports.limitTotalCurrent = limitTotalCurrent;
 exports.effectiveCurrentDemand = effectiveCurrentDemand;
@@ -218,6 +223,34 @@ function decidePhaseSwitch(input) {
         return { targetPhases, switchDelay: 0 };
     }
     return { targetPhases: input.currentPhases, switchDelay };
+}
+function phaseModeToSend(charge3Phase, enabledPhases) {
+    if (enabledPhases === (charge3Phase ? 3 : 1)) {
+        return null;
+    }
+    return charge3Phase ? 2 : 1;
+}
+function isVehicleDisconnected(carState) {
+    return carState === 1;
+}
+exports.CAR_STATE_FINISHED = 4;
+exports.RELEASE_RETRY_LIMIT = 30;
+exports.RELEASE_RETRY_INTERVAL = 6;
+function updateReleaseRejects(reportedAllow, requestedAllow, previous) {
+    if (requestedAllow === null || !Number.isFinite(reportedAllow) || reportedAllow === requestedAllow) {
+        return 0;
+    }
+    return (Number.isFinite(previous) ? Math.max(0, Math.trunc(previous)) : 0) + 1;
+}
+function holdRejectedRelease(rejects, carState) {
+    if (carState !== exports.CAR_STATE_FINISHED || !Number.isFinite(rejects) || rejects < exports.RELEASE_RETRY_LIMIT) {
+        return false;
+    }
+    return (Math.trunc(rejects) - exports.RELEASE_RETRY_LIMIT) % exports.RELEASE_RETRY_INTERVAL !== 0;
+}
+const COMMAND_READBACK = { alw: "alw", amp: "amp", amx: "amp" };
+function dropUnchangedChargerCommands(commands, reported) {
+    return commands.filter(command => reported[COMMAND_READBACK[command.parameter]] !== command.value);
 }
 function buildChargerCommands(allow, ampere, firmware) {
     if (!allow) {
