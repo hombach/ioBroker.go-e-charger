@@ -286,23 +286,63 @@ export function calculateOptimalChargeCurrent(input: ChargeCalculationInput): nu
 }
 
 /**
- * Moves the internal target current by at most one ampere per control cycle.
+ * The current the ramp has to reach before the charge release is given.
+ *
+ * Charging starts at {@link START_CHARGE_CURRENT} to keep the release from flapping around the
+ * technical minimum, but a wallbox capped below that can never reach it - such a wallbox starts at
+ * its own maximum instead.
+ *
+ * @param minimum Lowest current the ChargeManager may assign to this wallbox
+ * @param maximum Highest current the ChargeManager may assign to this wallbox
+ * @returns The current at which charging is released
+ */
+export function resolveStartChargeCurrent(minimum: number, maximum: number): number {
+	return Math.min(Math.max(START_CHARGE_CURRENT, minimum), maximum);
+}
+
+/**
+ * Ampere gap the newly calculated target must have from the current one before the charging
+ * current follows it. A one-ampere gap is what a passing cloud produces, and following it makes
+ * the charger hunt around the target instead of tracking it.
+ */
+export const CURRENT_DEADBAND = 2;
+
+/**
+ * Moves the internal target current by at most one ampere per control cycle, and only once the
+ * newly calculated target is at least {@link CURRENT_DEADBAND} amperes away.
+ *
+ * The ends of the usable range are followed exactly regardless of the deadband, or the deadband
+ * would make them unreachable: stopping (0 A), ramping up to a raised minimum or to the start
+ * current, and the configured maximum. Inside the range a one-ampere target change is ignored, so
+ * the charger settles instead of stepping back and forth every cycle.
+ *
+ * Known limit: while the target oscillates between the maximum and one ampere below it, the
+ * current ratchets up to the maximum and stays there. Capping that would cost the top ampere of
+ * every charge, which is the worse trade.
  *
  * @param current Previous internal target
  * @param target Newly calculated target
  * @param maximum Maximum current allowed by the ChargeManager
+ * @param minimum Minimum current allowed by the ChargeManager
  * @returns A finite target between 0 and the configured maximum
  */
-export function stepChargeCurrent(current: number, target: number, maximum = MAX_CHARGE_CURRENT): number {
+export function stepChargeCurrent(current: number, target: number, maximum = MAX_CHARGE_CURRENT, minimum = MIN_CHARGE_CURRENT): number {
 	const safeMaximum = Number.isInteger(maximum) && maximum >= MIN_CHARGE_CURRENT && maximum <= MAX_CHARGE_CURRENT ? maximum : MAX_CHARGE_CURRENT;
+	const safeMinimum = Number.isInteger(minimum) && minimum >= MIN_CHARGE_CURRENT && minimum <= safeMaximum ? minimum : MIN_CHARGE_CURRENT;
 	const safeCurrent = Number.isFinite(current) ? Math.max(0, Math.min(Math.trunc(current), safeMaximum)) : 0;
 	const safeTarget = Number.isFinite(target) ? Math.max(0, Math.min(Math.trunc(target), safeMaximum)) : 0;
 
-	if (safeCurrent < safeTarget) {
-		return safeCurrent + 1;
+	const gap = safeTarget - safeCurrent;
+	if (gap === 0) {
+		return safeCurrent;
 	}
-	if (safeCurrent > safeTarget) {
-		return safeCurrent - 1;
+	// the step onto the start current releases the charge; a target of exactly that current
+	// would otherwise leave the ramp one ampere short of it for good
+	const start = resolveStartChargeCurrent(safeMinimum, safeMaximum);
+	const reachesStart = safeCurrent < start && safeTarget >= start;
+	const atRangeEnd = safeTarget <= safeMinimum || safeTarget === safeMaximum || reachesStart;
+	if (atRangeEnd || Math.abs(gap) >= CURRENT_DEADBAND) {
+		return safeCurrent + Math.sign(gap);
 	}
 	return safeCurrent;
 }
@@ -351,10 +391,8 @@ export function decideChargeManager(input: ChargeManagerControllerInput): Charge
 		};
 	}
 
-	const currentAmp = stepChargeCurrent(input.state.currentAmp, optimalCurrent, input.maximumChargeCurrent);
-	// charging starts at 10 A to keep the release from flapping around the 6 A minimum, but a
-	// wallbox that is capped below that can never reach 10 A - it starts at its own maximum
-	const startChargeCurrent = Math.min(Math.max(START_CHARGE_CURRENT, input.minimumChargeCurrent), input.maximumChargeCurrent);
+	const currentAmp = stepChargeCurrent(input.state.currentAmp, optimalCurrent, input.maximumChargeCurrent, input.minimumChargeCurrent);
+	const startChargeCurrent = resolveStartChargeCurrent(input.minimumChargeCurrent, input.maximumChargeCurrent);
 	// while ramping up to a raised minimum current the target is briefly below the minimum;
 	// do not count that as an insufficient-surplus cycle
 	const isRampingToRaisedMinimum =

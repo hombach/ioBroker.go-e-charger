@@ -563,6 +563,74 @@ describe("ChargeManager safety helpers", () => {
 			assert.equal(stepChargeCurrent(32, 40, 32), 32); // already at the maximum, stays
 			assert.equal(stepChargeCurrent(10, 40, 20), 11); // steps toward the target bounded by the maximum
 		});
+
+		it("ignores a one-ampere target change inside the range", () => {
+			// a passing cloud moves the target by 1 A - following it makes the charger hunt
+			assert.equal(stepChargeCurrent(10, 11, 16, 8), 10);
+			assert.equal(stepChargeCurrent(10, 9, 16, 8), 10);
+			assert.equal(stepChargeCurrent(10, 12, 16, 8), 11);
+			assert.equal(stepChargeCurrent(10, 8, 16, 8), 9);
+		});
+
+		it("settles instead of oscillating when the target alternates by one ampere", () => {
+			// the 2026-09-19 pattern: the target flipped between 10 and 11 A every cycle
+			let current = 10;
+			for (let cycle = 0; cycle < 20; cycle++) {
+				current = stepChargeCurrent(current, cycle % 2 === 0 ? 11 : 10, 16, 8);
+			}
+			assert.equal(current, 10);
+		});
+
+		it("keeps both ends of the usable range reachable", () => {
+			assert.equal(stepChargeCurrent(11, 12, 16, 12), 12); // ramping up to a raised minimum
+			assert.equal(stepChargeCurrent(15, 16, 16, 8), 16); // reaching the configured maximum
+			assert.equal(stepChargeCurrent(1, 0, 16, 8), 0); // stopping is never blocked
+			assert.equal(stepChargeCurrent(9, 8, 16, 8), 8); // stepping down onto the minimum
+		});
+
+		it("never blocks the last step onto the start current", () => {
+			// 2026-09-22: the target sat at exactly 10 A for hours and the ramp stayed at 9 A
+			assert.equal(stepChargeCurrent(9, START_CHARGE_CURRENT, 16, 6), START_CHARGE_CURRENT);
+			assert.equal(stepChargeCurrent(9, START_CHARGE_CURRENT + 1, 16, 6), START_CHARGE_CURRENT);
+			assert.equal(stepChargeCurrent(8, 9, 16, 6), 8); // below the start the deadband still holds
+			assert.equal(stepChargeCurrent(START_CHARGE_CURRENT, START_CHARGE_CURRENT + 1, 16, 6), START_CHARGE_CURRENT);
+			assert.equal(stepChargeCurrent(START_CHARGE_CURRENT, START_CHARGE_CURRENT - 1, 16, 6), START_CHARGE_CURRENT);
+			assert.equal(stepChargeCurrent(7, 8, 8, 6), 8); // a wallbox capped below 10 A starts at its maximum
+			assert.equal(stepChargeCurrent(Number.NaN, START_CHARGE_CURRENT, 16, 6), 1);
+		});
+
+		it("starts charging when the surplus holds exactly the start current", () => {
+			let state = { currentAmp: 0, shutdownDelay: 0 };
+			let action = "";
+			for (let cycle = 0; cycle < 30; cycle++) {
+				const decision = decideChargeManager({
+					solarPower: START_CHARGE_CURRENT * 230 * 3 + 100,
+					houseConsumption: 0,
+					chargerPower: 0,
+					subtractChargerPower: false,
+					batterySoc: 99,
+					minBatterySoc: 90,
+					batteryMode: "priority",
+					reservePower: 100,
+					maximumBatteryBonus: 0,
+					maximumChargeCurrent: 16,
+					minimumChargeCurrent: 6,
+					phases: 3,
+					state,
+				});
+				assert.equal(decision.optimalCurrent, START_CHARGE_CURRENT);
+				state = decision.nextState;
+				action = decision.action;
+			}
+			assert.equal(action, "enable");
+			assert.equal(state.currentAmp, START_CHARGE_CURRENT);
+		});
+
+		it("recovers an invalid minimum instead of blocking the deadband", () => {
+			assert.equal(stepChargeCurrent(10, 11, 16, Number.NaN), 10);
+			assert.equal(stepChargeCurrent(10, 11, 16, 20), 10); // minimum above the maximum
+			assert.equal(stepChargeCurrent(10, 11, 16, 0), 10);
+		});
 	});
 
 	describe("buildChargerCommands", () => {
