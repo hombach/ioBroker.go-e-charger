@@ -157,7 +157,7 @@ function decideChargeManager(input) {
     const startChargeCurrent = resolveStartChargeCurrent(input.minimumChargeCurrent, input.maximumChargeCurrent);
     const isRampingToRaisedMinimum = input.minimumChargeCurrent > exports.START_CHARGE_CURRENT && optimalCurrent >= input.minimumChargeCurrent && currentAmp < input.minimumChargeCurrent;
     let shutdownDelay = isRampingToRaisedMinimum ? 0 : updateShutdownDelay(currentAmp, input.minimumChargeCurrent, input.state.shutdownDelay);
-    if (currentAmp >= startChargeCurrent) {
+    if (currentAmp >= (input.released === true ? input.minimumChargeCurrent : startChargeCurrent)) {
         return {
             action: "enable",
             reason: "charging-current",
@@ -199,6 +199,7 @@ function decideChargeManagerFleet(shared, participants) {
             minimumChargeCurrent: participant.minimumChargeCurrent,
             phases: participant.phases,
             state: participant.state,
+            released: participant.released,
         });
         const availablePower = calculateAvailableSurplusPower(surplus) ?? 0;
         if (participant.claimsPower) {

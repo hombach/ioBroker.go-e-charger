@@ -838,6 +838,7 @@ class go_e_charger extends utils.Adapter {
                 minimumChargeCurrent: Math.min(Math.max(chargeManagerMinCurrent, this.wallboxInfoList[iWB].MinAmp), this.wallboxInfoList[iWB].MaxAmp),
                 state: { currentAmp: this.wallboxInfoList[iWB].SetAmp, shutdownDelay: this.wallboxInfoList[iWB].DelayOff },
                 claimsPower: carState === 2 || carState === 3,
+                released: this.wallboxInfoList[iWB].Reported.alw === 1,
             });
             served.push(iWB);
             fleetChargePower += this.wallboxInfoList[iWB].ChargePower;

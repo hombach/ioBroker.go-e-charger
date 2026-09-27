@@ -444,6 +444,44 @@ describe("ChargeManager safety helpers", () => {
 			});
 		}
 
+		describe("while the charger reports the charge release", () => {
+			// 2026-09-26 17:50: 8-16 A, the ramp at 8 A for 3.5 minutes while the charger stayed at the
+			// 10 A written last - the start hysteresis also froze the current of the running charge
+			const released = (targetCurrent: number, currentAmp = targetCurrent): ChargeManagerControllerInput => ({
+				...inputForTarget(targetCurrent, currentAmp),
+				minimumChargeCurrent: 8,
+				maximumChargeCurrent: 16,
+				released: true,
+			});
+
+			it("writes every current from the minimum up", () => {
+				for (const current of [8, 9]) {
+					const decision = decideChargeManager(released(current));
+					assert.equal(decision.action, "enable", `${current} A`);
+					assert.deepEqual(decision.nextState, { currentAmp: current, shutdownDelay: 0 });
+				}
+			});
+
+			it("follows a falling surplus down to the minimum", () => {
+				assert.equal(decideChargeManager(released(8, 10)).nextState.currentAmp, 9);
+				assert.equal(decideChargeManager(released(8, 10)).action, "enable");
+				assert.equal(decideChargeManager(released(8, 9)).action, "enable");
+			});
+
+			it("still waits out the shutdown delay below the minimum", () => {
+				const decision = decideChargeManager(released(7));
+				assert.equal(decision.action, "hold");
+				assert.equal(decision.reason, "shutdown-delay");
+			});
+
+			it("keeps the start hysteresis before the release", () => {
+				for (const current of [8, 9]) {
+					assert.equal(decideChargeManager({ ...released(current), released: false }).action, "hold", `${current} A`);
+				}
+				assert.equal(decideChargeManager({ ...released(10), released: false }).action, "enable");
+			});
+		});
+
 		it("starts charging when the current ramp reaches 10 A", () => {
 			const decision = decideChargeManager(inputForTarget(MAX_CHARGE_CURRENT, START_CHARGE_CURRENT - 1));
 
@@ -753,6 +791,14 @@ describe("ChargeManager safety helpers", () => {
 			assert.deepEqual(decision, expected);
 			// 11000 - 1000 house - 100 reserve = 9900 W offered to the only wallbox
 			assert.equal(availablePower, 9900);
+		});
+
+		it("passes the charge release on to the wallbox decision", () => {
+			// 6700 - 1000 house - 100 reserve = 5600 W, 8 A on three phases, below the 10 A start
+			const eightAmps = { ...shared, solarPower: 6700 };
+			const running = box({ minimumChargeCurrent: 8, state: { currentAmp: 8, shutdownDelay: 0 } });
+			assert.equal(decideChargeManagerFleet(eightAmps, [{ ...running, released: true }])[0].action, "enable");
+			assert.equal(decideChargeManagerFleet(eightAmps, [running])[0].action, "hold");
 		});
 
 		it("does not hand the same surplus to two wallboxes", () => {
