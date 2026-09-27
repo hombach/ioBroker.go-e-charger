@@ -99,6 +99,19 @@ export interface IWallboxInfo {
 	 */
 	PhaseSwitchDelay: number;
 	/**
+	 * Charge release and currents the charger reported in the last successful API V1 read
+	 */
+	Reported: Partial<Record<"alw" | "amp" | "amx", number>>;
+	/**
+	 * Charge release last written to the charger, or `null` while none was written since the last
+	 * failed read. Compared against the reported one to notice a release the charger ignored.
+	 */
+	RequestedAllow: number | null;
+	/**
+	 * Consecutive cycles the charger reported a charge release other than the requested one
+	 */
+	ReleaseRejects: number;
+	/**
 	 * CurrentHysteresis
 	 */
 	CurrentHysteresis: number;
