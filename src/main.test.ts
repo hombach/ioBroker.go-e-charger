@@ -1,6 +1,7 @@
 import { strict as assert } from "node:assert";
 import {
 	buildChargerCommands,
+	CAR_STATE_FINISHED,
 	calculateOptimalChargeCurrent,
 	type ChargeManagerControllerInput,
 	decideChargeManager,
@@ -8,6 +9,7 @@ import {
 	decidePhaseSwitch,
 	dropUnchangedChargerCommands,
 	evaluateBatteryAvailability,
+	holdRejectedRelease,
 	type FleetParticipant,
 	limitTotalCurrent,
 	isVehicleDisconnected,
@@ -17,10 +19,13 @@ import {
 	PHASE_SWITCH_DELAY_CYCLES,
 	phaseModeToSend,
 	PHASE_VOLTAGE,
+	RELEASE_RETRY_INTERVAL,
+	RELEASE_RETRY_LIMIT,
 	resolveWallboxCurrentLimits,
 	SHUTDOWN_DELAY_CYCLES,
 	START_CHARGE_CURRENT,
 	stepChargeCurrent,
+	updateReleaseRejects,
 	updateShutdownDelay,
 } from "./lib/chargeManagerUtils";
 
@@ -934,6 +939,72 @@ describe("ChargeManager safety helpers", () => {
 				assert.equal(phaseModeToSend(false, enabledPhases), 1);
 				assert.equal(phaseModeToSend(true, enabledPhases), 2);
 			}
+		});
+	});
+
+	describe("updateReleaseRejects / holdRejectedRelease", () => {
+		it("counts only releases the charger did not apply", () => {
+			assert.equal(updateReleaseRejects(0, 1, 0), 1);
+			assert.equal(updateReleaseRejects(0, 1, 4), 5);
+			assert.equal(updateReleaseRejects(1, 1, 4), 0);
+			assert.equal(updateReleaseRejects(0, 0, 4), 0);
+		});
+
+		it("counts nothing without a request or a usable reading", () => {
+			assert.equal(updateReleaseRejects(0, null, 4), 0);
+			assert.equal(updateReleaseRejects(Number.NaN, 1, 4), 0);
+		});
+
+		it("survives a corrupt counter", () => {
+			assert.equal(updateReleaseRejects(0, 1, Number.NaN), 1);
+			assert.equal(updateReleaseRejects(0, 1, -7), 1);
+			assert.equal(updateReleaseRejects(0, 1, 2.6), 3);
+		});
+
+		it("retries every cycle up to the limit, for every car state", () => {
+			// the logged wake-ups happened after 2 to 7 consecutive writes - thinning them out
+			// earlier than that would cut charging off exactly where it was about to start
+			for (let rejects = 0; rejects < RELEASE_RETRY_LIMIT; rejects++) {
+				assert.equal(holdRejectedRelease(rejects, CAR_STATE_FINISHED), false);
+			}
+			for (const carState of [0, 1, 2, 3]) {
+				assert.equal(holdRejectedRelease(RELEASE_RETRY_LIMIT * 10, carState), false);
+			}
+		});
+
+		it("thins the retries out instead of giving up", () => {
+			assert.equal(holdRejectedRelease(RELEASE_RETRY_LIMIT, CAR_STATE_FINISHED), false);
+			for (let offset = 1; offset < RELEASE_RETRY_INTERVAL; offset++) {
+				assert.equal(holdRejectedRelease(RELEASE_RETRY_LIMIT + offset, CAR_STATE_FINISHED), true);
+			}
+			assert.equal(holdRejectedRelease(RELEASE_RETRY_LIMIT + RELEASE_RETRY_INTERVAL, CAR_STATE_FINISHED), false);
+			assert.equal(holdRejectedRelease(RELEASE_RETRY_LIMIT + RELEASE_RETRY_INTERVAL * 100, CAR_STATE_FINISHED), false);
+		});
+
+		it("does not hold on a corrupt counter", () => {
+			assert.equal(holdRejectedRelease(Number.NaN, CAR_STATE_FINISHED), false);
+		});
+
+		it("never stops retrying, so a late wake-up still starts charging", () => {
+			// the 2026-09-19 stretch: 540 cycles of "write alw=1, read back alw=0" at car state 4
+			let rejects = 0;
+			let writes = 0;
+			const writtenAt: number[] = [];
+			for (let cycle = 0; cycle < 540; cycle++) {
+				if (!holdRejectedRelease(rejects, CAR_STATE_FINISHED)) {
+					writes++;
+					writtenAt.push(cycle);
+				}
+				// the charger keeps reporting 0 whether or not this cycle wrote
+				rejects = updateReleaseRejects(0, 1, rejects);
+			}
+			// every one of the logged wake-ups (2 to 7 consecutive writes) is still covered
+			assert.deepEqual(writtenAt.slice(0, 8), [0, 1, 2, 3, 4, 5, 6, 7]);
+			// but the 90 minutes of hammering are cut down by more than half
+			assert.ok(writes < 130, `expected well under 130 writes, got ${writes}`);
+			// and the gap between retries never grows beyond the interval
+			const gaps = writtenAt.slice(1).map((cycle, i) => cycle - writtenAt[i]);
+			assert.equal(Math.max(...gaps), RELEASE_RETRY_INTERVAL);
 		});
 	});
 });

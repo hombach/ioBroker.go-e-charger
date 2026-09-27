@@ -570,6 +570,57 @@ export function isVehicleDisconnected(carState: number): boolean {
 	return carState === 1;
 }
 
+/** go-e car state for a vehicle that is plugged in and has finished charging */
+export const CAR_STATE_FINISHED = 4;
+/** Consecutive ignored charge releases that are still retried on every single cycle */
+export const RELEASE_RETRY_LIMIT = 30;
+/** After that many ignored releases, the release is only retried every this many cycles */
+export const RELEASE_RETRY_INTERVAL = 6;
+
+/**
+ * Counts how often in a row the charger kept reporting a charge release other than the one it was
+ * last told to apply.
+ *
+ * The charger answers every write with HTTP 200 and then quietly keeps its own value, so an
+ * ignored release looks exactly like a successful one until the next read. On 2026-09-19 that
+ * produced 291 consecutive ignored writes over 90 minutes.
+ *
+ * @param reportedAllow Charge release the charger reports now (`alw`)
+ * @param requestedAllow Charge release last written to the charger, or `null` if none was
+ * @param previous Consecutive ignored releases so far
+ * @returns The updated count; 0 as soon as the charger agrees or nothing was requested
+ */
+export function updateReleaseRejects(reportedAllow: number, requestedAllow: number | null, previous: number): number {
+	if (requestedAllow === null || !Number.isFinite(reportedAllow) || reportedAllow === requestedAllow) {
+		return 0;
+	}
+	return (Number.isFinite(previous) ? Math.max(0, Math.trunc(previous)) : 0) + 1;
+}
+
+/**
+ * Whether to skip re-sending the charge release this cycle because the charger keeps ignoring it.
+ *
+ * A vehicle that reports it has finished charging does not necessarily refuse the release for
+ * good: in the logged sessions it took it after two to seven consecutive writes, so the repeated
+ * writes are what wakes it, not wasted effort. They are only wasted once the vehicle has ignored
+ * them for a long while - 2026-09-19 has a stretch of 17 minutes with no reaction at all.
+ *
+ * So the release is never given up on. It is retried on every cycle for the first
+ * {@link RELEASE_RETRY_LIMIT} attempts, which covers every wake-up seen so far with a wide margin,
+ * and only then thinned out to every {@link RELEASE_RETRY_INTERVAL} cycles. The vehicle can still
+ * wake up at any time; the worst case is that it does so up to one interval later.
+ *
+ * @param rejects Consecutive ignored releases from {@link updateReleaseRejects}
+ * @param carState go-e car state as reported by the charger
+ * @returns `true` while the release should not be sent this cycle
+ */
+export function holdRejectedRelease(rejects: number, carState: number): boolean {
+	if (carState !== CAR_STATE_FINISHED || !Number.isFinite(rejects) || rejects < RELEASE_RETRY_LIMIT) {
+		return false;
+	}
+	return (Math.trunc(rejects) - RELEASE_RETRY_LIMIT) % RELEASE_RETRY_INTERVAL !== 0;
+}
+
 /**
  * The status field a written command reads back from. `amx` is write-only on the charger and
  * always reports 0, while the current it set shows up in `amp` - comparing `amx` against itself

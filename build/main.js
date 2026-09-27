@@ -137,6 +137,8 @@ class go_e_charger extends utils.Adapter {
                 DelayOff: 0,
                 PhaseSwitchDelay: 0,
                 Reported: {},
+                RequestedAllow: null,
+                ReleaseRejects: 0,
                 CurrentHysteresis: 0,
                 SetOptAmp: 5,
                 SetOptAllow: false,
@@ -582,6 +584,8 @@ class go_e_charger extends utils.Adapter {
         })
             .catch(error => {
             this.wallboxInfoList[iWB].Reported = {};
+            this.wallboxInfoList[iWB].RequestedAllow = null;
+            this.wallboxInfoList[iWB].ReleaseRejects = 0;
             if (error.message && error.message.includes("EHOSTUNREACH")) {
                 this.log.error(`Charger unreachable error when calling go-eCharger API: ${error}`);
                 this.wallboxInfoList[iWB].Firmware = `EHostUnreach`;
@@ -617,6 +621,11 @@ class go_e_charger extends utils.Adapter {
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrent`, Number(status.amp), `Charge current output`, "A", "level.current");
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrentVolatile`, Number(status.amx), `Charge current output volatile`, "A", "value.current");
         this.wallboxInfoList[iWB].Reported = { alw: Number(status.alw), amp: Number(status.amp), amx: Number(status.amx) };
+        const rejectsBefore = this.wallboxInfoList[iWB].ReleaseRejects;
+        this.wallboxInfoList[iWB].ReleaseRejects = (0, chargeManagerUtils_1.updateReleaseRejects)(Number(status.alw), this.wallboxInfoList[iWB].RequestedAllow, rejectsBefore);
+        if (rejectsBefore < chargeManagerUtils_1.RELEASE_RETRY_LIMIT && this.wallboxInfoList[iWB].ReleaseRejects >= chargeManagerUtils_1.RELEASE_RETRY_LIMIT) {
+            this.log.info(`Charger ${iWB}: the charge release was ignored ${this.wallboxInfoList[iWB].ReleaseRejects} times in a row - still retrying, but only every ${chargeManagerUtils_1.RELEASE_RETRY_INTERVAL} cycles from now on`);
+        }
         switch (status.alw) {
             case "0":
                 await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, false, `Charging allowed`, "indicator");
@@ -758,7 +767,10 @@ class go_e_charger extends utils.Adapter {
             this.log.warn(`Invalid charging current for charger ${iWB}: ${Ampere} A`);
             return;
         }
-        const pending = (0, chargeManagerUtils_1.dropUnchangedChargerCommands)(commands, this.wallboxInfoList[iWB].Reported);
+        let pending = (0, chargeManagerUtils_1.dropUnchangedChargerCommands)(commands, this.wallboxInfoList[iWB].Reported);
+        if ((0, chargeManagerUtils_1.holdRejectedRelease)(this.wallboxInfoList[iWB].ReleaseRejects, this.wallboxInfoList[iWB].CarState)) {
+            pending = pending.filter(command => command.parameter === "alw" && command.value === 0);
+        }
         if (pending.length === 0) {
             return;
         }
@@ -768,6 +780,7 @@ class go_e_charger extends utils.Adapter {
                 const response = await axiosInstance.get(`http://${this.config.wallBoxList[iWB].ipAddress}/mqtt?payload=${command.parameter}=${command.value}`, { transformResponse: r => r });
                 this.log.debug(`Sent to charger ${iWB}: ${command.parameter}=${command.value}`);
                 if (command.parameter === "alw") {
+                    this.wallboxInfoList[iWB].RequestedAllow = command.value;
                     await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, command.value === 1, `Charging allowed`, `indicator`);
                 }
                 else {
