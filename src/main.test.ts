@@ -7,6 +7,7 @@ import {
 	decideChargeManager,
 	decideChargeManagerFleet,
 	decidePhaseSwitch,
+	describeHold,
 	dropUnchangedChargerCommands,
 	effectiveCurrentDemand,
 	evaluateBatteryAvailability,
@@ -23,6 +24,7 @@ import {
 	PHASE_VOLTAGE,
 	RELEASE_RETRY_INTERVAL,
 	RELEASE_RETRY_LIMIT,
+	resolveStartChargeCurrent,
 	resolveWallboxCurrentLimits,
 	SHUTDOWN_DELAY_CYCLES,
 	START_CHARGE_CURRENT,
@@ -580,6 +582,51 @@ describe("ChargeManager safety helpers", () => {
 
 			assert.equal(decision.action, "disable");
 			assert.equal(decision.reason, "invalid-input");
+		});
+	});
+
+	describe("resolveStartChargeCurrent", () => {
+		it("starts at the fixed start current when the wallbox allows it", () => {
+			assert.equal(resolveStartChargeCurrent(MIN_CHARGE_CURRENT, 16), START_CHARGE_CURRENT);
+			assert.equal(resolveStartChargeCurrent(8, 16), START_CHARGE_CURRENT);
+		});
+
+		it("starts at a raised minimum above the start current", () => {
+			assert.equal(resolveStartChargeCurrent(12, 16), 12);
+		});
+
+		it("never asks for more than the wallbox maximum", () => {
+			// an 8 A coded cable can never reach the 10 A start current
+			assert.equal(resolveStartChargeCurrent(MIN_CHARGE_CURRENT, 8), 8);
+			assert.equal(resolveStartChargeCurrent(12, 8), 8);
+		});
+	});
+
+	describe("describeHold", () => {
+		it("reports not enough surplus below the minimum current, released or not", () => {
+			// otherwise the charge state alternates between "ramping up" and "not enough" all night
+			for (const released of [false, true]) {
+				assert.equal(describeHold(0, 8, released), "not-enough");
+				assert.equal(describeHold(7, 8, released), "not-enough");
+			}
+		});
+
+		it("ramps up from the minimum current on, or keeps charging a released charger", () => {
+			assert.equal(describeHold(8, 8, false), "ramping");
+			assert.equal(describeHold(16, 8, false), "ramping");
+			assert.equal(describeHold(8, 8, true), "charging");
+			assert.equal(describeHold(16, 8, true), "charging");
+		});
+
+		it("reports not enough surplus for unusable inputs", () => {
+			for (const [optimal, minimum] of [
+				[Number.NaN, 8],
+				[16, Number.NaN],
+				[Number.POSITIVE_INFINITY, 8],
+				[16, Number.NEGATIVE_INFINITY],
+			]) {
+				assert.equal(describeHold(optimal, minimum, true), "not-enough", `${optimal}/${minimum}`);
+			}
 		});
 	});
 

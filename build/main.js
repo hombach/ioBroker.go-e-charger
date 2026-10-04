@@ -137,6 +137,7 @@ class go_e_charger extends utils.Adapter {
                 DelayOff: 0,
                 PhaseSwitchDelay: 0,
                 ReclaimDelay: 0,
+                ChargeState: "",
                 Reported: {},
                 RequestedAllow: null,
                 ReleaseRejects: 0,
@@ -441,15 +442,18 @@ class go_e_charger extends utils.Adapter {
                         const alloc = budgetAllocations[iWB];
                         if (hasVehicle && alloc.allow) {
                             info.SetAmp = alloc.ampere;
+                            await this.setChargeState(iWB, `ChargeNOW is charging`);
                             await this.Charge_Config("1", alloc.ampere, `activate go-eCharger for forced charging`, iWB);
                         }
                         else {
                             info.SetAmp = 0;
                             const reason = hasVehicle ? `ChargeNOW off: installation current budget exhausted` : `ChargeNOW waiting for vehicle`;
+                            await this.setChargeState(iWB, reason);
                             await this.Charge_Config("0", info.MinAmp, reason, iWB);
                         }
                     }
                     else {
+                        await this.setChargeState(iWB, (0, chargeManagerUtils_1.isVehicleDisconnected)(info.CarState) ? `ChargeNOW waiting for vehicle` : `ChargeNOW is charging`);
                         const chargeNowCurrent = Math.min(Math.max(info.ChargeCurrent, info.MinAmp), info.MaxAmp);
                         info.SetAmp = chargeNowCurrent;
                         await this.Charge_Config("1", chargeNowCurrent, `activate go-eCharger for forced charging`, iWB);
@@ -465,6 +469,7 @@ class go_e_charger extends utils.Adapter {
                         this.wallboxInfoList[iWB].SetOptAmp = plan.decision.optimalCurrent;
                         this.wallboxInfoList[iWB].SetAmp = plan.decision.nextState.currentAmp;
                         this.wallboxInfoList[iWB].DelayOff = plan.decision.nextState.shutdownDelay;
+                        await this.setChargeState(iWB, `ChargeManager waiting for vehicle`);
                         if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
                             await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `No vehicle connected`, iWB);
                         }
@@ -505,6 +510,7 @@ class go_e_charger extends utils.Adapter {
                     }
                 }
                 else {
+                    await this.setChargeState(iWB, `ChargeNOW and ChargeManager are both switched off`);
                     if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
                         this.wallboxInfoList[iWB].SetAmp = 0;
                         await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `Deactivate go-eCharger`, iWB);
@@ -583,9 +589,21 @@ class go_e_charger extends utils.Adapter {
     async stopChargeManager(reason, iWB) {
         this.wallboxInfoList[iWB].SetAmp = 0;
         this.wallboxInfoList[iWB].DelayOff = 0;
+        await this.setChargeState(iWB, reason);
         if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
             await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, reason, iWB);
         }
+    }
+    async setChargeState(iWB, reason) {
+        if (this.wallboxInfoList[iWB].ChargeState === reason) {
+            return;
+        }
+        await this.projectUtils.checkAndSetValue(`Wallbox_${iWB}.info.chargeState`, reason, `Why the charger is charging or not`, "text");
+        this.wallboxInfoList[iWB].ChargeState = reason;
+        this.log.info(`Charger ${iWB}: ${reason}`);
+    }
+    chargeManagerMinimum(iWB) {
+        return Math.min(Math.max(chargeManagerMinCurrent, this.wallboxInfoList[iWB].MinAmp), this.wallboxInfoList[iWB].MaxAmp);
     }
     async Read_ChargerAPIV1(iWB) {
         await axiosInstance
@@ -850,7 +868,7 @@ class go_e_charger extends utils.Adapter {
             participants.push({
                 phases,
                 maximumChargeCurrent: this.wallboxInfoList[iWB].MaxAmp,
-                minimumChargeCurrent: Math.min(Math.max(chargeManagerMinCurrent, this.wallboxInfoList[iWB].MinAmp), this.wallboxInfoList[iWB].MaxAmp),
+                minimumChargeCurrent: this.chargeManagerMinimum(iWB),
                 state: { currentAmp: this.wallboxInfoList[iWB].SetAmp, shutdownDelay: this.wallboxInfoList[iWB].DelayOff },
                 claimsPower: carState === 2 || carState === 3,
                 released: this.wallboxInfoList[iWB].Reported.alw === 1,
@@ -958,10 +976,20 @@ class go_e_charger extends utils.Adapter {
         this.wallboxInfoList[iWB].DelayOff = decision.nextState.shutdownDelay;
         this.log.debug(`ZielAmpere: ${this.wallboxInfoList[iWB].SetAmp} A; Solar: ${solarPower} W; House: ${houseConsumption} W; Charger: ${this.wallboxInfoList[iWB].ChargePower} W`);
         if (decision.action === "enable") {
+            await this.setChargeState(iWB, `Charging from PV surplus`);
             await this.Charge_Config("1", this.wallboxInfoList[iWB].SetAmp, `Charging current: ${this.wallboxInfoList[iWB].SetAmp} A`, iWB);
         }
         else if (decision.action === "disable") {
+            await this.setChargeState(iWB, `Not enough PV surplus`);
             await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `Insufficient surplus`, iWB);
+        }
+        else {
+            const hold = (0, chargeManagerUtils_1.describeHold)(decision.optimalCurrent, this.chargeManagerMinimum(iWB), this.wallboxInfoList[iWB].Reported.alw === 1);
+            await this.setChargeState(iWB, hold === "not-enough"
+                ? `Not enough PV surplus`
+                : hold === "charging"
+                    ? `Charging from PV surplus`
+                    : `Ramping up from PV surplus to the ${(0, chargeManagerUtils_1.resolveStartChargeCurrent)(this.chargeManagerMinimum(iWB), this.wallboxInfoList[iWB].MaxAmp)} A needed to start`);
         }
     }
     isLikeEmpty(inputVar) {
