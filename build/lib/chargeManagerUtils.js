@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateAvailableSurplusPower = calculateAvailableSurplusPower;
 exports.calculateOptimalChargeCurrent = calculateOptimalChargeCurrent;
+exports.resolveStartChargeCurrent = resolveStartChargeCurrent;
 exports.stepChargeCurrent = stepChargeCurrent;
 exports.updateShutdownDelay = updateShutdownDelay;
 exports.decideChargeManager = decideChargeManager;
@@ -111,15 +112,24 @@ function calculateOptimalChargeCurrent(input) {
     const calculatedCurrent = Math.floor(availablePower / exports.PHASE_VOLTAGE / input.phases);
     return Math.max(0, Math.min(calculatedCurrent, input.maximumChargeCurrent));
 }
-function stepChargeCurrent(current, target, maximum = exports.MAX_CHARGE_CURRENT) {
+function resolveStartChargeCurrent(minimum, maximum) {
+    return Math.min(Math.max(exports.START_CHARGE_CURRENT, minimum), maximum);
+}
+exports.CURRENT_DEADBAND = 2;
+function stepChargeCurrent(current, target, maximum = exports.MAX_CHARGE_CURRENT, minimum = exports.MIN_CHARGE_CURRENT) {
     const safeMaximum = Number.isInteger(maximum) && maximum >= exports.MIN_CHARGE_CURRENT && maximum <= exports.MAX_CHARGE_CURRENT ? maximum : exports.MAX_CHARGE_CURRENT;
+    const safeMinimum = Number.isInteger(minimum) && minimum >= exports.MIN_CHARGE_CURRENT && minimum <= safeMaximum ? minimum : exports.MIN_CHARGE_CURRENT;
     const safeCurrent = Number.isFinite(current) ? Math.max(0, Math.min(Math.trunc(current), safeMaximum)) : 0;
     const safeTarget = Number.isFinite(target) ? Math.max(0, Math.min(Math.trunc(target), safeMaximum)) : 0;
-    if (safeCurrent < safeTarget) {
-        return safeCurrent + 1;
+    const gap = safeTarget - safeCurrent;
+    if (gap === 0) {
+        return safeCurrent;
     }
-    if (safeCurrent > safeTarget) {
-        return safeCurrent - 1;
+    const start = resolveStartChargeCurrent(safeMinimum, safeMaximum);
+    const reachesStart = safeCurrent < start && safeTarget >= start;
+    const atRangeEnd = safeTarget <= safeMinimum || safeTarget === safeMaximum || reachesStart;
+    if (atRangeEnd || Math.abs(gap) >= exports.CURRENT_DEADBAND) {
+        return safeCurrent + Math.sign(gap);
     }
     return safeCurrent;
 }
@@ -143,11 +153,11 @@ function decideChargeManager(input) {
             nextState: { currentAmp: 0, shutdownDelay: 0 },
         };
     }
-    const currentAmp = stepChargeCurrent(input.state.currentAmp, optimalCurrent, input.maximumChargeCurrent);
-    const startChargeCurrent = Math.min(Math.max(exports.START_CHARGE_CURRENT, input.minimumChargeCurrent), input.maximumChargeCurrent);
+    const currentAmp = stepChargeCurrent(input.state.currentAmp, optimalCurrent, input.maximumChargeCurrent, input.minimumChargeCurrent);
+    const startChargeCurrent = resolveStartChargeCurrent(input.minimumChargeCurrent, input.maximumChargeCurrent);
     const isRampingToRaisedMinimum = input.minimumChargeCurrent > exports.START_CHARGE_CURRENT && optimalCurrent >= input.minimumChargeCurrent && currentAmp < input.minimumChargeCurrent;
     let shutdownDelay = isRampingToRaisedMinimum ? 0 : updateShutdownDelay(currentAmp, input.minimumChargeCurrent, input.state.shutdownDelay);
-    if (currentAmp >= startChargeCurrent) {
+    if (currentAmp >= (input.released === true ? input.minimumChargeCurrent : startChargeCurrent)) {
         return {
             action: "enable",
             reason: "charging-current",
@@ -189,6 +199,7 @@ function decideChargeManagerFleet(shared, participants) {
             minimumChargeCurrent: participant.minimumChargeCurrent,
             phases: participant.phases,
             state: participant.state,
+            released: participant.released,
         });
         const availablePower = calculateAvailableSurplusPower(surplus) ?? 0;
         if (participant.claimsPower) {
