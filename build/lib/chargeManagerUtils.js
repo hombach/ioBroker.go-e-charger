@@ -6,6 +6,7 @@ exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateAvailableSurplusPower = calculateAvailableSurplusPower;
 exports.calculateOptimalChargeCurrent = calculateOptimalChargeCurrent;
 exports.resolveStartChargeCurrent = resolveStartChargeCurrent;
+exports.describeHold = describeHold;
 exports.stepChargeCurrent = stepChargeCurrent;
 exports.updateShutdownDelay = updateShutdownDelay;
 exports.decideChargeManager = decideChargeManager;
@@ -115,6 +116,12 @@ function calculateOptimalChargeCurrent(input) {
 }
 function resolveStartChargeCurrent(minimum, maximum) {
     return Math.min(Math.max(exports.START_CHARGE_CURRENT, minimum), maximum);
+}
+function describeHold(optimalCurrent, minimumCurrent, released) {
+    if (!Number.isFinite(optimalCurrent) || !Number.isFinite(minimumCurrent) || optimalCurrent < minimumCurrent) {
+        return "not-enough";
+    }
+    return released ? "charging" : "ramping";
 }
 exports.CURRENT_DEADBAND = 2;
 function stepChargeCurrent(current, target, maximum = exports.MAX_CHARGE_CURRENT, minimum = exports.MIN_CHARGE_CURRENT) {

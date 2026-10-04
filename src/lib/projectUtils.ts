@@ -104,6 +104,10 @@ export interface IWallboxInfo {
 	 */
 	ReclaimDelay: number;
 	/**
+	 * Last published reason for the current charging decision, so a change is logged only once
+	 */
+	ChargeState: string;
+	/**
 	 * Charge release and currents the charger reported in the last successful API V1 read
 	 */
 	Reported: Partial<Record<"alw" | "amp" | "amx", number>>;
