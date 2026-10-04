@@ -99,6 +99,11 @@ export interface IWallboxInfo {
 	 */
 	PhaseSwitchDelay: number;
 	/**
+	 * Consecutive cycles the wallbox has drawn clearly below its commanded current (dwell before the
+	 * installation budget reclaims its unused capacity for other wallboxes)
+	 */
+	ReclaimDelay: number;
+	/**
 	 * Charge release and currents the charger reported in the last successful API V1 read
 	 */
 	Reported: Partial<Record<"alw" | "amp" | "amx", number>>;
