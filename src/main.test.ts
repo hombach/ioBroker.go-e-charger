@@ -6,7 +6,9 @@ import {
 	type ChargeManagerControllerInput,
 	decideChargeManager,
 	decideChargeManagerFleet,
+	decideIdleRelease,
 	decidePhaseSwitch,
+	describeHold,
 	dropUnchangedChargerCommands,
 	effectiveCurrentDemand,
 	evaluateBatteryAvailability,
@@ -14,6 +16,8 @@ import {
 	type FleetParticipant,
 	limitTotalCurrent,
 	isVehicleDisconnected,
+	IDLE_CHARGE_POWER,
+	type IdleReleaseInput,
 	MAX_CHARGE_CURRENT,
 	MIN_CHARGE_CURRENT,
 	RECLAIM_DELAY_CYCLES,
@@ -23,6 +27,7 @@ import {
 	PHASE_VOLTAGE,
 	RELEASE_RETRY_INTERVAL,
 	RELEASE_RETRY_LIMIT,
+	resolveStartChargeCurrent,
 	resolveWallboxCurrentLimits,
 	SHUTDOWN_DELAY_CYCLES,
 	START_CHARGE_CURRENT,
@@ -580,6 +585,51 @@ describe("ChargeManager safety helpers", () => {
 
 			assert.equal(decision.action, "disable");
 			assert.equal(decision.reason, "invalid-input");
+		});
+	});
+
+	describe("resolveStartChargeCurrent", () => {
+		it("starts at the fixed start current when the wallbox allows it", () => {
+			assert.equal(resolveStartChargeCurrent(MIN_CHARGE_CURRENT, 16), START_CHARGE_CURRENT);
+			assert.equal(resolveStartChargeCurrent(8, 16), START_CHARGE_CURRENT);
+		});
+
+		it("starts at a raised minimum above the start current", () => {
+			assert.equal(resolveStartChargeCurrent(12, 16), 12);
+		});
+
+		it("never asks for more than the wallbox maximum", () => {
+			// an 8 A coded cable can never reach the 10 A start current
+			assert.equal(resolveStartChargeCurrent(MIN_CHARGE_CURRENT, 8), 8);
+			assert.equal(resolveStartChargeCurrent(12, 8), 8);
+		});
+	});
+
+	describe("describeHold", () => {
+		it("reports not enough surplus below the minimum current, released or not", () => {
+			// otherwise the charge state alternates between "ramping up" and "not enough" all night
+			for (const released of [false, true]) {
+				assert.equal(describeHold(0, 8, released), "not-enough");
+				assert.equal(describeHold(7, 8, released), "not-enough");
+			}
+		});
+
+		it("ramps up from the minimum current on, or keeps charging a released charger", () => {
+			assert.equal(describeHold(8, 8, false), "ramping");
+			assert.equal(describeHold(16, 8, false), "ramping");
+			assert.equal(describeHold(8, 8, true), "charging");
+			assert.equal(describeHold(16, 8, true), "charging");
+		});
+
+		it("reports not enough surplus for unusable inputs", () => {
+			for (const [optimal, minimum] of [
+				[Number.NaN, 8],
+				[16, Number.NaN],
+				[Number.POSITIVE_INFINITY, 8],
+				[16, Number.NEGATIVE_INFINITY],
+			]) {
+				assert.equal(describeHold(optimal, minimum, true), "not-enough", `${optimal}/${minimum}`);
+			}
 		});
 	});
 
@@ -1184,6 +1234,69 @@ describe("ChargeManager safety helpers", () => {
 			// and the gap between retries never grows beyond the interval
 			const gaps = writtenAt.slice(1).map((cycle, i) => cycle - writtenAt[i]);
 			assert.equal(Math.max(...gaps), RELEASE_RETRY_INTERVAL);
+		});
+	});
+
+	describe("decideIdleRelease", () => {
+		const idleState = { idleDelay: 0, latched: false };
+		function input(overrides: Partial<IdleReleaseInput> = {}): IdleReleaseInput {
+			return { releaseActive: true, carState: 2, chargePower: 0, controllerAction: "hold", delayCycles: 3, state: idleState, ...overrides };
+		}
+
+		it("withdraws the release once a connected vehicle ignored it for the whole delay", () => {
+			let state = idleState;
+			const withdrawals: boolean[] = [];
+			for (let cycle = 0; cycle < 3; cycle++) {
+				const decision = decideIdleRelease(input({ state }));
+				withdrawals.push(decision.withdraw);
+				state = decision.nextState;
+			}
+			assert.deepEqual(withdrawals, [false, false, true]);
+			assert.deepEqual(state, { idleDelay: 0, latched: true });
+		});
+
+		it("counts waiting (3) and finished (4) vehicles as idle", () => {
+			for (const carState of [3, 4]) {
+				assert.equal(decideIdleRelease(input({ carState, state: { idleDelay: 2, latched: false } })).withdraw, true);
+			}
+		});
+
+		it("resets the delay while the vehicle draws power", () => {
+			const decision = decideIdleRelease(input({ chargePower: 1400, state: { idleDelay: 2, latched: false } }));
+			assert.deepEqual(decision, { withdraw: false, nextState: idleState });
+		});
+
+		it("treats the power threshold as exclusive", () => {
+			assert.equal(decideIdleRelease(input({ chargePower: IDLE_CHARGE_POWER - 1, state: { idleDelay: 2, latched: false } })).withdraw, true);
+			assert.equal(decideIdleRelease(input({ chargePower: IDLE_CHARGE_POWER, state: { idleDelay: 2, latched: false } })).withdraw, false);
+		});
+
+		it("does not count without an active release or without a vehicle", () => {
+			assert.deepEqual(decideIdleRelease(input({ releaseActive: false, state: { idleDelay: 2, latched: false } })).nextState, idleState);
+			assert.deepEqual(decideIdleRelease(input({ carState: 1, state: { idleDelay: 2, latched: false } })).nextState, idleState);
+			assert.deepEqual(decideIdleRelease(input({ carState: 0, state: { idleDelay: 2, latched: false } })).nextState, idleState);
+		});
+
+		it("ignores invalid power readings instead of withdrawing", () => {
+			for (const chargePower of [Number.NaN, Number.POSITIVE_INFINITY]) {
+				assert.equal(decideIdleRelease(input({ chargePower, state: { idleDelay: 2, latched: false } })).withdraw, false);
+			}
+		});
+
+		it("keeps the release withdrawn while latched, even if the controller wants to enable", () => {
+			const decision = decideIdleRelease(input({ controllerAction: "enable", chargePower: 0, state: { idleDelay: 0, latched: true } }));
+			assert.deepEqual(decision, { withdraw: false, nextState: { idleDelay: 0, latched: true } });
+		});
+
+		it("clears the latch when the vehicle is unplugged or the surplus ends", () => {
+			const latched = { idleDelay: 0, latched: true };
+			assert.equal(decideIdleRelease(input({ carState: 1, state: latched })).nextState.latched, false);
+			assert.equal(decideIdleRelease(input({ controllerAction: "disable", state: latched })).nextState.latched, false);
+		});
+
+		it("never waits less than one cycle and survives a corrupt delay counter", () => {
+			assert.equal(decideIdleRelease(input({ delayCycles: 0 })).withdraw, true);
+			assert.equal(decideIdleRelease(input({ delayCycles: 2, state: { idleDelay: Number.NaN, latched: false } })).withdraw, false);
 		});
 	});
 });

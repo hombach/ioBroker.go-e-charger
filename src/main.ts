@@ -7,7 +7,9 @@ import {
 	buildChargerCommands,
 	type ChargeManagerDecision,
 	decideChargeManagerFleet,
+	decideIdleRelease,
 	decidePhaseSwitch,
+	describeHold,
 	dropUnchangedChargerCommands,
 	DEFAULT_MAXIMUM_BATTERY_BONUS,
 	DEFAULT_RESERVE_POWER,
@@ -21,9 +23,11 @@ import {
 	MIN_CHARGE_CURRENT,
 	RELEASE_RETRY_INTERVAL,
 	RELEASE_RETRY_LIMIT,
+	resolveStartChargeCurrent,
 	resolveWallboxCurrentLimits,
 	updateReleaseRejects,
 	phaseModeToSend,
+	IDLE_RELEASE_DELAY_MS,
 	START_CHARGE_CURRENT,
 	type TotalCurrentAllocation,
 	type TotalCurrentParticipant,
@@ -179,9 +183,12 @@ class go_e_charger extends utils.Adapter {
 				DelayOff: 0,
 				PhaseSwitchDelay: 0,
 				ReclaimDelay: 0,
+				ChargeState: "",
 				Reported: {},
 				RequestedAllow: null,
 				ReleaseRejects: 0,
+				IdleReleaseDelay: 0,
+				IdleReleaseLatched: false,
 				CurrentHysteresis: 0,
 				SetOptAmp: 5,
 				SetOptAllow: false,
@@ -606,19 +613,25 @@ class go_e_charger extends utils.Adapter {
 				// neither trips the fuse when a car is plugged in nor starves a charger that already charges.
 				const hasVehicle = info.CarState === 2 || info.CarState === 3;
 
+				if (!info.ChargeManager || info.ChargeNOW) {
+					this.resetIdleRelease(iWB);
+				}
 				if (info.ChargeNOW) {
 					if (budgetActive) {
 						const alloc = budgetAllocations[iWB];
 						if (hasVehicle && alloc.allow) {
 							info.SetAmp = alloc.ampere; // remember the applied current for next cycle's measured loop
+							await this.setChargeState(iWB, `ChargeNOW is charging`);
 							await this.Charge_Config("1", alloc.ampere, `activate go-eCharger for forced charging`, iWB);
 						} else {
 							// no vehicle yet, or no budget left after the higher-priority chargers
 							info.SetAmp = 0;
 							const reason = hasVehicle ? `ChargeNOW off: installation current budget exhausted` : `ChargeNOW waiting for vehicle`;
+							await this.setChargeState(iWB, reason);
 							await this.Charge_Config("0", info.MinAmp, reason, iWB);
 						}
 					} else {
+						await this.setChargeState(iWB, isVehicleDisconnected(info.CarState) ? `ChargeNOW waiting for vehicle` : `ChargeNOW is charging`);
 						// Charge-NOW is enabled - the per-wallbox current limits cap ChargeNOW as well
 						const chargeNowCurrent = Math.min(Math.max(info.ChargeCurrent, info.MinAmp), info.MaxAmp);
 						info.SetAmp = chargeNowCurrent;
@@ -637,6 +650,8 @@ class go_e_charger extends utils.Adapter {
 						this.wallboxInfoList[iWB].SetOptAmp = plan.decision.optimalCurrent;
 						this.wallboxInfoList[iWB].SetAmp = plan.decision.nextState.currentAmp;
 						this.wallboxInfoList[iWB].DelayOff = plan.decision.nextState.shutdownDelay;
+						this.resetIdleRelease(iWB);
+						await this.setChargeState(iWB, `ChargeManager waiting for vehicle`);
 						if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
 							await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `No vehicle connected`, iWB);
 						}
@@ -676,6 +691,7 @@ class go_e_charger extends utils.Adapter {
 					}
 				} else {
 					// both modes off: if the adapter previously enabled charging, switch it off again
+					await this.setChargeState(iWB, `ChargeNOW and ChargeManager are both switched off`);
 					if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
 						this.wallboxInfoList[iWB].SetAmp = 0;
 						await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `Deactivate go-eCharger`, iWB);
@@ -834,12 +850,56 @@ class go_e_charger extends utils.Adapter {
 		return value;
 	}
 
+	/**
+	 * Clears the idle-release delay and latch, so the next charge starts with the full delay again.
+	 *
+	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
+	 */
+	private resetIdleRelease(iWB: number): void {
+		this.wallboxInfoList[iWB].IdleReleaseDelay = 0;
+		this.wallboxInfoList[iWB].IdleReleaseLatched = false;
+	}
+
 	private async stopChargeManager(reason: string, iWB: number): Promise<void> {
 		this.wallboxInfoList[iWB].SetAmp = 0;
 		this.wallboxInfoList[iWB].DelayOff = 0;
+		this.resetIdleRelease(iWB);
+		await this.setChargeState(iWB, reason);
 		if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
 			await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, reason, iWB);
 		}
+	}
+
+	/**
+	 * Publishes why the charger is charging or not this cycle, and logs every change of that reason
+	 * once.
+	 *
+	 * Most of these reasons used to reach the log only when they happened to coincide with a write
+	 * to the charger, so a charger that never started - because the home battery is below its
+	 * setpoint, say - left no trace and could only be diagnosed by reading states by hand.
+	 *
+	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
+	 * @param reason - Human-readable reason for the current charging decision
+	 */
+	private async setChargeState(iWB: number, reason: string): Promise<void> {
+		if (this.wallboxInfoList[iWB].ChargeState === reason) {
+			return;
+		}
+		await this.projectUtils.checkAndSetValue(`Wallbox_${iWB}.info.chargeState`, reason, `Why the charger is charging or not`, "text");
+		// only remembered once written, so a failed write is retried next cycle
+		this.wallboxInfoList[iWB].ChargeState = reason;
+		this.log.info(`Charger ${iWB}: ${reason}`);
+	}
+
+	/**
+	 * Lowest current the ChargeManager may assign to a wallbox: the configured ChargeManager
+	 * minimum, raised to the wallbox's own minimum and capped at its maximum.
+	 *
+	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
+	 * @returns The minimum charging current in A
+	 */
+	private chargeManagerMinimum(iWB: number): number {
+		return Math.min(Math.max(chargeManagerMinCurrent, this.wallboxInfoList[iWB].MinAmp), this.wallboxInfoList[iWB].MaxAmp);
 	}
 
 	/**
@@ -1499,7 +1559,7 @@ class go_e_charger extends utils.Adapter {
 			participants.push({
 				phases,
 				maximumChargeCurrent: this.wallboxInfoList[iWB].MaxAmp,
-				minimumChargeCurrent: Math.min(Math.max(chargeManagerMinCurrent, this.wallboxInfoList[iWB].MinAmp), this.wallboxInfoList[iWB].MaxAmp),
+				minimumChargeCurrent: this.chargeManagerMinimum(iWB),
 				state: { currentAmp: this.wallboxInfoList[iWB].SetAmp, shutdownDelay: this.wallboxInfoList[iWB].DelayOff },
 				claimsPower: carState === 2 || carState === 3,
 				released: this.wallboxInfoList[iWB].Reported.alw === 1,
@@ -1670,10 +1730,47 @@ class go_e_charger extends utils.Adapter {
 			`ZielAmpere: ${this.wallboxInfoList[iWB].SetAmp} A; Solar: ${solarPower} W; House: ${houseConsumption} W; Charger: ${this.wallboxInfoList[iWB].ChargePower} W`,
 		);
 
+		if (this.config.wallBoxList[iWB].stopWhenCarIdle) {
+			const idle = decideIdleRelease({
+				releaseActive: (await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true,
+				carState: this.wallboxInfoList[iWB].CarState,
+				chargePower: Number(this.wallboxInfoList[iWB].ChargePower),
+				controllerAction: decision.action,
+				delayCycles: Math.ceil(IDLE_RELEASE_DELAY_MS / this.config.cycleTime),
+				state: { idleDelay: this.wallboxInfoList[iWB].IdleReleaseDelay, latched: this.wallboxInfoList[iWB].IdleReleaseLatched },
+			});
+			this.wallboxInfoList[iWB].IdleReleaseDelay = idle.nextState.idleDelay;
+			this.wallboxInfoList[iWB].IdleReleaseLatched = idle.nextState.latched;
+			if (idle.withdraw) {
+				await this.setChargeState(
+					iWB,
+					`Vehicle does not draw power despite the charge release - release withdrawn until it is unplugged or the surplus ends`,
+				);
+				await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `Vehicle not charging`, iWB);
+				return;
+			}
+			if (idle.nextState.latched) {
+				return;
+			}
+		}
+
 		if (decision.action === "enable") {
+			await this.setChargeState(iWB, `Charging from PV surplus`);
 			await this.Charge_Config("1", this.wallboxInfoList[iWB].SetAmp, `Charging current: ${this.wallboxInfoList[iWB].SetAmp} A`, iWB);
 		} else if (decision.action === "disable") {
+			await this.setChargeState(iWB, `Not enough PV surplus`);
 			await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `Insufficient surplus`, iWB);
+		} else {
+			// ramping towards the start current, or waiting out the shutdown delay - nothing is sent
+			const hold = describeHold(decision.optimalCurrent, this.chargeManagerMinimum(iWB), this.wallboxInfoList[iWB].Reported.alw === 1);
+			await this.setChargeState(
+				iWB,
+				hold === "not-enough"
+					? `Not enough PV surplus`
+					: hold === "charging"
+						? `Charging from PV surplus`
+						: `Ramping up from PV surplus to the ${resolveStartChargeCurrent(this.chargeManagerMinimum(iWB), this.wallboxInfoList[iWB].MaxAmp)} A needed to start`,
+			);
 		}
 	} // END Charge_Manager
 

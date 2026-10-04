@@ -104,6 +104,10 @@ export interface IWallboxInfo {
 	 */
 	ReclaimDelay: number;
 	/**
+	 * Last published reason for the current charging decision, so a change is logged only once
+	 */
+	ChargeState: string;
+	/**
 	 * Charge release and currents the charger reported in the last successful API V1 read
 	 */
 	Reported: Partial<Record<"alw" | "amp" | "amx", number>>;
@@ -116,6 +120,14 @@ export interface IWallboxInfo {
 	 * Consecutive cycles the charger reported a charge release other than the requested one
 	 */
 	ReleaseRejects: number;
+	/**
+	 * Consecutive cycles the connected vehicle ignored an active charge release
+	 */
+	IdleReleaseDelay: number;
+	/**
+	 * Charge release was withdrawn because the vehicle stopped charging; blocks re-enabling
+	 */
+	IdleReleaseLatched: boolean;
 	/**
 	 * CurrentHysteresis
 	 */

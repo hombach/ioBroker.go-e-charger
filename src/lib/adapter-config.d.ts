@@ -25,6 +25,7 @@ declare global {
 					maxAmp: number;
 					minAmp: number;
 					autoPhaseSwitch: boolean;
+					stopWhenCarIdle?: boolean;
 				},
 			];
 		}
