@@ -16,6 +16,11 @@ This adapter integrates one or more go-e Charger wallboxes into your ioBroker ho
 
 ## Changelog - OLD CHANGES
 
+## 1.4.1 (2026-08-23)
+
+- (typhosj) refactored the ChargeManager control decision into a deterministic, unit-tested function (#846); behavior unchanged
+- (hombach) fixed vulnerabilities
+
 ## 1.4.0 (2026-08-10)
 
 - (hombach) added info.unlockedByRFIDName with the name of the current session's RFID card, in parallel to unlockedByRFIDNo (#634)
