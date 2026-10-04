@@ -606,6 +606,67 @@ export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision 
 	return { targetPhases: input.currentPhases, switchDelay };
 }
 
+/** How long a connected vehicle may ignore an active charge release before it is withdrawn */
+export const IDLE_RELEASE_DELAY_MS = 5 * 60 * 1000;
+/** Charging power below which a connected vehicle counts as not charging */
+export const IDLE_CHARGE_POWER = 100;
+
+/** Idle-release tracking carried between control cycles. */
+export interface IdleReleaseState {
+	/** Consecutive cycles the vehicle ignored the active release */
+	idleDelay: number;
+	/** Release was withdrawn because the vehicle stopped charging; blocks re-enabling */
+	latched: boolean;
+}
+
+/** Inputs for one idle-release decision. */
+export interface IdleReleaseInput {
+	/** Whether the charger currently reports an active charge release */
+	releaseActive: boolean;
+	/** go-e car state (1 = no car, 2 = charging, 3 = waiting for car, 4 = charge finished) */
+	carState: number;
+	/** Measured charging power in watts */
+	chargePower: number;
+	/** Action the ChargeManager controller planned for this cycle */
+	controllerAction: ChargeManagerAction;
+	/** Cycles the vehicle may ignore the release before it is withdrawn */
+	delayCycles: number;
+	/** State from the previous cycle */
+	state: IdleReleaseState;
+}
+
+/**
+ * Detects a vehicle that stopped drawing power while the charge release is still active.
+ * Some vehicles (e.g. Renault Zoe) stay in charging mode as long as the release is held;
+ * withdrawing it lets them leave that mode. Once withdrawn, the release stays off until the
+ * vehicle is unplugged or the controller itself stops charging for lack of surplus, so the
+ * adapter does not toggle the release every few minutes.
+ *
+ * @param input Measurements, planned action and previous state
+ * @returns Whether to withdraw the release now, and the state for the next cycle
+ */
+export function decideIdleRelease(input: IdleReleaseInput): { withdraw: boolean; nextState: IdleReleaseState } {
+	if (input.carState === 1 || input.controllerAction === "disable") {
+		return { withdraw: false, nextState: { idleDelay: 0, latched: false } };
+	}
+	if (input.state.latched) {
+		return { withdraw: false, nextState: { idleDelay: 0, latched: true } };
+	}
+	const idle =
+		input.releaseActive &&
+		(input.carState === 2 || input.carState === 3 || input.carState === 4) &&
+		Number.isFinite(input.chargePower) &&
+		input.chargePower < IDLE_CHARGE_POWER;
+	if (!idle) {
+		return { withdraw: false, nextState: { idleDelay: 0, latched: false } };
+	}
+	const idleDelay = (Number.isFinite(input.state.idleDelay) ? Math.max(0, Math.trunc(input.state.idleDelay)) : 0) + 1;
+	if (idleDelay >= Math.max(1, input.delayCycles)) {
+		return { withdraw: true, nextState: { idleDelay: 0, latched: true } };
+	}
+	return { withdraw: false, nextState: { idleDelay, latched: false } };
+}
+
 /**
  * Returns the go-e phase mode (`psm`: 1 = one phase, 2 = three phases) to send, or `null` when the
  * charger already reports the requested mode. `psm` is a stored setting, so it is not rewritten
