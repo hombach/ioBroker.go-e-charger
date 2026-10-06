@@ -3,6 +3,7 @@ import {
 	buildChargerCommands,
 	CAR_STATE_FINISHED,
 	calculateOptimalChargeCurrent,
+	carryCurrentOverPhaseSwitch,
 	type ChargeManagerControllerInput,
 	decideChargeManager,
 	decideChargeManagerFleet,
@@ -954,6 +955,39 @@ describe("ChargeManager safety helpers", () => {
 		it("leaves invalid inputs untouched", () => {
 			assert.deepEqual(decidePhaseSwitch(input({ currentPhases: 2, availablePower: 10000 })), { targetPhases: 2, switchDelay: 0 });
 			assert.equal(decidePhaseSwitch(input({ currentPhases: 1, availablePower: Number.NaN, switchDelay: 3 })).targetPhases, 1);
+		});
+	});
+
+	describe("carryCurrentOverPhaseSwitch", () => {
+		it("starts three phases at the power charged on one phase, not at the one-phase amperes", () => {
+			// 2026-10-06 12:26:17: 16 A on one phase, 7100 W surplus, minimum 8 A; the old amperes on three
+			// phases drew about 11 kW and ramped down one ampere per cycle
+			assert.equal(carryCurrentOverPhaseSwitch(16, 1, 3, 8), 8);
+			assert.equal(carryCurrentOverPhaseSwitch(16, 1, 3, MIN_CHARGE_CURRENT), MIN_CHARGE_CURRENT);
+		});
+
+		it("never draws more on three phases than on one phase or at the three-phase minimum", () => {
+			for (const minimum of [MIN_CHARGE_CURRENT, 8, 10]) {
+				for (let current = minimum; current <= 32; current++) {
+					const carried = carryCurrentOverPhaseSwitch(current, 1, 3, minimum);
+					assert.ok(carried >= minimum, `${current} A, minimum ${minimum} A`);
+					assert.ok(carried * 3 <= Math.max(current, minimum * 3), `${current} A, minimum ${minimum} A`);
+				}
+			}
+		});
+
+		it("keeps the amperes when switching down, which already lie below the three-phase power", () => {
+			assert.equal(carryCurrentOverPhaseSwitch(10, 3, 1, 8), 10);
+			assert.equal(carryCurrentOverPhaseSwitch(MIN_CHARGE_CURRENT, 3, 1, MIN_CHARGE_CURRENT), MIN_CHARGE_CURRENT);
+		});
+
+		it("leaves a stopped ramp, an unchanged phase count and invalid input alone", () => {
+			assert.equal(carryCurrentOverPhaseSwitch(0, 1, 3, 8), 0);
+			assert.equal(carryCurrentOverPhaseSwitch(16, 1, 1, 8), 16);
+			assert.equal(carryCurrentOverPhaseSwitch(16, 0, 3, 8), 16);
+			assert.equal(carryCurrentOverPhaseSwitch(16, 1, 2, 8), 16);
+			assert.equal(carryCurrentOverPhaseSwitch(16, 1, 3, Number.NaN), 16);
+			assert.ok(Number.isNaN(carryCurrentOverPhaseSwitch(Number.NaN, 1, 3, 8)));
 		});
 	});
 

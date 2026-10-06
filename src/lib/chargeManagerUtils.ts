@@ -588,6 +588,29 @@ export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision 
 }
 
 /**
+ * The ramped current to go on with when a wallbox switches its phase count.
+ *
+ * The ramp moves one ampere per cycle, so after a switch up it would start three phases at the
+ * one-phase amperes and need many cycles to come down: 16 A on one phase became about 11 kW on
+ * three, on 7.1 kW surplus. A switch up therefore carries the power charged so far over, at least
+ * the minimum current; the surplus that triggered it always carries the three-phase minimum. A
+ * switch down keeps the amperes, which already draw less than before.
+ *
+ * @param currentAmp Ramped current before the switch
+ * @param fromPhases Phase count before the switch (1 or 3)
+ * @param toPhases Phase count after the switch (1 or 3)
+ * @param minimumChargeCurrent Lowest current the ChargeManager may assign to this wallbox
+ * @returns The current to continue the ramp with; `currentAmp` unchanged for invalid input
+ */
+export function carryCurrentOverPhaseSwitch(currentAmp: number, fromPhases: number, toPhases: number, minimumChargeCurrent: number): number {
+	if ((fromPhases !== 1 && fromPhases !== 3) || (toPhases !== 1 && toPhases !== 3) || !Number.isFinite(minimumChargeCurrent)) {
+		return currentAmp;
+	}
+	const samePower = Math.max(minimumChargeCurrent, Math.floor((currentAmp * fromPhases) / toPhases));
+	return Math.min(currentAmp, samePower);
+}
+
+/**
  * Returns the go-e phase mode (`psm`: 1 = one phase, 2 = three phases) to send, or `null` when the
  * charger already reports the requested mode. `psm` is a stored setting, so it is not rewritten
  * every cycle.
