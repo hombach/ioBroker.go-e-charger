@@ -1574,6 +1574,8 @@ class go_e_charger extends utils.Adapter {
 						this.wallboxInfoList[iWB].EnabledPhases,
 						phaseDecision.targetPhases,
 						participant.minimumChargeCurrent,
+						participant.maximumChargeCurrent,
+						decisions[index].availablePower,
 					);
 				}
 			}

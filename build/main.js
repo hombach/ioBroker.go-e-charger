@@ -893,7 +893,7 @@ class go_e_charger extends utils.Adapter {
                 this.wallboxInfoList[iWB].ManagedCharge3Phase = phaseDecision.targetPhases === 3;
                 if (phaseDecision.targetPhases !== this.wallboxInfoList[iWB].EnabledPhases) {
                     this.log.info(`ChargeManager: switching charger ${iWB} to ${phaseDecision.targetPhases}-phase charging (surplus ${Math.round(decisions[index].availablePower)} W)`);
-                    decision.nextState.currentAmp = (0, chargeManagerUtils_1.carryCurrentOverPhaseSwitch)(decision.nextState.currentAmp, this.wallboxInfoList[iWB].EnabledPhases, phaseDecision.targetPhases, participant.minimumChargeCurrent);
+                    decision.nextState.currentAmp = (0, chargeManagerUtils_1.carryCurrentOverPhaseSwitch)(decision.nextState.currentAmp, this.wallboxInfoList[iWB].EnabledPhases, phaseDecision.targetPhases, participant.minimumChargeCurrent, participant.maximumChargeCurrent, decisions[index].availablePower);
                 }
             }
         });

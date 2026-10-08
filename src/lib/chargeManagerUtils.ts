@@ -594,20 +594,37 @@ export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision 
  * one-phase amperes and need many cycles to come down: 16 A on one phase became about 11 kW on
  * three, on 7.1 kW surplus. A switch up therefore carries the power charged so far over, at least
  * the minimum current; the surplus that triggered it always carries the three-phase minimum. A
- * switch down keeps the amperes, which already draw less than before.
+ * switch down carries the power over as well, capped at what the surplus and the maximum carry on
+ * one phase: keeping the three-phase amperes left a vehicle plugged in on three phases kept from
+ * the last charge at 4 A one-phase, a minute short of the start (2026-10-07 17:35:29).
  *
  * @param currentAmp Ramped current before the switch
  * @param fromPhases Phase count before the switch (1 or 3)
  * @param toPhases Phase count after the switch (1 or 3)
  * @param minimumChargeCurrent Lowest current the ChargeManager may assign to this wallbox
+ * @param maximumChargeCurrent Highest current the ChargeManager may assign to this wallbox
+ * @param availablePower PV surplus power offered to this wallbox in watts
  * @returns The current to continue the ramp with; `currentAmp` unchanged for invalid input
  */
-export function carryCurrentOverPhaseSwitch(currentAmp: number, fromPhases: number, toPhases: number, minimumChargeCurrent: number): number {
+export function carryCurrentOverPhaseSwitch(
+	currentAmp: number,
+	fromPhases: number,
+	toPhases: number,
+	minimumChargeCurrent: number,
+	maximumChargeCurrent: number,
+	availablePower: number,
+): number {
 	if ((fromPhases !== 1 && fromPhases !== 3) || (toPhases !== 1 && toPhases !== 3) || !Number.isFinite(minimumChargeCurrent)) {
 		return currentAmp;
 	}
-	const samePower = Math.max(minimumChargeCurrent, Math.floor((currentAmp * fromPhases) / toPhases));
-	return Math.min(currentAmp, samePower);
+	const samePower = Math.floor((currentAmp * fromPhases) / toPhases);
+	if (toPhases >= fromPhases) {
+		return Math.min(currentAmp, Math.max(minimumChargeCurrent, samePower));
+	}
+	if (!Number.isFinite(maximumChargeCurrent) || !Number.isFinite(availablePower)) {
+		return currentAmp;
+	}
+	return Math.max(0, Math.min(samePower, Math.floor(availablePower / PHASE_VOLTAGE / toPhases), maximumChargeCurrent));
 }
 
 /**

@@ -236,12 +236,18 @@ function decidePhaseSwitch(input) {
     }
     return { targetPhases: input.currentPhases, switchDelay };
 }
-function carryCurrentOverPhaseSwitch(currentAmp, fromPhases, toPhases, minimumChargeCurrent) {
+function carryCurrentOverPhaseSwitch(currentAmp, fromPhases, toPhases, minimumChargeCurrent, maximumChargeCurrent, availablePower) {
     if ((fromPhases !== 1 && fromPhases !== 3) || (toPhases !== 1 && toPhases !== 3) || !Number.isFinite(minimumChargeCurrent)) {
         return currentAmp;
     }
-    const samePower = Math.max(minimumChargeCurrent, Math.floor((currentAmp * fromPhases) / toPhases));
-    return Math.min(currentAmp, samePower);
+    const samePower = Math.floor((currentAmp * fromPhases) / toPhases);
+    if (toPhases >= fromPhases) {
+        return Math.min(currentAmp, Math.max(minimumChargeCurrent, samePower));
+    }
+    if (!Number.isFinite(maximumChargeCurrent) || !Number.isFinite(availablePower)) {
+        return currentAmp;
+    }
+    return Math.max(0, Math.min(samePower, Math.floor(availablePower / exports.PHASE_VOLTAGE / toPhases), maximumChargeCurrent));
 }
 function phaseModeToSend(charge3Phase, enabledPhases) {
     if (enabledPhases === (charge3Phase ? 3 : 1)) {
