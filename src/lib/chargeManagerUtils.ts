@@ -303,6 +303,25 @@ export function resolveStartChargeCurrent(minimum: number, maximum: number): num
 }
 
 /**
+ * What the ChargeManager is doing while it holds the charger as it is (`hold`), for the charge state.
+ *
+ * "Ramping up" only applies when the surplus would carry at least the minimum current; otherwise
+ * the ramp never reaches the start and the state would flip between "ramping up at 0 A" and
+ * "not enough PV surplus" every two minutes all night.
+ *
+ * @param optimalCurrent Current the surplus would carry
+ * @param minimumCurrent Lowest current the ChargeManager may assign to this wallbox
+ * @param released Whether the charger reports an active charge release
+ * @returns `charging` for a running charge, `ramping` towards the start current, or `not-enough`
+ */
+export function describeHold(optimalCurrent: number, minimumCurrent: number, released: boolean): "charging" | "ramping" | "not-enough" {
+	if (!Number.isFinite(optimalCurrent) || !Number.isFinite(minimumCurrent) || optimalCurrent < minimumCurrent) {
+		return "not-enough";
+	}
+	return released ? "charging" : "ramping";
+}
+
+/**
  * Ampere gap the newly calculated target must have from the current one before the charging
  * current follows it. A one-ampere gap is what a passing cloud produces, and following it makes
  * the charger hunt around the target instead of tracking it.
