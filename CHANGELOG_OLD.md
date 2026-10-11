@@ -16,6 +16,13 @@ This adapter integrates one or more go-e Charger wallboxes into your ioBroker ho
 
 ## Changelog - OLD CHANGES
 
+## 1.5.0 (2026-08-25)
+
+- (hombach) ChargeManager: grid reserve power and maximum battery bonus are now configurable (defaults 100 W / 2000 W) (#852)
+- (hombach) ChargeManager: minimum and maximum surplus charging current are now configurable, with the maximum raised to up to 32 A (#852)
+- (hombach) the configurable maximum charging current now caps ChargeNOW as well
+- (hombach) admin: moved the ChargeManager settings into their own configuration tab, separate from the standard settings
+
 ## 1.4.1 (2026-08-23)
 
 - (typhosj) refactored the ChargeManager control decision into a deterministic, unit-tested function (#846); behavior unchanged
