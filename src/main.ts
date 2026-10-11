@@ -5,6 +5,7 @@ import {
 	type BatteryAvailabilityReason,
 	type BatteryMode,
 	buildChargerCommands,
+	carryCurrentOverPhaseSwitch,
 	type ChargeManagerDecision,
 	decideChargeManagerFleet,
 	decidePhaseSwitch,
@@ -1566,6 +1567,15 @@ class go_e_charger extends utils.Adapter {
 				if (phaseDecision.targetPhases !== this.wallboxInfoList[iWB].EnabledPhases) {
 					this.log.info(
 						`ChargeManager: switching charger ${iWB} to ${phaseDecision.targetPhases}-phase charging (surplus ${Math.round(decisions[index].availablePower)} W)`,
+					);
+					// the current sent with the switch belongs to the new phase count
+					decision.nextState.currentAmp = carryCurrentOverPhaseSwitch(
+						decision.nextState.currentAmp,
+						this.wallboxInfoList[iWB].EnabledPhases,
+						phaseDecision.targetPhases,
+						participant.minimumChargeCurrent,
+						participant.maximumChargeCurrent,
+						decisions[index].availablePower,
 					);
 				}
 			}

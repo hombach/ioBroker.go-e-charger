@@ -11,6 +11,7 @@ exports.updateShutdownDelay = updateShutdownDelay;
 exports.decideChargeManager = decideChargeManager;
 exports.decideChargeManagerFleet = decideChargeManagerFleet;
 exports.decidePhaseSwitch = decidePhaseSwitch;
+exports.carryCurrentOverPhaseSwitch = carryCurrentOverPhaseSwitch;
 exports.phaseModeToSend = phaseModeToSend;
 exports.isVehicleDisconnected = isVehicleDisconnected;
 exports.updateReleaseRejects = updateReleaseRejects;
@@ -234,6 +235,19 @@ function decidePhaseSwitch(input) {
         return { targetPhases, switchDelay: 0 };
     }
     return { targetPhases: input.currentPhases, switchDelay };
+}
+function carryCurrentOverPhaseSwitch(currentAmp, fromPhases, toPhases, minimumChargeCurrent, maximumChargeCurrent, availablePower) {
+    if ((fromPhases !== 1 && fromPhases !== 3) || (toPhases !== 1 && toPhases !== 3) || !Number.isFinite(minimumChargeCurrent)) {
+        return currentAmp;
+    }
+    const samePower = Math.floor((currentAmp * fromPhases) / toPhases);
+    if (toPhases >= fromPhases) {
+        return Math.min(currentAmp, Math.max(minimumChargeCurrent, samePower));
+    }
+    if (!Number.isFinite(maximumChargeCurrent) || !Number.isFinite(availablePower)) {
+        return currentAmp;
+    }
+    return Math.max(0, Math.min(samePower, Math.floor(availablePower / exports.PHASE_VOLTAGE / toPhases), maximumChargeCurrent));
 }
 function phaseModeToSend(charge3Phase, enabledPhases) {
     if (enabledPhases === (charge3Phase ? 3 : 1)) {

@@ -3,6 +3,7 @@ import {
 	buildChargerCommands,
 	CAR_STATE_FINISHED,
 	calculateOptimalChargeCurrent,
+	carryCurrentOverPhaseSwitch,
 	type ChargeManagerControllerInput,
 	decideChargeManager,
 	decideChargeManagerFleet,
@@ -954,6 +955,64 @@ describe("ChargeManager safety helpers", () => {
 		it("leaves invalid inputs untouched", () => {
 			assert.deepEqual(decidePhaseSwitch(input({ currentPhases: 2, availablePower: 10000 })), { targetPhases: 2, switchDelay: 0 });
 			assert.equal(decidePhaseSwitch(input({ currentPhases: 1, availablePower: Number.NaN, switchDelay: 3 })).targetPhases, 1);
+		});
+	});
+
+	describe("carryCurrentOverPhaseSwitch", () => {
+		it("starts three phases at the power charged on one phase, not at the one-phase amperes", () => {
+			// 2026-10-06 12:26:17: 16 A on one phase, 7100 W surplus, minimum 8 A; the old amperes on three
+			// phases drew about 11 kW and ramped down one ampere per cycle
+			assert.equal(carryCurrentOverPhaseSwitch(16, 1, 3, 8, 16, 7100), 8);
+			assert.equal(carryCurrentOverPhaseSwitch(16, 1, 3, MIN_CHARGE_CURRENT, 16, 7100), MIN_CHARGE_CURRENT);
+		});
+
+		it("never draws more on three phases than on one phase or at the three-phase minimum", () => {
+			for (const minimum of [MIN_CHARGE_CURRENT, 8, 10]) {
+				for (let current = minimum; current <= 32; current++) {
+					const carried = carryCurrentOverPhaseSwitch(current, 1, 3, minimum, 32, 7100);
+					assert.ok(carried >= minimum, `${current} A, minimum ${minimum} A`);
+					assert.ok(carried * 3 <= Math.max(current, minimum * 3), `${current} A, minimum ${minimum} A`);
+				}
+			}
+		});
+
+		it("starts one phase at the power the three-phase ramp had reached", () => {
+			// 2026-10-07 17:35:29: plugged in while the charger still held three phases; the ramp stood at
+			// 4 A three-phase, one phase kept the 4 A and needed a minute to reach the start current
+			// although the 2923 W surplus carried 12 A
+			assert.equal(carryCurrentOverPhaseSwitch(4, 3, 1, 8, 16, 2823), 12);
+		});
+
+		it("goes on from the carried power when the ramp had only just begun", () => {
+			assert.equal(carryCurrentOverPhaseSwitch(2, 3, 1, 8, 16, 2823), 6);
+			assert.equal(carryCurrentOverPhaseSwitch(0, 3, 1, 8, 16, 2823), 0);
+		});
+
+		it("never draws more on one phase than the surplus or the maximum carries", () => {
+			for (const availablePower of [0, 1840, 2823, 3394, 5519]) {
+				for (let current = 0; current <= 16; current++) {
+					const carried = carryCurrentOverPhaseSwitch(current, 3, 1, 8, 16, availablePower);
+					assert.ok(carried * PHASE_VOLTAGE <= availablePower, `${availablePower} W, ${current} A: ${carried} A`);
+					assert.ok(carried <= 16 && carried >= 0, `${availablePower} W, ${current} A: ${carried} A`);
+				}
+			}
+		});
+
+		it("comes down to the surplus during a charge instead of keeping the three-phase amperes", () => {
+			// the 2026-09-21 hand-over: three phases at 10 A on 3394 W
+			assert.equal(carryCurrentOverPhaseSwitch(10, 3, 1, MIN_CHARGE_CURRENT, 16, 3394), 14);
+		});
+
+		it("leaves a stopped ramp, an unchanged phase count and invalid input alone", () => {
+			assert.equal(carryCurrentOverPhaseSwitch(0, 1, 3, 8, 16, 7100), 0);
+			assert.equal(carryCurrentOverPhaseSwitch(16, 1, 1, 8, 16, 7100), 16);
+			assert.equal(carryCurrentOverPhaseSwitch(16, 0, 3, 8, 16, 7100), 16);
+			assert.equal(carryCurrentOverPhaseSwitch(16, 1, 2, 8, 16, 7100), 16);
+			assert.equal(carryCurrentOverPhaseSwitch(16, 1, 3, Number.NaN, 16, 7100), 16);
+			assert.ok(Number.isNaN(carryCurrentOverPhaseSwitch(Number.NaN, 1, 3, 8, 16, 7100)));
+			assert.equal(carryCurrentOverPhaseSwitch(4, 3, 1, 8, Number.NaN, 2823), 4);
+			assert.equal(carryCurrentOverPhaseSwitch(4, 3, 1, 8, 16, Number.NaN), 4);
+			assert.ok(Number.isNaN(carryCurrentOverPhaseSwitch(Number.NaN, 3, 1, 8, 16, 2823)));
 		});
 	});
 
