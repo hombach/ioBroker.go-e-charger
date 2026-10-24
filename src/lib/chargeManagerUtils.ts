@@ -675,6 +675,19 @@ export function isVehicleDisconnected(carState: number): boolean {
 	return carState === 1;
 }
 
+/**
+ * Grid frequency as reported by the charger (API V2 key `fhz`).
+ *
+ * The charger reports 0 while it does not know the frequency; that, a missing key and any
+ * malformed value read as unknown, so no made-up 0 Hz is ever published.
+ *
+ * @param fhz raw `fhz` value from the API V2 status
+ * @returns frequency in Hz, or `null` when unknown
+ */
+export function gridFrequencyFromStatus(fhz: unknown): number | null {
+	return typeof fhz === "number" && Number.isFinite(fhz) && fhz > 0 ? fhz : null;
+}
+
 /** go-e car state for a vehicle that is plugged in and has finished charging */
 export const CAR_STATE_FINISHED = 4;
 /** Consecutive ignored charge releases that are still retried on every single cycle */

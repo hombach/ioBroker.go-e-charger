@@ -719,7 +719,7 @@ class go_e_charger extends utils.Adapter {
     }
     async Read_ChargerAPIV2(iWB) {
         await axiosInstance
-            .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,frc,modelStatus,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,trx,ast,ama,cbl,mca,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`, {
+            .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,frc,modelStatus,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,fhz,trx,ast,ama,cbl,mca,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`, {
             transformResponse: r => r,
         })
             .then(async (response) => {
@@ -753,6 +753,10 @@ class go_e_charger extends utils.Adapter {
         this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
         this.wallboxInfoList[iWB].Hardware = status.typ;
         void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, `info.hardware`);
+        const gridFrequency = (0, chargeManagerUtils_1.gridFrequencyFromStatus)(status.fhz);
+        if (gridFrequency !== null) {
+            void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.GridFrequency`, gridFrequency, `Grid frequency`, "Hz", "value.frequency");
+        }
         this.setWallboxHardwareLimits(iWB, this.combineHardwareMax(Number(status.ama), Number(status.cbl)), Number(status.mca), basePath);
         if (status.ast !== undefined && status.ast !== null) {
             void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");

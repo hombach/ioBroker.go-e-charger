@@ -14,6 +14,7 @@ import {
 	evaluateBatteryAvailability,
 	holdRejectedRelease,
 	type FleetParticipant,
+	gridFrequencyFromStatus,
 	limitTotalCurrent,
 	isVehicleDisconnected,
 	MAX_CHARGE_CURRENT,
@@ -792,6 +793,19 @@ describe("ChargeManager safety helpers", () => {
 			for (const carState of [0, 2, 3, 4, 5, -1, Number.NaN]) {
 				assert.equal(isVehicleDisconnected(carState), false, `car state ${carState}`);
 			}
+		});
+	});
+
+	describe("gridFrequencyFromStatus", () => {
+		it("passes a reported grid frequency through unchanged", () => {
+			assert.equal(gridFrequencyFromStatus(49.98), 49.98);
+			assert.equal(gridFrequencyFromStatus(60.01), 60.01);
+		});
+
+		it("reads 0, missing and malformed values as unknown", () => {
+			[0, -50, null, undefined, Number.NaN, Number.POSITIVE_INFINITY, "50", {}].forEach((fhz, index) => {
+				assert.equal(gridFrequencyFromStatus(fhz), null, `case ${index}`);
+			});
 		});
 	});
 

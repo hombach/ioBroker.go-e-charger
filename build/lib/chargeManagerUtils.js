@@ -15,6 +15,7 @@ exports.decidePhaseSwitch = decidePhaseSwitch;
 exports.carryCurrentOverPhaseSwitch = carryCurrentOverPhaseSwitch;
 exports.phaseModeToSend = phaseModeToSend;
 exports.isVehicleDisconnected = isVehicleDisconnected;
+exports.gridFrequencyFromStatus = gridFrequencyFromStatus;
 exports.updateReleaseRejects = updateReleaseRejects;
 exports.holdRejectedRelease = holdRejectedRelease;
 exports.dropUnchangedChargerCommands = dropUnchangedChargerCommands;
@@ -264,6 +265,9 @@ function phaseModeToSend(charge3Phase, enabledPhases) {
 }
 function isVehicleDisconnected(carState) {
     return carState === 1;
+}
+function gridFrequencyFromStatus(fhz) {
+    return typeof fhz === "number" && Number.isFinite(fhz) && fhz > 0 ? fhz : null;
 }
 exports.CAR_STATE_FINISHED = 4;
 exports.RELEASE_RETRY_LIMIT = 30;
