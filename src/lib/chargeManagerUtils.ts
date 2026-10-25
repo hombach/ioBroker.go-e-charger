@@ -667,6 +667,134 @@ export function decideIdleRelease(input: IdleReleaseInput): { withdraw: boolean;
 	return { withdraw: false, nextState: { idleDelay, latched: false } };
 }
 
+/** ChargeNOW session tracking carried between control cycles. */
+export interface ChargeNowSessionState {
+	/** Whether a vehicle was connected at any point of the running session */
+	sawVehicle: boolean;
+	/** Consecutive cycles the connected vehicle drew no power */
+	idleDelay: number;
+}
+
+/** Inputs for one ChargeNOW end decision. */
+export interface ChargeNowEndInput {
+	/** go-e car state (1 = no car, 2 = charging, 3 = waiting for car, 4 = charge finished) */
+	carState: number;
+	/** Whether the wallbox is configured to stop when the vehicle stops charging */
+	stopWhenCarIdle: boolean;
+	/** Whether the charger currently reports an active charge release */
+	releaseActive: boolean;
+	/** Measured charging power in watts */
+	chargePower: number;
+	/** Cycles the vehicle may draw no power before the session ends */
+	delayCycles: number;
+	/** State from the previous cycle */
+	state: ChargeNowSessionState;
+}
+
+/**
+ * Decides whether a running ChargeNOW session has done its job. Without this, ChargeNOW held the
+ * charge release until someone switched it off - on 2026-09-19 46 minutes past the end of the
+ * charge - and the next vehicle plugged in started charging at the full ChargeNOW current.
+ *
+ * Two things end a session: the vehicle was unplugged, and, with `stopWhenCarIdle`, a vehicle
+ * that drew no power for the whole idle delay, which is what a full battery looks like from the
+ * charger. The delay rides out the car state 4 a one-/three-phase switch reports for a moment.
+ * "No vehicle" only counts as unplugged once a vehicle was seen in the session, since switching
+ * ChargeNOW on and plugging in a moment later is the normal order of operations.
+ *
+ * @param input Measurements, configuration and previous state
+ * @returns Why the session ends now (`null` = it goes on), and the state for the next cycle
+ */
+export function decideChargeNowEnd(input: ChargeNowEndInput): { end: "unplugged" | "idle" | null; nextState: ChargeNowSessionState } {
+	const fresh = { sawVehicle: false, idleDelay: 0 };
+	if (isVehicleDisconnected(input.carState)) {
+		return { end: input.state.sawVehicle ? "unplugged" : null, nextState: fresh };
+	}
+	if (input.carState !== 2 && input.carState !== 3 && input.carState !== 4) {
+		// unknown car state, e.g. after a failed read - neither a vehicle nor an unplug
+		return { end: null, nextState: { ...input.state, idleDelay: 0 } };
+	}
+	if (!input.stopWhenCarIdle) {
+		return { end: null, nextState: { sawVehicle: true, idleDelay: 0 } };
+	}
+	const idle = decideIdleRelease({
+		releaseActive: input.releaseActive,
+		carState: input.carState,
+		chargePower: input.chargePower,
+		controllerAction: "enable",
+		delayCycles: input.delayCycles,
+		state: { idleDelay: input.state.idleDelay, latched: false },
+	});
+	if (idle.withdraw) {
+		return { end: "idle", nextState: fresh };
+	}
+	return { end: null, nextState: { sawVehicle: true, idleDelay: idle.nextState.idleDelay } };
+}
+
+/**
+ * Charging power in watts from the API V1 `nrg` array, whose total power (index 11) is given in
+ * units of 10 W.
+ *
+ * Read once per cycle for every charger, so the ChargeNOW idle check sees this cycle's power. It
+ * used to see a value only the ChargeManager refreshed: 0 W after an adapter restart, which would
+ * end a session drawing 7 kW after five minutes as "vehicle stopped drawing power".
+ *
+ * @param nrg The `nrg` array of the API V1 status
+ * @returns The power in watts, or `NaN` for a missing or malformed reading
+ */
+export function chargePowerFromStatusV1(nrg: unknown): number {
+	if (!Array.isArray(nrg) || nrg.length < 12) {
+		return Number.NaN;
+	}
+	const raw: unknown = nrg[11];
+	if (typeof raw !== "number" && (typeof raw !== "string" || raw.trim() === "")) {
+		return Number.NaN;
+	}
+	const power = Number(raw) * 10;
+	return Number.isFinite(power) ? power : Number.NaN;
+}
+
+/**
+ * Whether to withdraw the charge release while ChargeNOW and ChargeManager are both switched off.
+ *
+ * Only a release the adapter gave itself is withdrawn. A release from anywhere else - the go-e
+ * app, the button on the charger, the charger's own default after a restart - belongs to the user,
+ * and withdrawing it every cycle aborted each charge within seconds until the vehicle gave up.
+ *
+ * @param chargingAllowed Charge release the charger reports (`Power.ChargingAllowed`)
+ * @param releasedByAdapter Whether the release was last given by the adapter
+ * @returns `true` only for an active release the adapter gave
+ */
+export function withdrawReleaseWithModesOff(chargingAllowed: unknown, releasedByAdapter: boolean): boolean {
+	return releasedByAdapter === true && chargingAllowed === true;
+}
+
+/**
+ * Controller state for a ChargeManager that takes over a charger - at adapter start, or when it
+ * is switched on after ChargeNOW or a charge started elsewhere.
+ *
+ * A vehicle that is already charging is taken over at the current it charges with. State carried
+ * over from an earlier run is wrong for the new charge: a shutdown delay that had already run out
+ * withdrew a working release in the first cycle, so the shutdown delay always starts from zero.
+ *
+ * @param reportedAllow Charge release the charger reports (`alw`, 1 = released)
+ * @param reportedAmp Charging current the charger reports (`amp`)
+ * @param minimum Lowest current the ChargeManager may assign to this wallbox
+ * @param maximum Highest current the ChargeManager may assign to this wallbox
+ * @returns The state to start the controller with
+ */
+export function seedChargeManagerState(
+	reportedAllow: number | undefined,
+	reportedAmp: number | undefined,
+	minimum: number,
+	maximum: number,
+): ChargeManagerState {
+	if (reportedAllow !== 1 || !Number.isFinite(reportedAmp) || (reportedAmp as number) <= 0) {
+		return { currentAmp: 0, shutdownDelay: 0 };
+	}
+	return { currentAmp: Math.min(Math.max(Math.trunc(reportedAmp as number), minimum), maximum), shutdownDelay: 0 };
+}
+
 /**
  * The ramped current to go on with when a wallbox switches its phase count.
  *

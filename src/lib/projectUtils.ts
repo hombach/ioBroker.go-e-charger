@@ -129,6 +129,26 @@ export interface IWallboxInfo {
 	 */
 	IdleReleaseLatched: boolean;
 	/**
+	 * Whether a vehicle was connected at any point of the running ChargeNOW session. Only then does
+	 * "no vehicle" mean unplugged - before that ChargeNOW is still waiting for one.
+	 */
+	ChargeNowSawVehicle: boolean;
+	/**
+	 * Consecutive cycles the connected vehicle drew no power during ChargeNOW (counted apart from
+	 * {@link IWallboxInfo.IdleReleaseDelay}, which is reset every cycle while ChargeNOW runs)
+	 */
+	ChargeNowIdleDelay: number;
+	/**
+	 * Whether the adapter itself gave the current charge release. Only such a release is withdrawn
+	 * while ChargeNOW and ChargeManager are both switched off; one given elsewhere is left alone.
+	 */
+	ReleasedByAdapter: boolean;
+	/**
+	 * Whether the ChargeManager controlled this charger in the previous cycle. When it takes over,
+	 * its controller state is seeded from the charger instead of carried over from an earlier run.
+	 */
+	ChargeManagerRunning: boolean;
+	/**
 	 * CurrentHysteresis
 	 */
 	CurrentHysteresis: number;

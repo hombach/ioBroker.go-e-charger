@@ -3,10 +3,13 @@ import {
 	buildChargerCommands,
 	CAR_STATE_FINISHED,
 	calculateOptimalChargeCurrent,
+	chargePowerFromStatusV1,
+	type ChargeNowEndInput,
 	carryCurrentOverPhaseSwitch,
 	type ChargeManagerControllerInput,
 	decideChargeManager,
 	decideChargeManagerFleet,
+	decideChargeNowEnd,
 	decideIdleRelease,
 	decidePhaseSwitch,
 	describeHold,
@@ -31,11 +34,13 @@ import {
 	RELEASE_RETRY_LIMIT,
 	resolveStartChargeCurrent,
 	resolveWallboxCurrentLimits,
+	seedChargeManagerState,
 	SHUTDOWN_DELAY_CYCLES,
 	START_CHARGE_CURRENT,
 	stepChargeCurrent,
 	updateReleaseRejects,
 	updateShutdownDelay,
+	withdrawReleaseWithModesOff,
 } from "./lib/chargeManagerUtils";
 
 describe("ChargeManager safety helpers", () => {
@@ -1370,6 +1375,148 @@ describe("ChargeManager safety helpers", () => {
 		it("never waits less than one cycle and survives a corrupt delay counter", () => {
 			assert.equal(decideIdleRelease(input({ delayCycles: 0 })).withdraw, true);
 			assert.equal(decideIdleRelease(input({ delayCycles: 2, state: { idleDelay: Number.NaN, latched: false } })).withdraw, false);
+		});
+	});
+
+	describe("decideChargeNowEnd", () => {
+		const fresh = { sawVehicle: false, idleDelay: 0 };
+		function input(overrides: Partial<ChargeNowEndInput> = {}): ChargeNowEndInput {
+			return { carState: 2, stopWhenCarIdle: true, releaseActive: true, chargePower: 7000, delayCycles: 3, state: fresh, ...overrides };
+		}
+
+		it("keeps waiting while no vehicle was plugged in yet", () => {
+			// switching ChargeNOW on and plugging in a moment later is the normal order of operations
+			assert.deepEqual(decideChargeNowEnd(input({ carState: 1 })), { end: null, nextState: fresh });
+		});
+
+		it("ends the session when the vehicle is unplugged", () => {
+			const decision = decideChargeNowEnd(input({ carState: 1, state: { sawVehicle: true, idleDelay: 0 } }));
+			assert.deepEqual(decision, { end: "unplugged", nextState: fresh });
+		});
+
+		it("remembers a plugged-in vehicle in every connected car state", () => {
+			for (const carState of [2, 3, 4]) {
+				assert.equal(decideChargeNowEnd(input({ carState })).nextState.sawVehicle, true, `car ${carState}`);
+			}
+		});
+
+		it("does not count an unknown car state as a vehicle", () => {
+			// a failed read reports car state 0; it must not turn the next "no vehicle" into an unplug
+			for (const carState of [0, 5, Number.NaN]) {
+				assert.deepEqual(decideChargeNowEnd(input({ carState })), { end: null, nextState: fresh }, `car ${carState}`);
+			}
+		});
+
+		it("keeps a running session across an unknown car state", () => {
+			const decision = decideChargeNowEnd(input({ carState: 0, chargePower: 0, state: { sawVehicle: true, idleDelay: 2 } }));
+			assert.deepEqual(decision, { end: null, nextState: { sawVehicle: true, idleDelay: 0 } });
+		});
+
+		it("ends the session once the vehicle drew no power for the whole idle delay", () => {
+			let state = fresh;
+			const ends: (string | null)[] = [];
+			for (let cycle = 0; cycle < 3; cycle++) {
+				const decision = decideChargeNowEnd(input({ carState: 4, chargePower: 0, state }));
+				ends.push(decision.end);
+				state = decision.nextState;
+			}
+			assert.deepEqual(ends, [null, null, "idle"]);
+			assert.deepEqual(state, fresh);
+		});
+
+		it("rides out the short car state 4 of a phase switch", () => {
+			let state = fresh;
+			for (const [carState, chargePower] of [
+				[2, 4100],
+				[4, 0],
+				[4, 0],
+				[2, 4100],
+			] as const) {
+				const decision = decideChargeNowEnd(input({ carState, chargePower, state }));
+				assert.equal(decision.end, null);
+				state = decision.nextState;
+			}
+			assert.deepEqual(state, { sawVehicle: true, idleDelay: 0 });
+		});
+
+		it("never ends an idle session without stopWhenCarIdle", () => {
+			const decision = decideChargeNowEnd(input({ carState: 4, chargePower: 0, stopWhenCarIdle: false, state: { sawVehicle: true, idleDelay: 2 } }));
+			assert.deepEqual(decision, { end: null, nextState: { sawVehicle: true, idleDelay: 0 } });
+		});
+
+		it("never counts a missing power reading as idle", () => {
+			const decision = decideChargeNowEnd(input({ carState: 4, chargePower: Number.NaN, state: { sawVehicle: true, idleDelay: 2 } }));
+			assert.equal(decision.end, null);
+		});
+	});
+
+	describe("chargePowerFromStatusV1", () => {
+		// API V1 nrg of the go-e V4 charging a Renault Zoe on three phases (log of 2026-09-21 18:36)
+		const charging = [233.12, 234.67, 236.84, 2.79, 118, 118, 118, 23, 23, 23, 0, 709, 85.34, 84.88, 84.54, 100];
+		const withPower = (raw: unknown): unknown[] => charging.map((value, index) => (index === 11 ? raw : value));
+
+		it("reads the total power in units of 10 W", () => {
+			assert.equal(chargePowerFromStatusV1(charging), 7090);
+			assert.equal(chargePowerFromStatusV1(withPower("709")), 7090);
+		});
+
+		it("keeps zero and the small negative readings of a stopping vehicle", () => {
+			assert.equal(chargePowerFromStatusV1(withPower(0)), 0);
+			assert.equal(chargePowerFromStatusV1(withPower(-34)), -340);
+		});
+
+		it("returns NaN for a missing or malformed reading, which never counts as idle", () => {
+			for (const nrg of [undefined, null, "709", {}, [], charging.slice(0, 11)]) {
+				assert.ok(Number.isNaN(chargePowerFromStatusV1(nrg)), JSON.stringify(nrg));
+			}
+			for (const raw of [null, true, "", "  ", "abc", Number.NaN, Number.POSITIVE_INFINITY]) {
+				assert.ok(Number.isNaN(chargePowerFromStatusV1(withPower(raw))), String(raw));
+			}
+		});
+	});
+
+	describe("withdrawReleaseWithModesOff", () => {
+		it("withdraws an active release the adapter gave", () => {
+			assert.equal(withdrawReleaseWithModesOff(true, true), true);
+		});
+
+		it("leaves a release from the app, the button or a charger restart alone", () => {
+			// 2026-09-21: every such release was withdrawn within one cycle until the Zoe gave up
+			assert.equal(withdrawReleaseWithModesOff(true, false), false);
+		});
+
+		it("sends nothing when no release is active or its state is unknown", () => {
+			for (const chargingAllowed of [false, null, undefined, 1, "true", Number.NaN]) {
+				assert.equal(withdrawReleaseWithModesOff(chargingAllowed, true), false, `ChargingAllowed ${String(chargingAllowed)}`);
+			}
+		});
+	});
+
+	describe("seedChargeManagerState", () => {
+		it("takes over a running charge at the current the charger reports", () => {
+			// 2026-09-21: taken over with a used-up shutdown delay, the ChargeManager withdrew the release at once
+			assert.deepEqual(seedChargeManagerState(1, 10, MIN_CHARGE_CURRENT, 16), { currentAmp: 10, shutdownDelay: 0 });
+		});
+
+		it("clamps the reported current into the ChargeManager range", () => {
+			assert.equal(seedChargeManagerState(1, 32, MIN_CHARGE_CURRENT, 16).currentAmp, 16);
+			assert.equal(seedChargeManagerState(1, 16, MIN_CHARGE_CURRENT, 16).currentAmp, 16);
+			assert.equal(seedChargeManagerState(1, 3, 8, 16).currentAmp, 8);
+			assert.equal(seedChargeManagerState(1, 10.7, MIN_CHARGE_CURRENT, 16).currentAmp, 10);
+		});
+
+		it("starts from 0 A without an active release or without a valid reading", () => {
+			for (const [allow, amp] of [
+				[0, 10],
+				[undefined, 10],
+				[Number.NaN, 10],
+				[1, undefined],
+				[1, Number.NaN],
+				[1, 0],
+				[1, -5],
+			] as [number | undefined, number | undefined][]) {
+				assert.deepEqual(seedChargeManagerState(allow, amp, MIN_CHARGE_CURRENT, 16), { currentAmp: 0, shutdownDelay: 0 }, `alw ${allow}, amp ${amp}`);
+			}
 		});
 	});
 });
