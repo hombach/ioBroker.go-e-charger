@@ -749,6 +749,38 @@ export function gridFrequencyFromStatus(fhz: unknown): number | null {
 	return typeof fhz === "number" && Number.isFinite(fhz) && fhz > 0 ? fhz : null;
 }
 
+/**
+ * Voltages of the three grid phases L1, L2, L3 from the charger's energy array (API V1 key `nrg`:
+ * slots 0-2 = L1-L3, slot 3 = N, all in V).
+ *
+ * Follows the go-e app logic from the official API V1 documentation: when only phase 1 is present
+ * in front of the contactor (`Math.floor(pha / 8) === 1`) and N reads higher than L1, the supply is
+ * single-phase with L and N swapped, and the N voltage is shown as L1.
+ *
+ * 0 V is a real reading (e.g. a phase that is not connected on a single-phase supply) and is kept.
+ * A missing array, a missing slot and any negative or malformed value read as unknown for that
+ * phase, so no made-up voltage is ever published.
+ *
+ * @param nrg raw `nrg` value from the API V1 status
+ * @param pha raw `pha` value from the API V1 status (phase flags before and after the contactor)
+ * @returns voltages of L1, L2, L3 in V, each `null` when unknown
+ */
+export function phaseVoltagesFromNrg(nrg: unknown, pha: unknown): [number | null, number | null, number | null] {
+	const voltage = (index: number): number | null => {
+		const raw: unknown = Array.isArray(nrg) ? nrg[index] : undefined;
+		// API V1 values may arrive as numeric strings; the go-e app parses them the same way
+		const value = typeof raw === "string" && raw.trim() !== "" ? Number(raw) : raw;
+		return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+	};
+	let l1 = voltage(0);
+	const neutral = voltage(3);
+	const phaseFlags = Number(pha);
+	if (Number.isInteger(phaseFlags) && Math.floor(phaseFlags / 8) === 1 && l1 !== null && neutral !== null && neutral > l1) {
+		l1 = neutral;
+	}
+	return [l1, voltage(1), voltage(2)];
+}
+
 /** go-e car state for a vehicle that is plugged in and has finished charging */
 export const CAR_STATE_FINISHED = 4;
 /** Consecutive ignored charge releases that are still retried on every single cycle */

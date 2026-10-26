@@ -29,6 +29,7 @@ import {
 	resolveWallboxCurrentLimits,
 	updateReleaseRejects,
 	phaseModeToSend,
+	phaseVoltagesFromNrg,
 	IDLE_RELEASE_DELAY_MS,
 	START_CHARGE_CURRENT,
 	type TotalCurrentAllocation,
@@ -1103,6 +1104,17 @@ class go_e_charger extends utils.Adapter {
 			"A",
 			"value.current",
 		);
+		phaseVoltagesFromNrg(status.nrg, status.pha).forEach((voltage, index) => {
+			if (voltage !== null) {
+				void this.projectUtils.checkAndSetValueNumber(
+					`${basePath}.Power.VoltageL${index + 1}`,
+					voltage,
+					`Measured voltage of grid phase L${index + 1}`,
+					"V",
+					"value.voltage",
+				);
+			}
+		});
 		// actually drawn current, used by the installation budget to reclaim unused capacity (measured loop)
 		this.wallboxInfoList[iWB].MeasuredMaxChargeAmp = Math.round(measuredMaxPhaseCurrent);
 		this.wallboxInfoList[iWB].Firmware = status.fwv;

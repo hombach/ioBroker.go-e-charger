@@ -26,6 +26,7 @@ import {
 	type TotalCurrentParticipant,
 	PHASE_SWITCH_DELAY_CYCLES,
 	phaseModeToSend,
+	phaseVoltagesFromNrg,
 	PHASE_VOLTAGE,
 	RELEASE_RETRY_INTERVAL,
 	RELEASE_RETRY_LIMIT,
@@ -809,6 +810,44 @@ describe("ChargeManager safety helpers", () => {
 			[0, -50, null, undefined, Number.NaN, Number.POSITIVE_INFINITY, "50", {}].forEach((fhz, index) => {
 				assert.equal(gridFrequencyFromStatus(fhz), null, `case ${index}`);
 			});
+		});
+	});
+
+	describe("phaseVoltagesFromNrg", () => {
+		const PHASE1_ONLY = 0b00001001; // phase 1 in front of and after the contactor
+		const THREE_PHASES = 0b00111111;
+
+		it("reads L1, L2, L3 from nrg slots 0-2", () => {
+			assert.deepEqual(phaseVoltagesFromNrg([231, 229, 233, 1, 0, 0, 0, 0, 0, 0, 0, 0], THREE_PHASES), [231, 229, 233]);
+		});
+
+		it("keeps 0 V as a real reading", () => {
+			assert.deepEqual(phaseVoltagesFromNrg([230, 0, 0, 0], PHASE1_ONLY), [230, 0, 0]);
+		});
+
+		it("accepts numeric strings", () => {
+			assert.deepEqual(phaseVoltagesFromNrg(["231", "229", "233", "0"], String(THREE_PHASES)), [231, 229, 233]);
+		});
+
+		it("shows the N voltage as L1 on a single-phase supply with L and N swapped (go-e app logic)", () => {
+			// example status from the official go-e API V1 documentation: pha 8, nrg [2,0,0,235,...]
+			assert.deepEqual(phaseVoltagesFromNrg([2, 0, 0, 235, 0, 0, 0, 0, 0, 0, 0, 0], 8), [235, 0, 0]);
+			assert.deepEqual(phaseVoltagesFromNrg([2, 0, 0, 235], "8"), [235, 0, 0]);
+		});
+
+		it("does not swap in N on a three-phase supply or when N is not higher", () => {
+			assert.deepEqual(phaseVoltagesFromNrg([2, 0, 0, 235], THREE_PHASES), [2, 0, 0]);
+			assert.deepEqual(phaseVoltagesFromNrg([231, 0, 0, 5], PHASE1_ONLY), [231, 0, 0]);
+			assert.deepEqual(phaseVoltagesFromNrg([2, 0, 0, 235], undefined), [2, 0, 0]);
+		});
+
+		it("reads a missing array, missing slots and malformed values as unknown", () => {
+			[undefined, null, "230", {}, 230].forEach((nrg, index) => {
+				assert.deepEqual(phaseVoltagesFromNrg(nrg, THREE_PHASES), [null, null, null], `case ${index}`);
+			});
+			assert.deepEqual(phaseVoltagesFromNrg([230], THREE_PHASES), [230, null, null]);
+			assert.deepEqual(phaseVoltagesFromNrg([-1, Number.NaN, "", 0], THREE_PHASES), [null, null, null]);
+			assert.deepEqual(phaseVoltagesFromNrg([null, "abc", {}, 0], THREE_PHASES), [null, null, null]);
 		});
 	});
 
