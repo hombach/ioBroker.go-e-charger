@@ -746,7 +746,7 @@ export function isVehicleDisconnected(carState: number): boolean {
  * @returns frequency in Hz, or `null` when unknown
  */
 export function gridFrequencyFromStatus(fhz: unknown): number | null {
-	return typeof fhz === "number" && Number.isFinite(fhz) && fhz > 0 ? fhz : null;
+	return typeof fhz === "number" && Number.isFinite(fhz) && fhz > 0 ? Math.round(fhz * 100) / 100 : null;
 }
 
 /**
@@ -770,7 +770,7 @@ export function phaseVoltagesFromNrg(nrg: unknown, pha: unknown): [number | null
 		const raw: unknown = Array.isArray(nrg) ? nrg[index] : undefined;
 		// API V1 values may arrive as numeric strings; the go-e app parses them the same way
 		const value = typeof raw === "string" && raw.trim() !== "" ? Number(raw) : raw;
-		return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+		return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.round(value * 100) / 100 : null;
 	};
 	let l1 = voltage(0);
 	const neutral = voltage(3);
