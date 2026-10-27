@@ -683,6 +683,11 @@ class go_e_charger extends utils.Adapter {
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.Charge`, status.nrg[11] * 10, `actual charging-power`, "W", "value.power");
         const measuredMaxPhaseCurrent = Math.max(...status.nrg.slice(4, 7)) / 10;
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.MeasuredMaxPhaseCurrent`, measuredMaxPhaseCurrent, `Measured max. current of grid phases`, "A", "value.current");
+        (0, chargeManagerUtils_1.phaseVoltagesFromNrg)(status.nrg, status.pha).forEach((voltage, index) => {
+            if (voltage !== null) {
+                void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.VoltageL${index + 1}`, voltage, `Measured voltage of grid phase L${index + 1}`, "V", "value.voltage");
+            }
+        });
         this.wallboxInfoList[iWB].MeasuredMaxChargeAmp = Math.round(measuredMaxPhaseCurrent);
         this.wallboxInfoList[iWB].Firmware = status.fwv;
         void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`, `info.firmware`);
