@@ -806,6 +806,11 @@ describe("ChargeManager safety helpers", () => {
 			assert.equal(gridFrequencyFromStatus(60.01), 60.01);
 		});
 
+		it("rounds the grid frequency to 2 decimal places", () => {
+			assert.equal(gridFrequencyFromStatus(50.1234), 50.12);
+			assert.equal(gridFrequencyFromStatus(49.996), 50);
+		});
+
 		it("reads 0, missing and malformed values as unknown", () => {
 			[0, -50, null, undefined, Number.NaN, Number.POSITIVE_INFINITY, "50", {}].forEach((fhz, index) => {
 				assert.equal(gridFrequencyFromStatus(fhz), null, `case ${index}`);
@@ -819,6 +824,10 @@ describe("ChargeManager safety helpers", () => {
 
 		it("reads L1, L2, L3 from nrg slots 0-2", () => {
 			assert.deepEqual(phaseVoltagesFromNrg([231, 229, 233, 1, 0, 0, 0, 0, 0, 0, 0, 0], THREE_PHASES), [231, 229, 233]);
+		});
+
+		it("rounds the phase voltages to 2 decimal places", () => {
+			assert.deepEqual(phaseVoltagesFromNrg([229.456, 230.1, 231.004, 0], THREE_PHASES), [229.46, 230.1, 231]);
 		});
 
 		it("keeps 0 V as a real reading", () => {
