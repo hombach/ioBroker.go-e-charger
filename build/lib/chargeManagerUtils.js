@@ -21,6 +21,7 @@ exports.carryCurrentOverPhaseSwitch = carryCurrentOverPhaseSwitch;
 exports.phaseModeToSend = phaseModeToSend;
 exports.isVehicleDisconnected = isVehicleDisconnected;
 exports.gridFrequencyFromStatus = gridFrequencyFromStatus;
+exports.phaseVoltagesFromNrg = phaseVoltagesFromNrg;
 exports.updateReleaseRejects = updateReleaseRejects;
 exports.holdRejectedRelease = holdRejectedRelease;
 exports.dropUnchangedChargerCommands = dropUnchangedChargerCommands;
@@ -338,7 +339,21 @@ function isVehicleDisconnected(carState) {
     return carState === 1;
 }
 function gridFrequencyFromStatus(fhz) {
-    return typeof fhz === "number" && Number.isFinite(fhz) && fhz > 0 ? fhz : null;
+    return typeof fhz === "number" && Number.isFinite(fhz) && fhz > 0 ? Math.round(fhz * 100) / 100 : null;
+}
+function phaseVoltagesFromNrg(nrg, pha) {
+    const voltage = (index) => {
+        const raw = Array.isArray(nrg) ? nrg[index] : undefined;
+        const value = typeof raw === "string" && raw.trim() !== "" ? Number(raw) : raw;
+        return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.round(value * 100) / 100 : null;
+    };
+    let l1 = voltage(0);
+    const neutral = voltage(3);
+    const phaseFlags = Number(pha);
+    if (Number.isInteger(phaseFlags) && Math.floor(phaseFlags / 8) === 1 && l1 !== null && neutral !== null && neutral > l1) {
+        l1 = neutral;
+    }
+    return [l1, voltage(1), voltage(2)];
 }
 exports.CAR_STATE_FINISHED = 4;
 exports.RELEASE_RETRY_LIMIT = 30;
