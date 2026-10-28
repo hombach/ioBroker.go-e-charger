@@ -13,6 +13,10 @@ exports.decideChargeManager = decideChargeManager;
 exports.decideChargeManagerFleet = decideChargeManagerFleet;
 exports.decidePhaseSwitch = decidePhaseSwitch;
 exports.decideIdleRelease = decideIdleRelease;
+exports.decideChargeNowEnd = decideChargeNowEnd;
+exports.chargePowerFromStatusV1 = chargePowerFromStatusV1;
+exports.withdrawReleaseWithModesOff = withdrawReleaseWithModesOff;
+exports.seedChargeManagerState = seedChargeManagerState;
 exports.carryCurrentOverPhaseSwitch = carryCurrentOverPhaseSwitch;
 exports.phaseModeToSend = phaseModeToSend;
 exports.isVehicleDisconnected = isVehicleDisconnected;
@@ -267,6 +271,50 @@ function decideIdleRelease(input) {
         return { withdraw: true, nextState: { idleDelay: 0, latched: true } };
     }
     return { withdraw: false, nextState: { idleDelay, latched: false } };
+}
+function decideChargeNowEnd(input) {
+    const fresh = { sawVehicle: false, idleDelay: 0 };
+    if (isVehicleDisconnected(input.carState)) {
+        return { end: input.state.sawVehicle ? "unplugged" : null, nextState: fresh };
+    }
+    if (input.carState !== 2 && input.carState !== 3 && input.carState !== 4) {
+        return { end: null, nextState: { ...input.state, idleDelay: 0 } };
+    }
+    if (!input.stopWhenCarIdle) {
+        return { end: null, nextState: { sawVehicle: true, idleDelay: 0 } };
+    }
+    const idle = decideIdleRelease({
+        releaseActive: input.releaseActive,
+        carState: input.carState,
+        chargePower: input.chargePower,
+        controllerAction: "enable",
+        delayCycles: input.delayCycles,
+        state: { idleDelay: input.state.idleDelay, latched: false },
+    });
+    if (idle.withdraw) {
+        return { end: "idle", nextState: fresh };
+    }
+    return { end: null, nextState: { sawVehicle: true, idleDelay: idle.nextState.idleDelay } };
+}
+function chargePowerFromStatusV1(nrg) {
+    if (!Array.isArray(nrg) || nrg.length < 12) {
+        return Number.NaN;
+    }
+    const raw = nrg[11];
+    if (typeof raw !== "number" && (typeof raw !== "string" || raw.trim() === "")) {
+        return Number.NaN;
+    }
+    const power = Number(raw) * 10;
+    return Number.isFinite(power) ? power : Number.NaN;
+}
+function withdrawReleaseWithModesOff(chargingAllowed, releasedByAdapter) {
+    return releasedByAdapter === true && chargingAllowed === true;
+}
+function seedChargeManagerState(reportedAllow, reportedAmp, minimum, maximum) {
+    if (reportedAllow !== 1 || !Number.isFinite(reportedAmp) || reportedAmp <= 0) {
+        return { currentAmp: 0, shutdownDelay: 0 };
+    }
+    return { currentAmp: Math.min(Math.max(Math.trunc(reportedAmp), minimum), maximum), shutdownDelay: 0 };
 }
 function carryCurrentOverPhaseSwitch(currentAmp, fromPhases, toPhases, minimumChargeCurrent, maximumChargeCurrent, availablePower) {
     if ((fromPhases !== 1 && fromPhases !== 3) || (toPhases !== 1 && toPhases !== 3) || !Number.isFinite(minimumChargeCurrent)) {
