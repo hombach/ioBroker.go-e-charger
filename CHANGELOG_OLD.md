@@ -15,6 +15,10 @@
 This adapter integrates one or more go-e Charger wallboxes into your ioBroker home automation. It cyclically polls each wallbox via its local HTTP API, provides all relevant data as ioBroker states, and lets you control charging directly from your smart home.
 
 ## Changelog - OLD CHANGES
+## 1.6.1 (2026-09-04)
+
+- (typhosj) fixed: a wallbox whose effective maximum charging current is below 10 A - e.g. an 8 A coded cable or a per-wallbox maximum of 8 A - was rejected as invalid ChargeManager input and never charged from PV surplus. Such a wallbox now starts charging at its own maximum
+
 ## 1.6.0 (2026-08-29)
 
 - (hombach) added optional per-wallbox minimum and maximum charging current, applied to both ChargeManager and ChargeNOW and always kept within the installation-wide maximum

@@ -229,8 +229,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.10.0 (2026-10-29)
 
 - (HombachC) improved log message for invalid wallbox responses (no longer suggests checking the IP)
 - (HombachC) fixed maxAmpTotal config: default 16 A, max 64 A consistent between admin and code
@@ -282,10 +281,6 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) switch to iobroker testing 6.x
 - (hombach) fixed repochecker warnings
 - (hombach) added node 26 tests
-
-### 1.6.1 (2026-09-04)
-
-- (typhosj) fixed: a wallbox whose effective maximum charging current is below 10 A - e.g. an 8 A coded cable or a per-wallbox maximum of 8 A - was rejected as invalid ChargeManager input and never charged from PV surplus. Such a wallbox now starts charging at its own maximum
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 
