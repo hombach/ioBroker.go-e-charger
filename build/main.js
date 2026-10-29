@@ -98,7 +98,11 @@ class go_e_charger extends utils.Adapter {
             maxChargeCurrent = chargeManagerUtils_1.MAX_CHARGE_CURRENT;
         }
         this.log.debug(`ChargeManager current range: ${chargeManagerMinCurrent}-${maxChargeCurrent} A`);
-        maxAmpTotal = this.validateBoundedIntConfig(this.config.maxAmpTotal, 0, 0, 250, "maxAmpTotal");
+        const maxAmpTotalConfig = (0, chargeManagerUtils_1.validateMaxAmpTotal)(this.config.maxAmpTotal);
+        if (!maxAmpTotalConfig.valid) {
+            this.log.warn(`Config maxAmpTotal is invalid (${JSON.stringify(this.config.maxAmpTotal)}); allowed is 0 (disabled) or up to ${chargeManagerUtils_1.MAX_AMP_TOTAL} A - total current budget disabled`);
+        }
+        maxAmpTotal = maxAmpTotalConfig.ampere;
         if (maxAmpTotal > 0) {
             this.log.debug(`Installation total current budget: ${maxAmpTotal} A`);
         }
