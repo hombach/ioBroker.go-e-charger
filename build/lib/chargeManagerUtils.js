@@ -32,6 +32,7 @@ exports.validateMaxAmpTotal = validateMaxAmpTotal;
 exports.limitTotalCurrent = limitTotalCurrent;
 exports.effectiveCurrentDemand = effectiveCurrentDemand;
 exports.parseWallboxIndex = parseWallboxIndex;
+exports.isConnectionError = isConnectionError;
 exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 32;
 exports.START_CHARGE_CURRENT = 10;
@@ -468,5 +469,30 @@ function parseWallboxIndex(segment, wallboxCount) {
     }
     const index = Number(match[1]);
     return Number.isSafeInteger(index) && index < wallboxCount ? index : null;
+}
+const CONNECTION_ERROR_CODES = new Set([
+    "ECONNREFUSED",
+    "ECONNRESET",
+    "ECONNABORTED",
+    "EHOSTUNREACH",
+    "EHOSTDOWN",
+    "ENETUNREACH",
+    "ENOTFOUND",
+    "EAI_AGAIN",
+    "ETIMEDOUT",
+    "ERR_NETWORK",
+]);
+function isConnectionError(error) {
+    if (typeof error !== "object" || error === null) {
+        return false;
+    }
+    const { isAxiosError, code, message } = error;
+    if (isAxiosError === true) {
+        return true;
+    }
+    if (typeof code === "string" && CONNECTION_ERROR_CODES.has(code)) {
+        return true;
+    }
+    return typeof message === "string" && [...CONNECTION_ERROR_CODES].some(errorCode => message.includes(errorCode));
 }
 //# sourceMappingURL=chargeManagerUtils.js.map

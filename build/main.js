@@ -695,6 +695,10 @@ class go_e_charger extends utils.Adapter {
             this.wallboxInfoList[iWB].ChargePower = Number.NaN;
             this.wallboxInfoList[iWB].RequestedAllow = null;
             this.wallboxInfoList[iWB].ReleaseRejects = 0;
+            if (!(0, chargeManagerUtils_1.isConnectionError)(error)) {
+                this.log.error(`Unexpected API V1 response from charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}): ${error} - check firmware/API version`);
+                return;
+            }
             if (error.message && error.message.includes("EHOSTUNREACH")) {
                 this.log.error(`Charger unreachable error when calling go-eCharger API: ${error}`);
                 this.wallboxInfoList[iWB].Firmware = `EHostUnreach`;
@@ -819,6 +823,10 @@ class go_e_charger extends utils.Adapter {
         })
             .catch(error => {
             this.wallboxInfoList[iWB].ForceState = Number.NaN;
+            if (!(0, chargeManagerUtils_1.isConnectionError)(error)) {
+                this.log.warn(`Unexpected API V2 response from charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}): ${error} - check firmware/API version`);
+                return;
+            }
             this.log.warn(`API V2 not reachable for charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}) - normal for hardware gen 1/2; on gen 3+ enable "HTTP API v2" for phase switching and RFID session info. (${error})`);
         });
     }
@@ -915,6 +923,10 @@ class go_e_charger extends utils.Adapter {
                 }
             }
             catch (error) {
+                if (!(0, chargeManagerUtils_1.isConnectionError)(error)) {
+                    this.log.warn(`Unexpected response from charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}) to ${command.parameter}=${command.value}: ${String(error)} - check firmware/API version`);
+                    return;
+                }
                 this.log.warn(`Error: ${String(error)} by writing to charger ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} ${command.parameter}=${command.value}`);
                 this.log.error(`Please verify IP address of charger ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} !!!`);
                 return;

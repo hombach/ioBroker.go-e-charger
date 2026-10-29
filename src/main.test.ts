@@ -27,6 +27,7 @@ import {
 	limitTotalCurrent,
 	validateMaxAmpTotal,
 	parseWallboxIndex,
+	isConnectionError,
 	isVehicleDisconnected,
 	IDLE_CHARGE_POWER,
 	type IdleReleaseInput,
@@ -1681,6 +1682,47 @@ describe("ChargeManager safety helpers", () => {
 				assert.equal(parseWallboxIndex(segment, 2), null, segment);
 			}
 			assert.equal(parseWallboxIndex("Wallbox_0", 0), null);
+		});
+	});
+
+	describe("isConnectionError", () => {
+		it("takes timeouts, refused or unreachable hosts and HTTP status errors for connection problems", () => {
+			const axiosError = (code?: string, status?: number): unknown =>
+				Object.assign(new Error(`Request failed`), { isAxiosError: true, code, response: status ? { status } : undefined });
+			assert.equal(isConnectionError(axiosError("ECONNABORTED")), true);
+			assert.equal(isConnectionError(axiosError("ERR_NETWORK")), true);
+			assert.equal(isConnectionError(axiosError("ERR_BAD_REQUEST", 404)), true);
+			assert.equal(isConnectionError(axiosError("ERR_BAD_RESPONSE", 500)), true);
+			for (const code of ["ECONNREFUSED", "EHOSTUNREACH", "ETIMEDOUT", "ENETUNREACH", "ENOTFOUND"]) {
+				assert.equal(isConnectionError(Object.assign(new Error(code), { code })), true, code);
+			}
+			assert.equal(isConnectionError(new Error("connect EHOSTUNREACH 192.168.1.50:80")), true);
+		});
+
+		it("takes an answer that cannot be parsed for an unexpected response, not a connection problem", () => {
+			let syntaxError: unknown;
+			try {
+				JSON.parse("<html>not json</html>");
+			} catch (error) {
+				syntaxError = error;
+			}
+			assert.equal(isConnectionError(syntaxError), false);
+			// API V1 status without an nrg array
+			let typeError: unknown;
+			try {
+				const status = JSON.parse(`{"car":"1"}`) as { nrg: number[] };
+				status.nrg.slice(4, 7);
+			} catch (error) {
+				typeError = error;
+			}
+			assert.equal(isConnectionError(typeError), false);
+			assert.equal(isConnectionError(new Error("missing nrg array")), false);
+		});
+
+		it("does not take anything that is not an error object for a connection problem", () => {
+			for (const value of [undefined, null, "ECONNREFUSED", 42, {}]) {
+				assert.equal(isConnectionError(value), false, JSON.stringify(value));
+			}
 		});
 	});
 });
