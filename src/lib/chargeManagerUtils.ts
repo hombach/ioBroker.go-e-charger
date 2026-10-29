@@ -795,6 +795,42 @@ export function seedChargeManagerState(
 	return { currentAmp: Math.min(Math.max(Math.trunc(reportedAmp as number), minimum), maximum), shutdownDelay: 0 };
 }
 
+/** go-e `frc` (forceState) value for "neutral": the charger follows its own default and charges any vehicle */
+export const FORCE_STATE_NEUTRAL = 0;
+
+/**
+ * The charge release to compare a write against, from what the charger reports.
+ *
+ * With `frc` 0 the reported `alw` is the charger's own decision, not a release anybody gave: a
+ * charger that says "not released" there still charges the next vehicle plugged in. So there is
+ * no readback, and the adapter's own release or withdrawal is always sent.
+ *
+ * @param reportedAllow Charge release the charger reports (`alw`, 1 = released)
+ * @param forceState `frc` the charger reports
+ * @returns The release to compare against, `undefined` while the charger decides itself
+ */
+export function releaseReadback(reportedAllow: number | undefined, forceState: unknown): number | undefined {
+	return forceState === FORCE_STATE_NEUTRAL ? undefined : reportedAllow;
+}
+
+/**
+ * Whether the ChargeManager has to hold off a charger it gives no release.
+ *
+ * In force state neutral the charger decides by itself and charges any vehicle. Firmware 60.6
+ * comes back from every restart with `frc` 0, the go-e app sets it when a setting is saved, and
+ * firmware 59.4 and 60.6 set it themselves when a vehicle is unplugged. The next vehicle then
+ * charged at full power from the grid until the shutdown delay withdrew the release - 6.1 kW for
+ * 70 seconds on 2026-09-22. A release the adapter gave itself stays, so a restart during a PV
+ * charge does not interrupt it.
+ *
+ * @param forceState `frc` the charger reports
+ * @param releasedByAdapter Whether the adapter itself gave the current charge release
+ * @returns `true` for `frc` 0 without a release from the adapter
+ */
+export function enforceOffState(forceState: unknown, releasedByAdapter: boolean): boolean {
+	return releasedByAdapter !== true && forceState === FORCE_STATE_NEUTRAL;
+}
+
 /**
  * The ramped current to go on with when a wallbox switches its phase count.
  *

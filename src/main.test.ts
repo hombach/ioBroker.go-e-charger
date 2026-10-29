@@ -2,6 +2,9 @@ import { strict as assert } from "node:assert";
 import {
 	buildChargerCommands,
 	CAR_STATE_FINISHED,
+	enforceOffState,
+	FORCE_STATE_NEUTRAL,
+	releaseReadback,
 	calculateOptimalChargeCurrent,
 	chargePowerFromStatusV1,
 	type ChargeNowEndInput,
@@ -1495,6 +1498,40 @@ describe("ChargeManager safety helpers", () => {
 		it("never counts a missing power reading as idle", () => {
 			const decision = decideChargeNowEnd(input({ carState: 4, chargePower: Number.NaN, state: { sawVehicle: true, idleDelay: 2 } }));
 			assert.equal(decision.end, null);
+		});
+	});
+
+	describe("releaseReadback", () => {
+		it("has no readback while the charger decides by itself", () => {
+			// 2026-09-23 09:38: after a restart 60.6 reported alw false with frc 0 - a withdrawal was never sent
+			assert.equal(releaseReadback(0, FORCE_STATE_NEUTRAL), undefined);
+			assert.equal(releaseReadback(1, FORCE_STATE_NEUTRAL), undefined);
+		});
+
+		it("keeps the reported release for every other force state, also a missing or unusable one", () => {
+			// 1 = off, 2 = on, 3 = undocumented
+			for (const forceState of [1, 2, 3, Number.NaN, "0", null, undefined]) {
+				assert.equal(releaseReadback(0, forceState), 0, String(forceState));
+				assert.equal(releaseReadback(1, forceState), 1, String(forceState));
+			}
+			assert.equal(releaseReadback(undefined, 1), undefined);
+		});
+	});
+
+	describe("enforceOffState", () => {
+		it("holds off a charger in force state neutral the adapter did not release", () => {
+			// 2026-09-22 18:19: 60.6 came back from a firmware restart with frc 0 and charged 6.1 kW from the grid
+			assert.equal(enforceOffState(FORCE_STATE_NEUTRAL, false), true);
+		});
+
+		it("leaves a release the adapter gave itself running", () => {
+			assert.equal(enforceOffState(FORCE_STATE_NEUTRAL, true), false);
+		});
+
+		it("leaves a held-off charger, force state on and an unusable force state alone", () => {
+			for (const forceState of [1, 2, 3, -0.5, Number.NaN, "0", null, undefined, false]) {
+				assert.equal(enforceOffState(forceState, false), false, String(forceState));
+			}
 		});
 	});
 
