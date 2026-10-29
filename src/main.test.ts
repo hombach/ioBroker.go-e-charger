@@ -23,6 +23,7 @@ import {
 	type FleetParticipant,
 	gridFrequencyFromStatus,
 	limitTotalCurrent,
+	parseWallboxIndex,
 	isVehicleDisconnected,
 	IDLE_CHARGE_POWER,
 	type IdleReleaseInput,
@@ -1602,6 +1603,20 @@ describe("ChargeManager safety helpers", () => {
 			] as [number | undefined, number | undefined][]) {
 				assert.deepEqual(seedChargeManagerState(allow, amp, MIN_CHARGE_CURRENT, 16), { currentAmp: 0, shutdownDelay: 0 }, `alw ${allow}, amp ${amp}`);
 			}
+		});
+	});
+
+	describe("parseWallboxIndex", () => {
+		it("returns the index of a configured wallbox", () => {
+			assert.equal(parseWallboxIndex("Wallbox_0", 2), 0);
+			assert.equal(parseWallboxIndex("Wallbox_1", 2), 1);
+		});
+
+		it("rejects a wallbox number that is not configured instead of failing later", () => {
+			for (const segment of ["Wallbox_2", "Wallbox_5", "Wallbox_-1", "Wallbox_", "Wallbox_x", "Wallbox_1.5", "Wallbox_1e3", "Settings"]) {
+				assert.equal(parseWallboxIndex(segment, 2), null, segment);
+			}
+			assert.equal(parseWallboxIndex("Wallbox_0", 0), null);
 		});
 	});
 });

@@ -1202,3 +1202,21 @@ export function effectiveCurrentDemand(input: EffectiveDemandInput): EffectiveDe
 	// sustained under-draw: reserve only the measured draw plus headroom, freeing the rest for other wallboxes
 	return { demand: Math.min(wish, Math.max(floor, measured + DEMAND_HEADROOM)), reclaimDelay: nextDelay };
 }
+
+/**
+ * Parses the wallbox number from a state id segment like `Wallbox_2` and checks it against the
+ * configured wallboxes, so a state change for an unconfigured wallbox can be ignored instead of
+ * failing on a missing entry.
+ *
+ * @param segment State id segment, e.g. `Wallbox_2`
+ * @param wallboxCount Number of configured wallboxes
+ * @returns The wallbox index, or null if it is not a valid index of a configured wallbox
+ */
+export function parseWallboxIndex(segment: string, wallboxCount: number): number | null {
+	const match = /^Wallbox_(\d+)$/.exec(segment);
+	if (!match) {
+		return null;
+	}
+	const index = Number(match[1]);
+	return Number.isSafeInteger(index) && index < wallboxCount ? index : null;
+}

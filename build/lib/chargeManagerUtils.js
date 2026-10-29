@@ -30,6 +30,7 @@ exports.dropUnchangedChargerCommands = dropUnchangedChargerCommands;
 exports.buildChargerCommands = buildChargerCommands;
 exports.limitTotalCurrent = limitTotalCurrent;
 exports.effectiveCurrentDemand = effectiveCurrentDemand;
+exports.parseWallboxIndex = parseWallboxIndex;
 exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 32;
 exports.START_CHARGE_CURRENT = 10;
@@ -448,5 +449,13 @@ function effectiveCurrentDemand(input) {
         return { demand: Math.min(wish, commanded), reclaimDelay: nextDelay };
     }
     return { demand: Math.min(wish, Math.max(floor, measured + exports.DEMAND_HEADROOM)), reclaimDelay: nextDelay };
+}
+function parseWallboxIndex(segment, wallboxCount) {
+    const match = /^Wallbox_(\d+)$/.exec(segment);
+    if (!match) {
+        return null;
+    }
+    const index = Number(match[1]);
+    return Number.isSafeInteger(index) && index < wallboxCount ? index : null;
 }
 //# sourceMappingURL=chargeManagerUtils.js.map
