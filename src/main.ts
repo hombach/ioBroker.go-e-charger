@@ -39,6 +39,7 @@ import {
 	withdrawReleaseWithModesOff,
 	phaseModeToSend,
 	phaseVoltagesFromNrg,
+	isConnectionError,
 	IDLE_RELEASE_DELAY_MS,
 	START_CHARGE_CURRENT,
 	type TotalCurrentAllocation,
@@ -1036,6 +1037,13 @@ class go_e_charger extends utils.Adapter {
 				this.wallboxInfoList[iWB].ChargePower = Number.NaN;
 				this.wallboxInfoList[iWB].RequestedAllow = null;
 				this.wallboxInfoList[iWB].ReleaseRejects = 0;
+				if (!isConnectionError(error)) {
+					// the charger answered - its IP address is fine, the response is not what the adapter expects
+					this.log.error(
+						`Unexpected API V1 response from charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}): ${error} - check firmware/API version`,
+					);
+					return;
+				}
 				if (error.message && error.message.includes("EHOSTUNREACH")) {
 					this.log.error(`Charger unreachable error when calling go-eCharger API: ${error}`);
 					this.wallboxInfoList[iWB].Firmware = `EHostUnreach`;
@@ -1404,6 +1412,13 @@ class go_e_charger extends utils.Adapter {
 			.catch(error => {
 				// without a fresh read the adapter must not act on an old force state
 				this.wallboxInfoList[iWB].ForceState = Number.NaN;
+				if (!isConnectionError(error)) {
+					// the charger answered on API V2, but not with valid JSON
+					this.log.warn(
+						`Unexpected API V2 response from charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}): ${error} - check firmware/API version`,
+					);
+					return;
+				}
 				// API V2 is optional - failing is normal on hardware gen 1/2 which only offers API V1
 				this.log.warn(
 					`API V2 not reachable for charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}) - normal for hardware gen 1/2; on gen 3+ enable "HTTP API v2" for phase switching and RFID session info. (${error})`,
@@ -1634,6 +1649,13 @@ class go_e_charger extends utils.Adapter {
 					);
 				}
 			} catch (error) {
+				if (!isConnectionError(error)) {
+					// the write reached the charger - only its answer could not be read
+					this.log.warn(
+						`Unexpected response from charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}) to ${command.parameter}=${command.value}: ${String(error)} - check firmware/API version`,
+					);
+					return;
+				}
 				this.log.warn(
 					`Error: ${String(error)} by writing to charger ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} ${command.parameter}=${command.value}`,
 				);

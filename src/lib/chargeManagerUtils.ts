@@ -1244,3 +1244,42 @@ export function parseWallboxIndex(segment: string, wallboxCount: number): number
 	const index = Number(match[1]);
 	return Number.isSafeInteger(index) && index < wallboxCount ? index : null;
 }
+
+/** Error codes of a request that never got a usable answer from the charger */
+const CONNECTION_ERROR_CODES = new Set([
+	"ECONNREFUSED",
+	"ECONNRESET",
+	"ECONNABORTED",
+	"EHOSTUNREACH",
+	"EHOSTDOWN",
+	"ENETUNREACH",
+	"ENOTFOUND",
+	"EAI_AGAIN",
+	"ETIMEDOUT",
+	"ERR_NETWORK",
+]);
+
+/**
+ * Whether an error of a charger request is a connection problem - timeout, refused or unreachable
+ * host, or an HTTP error status - rather than an answer the adapter could not understand.
+ *
+ * Only a connection problem may point at the configured IP address. A charger that answered with
+ * invalid JSON or without the expected fields (e.g. no `nrg` array) is reachable, and asking to
+ * verify its IP address only sends the user looking in the wrong place.
+ *
+ * @param error Error caught around a charger request and the parsing of its response
+ * @returns `true` for a connection or HTTP status error, `false` for an unexpected response
+ */
+export function isConnectionError(error: unknown): boolean {
+	if (typeof error !== "object" || error === null) {
+		return false;
+	}
+	const { isAxiosError, code, message } = error as { isAxiosError?: unknown; code?: unknown; message?: unknown };
+	if (isAxiosError === true) {
+		return true;
+	}
+	if (typeof code === "string" && CONNECTION_ERROR_CODES.has(code)) {
+		return true;
+	}
+	return typeof message === "string" && [...CONNECTION_ERROR_CODES].some(errorCode => message.includes(errorCode));
+}
