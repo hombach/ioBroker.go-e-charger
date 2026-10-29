@@ -167,11 +167,11 @@
     "supportCustoms": false
   },
   "native": {
-    "polltimelive": 10000,
-    "StateHomeBatSoc": "",
-    "StateHomeSolarPower": "",
-    "StateHomePowerConsumption": "",
-    "SubtractSelfConsumption": true,
+    "cycleTime": 10000,
+    "stateHomeBatSoc": "",
+    "stateHomeSolarPower": "",
+    "stateHomePowerConsumption": "",
+    "subtractSelfConsumption": true,
     "chargeManagerReservePower": 100,
     "chargeManagerMaxBatteryBonus": 2000,
     "chargeManagerMinCurrent": 6,
@@ -179,7 +179,8 @@
     "maxAmpTotal": 0,
     "batteryMode": "priority",
     "batterySocHysteresis": 0,
-    "batterySocMaxAgeSeconds": 0
+    "batterySocMaxAgeSeconds": 0,
+    "wallBoxList": []
   },
   "objects": [],
   "instanceObjects": [
