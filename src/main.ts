@@ -21,9 +21,11 @@ import {
 	effectiveCurrentDemand,
 	type FleetParticipant,
 	gridFrequencyFromStatus,
+	MAX_AMP_TOTAL,
 	MAX_CHARGE_CURRENT,
 	evaluateBatteryAvailability,
 	limitTotalCurrent,
+	validateMaxAmpTotal,
 	parseWallboxIndex,
 	holdRejectedRelease,
 	isVehicleDisconnected,
@@ -146,7 +148,13 @@ class go_e_charger extends utils.Adapter {
 		this.log.debug(`ChargeManager current range: ${chargeManagerMinCurrent}-${maxChargeCurrent} A`);
 
 		// installation-wide current budget (fuse protection); 0 disables the cap
-		maxAmpTotal = this.validateBoundedIntConfig(this.config.maxAmpTotal, 0, 0, 250, "maxAmpTotal");
+		const maxAmpTotalConfig = validateMaxAmpTotal(this.config.maxAmpTotal);
+		if (!maxAmpTotalConfig.valid) {
+			this.log.warn(
+				`Config maxAmpTotal is invalid (${JSON.stringify(this.config.maxAmpTotal)}); allowed is 0 (disabled) or up to ${MAX_AMP_TOTAL} A - total current budget disabled`,
+			);
+		}
+		maxAmpTotal = maxAmpTotalConfig.ampere;
 		if (maxAmpTotal > 0) {
 			this.log.debug(`Installation total current budget: ${maxAmpTotal} A`);
 		}

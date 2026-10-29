@@ -1,4 +1,6 @@
 import { strict as assert } from "node:assert";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
 	buildChargerCommands,
 	CAR_STATE_FINISHED,
@@ -23,10 +25,12 @@ import {
 	type FleetParticipant,
 	gridFrequencyFromStatus,
 	limitTotalCurrent,
+	validateMaxAmpTotal,
 	parseWallboxIndex,
 	isVehicleDisconnected,
 	IDLE_CHARGE_POWER,
 	type IdleReleaseInput,
+	MAX_AMP_TOTAL,
 	MAX_CHARGE_CURRENT,
 	MIN_CHARGE_CURRENT,
 	RECLAIM_DELAY_CYCLES,
@@ -1134,6 +1138,66 @@ describe("ChargeManager safety helpers", () => {
 			assert.equal(carryCurrentOverPhaseSwitch(4, 3, 1, 8, Number.NaN, 2823), 4);
 			assert.equal(carryCurrentOverPhaseSwitch(4, 3, 1, 8, 16, Number.NaN), 4);
 			assert.ok(Number.isNaN(carryCurrentOverPhaseSwitch(Number.NaN, 3, 1, 8, 16, 2823)));
+		});
+	});
+
+	describe("validateMaxAmpTotal", () => {
+		it("keeps 0 as 'no total limit' (former default on existing installs)", () => {
+			assert.deepEqual(validateMaxAmpTotal(0), { ampere: 0, valid: true });
+		});
+
+		it("disables the budget silently when the value is missing", () => {
+			assert.deepEqual(validateMaxAmpTotal(undefined), { ampere: 0, valid: true });
+			assert.deepEqual(validateMaxAmpTotal(null), { ampere: 0, valid: true });
+		});
+
+		it("accepts integer budgets up to the 64 A admin maximum", () => {
+			assert.equal(MAX_AMP_TOTAL, 64);
+			for (const value of [6, 16, 32, MAX_AMP_TOTAL]) {
+				assert.deepEqual(validateMaxAmpTotal(value), { ampere: value, valid: true });
+			}
+		});
+
+		it("rejects values above 64 A (formerly accepted up to 250 A)", () => {
+			for (const value of [MAX_AMP_TOTAL + 1, 100, 250]) {
+				assert.deepEqual(validateMaxAmpTotal(value), { ampere: 0, valid: false });
+			}
+		});
+
+		it("rejects negative, fractional and non-numeric values", () => {
+			for (const value of [-1, 16.5, Number.NaN, "16", true]) {
+				assert.deepEqual(validateMaxAmpTotal(value), { ampere: 0, valid: false });
+			}
+		});
+	});
+
+	describe("maxAmpTotal admin config", () => {
+		/**
+		 * Finds a config item by attribute name in the (tabbed) jsonConfig schema
+		 *
+		 * @param items - jsonConfig items object
+		 * @param name - attribute name
+		 * @returns the item, or undefined
+		 */
+		const findItem = (items: Record<string, any>, name: string): any => {
+			for (const [key, item] of Object.entries(items)) {
+				if (key === name) {
+					return item;
+				}
+				const found = item?.items ? findItem(item.items, name) : undefined;
+				if (found) {
+					return found;
+				}
+			}
+			return undefined;
+		};
+
+		it("uses default 16 A and the same maximum as the code", () => {
+			const jsonConfig = JSON.parse(readFileSync(join(__dirname, "..", "admin", "jsonConfig.json"), "utf8"));
+			const item = findItem(jsonConfig.items, "maxAmpTotal");
+			assert.equal(item.default, 16);
+			assert.equal(item.max, MAX_AMP_TOTAL);
+			assert.ok(item.default >= item.min && item.default <= item.max);
 		});
 	});
 

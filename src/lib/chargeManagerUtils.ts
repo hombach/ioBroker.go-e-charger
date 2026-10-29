@@ -1066,6 +1066,30 @@ export interface TotalCurrentAllocation {
 	ampere: number;
 }
 
+/** Highest accepted installation current budget in amps (matches the admin UI maximum) */
+export const MAX_AMP_TOTAL = 64;
+
+/**
+ * Validates the configured installation current budget (`maxAmpTotal`).
+ *
+ * 0 keeps its meaning "no total limit" (budget disabled), so existing instances that still store
+ * the former default 0 continue to work unchanged. A missing value also disables the budget.
+ * Any other value must be an integer in [0, MAX_AMP_TOTAL]; invalid values disable the budget and
+ * are reported as invalid so the caller can log a warning.
+ *
+ * @param value Raw config value (may be undefined on upgraded instances)
+ * @returns The budget in amps (0 = disabled) and whether the raw value was valid
+ */
+export function validateMaxAmpTotal(value: unknown): { ampere: number; valid: boolean } {
+	if (value === undefined || value === null) {
+		return { ampere: 0, valid: true };
+	}
+	if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > MAX_AMP_TOTAL) {
+		return { ampere: 0, valid: false };
+	}
+	return { ampere: value, valid: true };
+}
+
 /**
  * Caps the summed charging current of all wallboxes to a single installation-wide budget in
  * amperes, protecting the supply fuse. This is a hard limit applied on top of the PV surplus
