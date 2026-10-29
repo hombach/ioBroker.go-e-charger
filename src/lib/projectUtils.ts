@@ -148,6 +148,8 @@ export interface IWallboxInfo {
 	 * its controller state is seeded from the charger instead of carried over from an earlier run.
 	 */
 	ChargeManagerRunning: boolean;
+	/** `frc` from the last API V2 read, `NaN` without one */
+	ForceState: number;
 	/**
 	 * CurrentHysteresis
 	 */

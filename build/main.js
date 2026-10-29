@@ -147,6 +147,7 @@ class go_e_charger extends utils.Adapter {
                 ChargeNowIdleDelay: 0,
                 ReleasedByAdapter: false,
                 ChargeManagerRunning: false,
+                ForceState: Number.NaN,
                 CurrentHysteresis: 0,
                 SetOptAmp: 5,
                 SetOptAllow: false,
@@ -491,13 +492,16 @@ class go_e_charger extends utils.Adapter {
                 }
                 else if (info.ChargeManager) {
                     const plan = chargePlans[iWB];
+                    if ((0, chargeManagerUtils_1.enforceOffState)(info.ForceState, info.ReleasedByAdapter)) {
+                        await this.Charge_Config("0", info.MinAmp, `Charger decides by itself (force state neutral) - holding it off`, iWB);
+                    }
                     if ((0, chargeManagerUtils_1.isVehicleDisconnected)(this.wallboxInfoList[iWB].CarState) && plan?.decision && plan.decision.optimalCurrent !== null) {
                         this.wallboxInfoList[iWB].SetOptAmp = plan.decision.optimalCurrent;
                         this.wallboxInfoList[iWB].SetAmp = plan.decision.nextState.currentAmp;
                         this.wallboxInfoList[iWB].DelayOff = plan.decision.nextState.shutdownDelay;
                         this.resetIdleRelease(iWB);
                         await this.setChargeState(iWB, `ChargeManager waiting for vehicle`);
-                        if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
+                        if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true || info.ReleasedByAdapter) {
                             await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `No vehicle connected`, iWB);
                         }
                     }
@@ -805,6 +809,7 @@ class go_e_charger extends utils.Adapter {
             }
         })
             .catch(error => {
+            this.wallboxInfoList[iWB].ForceState = Number.NaN;
             this.log.warn(`API V2 not reachable for charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}) - normal for hardware gen 1/2; on gen 3+ enable "HTTP API v2" for phase switching and RFID session info. (${error})`);
         });
     }
@@ -822,6 +827,8 @@ class go_e_charger extends utils.Adapter {
         }
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.EnabledPhases`, this.wallboxInfoList[iWB].EnabledPhases, `No of enabled phases in go-e wallbox`, "phase", "value");
         this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
+        this.wallboxInfoList[iWB].ForceState = typeof status.frc === "number" ? status.frc : Number.NaN;
+        this.wallboxInfoList[iWB].Reported.alw = (0, chargeManagerUtils_1.releaseReadback)(this.wallboxInfoList[iWB].Reported.alw, this.wallboxInfoList[iWB].ForceState);
         this.wallboxInfoList[iWB].Hardware = status.typ;
         void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, `info.hardware`);
         const gridFrequency = (0, chargeManagerUtils_1.gridFrequencyFromStatus)(status.fhz);
@@ -890,6 +897,7 @@ class go_e_charger extends utils.Adapter {
                 this.log.debug(`Sent to charger ${iWB}: ${command.parameter}=${command.value}`);
                 if (command.parameter === "alw") {
                     this.wallboxInfoList[iWB].RequestedAllow = command.value;
+                    this.wallboxInfoList[iWB].Reported.alw = command.value;
                     await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, command.value === 1, `Charging allowed`, `indicator`);
                 }
                 else {

@@ -14,6 +14,8 @@ import {
 	decidePhaseSwitch,
 	describeHold,
 	dropUnchangedChargerCommands,
+	enforceOffState,
+	releaseReadback,
 	DEFAULT_MAXIMUM_BATTERY_BONUS,
 	DEFAULT_RESERVE_POWER,
 	effectiveCurrentDemand,
@@ -200,6 +202,7 @@ class go_e_charger extends utils.Adapter {
 				ChargeNowIdleDelay: 0,
 				ReleasedByAdapter: false,
 				ChargeManagerRunning: false,
+				ForceState: Number.NaN,
 				CurrentHysteresis: 0,
 				SetOptAmp: 5,
 				SetOptAllow: false,
@@ -675,6 +678,9 @@ class go_e_charger extends utils.Adapter {
 				} else if (info.ChargeManager) {
 					// Charge-Manager is enabled - apply the decision planned for this charger
 					const plan = chargePlans[iWB];
+					if (enforceOffState(info.ForceState, info.ReleasedByAdapter)) {
+						await this.Charge_Config("0", info.MinAmp, `Charger decides by itself (force state neutral) - holding it off`, iWB);
+					}
 					if (isVehicleDisconnected(this.wallboxInfoList[iWB].CarState) && plan?.decision && plan.decision.optimalCurrent !== null) {
 						// no vehicle: the controller keeps running, so a vehicle plugged in later starts exactly
 						// as before, but nothing is sent except withdrawing a remaining release once
@@ -683,7 +689,8 @@ class go_e_charger extends utils.Adapter {
 						this.wallboxInfoList[iWB].DelayOff = plan.decision.nextState.shutdownDelay;
 						this.resetIdleRelease(iWB);
 						await this.setChargeState(iWB, `ChargeManager waiting for vehicle`);
-						if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true) {
+						// the own release is dropped also when the charger reports none, so the vehicle plugged in next is held off
+						if ((await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.ChargingAllowed`)) == true || info.ReleasedByAdapter) {
 							await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `No vehicle connected`, iWB);
 						}
 					} else if (plan?.decision) {
@@ -1381,6 +1388,8 @@ class go_e_charger extends utils.Adapter {
 				}
 			})
 			.catch(error => {
+				// without a fresh read the adapter must not act on an old force state
+				this.wallboxInfoList[iWB].ForceState = Number.NaN;
 				// API V2 is optional - failing is normal on hardware gen 1/2 which only offers API V1
 				this.log.warn(
 					`API V2 not reachable for charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}) - normal for hardware gen 1/2; on gen 3+ enable "HTTP API v2" for phase switching and RFID session info. (${error})`,
@@ -1393,6 +1402,7 @@ class go_e_charger extends utils.Adapter {
 	 *
 	 * @param status - The API V2 status object returned by the wallbox.
 	 * @param status.psm - Phase switching mode (1 = single-phase, 2 = three-phase).
+	 * @param status.frc - Force state (0 = neutral, 1 = off, 2 = on).
 	 * @param status.typ - Hardware version or type identifier.
 	 * @param status.fhz - Grid frequency in Hz, 0 if unknown
 	 * @param status.trx - Transaction: null = none, 0 = without card, otherwise cardIndex + 1 (API V2 equivalent of V1 uby)
@@ -1435,6 +1445,7 @@ class go_e_charger extends utils.Adapter {
 	private async ParseStatusAPIV2(
 		status: {
 			psm: number;
+			frc?: number;
 			typ: string;
 			fhz?: unknown;
 			trx?: number | null;
@@ -1494,6 +1505,8 @@ class go_e_charger extends utils.Adapter {
 			"value",
 		);
 		this.log.debug(`got enabled phases for charger ${iWB}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
+		this.wallboxInfoList[iWB].ForceState = typeof status.frc === "number" ? status.frc : Number.NaN;
+		this.wallboxInfoList[iWB].Reported.alw = releaseReadback(this.wallboxInfoList[iWB].Reported.alw, this.wallboxInfoList[iWB].ForceState);
 		this.wallboxInfoList[iWB].Hardware = status.typ;
 		void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, `info.hardware`);
 		const gridFrequency = gridFrequencyFromStatus(status.fhz);
@@ -1593,6 +1606,8 @@ class go_e_charger extends utils.Adapter {
 
 				if (command.parameter === "alw") {
 					this.wallboxInfoList[iWB].RequestedAllow = command.value;
+					// until the next read, so a second request in the same cycle is not sent twice
+					this.wallboxInfoList[iWB].Reported.alw = command.value;
 					await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, command.value === 1, `Charging allowed`, `indicator`);
 				} else {
 					const result = JSON.parse(response.data);
