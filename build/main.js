@@ -263,7 +263,12 @@ class go_e_charger extends utils.Adapter {
                                 break;
                             default:
                                 if (statePath[2].startsWith("Wallbox_") && statePath[3] === "Settings") {
-                                    chargerNo = Number(statePath[2].replace("Wallbox_", ""));
+                                    const wallboxIndex = (0, chargeManagerUtils_1.parseWallboxIndex)(statePath[2], this.wallboxInfoList.length);
+                                    if (wallboxIndex === null) {
+                                        this.log.warn(`state change ignored for unconfigured wallbox: ${id}`);
+                                        return;
+                                    }
+                                    chargerNo = wallboxIndex;
                                     settingType = statePath[4];
                                     switch (settingType) {
                                         case "ChargeNOW":
