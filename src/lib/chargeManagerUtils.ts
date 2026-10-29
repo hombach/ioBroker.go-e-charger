@@ -887,6 +887,37 @@ export function phaseModeToSend(charge3Phase: boolean, enabledPhases: number): 1
 	return charge3Phase ? 2 : 1;
 }
 
+/** `Settings.PhaseMode` value for automatic switching; 1 and 3 fix the phase count */
+export const PHASE_MODE_AUTO = 0;
+
+/**
+ * Resolves a user write to `Settings.PhaseMode`.
+ *
+ * @param value The written value: 1 or 3 fixes the phase count, {@link PHASE_MODE_AUTO} selects automatic switching
+ * @param autoAllowed Whether automatic switching is enabled for this wallbox in the instance settings (and supported)
+ * @returns Whether automatic switching is on and, for a fixed mode, the manual phase request; `null` rejects the write
+ */
+export function resolvePhaseModeWrite(value: unknown, autoAllowed: boolean): { auto: boolean; charge3Phase?: boolean } | null {
+	if (value === 1 || value === 3) {
+		return { auto: false, charge3Phase: value === 3 };
+	}
+	if (value === PHASE_MODE_AUTO && autoAllowed) {
+		return { auto: true };
+	}
+	return null;
+}
+
+/**
+ * Returns the `Settings.PhaseMode` value that matches the current settings.
+ *
+ * @param auto Whether automatic switching is on
+ * @param charge3Phase The manual phase request (`Settings.Charge3Phase`)
+ * @returns The mode: 1, 3 or {@link PHASE_MODE_AUTO}
+ */
+export function phaseModeOf(auto: boolean, charge3Phase: boolean): number {
+	return auto ? PHASE_MODE_AUTO : charge3Phase ? 3 : 1;
+}
+
 /**
  * Whether the charger reports that no vehicle is plugged in (go-e car state 1).
  *
