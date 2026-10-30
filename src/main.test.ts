@@ -43,6 +43,7 @@ import {
 	PHASE_MODE_AUTO,
 	autoPhaseSupported,
 	phaseModeOf,
+	PHASE_SWITCH_HYSTERESIS,
 	phaseModeToSend,
 	resolvePhaseModeWrite,
 	phaseVoltagesFromNrg,
@@ -1068,21 +1069,40 @@ describe("ChargeManager safety helpers", () => {
 			});
 		});
 
-		it("never inverts the band when the one-phase maximum is below the three-phase minimum", () => {
-			// a 16 A box: one-phase max 3680 W < three-phase min 4140 W -> up threshold floored at 4140 W
+		it("keeps a hysteresis band when the one-phase maximum is below the three-phase minimum", () => {
+			// a 16 A box: one-phase max 3680 W < three-phase min 4140 W -> up threshold is the
+			// three-phase minimum widened by PHASE_SWITCH_HYSTERESIS, not the bare minimum
 			const smallBox = { minimumChargeCurrent: MIN_CHARGE_CURRENT, maximumChargeCurrent: 16 };
-			// just below the three-phase minimum: no up-switch even with the dwell already elapsed
-			assert.equal(
-				decidePhaseSwitch(input({ ...smallBox, currentPhases: 1, availablePower: threePhaseMinPower - 1, switchDelay: PHASE_SWITCH_DELAY_CYCLES }))
-					.targetPhases,
-				1,
-			);
-			// at the three-phase minimum: the up-switch fires
-			assert.equal(
-				decidePhaseSwitch(input({ ...smallBox, currentPhases: 1, availablePower: threePhaseMinPower, switchDelay: PHASE_SWITCH_DELAY_CYCLES }))
-					.targetPhases,
-				3,
-			);
+			const upThreshold = threePhaseMinPower * PHASE_SWITCH_HYSTERESIS;
+			const elapsed = { switchDelay: PHASE_SWITCH_DELAY_CYCLES };
+			// inside the band, on either side of the bare three-phase minimum: no up-switch, even
+			// with the dwell already elapsed - this is the value both thresholds used to share
+			for (const availablePower of [threePhaseMinPower - 1, threePhaseMinPower, upThreshold - 1]) {
+				assert.equal(decidePhaseSwitch(input({ ...smallBox, ...elapsed, currentPhases: 1, availablePower })).targetPhases, 1);
+			}
+			// at the up threshold the switch fires
+			assert.equal(decidePhaseSwitch(input({ ...smallBox, ...elapsed, currentPhases: 1, availablePower: upThreshold })).targetPhases, 3);
+			// and three-phase charging is only given up below the three-phase minimum, not below the
+			// up threshold - otherwise the surplus would cross a single value in both directions
+			assert.equal(decidePhaseSwitch(input({ ...smallBox, ...elapsed, currentPhases: 3, availablePower: upThreshold - 1 })).targetPhases, 3);
+			assert.equal(decidePhaseSwitch(input({ ...smallBox, ...elapsed, currentPhases: 3, availablePower: threePhaseMinPower })).targetPhases, 3);
+			assert.equal(decidePhaseSwitch(input({ ...smallBox, ...elapsed, currentPhases: 3, availablePower: threePhaseMinPower - 1 })).targetPhases, 1);
+		});
+
+		it("never lets the band collapse, whatever the configured limits are", () => {
+			// the band had width zero for every wallbox whose maximum is at most three times its
+			// minimum, which is every 16 A box - a surplus sitting on that value flapped on the dwell
+			for (const minimumChargeCurrent of [6, 8, 10, 12, 16]) {
+				for (const maximumChargeCurrent of [16, 20, 32]) {
+					if (minimumChargeCurrent > maximumChargeCurrent) {
+						continue;
+					}
+					const limits = { minimumChargeCurrent, maximumChargeCurrent, switchDelay: PHASE_SWITCH_DELAY_CYCLES };
+					const downThreshold = minimumChargeCurrent * 3 * PHASE_VOLTAGE;
+					// the power that switches down must never also switch up
+					assert.equal(decidePhaseSwitch(input({ ...limits, currentPhases: 1, availablePower: downThreshold })).targetPhases, 1);
+				}
+			}
 		});
 
 		it("leaves invalid inputs untouched", () => {
