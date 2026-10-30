@@ -8,6 +8,10 @@ export const DEFAULT_MAXIMUM_BATTERY_BONUS = 2000;
 export const PHASE_VOLTAGE = 230;
 /** Number of consecutive cycles a phase-switch condition must hold before the phase is actually switched */
 export const PHASE_SWITCH_DELAY_CYCLES = 12;
+/** How long more surplus must hold before switching up to three phases */
+export const PHASE_SWITCH_UP_DELAY_MS = 60 * 1000;
+/** How long a lower surplus must hold before switching down to one phase */
+export const PHASE_SWITCH_DOWN_DELAY_MS = 3 * 60 * 1000;
 /**
  * How far above the three-phase minimum the surplus must reach before switching up, as a factor
  * of that minimum. This is the width of the phase hysteresis band and the tuning knob for it:
@@ -553,6 +557,12 @@ export interface PhaseSwitchInput {
 	maximumChargeCurrent: number;
 	/** Consecutive cycles the pending switch condition has already held */
 	switchDelay: number;
+	/** Cycles the condition must hold before switching up (default {@link PHASE_SWITCH_DELAY_CYCLES}) */
+	upDelayCycles?: number;
+	/** Cycles the condition must hold before switching down (default {@link PHASE_SWITCH_DELAY_CYCLES}) */
+	downDelayCycles?: number;
+	/** No switch at all, e.g. while the charger's own wait after the last switch is still running */
+	blocked?: boolean;
 }
 
 /** Result of the automatic phase-switching decision. */
@@ -580,11 +590,18 @@ export interface PhaseSwitchDecision {
  * The factor also means three-phase charging starts with headroom above its own floor instead
  * of right on it, where the next cloud drops it below again.
  *
+ * Switching down also needs enough surplus for one-phase charging at the minimum. Below that,
+ * one phase would not charge either: the switch would only cost a pause - and on the go-e it can
+ * leave the charger stuck in "min pause duration" until it is restarted (2026-09-22: a switch at
+ * 571 W with nothing charging). The controller stops charging instead, and the switch happens
+ * once one-phase charging can actually start.
+ *
  * @param input Current phase count, available surplus power and the pending-switch counter
  * @returns The phase count to use next cycle and the updated dwell counter
  */
 export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision {
 	if (
+		input.blocked === true ||
 		(input.currentPhases !== 1 && input.currentPhases !== 3) ||
 		!Number.isFinite(input.availablePower) ||
 		!Number.isFinite(input.minimumChargeCurrent) ||
@@ -601,7 +618,7 @@ export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision 
 	let targetPhases = input.currentPhases;
 	if (input.currentPhases === 1 && input.availablePower >= upThreshold) {
 		targetPhases = 3;
-	} else if (input.currentPhases === 3 && input.availablePower < threePhaseMinPower) {
+	} else if (input.currentPhases === 3 && input.availablePower < threePhaseMinPower && input.availablePower >= input.minimumChargeCurrent * PHASE_VOLTAGE) {
 		targetPhases = 1;
 	}
 
@@ -609,12 +626,32 @@ export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision 
 		return { targetPhases: input.currentPhases, switchDelay: 0 };
 	}
 
+	const delayCycles = validDelayCycles(targetPhases === 3 ? input.upDelayCycles : input.downDelayCycles);
 	const switchDelay = input.switchDelay + 1;
-	if (switchDelay > PHASE_SWITCH_DELAY_CYCLES) {
+	if (switchDelay > delayCycles) {
 		return { targetPhases, switchDelay: 0 };
 	}
 	// condition holds but the dwell time has not elapsed yet - keep the current phase count
 	return { targetPhases: input.currentPhases, switchDelay };
+}
+
+function validDelayCycles(cycles: number | undefined): number {
+	return cycles !== undefined && Number.isFinite(cycles) && cycles >= 0 ? Math.trunc(cycles) : PHASE_SWITCH_DELAY_CYCLES;
+}
+
+/** go-e default for `mptwt`, the minimum time between two phase switches */
+export const DEFAULT_PHASE_TOGGLE_WAIT_MS = 10 * 60 * 1000;
+
+/**
+ * A pause setting the charger reports (`mptwt`), or the go-e default when the value is missing or
+ * unusable.
+ *
+ * @param value Reported value in milliseconds
+ * @param fallback Default in milliseconds
+ * @returns The pause in milliseconds
+ */
+export function chargerPauseMs(value: unknown, fallback: number): number {
+	return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : fallback;
 }
 
 /** How long a connected vehicle may ignore an active charge release before it is withdrawn */
