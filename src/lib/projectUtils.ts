@@ -165,6 +165,8 @@ export interface IWallboxInfo {
 	PhaseToggleWaitMs: number;
 	/** When the adapter last switched the phase mode, `null` if not since the start */
 	LastPhaseSwitchMs: number | null;
+	/** Phase count decided on or requested that waits for the charge release, `null` if none */
+	PendingPhases: number | null;
 	/**
 	 * CurrentHysteresis
 	 */

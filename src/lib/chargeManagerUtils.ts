@@ -845,6 +845,8 @@ export function seedChargeManagerState(
 
 /** go-e `frc` (forceState) value for "neutral": the charger follows its own default and charges any vehicle */
 export const FORCE_STATE_NEUTRAL = 0;
+/** go-e `frc` (forceState) value that forces charging on - what the adapter's release sets */
+export const FORCE_STATE_ON = 2;
 
 /**
  * The charge release to compare a write against, from what the charger reports.
@@ -877,6 +879,53 @@ export function releaseReadback(reportedAllow: number | undefined, forceState: u
  */
 export function enforceOffState(forceState: unknown, releasedByAdapter: boolean): boolean {
 	return releasedByAdapter !== true && forceState === FORCE_STATE_NEUTRAL;
+}
+
+/**
+ * Phase count the ChargeManager plans with: the one decided or requested but not written yet -
+ * a phase switch waits for the charge release - otherwise the one the charger reports.
+ *
+ * @param pendingPhases Decided or requested phase count, `null` if none
+ * @param enabledPhases Phase count the charger reports
+ * @returns The phase count to size the charging current for
+ */
+export function planningPhases(pendingPhases: number | null, enabledPhases: number): number {
+	return pendingPhases === 1 || pendingPhases === 3 ? pendingPhases : enabledPhases;
+}
+
+/**
+ * Whether a phase switch may be written to the charger now.
+ *
+ * The phase count only matters once the charger charges. A switch while it is held off is never
+ * needed, and it starts the charger's minimum time between two switches (`mptwt`, 10 minutes by
+ * default), which can then block the switch the start really needs if the surplus has moved on
+ * in the meantime. Each write also wakes the charger. On top of that, a switch while held off
+ * left the go-e hanging in "min pause duration" for hours on 2026-09-22 (12:33 and 18:46), while a
+ * switch during a charge went through within 20 seconds. So the switch waits until the release is
+ * active, and a switch that would be followed by a withdrawal right away is not written at all.
+ *
+ * @param forceState `frc` the charger reports
+ * @param action What the ChargeManager does with the charger this cycle
+ * @returns `true` only while charging is forced on and not about to be switched off
+ */
+export function mayWritePhaseSwitch(forceState: unknown, action: ChargeManagerAction): boolean {
+	return forceState === FORCE_STATE_ON && action !== "disable";
+}
+
+/**
+ * Cycles a phase-switch condition must hold before the switch is planned.
+ *
+ * The dwell protects a running charge from being interrupted again and again. While the charger
+ * is held off a switch is only planned, not written, so it costs nothing and follows the surplus
+ * at once - on 2026-09-23 the dwell alone held back a PV start by three minutes.
+ *
+ * @param delayMs Dwell for a switch during a charge
+ * @param cycleTimeMs Poll cycle time
+ * @param forceState `frc` the charger reports
+ * @returns The dwell in cycles, 0 while charging is not forced on
+ */
+export function phaseSwitchDwellCycles(delayMs: number, cycleTimeMs: number, forceState: unknown): number {
+	return forceState === FORCE_STATE_ON ? Math.ceil(delayMs / cycleTimeMs) : 0;
 }
 
 /**

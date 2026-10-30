@@ -5,6 +5,12 @@ import {
 	buildChargerCommands,
 	CAR_STATE_FINISHED,
 	enforceOffState,
+	FORCE_STATE_ON,
+	mayWritePhaseSwitch,
+	PHASE_SWITCH_DOWN_DELAY_MS,
+	PHASE_SWITCH_UP_DELAY_MS,
+	phaseSwitchDwellCycles,
+	planningPhases,
 	FORCE_STATE_NEUTRAL,
 	releaseReadback,
 	calculateOptimalChargeCurrent,
@@ -1775,6 +1781,50 @@ describe("ChargeManager safety helpers", () => {
 			for (const value of [undefined, null, -1, Number.NaN, Number.POSITIVE_INFINITY, "600000"]) {
 				assert.equal(chargerPauseMs(value, DEFAULT_PHASE_TOGGLE_WAIT_MS), DEFAULT_PHASE_TOGGLE_WAIT_MS, String(value));
 			}
+		});
+	});
+
+	describe("planningPhases", () => {
+		it("plans with a decided switch that waits for the release", () => {
+			assert.equal(planningPhases(1, 3), 1);
+			assert.equal(planningPhases(3, 1), 3);
+		});
+
+		it("falls back to the reported phase count without a usable pending switch", () => {
+			for (const pending of [null, 0, 2, 4, -1, Number.NaN]) {
+				assert.equal(planningPhases(pending, 3), 3, String(pending));
+			}
+		});
+	});
+
+	describe("phaseSwitchDwellCycles", () => {
+		it("keeps the dwell while charging is forced on", () => {
+			assert.equal(phaseSwitchDwellCycles(PHASE_SWITCH_DOWN_DELAY_MS, 10000, FORCE_STATE_ON), 18);
+			assert.equal(phaseSwitchDwellCycles(PHASE_SWITCH_UP_DELAY_MS, 7000, FORCE_STATE_ON), 9);
+		});
+
+		it("plans a switch at once while the charger is held off or its state is unknown", () => {
+			// 2026-09-23 15:15-15:18: three minutes of dwell before a PV start on one phase
+			for (const forceState of [FORCE_STATE_NEUTRAL, 1, 3, Number.NaN, "2", null, undefined]) {
+				assert.equal(phaseSwitchDwellCycles(PHASE_SWITCH_DOWN_DELAY_MS, 10000, forceState), 0, String(forceState));
+			}
+		});
+	});
+
+	describe("mayWritePhaseSwitch", () => {
+		it("switches while the release is active and stays active", () => {
+			// 2026-09-22 13:56: 1 -> 3 phases during a charge, charging again after 20 seconds
+			assert.equal(mayWritePhaseSwitch(FORCE_STATE_ON, "enable"), true);
+			assert.equal(mayWritePhaseSwitch(FORCE_STATE_ON, "hold"), true);
+		});
+
+		it("never switches a charger that is held off or about to be", () => {
+			for (const forceState of [FORCE_STATE_NEUTRAL, 1, 3, Number.NaN, "2", null, undefined]) {
+				for (const action of ["enable", "hold", "disable"] as const) {
+					assert.equal(mayWritePhaseSwitch(forceState, action), false, `frc ${String(forceState)}, ${action}`);
+				}
+			}
+			assert.equal(mayWritePhaseSwitch(FORCE_STATE_ON, "disable"), false);
 		});
 	});
 
