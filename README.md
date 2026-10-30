@@ -249,6 +249,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (HombachC) moved the Sentry notice near the top of README.md to satisfy the repository checker (#938)
 - (hombach) updated iobroker/testing
 - (hombach) updated dependencies
+- (typhosj) ChargeManager: the automatic 1-/3-phase switching now keeps a real gap between switching up and switching back down - for a 16 A wallbox both thresholds used to be the same value
 
 ### 1.10.2 (2026-11-01)
 

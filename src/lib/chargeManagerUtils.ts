@@ -8,6 +8,12 @@ export const DEFAULT_MAXIMUM_BATTERY_BONUS = 2000;
 export const PHASE_VOLTAGE = 230;
 /** Number of consecutive cycles a phase-switch condition must hold before the phase is actually switched */
 export const PHASE_SWITCH_DELAY_CYCLES = 12;
+/**
+ * How far above the three-phase minimum the surplus must reach before switching up, as a factor
+ * of that minimum. This is the width of the phase hysteresis band and the tuning knob for it:
+ * raise it if the installation still switches back and forth on partly cloudy days.
+ */
+export const PHASE_SWITCH_HYSTERESIS = 1.25;
 
 /** Per-wallbox configuration and optional hardware caps used to resolve its current limits. */
 export interface WallboxLimitInput {
@@ -567,8 +573,12 @@ export interface PhaseSwitchDecision {
  * thresholds plus a dwell time of {@link PHASE_SWITCH_DELAY_CYCLES} cycles keeps a wallbox
  * from flapping between phase modes, which would interrupt charging each time.
  *
- * The up threshold is floored at the three-phase minimum, so a wallbox whose one-phase
- * maximum is already below that minimum still has a stable (non-overlapping) hysteresis band.
+ * The up threshold is floored at the three-phase minimum times {@link PHASE_SWITCH_HYSTERESIS},
+ * never at the bare minimum: flooring it there gives a band of width zero, and the surplus then
+ * crosses a single threshold in both directions. That is the case for every wallbox whose
+ * maximum is at most three times its minimum - with 8-16 A both thresholds land on 5520 W.
+ * The factor also means three-phase charging starts with headroom above its own floor instead
+ * of right on it, where the next cloud drops it below again.
  *
  * @param input Current phase count, available surplus power and the pending-switch counter
  * @returns The phase count to use next cycle and the updated dwell counter
@@ -584,8 +594,9 @@ export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision 
 	}
 
 	const threePhaseMinPower = input.minimumChargeCurrent * 3 * PHASE_VOLTAGE;
-	// the up threshold can never be below the three-phase minimum, so the band never inverts
-	const upThreshold = Math.max(input.maximumChargeCurrent * PHASE_VOLTAGE, threePhaseMinPower);
+	// the up threshold keeps a real distance from the three-phase minimum, so the band never
+	// inverts and never collapses to a single value the surplus crosses in both directions
+	const upThreshold = Math.max(input.maximumChargeCurrent * PHASE_VOLTAGE, threePhaseMinPower * PHASE_SWITCH_HYSTERESIS);
 
 	let targetPhases = input.currentPhases;
 	if (input.currentPhases === 1 && input.availablePower >= upThreshold) {
