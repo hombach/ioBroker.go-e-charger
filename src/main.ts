@@ -2019,6 +2019,7 @@ class go_e_charger extends utils.Adapter {
 					// every switch costs the charger a pause, so none follows before the charger's own
 					// minimum time between two switches (mptwt) has passed
 					blocked: lastSwitch !== null && now - lastSwitch < info.PhaseToggleWaitMs,
+					waitingForStart: info.ForceState !== FORCE_STATE_ON,
 				});
 				info.PhaseSwitchDelay = phaseDecision.switchDelay;
 				// phase-switch control loop: show the current/target phase and the pending dwell counter

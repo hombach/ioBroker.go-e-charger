@@ -1154,6 +1154,59 @@ describe("ChargeManager safety helpers", () => {
 			assert.deepEqual(decidePhaseSwitch(input({ ...due, currentPhases: 3, availablePower: 2000 })), { targetPhases: 3, switchDelay: 0 });
 		});
 
+		describe("before the charge has started", () => {
+			// 2026-09-25 12:04: minimum 8 A, 6831 W surplus - above the three-phase minimum of 5520 W,
+			// below the three-phase start of 6900 W, so the ramp stopped at 8 A and never started; held off,
+			// the switch is only planned and needs no dwell (phaseSwitchDwellCycles)
+			const waiting = (overrides: Partial<Parameters<typeof decidePhaseSwitch>[0]> = {}): Parameters<typeof decidePhaseSwitch>[0] =>
+				input({
+					currentPhases: 3,
+					minimumChargeCurrent: 8,
+					maximumChargeCurrent: 16,
+					waitingForStart: true,
+					upDelayCycles: 0,
+					downDelayCycles: 0,
+					...overrides,
+				});
+			const target = (overrides: Partial<Parameters<typeof decidePhaseSwitch>[0]>): number => decidePhaseSwitch(waiting(overrides)).targetPhases;
+
+			it("switches to one phase when the surplus carries the minimum but not the start on three phases", () => {
+				assert.equal(target({ availablePower: 6831 }), 1);
+			});
+
+			it("keeps three phases once the surplus carries the three-phase start", () => {
+				assert.equal(target({ availablePower: 6900 }), 3);
+				assert.equal(target({ availablePower: 6899 }), 1);
+			});
+
+			it("stays on three phases when one phase could not start either", () => {
+				assert.equal(target({ availablePower: 2300 }), 1);
+				assert.equal(target({ availablePower: 2299 }), 3);
+			});
+
+			it("switches up to three phases as soon as the surplus carries the three-phase start", () => {
+				assert.equal(target({ currentPhases: 1, availablePower: 6900 }), 3);
+				assert.equal(target({ currentPhases: 1, availablePower: 6899 }), 1);
+				// with the band of a running charge, a raised minimum of 12 A would wait for 10350 W
+				assert.equal(target({ currentPhases: 1, minimumChargeCurrent: 12, availablePower: 8280 }), 3);
+				assert.equal(target({ currentPhases: 1, minimumChargeCurrent: 12, availablePower: 8279 }), 1);
+			});
+
+			it("keeps the minimum as the floor while charging", () => {
+				assert.equal(target({ waitingForStart: false, availablePower: 5520 }), 3);
+				assert.equal(target({ waitingForStart: false, availablePower: 5519 }), 1);
+			});
+
+			it("uses a raised minimum above the start current as the floor", () => {
+				assert.equal(target({ minimumChargeCurrent: 12, availablePower: 8280 }), 3);
+				assert.equal(target({ minimumChargeCurrent: 12, availablePower: 8279 }), 1);
+			});
+
+			it("does not switch on an invalid surplus", () => {
+				assert.deepEqual(decidePhaseSwitch(waiting({ availablePower: Number.NaN })), { targetPhases: 3, switchDelay: 0 });
+			});
+		});
+
 		it("leaves invalid inputs untouched", () => {
 			assert.deepEqual(decidePhaseSwitch(input({ currentPhases: 2, availablePower: 10000 })), { targetPhases: 2, switchDelay: 0 });
 			assert.equal(decidePhaseSwitch(input({ currentPhases: 1, availablePower: Number.NaN, switchDelay: 3 })).targetPhases, 1);
