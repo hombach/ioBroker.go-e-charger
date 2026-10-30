@@ -19,6 +19,8 @@ import {
 	decideChargeNowEnd,
 	decideIdleRelease,
 	decidePhaseSwitch,
+	decisionAfterPhaseSwitch,
+	type ChargeManagerDecision,
 	describeHold,
 	dropUnchangedChargerCommands,
 	effectiveCurrentDemand,
@@ -1412,6 +1414,85 @@ describe("ChargeManager safety helpers", () => {
 
 		it("falls back to the wish on invalid input", () => {
 			assert.deepEqual(effectiveCurrentDemand({ ...base, measuredAmp: Number.NaN, wishAmp: 12 }), { demand: 12, reclaimDelay: 0 });
+		});
+	});
+
+	describe("decisionAfterPhaseSwitch", () => {
+		const stop: ChargeManagerDecision = {
+			action: "disable",
+			reason: "insufficient-surplus",
+			optimalCurrent: 7,
+			nextState: { currentAmp: 7, shutdownDelay: 0 },
+		};
+
+		it("goes on charging instead of stopping once the carried current reaches the minimum", () => {
+			assert.deepEqual(decisionAfterPhaseSwitch(stop, 16, 8), {
+				action: "enable",
+				reason: "charging-current",
+				optimalCurrent: 7,
+				nextState: { currentAmp: 16, shutdownDelay: 0 },
+			});
+			assert.equal(decisionAfterPhaseSwitch(stop, 8, 8).action, "enable");
+		});
+
+		it("still stops when the carried current stays below the minimum or is unusable", () => {
+			for (const carriedAmp of [7, 0, Number.NaN]) {
+				const decision = decisionAfterPhaseSwitch(stop, carriedAmp, 8);
+				assert.equal(decision.action, "disable", String(carriedAmp));
+				assert.equal(decision.nextState.shutdownDelay, 0);
+			}
+		});
+
+		it("only carries the current over for every other decision", () => {
+			const invalid: ChargeManagerDecision = {
+				action: "disable",
+				reason: "invalid-input",
+				optimalCurrent: null,
+				nextState: { currentAmp: 0, shutdownDelay: 0 },
+			};
+			assert.deepEqual(decisionAfterPhaseSwitch(invalid, 16, 8), { ...invalid, nextState: { currentAmp: 16, shutdownDelay: 0 } });
+			const hold: ChargeManagerDecision = { action: "hold", reason: "shutdown-delay", optimalCurrent: 7, nextState: { currentAmp: 7, shutdownDelay: 5 } };
+			assert.deepEqual(decisionAfterPhaseSwitch(hold, 16, 8), { ...hold, nextState: { currentAmp: 16, shutdownDelay: 5 } });
+		});
+
+		it("switches a three-phase charge down instead of stopping it when the shutdown delay runs out", () => {
+			// 2026-09-26 12:22:43: 8-16 A, three phases, 5109 W - the shutdown withdrew the release
+			// with the three-minute down dwell at 8 of 18 cycles, and one phase restarted 40 s later
+			const shared = {
+				solarPower: 5109 + 100,
+				houseConsumption: 0,
+				chargerPower: 0,
+				subtractChargerPower: false,
+				batterySoc: null,
+				minBatterySoc: 70,
+				batteryMode: "disabled" as const,
+				reservePower: 100,
+				maximumBatteryBonus: 2000,
+			};
+			const charging: FleetParticipant = {
+				phases: 3,
+				minimumChargeCurrent: 8,
+				maximumChargeCurrent: 16,
+				state: { currentAmp: 7, shutdownDelay: SHUTDOWN_DELAY_CYCLES },
+				claimsPower: true,
+				released: true,
+			};
+			const [decision] = decideChargeManagerFleet(shared, [charging]);
+			assert.equal(decision.action, "disable");
+			const phase = decidePhaseSwitch({
+				currentPhases: 3,
+				availablePower: decision.availablePower,
+				minimumChargeCurrent: 8,
+				maximumChargeCurrent: 16,
+				switchDelay: 7,
+				upDelayCycles: 6,
+				downDelayCycles: decision.reason === "insufficient-surplus" ? 0 : 18,
+			});
+			assert.equal(phase.targetPhases, 1);
+			const carriedAmp = carryCurrentOverPhaseSwitch(decision.nextState.currentAmp, 3, 1, 8, 16, decision.availablePower);
+			const after = decisionAfterPhaseSwitch(decision, carriedAmp, 8);
+			assert.equal(after.action, "enable");
+			assert.ok(after.nextState.currentAmp * PHASE_VOLTAGE <= 5109, `${after.nextState.currentAmp} A on one phase`);
 		});
 	});
 

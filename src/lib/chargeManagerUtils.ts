@@ -920,6 +920,26 @@ export function carryCurrentOverPhaseSwitch(
 }
 
 /**
+ * The decision for a cycle that switches the phase count, with the ramp carried over.
+ *
+ * The shutdown delay runs out before the down dwell does, so a three-phase charge that one phase
+ * could carry was stopped and restarted on one phase 40 seconds later (2026-09-26 12:22:43: 5109 W,
+ * 8-16 A, dwell at 8 of 18 cycles). The switch costs the charge a short pause, the stop all of it,
+ * so a stop for too little surplus goes on charging once the carried current reaches the minimum.
+ *
+ * @param decision Decision the controller made for the old phase count
+ * @param carriedAmp Current carried over to the new phase count ({@link carryCurrentOverPhaseSwitch})
+ * @param minimumChargeCurrent Lowest current the ChargeManager may assign to this wallbox
+ * @returns The decision to apply with the switch
+ */
+export function decisionAfterPhaseSwitch<T extends ChargeManagerDecision>(decision: T, carriedAmp: number, minimumChargeCurrent: number): T {
+	if (decision.action === "disable" && decision.reason === "insufficient-surplus" && carriedAmp >= minimumChargeCurrent) {
+		return { ...decision, action: "enable", reason: "charging-current", nextState: { currentAmp: carriedAmp, shutdownDelay: 0 } };
+	}
+	return { ...decision, nextState: { ...decision.nextState, currentAmp: carriedAmp } };
+}
+
+/**
  * Returns the go-e phase mode (`psm`: 1 = one phase, 2 = three phases) to send, or `null` when the
  * charger already reports the requested mode. `psm` is a stored setting, so it is not rewritten
  * every cycle.

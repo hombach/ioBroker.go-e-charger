@@ -13,6 +13,7 @@ import {
 	decideChargeNowEnd,
 	decideIdleRelease,
 	decidePhaseSwitch,
+	decisionAfterPhaseSwitch,
 	DEFAULT_PHASE_TOGGLE_WAIT_MS,
 	describeHold,
 	dropUnchangedChargerCommands,
@@ -1968,7 +1969,8 @@ class go_e_charger extends utils.Adapter {
 					maximumChargeCurrent: participant.maximumChargeCurrent,
 					switchDelay: this.wallboxInfoList[iWB].PhaseSwitchDelay,
 					upDelayCycles: Math.ceil(PHASE_SWITCH_UP_DELAY_MS / this.config.cycleTime),
-					downDelayCycles: Math.ceil(PHASE_SWITCH_DOWN_DELAY_MS / this.config.cycleTime),
+					// a stop for too little surplus switches down at once, see decisionAfterPhaseSwitch
+					downDelayCycles: decision.reason === "insufficient-surplus" ? 0 : Math.ceil(PHASE_SWITCH_DOWN_DELAY_MS / this.config.cycleTime),
 					// every switch costs the charger a pause, so none follows before the charger's own
 					// minimum time between two switches (mptwt) has passed
 					blocked: lastSwitch !== null && now - lastSwitch < this.wallboxInfoList[iWB].PhaseToggleWaitMs,
@@ -1986,7 +1988,7 @@ class go_e_charger extends utils.Adapter {
 						`ChargeManager: switching charger ${this.wallboxLabel(iWB)} to ${phaseDecision.targetPhases}-phase charging (surplus ${Math.round(decisions[index].availablePower)} W)`,
 					);
 					// the current sent with the switch belongs to the new phase count
-					decision.nextState.currentAmp = carryCurrentOverPhaseSwitch(
+					const carriedAmp = carryCurrentOverPhaseSwitch(
 						decision.nextState.currentAmp,
 						this.wallboxInfoList[iWB].EnabledPhases,
 						phaseDecision.targetPhases,
@@ -1994,6 +1996,7 @@ class go_e_charger extends utils.Adapter {
 						participant.maximumChargeCurrent,
 						decisions[index].availablePower,
 					);
+					plans[iWB] = { decision: decisionAfterPhaseSwitch(decision, carriedAmp, participant.minimumChargeCurrent), batteryReason: "available" };
 				}
 			}
 		});
