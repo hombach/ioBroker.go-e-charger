@@ -563,6 +563,8 @@ export interface PhaseSwitchInput {
 	downDelayCycles?: number;
 	/** No switch at all, e.g. while the charger's own wait after the last switch is still running */
 	blocked?: boolean;
+	/** The charger is not charging yet, so the ramp must reach the start current before it does */
+	waitingForStart?: boolean;
 }
 
 /** Result of the automatic phase-switching decision. */
@@ -596,6 +598,13 @@ export interface PhaseSwitchDecision {
  * 571 W with nothing charging). The controller stops charging instead, and the switch happens
  * once one-phase charging can actually start.
  *
+ * Before the charge has started, the floor is the start current instead of the minimum: the ramp
+ * releases the charge only there. With the minimum as the floor, a surplus between the three-phase
+ * minimum and the three-phase start kept the charger on three phases, where it never started,
+ * although one phase could have charged at full current (2026-09-25: 6831 W, 8-16 A). The switch
+ * is only planned then, not written (see {@link mayWritePhaseSwitch}), so both directions use the
+ * same threshold without a band.
+ *
  * @param input Current phase count, available surplus power and the pending-switch counter
  * @returns The phase count to use next cycle and the updated dwell counter
  */
@@ -610,15 +619,19 @@ export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision 
 		return { targetPhases: input.currentPhases, switchDelay: 0 };
 	}
 
-	const threePhaseMinPower = input.minimumChargeCurrent * 3 * PHASE_VOLTAGE;
-	// the up threshold keeps a real distance from the three-phase minimum, so the band never
-	// inverts and never collapses to a single value the surplus crosses in both directions
-	const upThreshold = Math.max(input.maximumChargeCurrent * PHASE_VOLTAGE, threePhaseMinPower * PHASE_SWITCH_HYSTERESIS);
+	const floorCurrent = input.waitingForStart ? resolveStartChargeCurrent(input.minimumChargeCurrent, input.maximumChargeCurrent) : input.minimumChargeCurrent;
+	const threePhaseMinPower = floorCurrent * 3 * PHASE_VOLTAGE;
+	// during a charge the up threshold keeps a real distance from the three-phase minimum, so the
+	// band never inverts and never collapses to a single value the surplus crosses in both directions
+	const upThreshold = Math.max(
+		input.maximumChargeCurrent * PHASE_VOLTAGE,
+		input.waitingForStart ? threePhaseMinPower : threePhaseMinPower * PHASE_SWITCH_HYSTERESIS,
+	);
 
 	let targetPhases = input.currentPhases;
 	if (input.currentPhases === 1 && input.availablePower >= upThreshold) {
 		targetPhases = 3;
-	} else if (input.currentPhases === 3 && input.availablePower < threePhaseMinPower && input.availablePower >= input.minimumChargeCurrent * PHASE_VOLTAGE) {
+	} else if (input.currentPhases === 3 && input.availablePower < threePhaseMinPower && input.availablePower >= floorCurrent * PHASE_VOLTAGE) {
 		targetPhases = 1;
 	}
 
