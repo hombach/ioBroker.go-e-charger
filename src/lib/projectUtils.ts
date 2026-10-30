@@ -161,6 +161,10 @@ export interface IWallboxInfo {
 	ChargeManagerRunning: boolean;
 	/** `frc` from the last API V2 read, `NaN` without one */
 	ForceState: number;
+	/** Minimum time between two phase switches (`mptwt`) in milliseconds */
+	PhaseToggleWaitMs: number;
+	/** When the adapter last switched the phase mode, `null` if not since the start */
+	LastPhaseSwitchMs: number | null;
 	/**
 	 * CurrentHysteresis
 	 */

@@ -6,12 +6,14 @@ import {
 	type BatteryMode,
 	buildChargerCommands,
 	carryCurrentOverPhaseSwitch,
+	chargerPauseMs,
 	chargePowerFromStatusV1,
 	type ChargeManagerDecision,
 	decideChargeManagerFleet,
 	decideChargeNowEnd,
 	decideIdleRelease,
 	decidePhaseSwitch,
+	DEFAULT_PHASE_TOGGLE_WAIT_MS,
 	describeHold,
 	dropUnchangedChargerCommands,
 	enforceOffState,
@@ -42,6 +44,8 @@ import {
 	autoPhaseSupported,
 	phaseModeOf,
 	resolvePhaseModeWrite,
+	PHASE_SWITCH_DOWN_DELAY_MS,
+	PHASE_SWITCH_UP_DELAY_MS,
 	phaseVoltagesFromNrg,
 	isConnectionError,
 	wallboxLabel,
@@ -222,6 +226,8 @@ class go_e_charger extends utils.Adapter {
 				ReleasedByAdapter: false,
 				ChargeManagerRunning: false,
 				ForceState: Number.NaN,
+				PhaseToggleWaitMs: DEFAULT_PHASE_TOGGLE_WAIT_MS,
+				LastPhaseSwitchMs: null,
 				CurrentHysteresis: 0,
 				SetOptAmp: 5,
 				SetOptAllow: false,
@@ -1556,7 +1562,7 @@ class go_e_charger extends utils.Adapter {
 	async Read_ChargerAPIV2(iWB: number): Promise<void> {
 		await axiosInstance
 			.get(
-				`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,frc,modelStatus,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,fhz,trx,ast,ama,cbl,mca,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`,
+				`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,frc,modelStatus,mptwt,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,fhz,trx,ast,ama,cbl,mca,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`,
 				{
 					transformResponse: r => r,
 				},
@@ -1593,6 +1599,7 @@ class go_e_charger extends utils.Adapter {
 	 * @param status - The API V2 status object returned by the wallbox.
 	 * @param status.psm - Phase switching mode (1 = single-phase, 2 = three-phase).
 	 * @param status.frc - Force state (0 = neutral, 1 = off, 2 = on).
+	 * @param status.mptwt - Minimum time between two phase switches in milliseconds.
 	 * @param status.typ - Hardware version or type identifier.
 	 * @param status.fhz - Grid frequency in Hz, 0 if unknown
 	 * @param status.trx - Transaction: null = none, 0 = without card, otherwise cardIndex + 1 (API V2 equivalent of V1 uby)
@@ -1636,6 +1643,7 @@ class go_e_charger extends utils.Adapter {
 		status: {
 			psm: number;
 			frc?: number;
+			mptwt?: number;
 			typ: string;
 			fhz?: unknown;
 			trx?: number | null;
@@ -1697,6 +1705,7 @@ class go_e_charger extends utils.Adapter {
 		this.log.debug(`got enabled phases for charger ${this.wallboxLabel(iWB)}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
 		this.wallboxInfoList[iWB].ForceState = typeof status.frc === "number" ? status.frc : Number.NaN;
 		this.wallboxInfoList[iWB].Reported.alw = releaseReadback(this.wallboxInfoList[iWB].Reported.alw, this.wallboxInfoList[iWB].ForceState);
+		this.wallboxInfoList[iWB].PhaseToggleWaitMs = chargerPauseMs(status.mptwt, DEFAULT_PHASE_TOGGLE_WAIT_MS);
 		this.wallboxInfoList[iWB].Hardware = status.typ;
 		void this.projectUtils.checkAndSetValue(`${basePath}.info.hardwareVersion`, status.typ, `Hardware version of charger`, `info.hardware`);
 		const gridFrequency = gridFrequencyFromStatus(status.fhz);
@@ -1744,6 +1753,7 @@ class go_e_charger extends utils.Adapter {
 			.get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/set?psm=${psm}`, { transformResponse: r => r })
 			.then(response => {
 				//.status == 200
+				this.wallboxInfoList[iWB].LastPhaseSwitchMs = Date.now();
 				this.log.debug(`Sent: PSM=${psm} to charger ${this.wallboxLabel(iWB)} → Response: ${response.statusText}`);
 			})
 			.catch(error => {
@@ -1918,6 +1928,7 @@ class go_e_charger extends utils.Adapter {
 			this.log.debug(`Got external state of battery SoC: ${batterySoc}%`);
 		}
 
+		const now = Date.now();
 		const decisions = decideChargeManagerFleet(
 			{
 				solarPower,
@@ -1949,12 +1960,18 @@ class go_e_charger extends utils.Adapter {
 			// without a vehicle there is nothing to switch for - every phase switch wakes the charger
 			if (this.wallboxInfoList[iWB].AutoPhase && this.wallboxInfoList[iWB].HardwareMin3 && !isVehicleDisconnected(this.wallboxInfoList[iWB].CarState)) {
 				const participant = participants[index];
+				const lastSwitch = this.wallboxInfoList[iWB].LastPhaseSwitchMs;
 				const phaseDecision = decidePhaseSwitch({
 					currentPhases: this.wallboxInfoList[iWB].EnabledPhases,
 					availablePower: decisions[index].availablePower,
 					minimumChargeCurrent: participant.minimumChargeCurrent,
 					maximumChargeCurrent: participant.maximumChargeCurrent,
 					switchDelay: this.wallboxInfoList[iWB].PhaseSwitchDelay,
+					upDelayCycles: Math.ceil(PHASE_SWITCH_UP_DELAY_MS / this.config.cycleTime),
+					downDelayCycles: Math.ceil(PHASE_SWITCH_DOWN_DELAY_MS / this.config.cycleTime),
+					// every switch costs the charger a pause, so none follows before the charger's own
+					// minimum time between two switches (mptwt) has passed
+					blocked: lastSwitch !== null && now - lastSwitch < this.wallboxInfoList[iWB].PhaseToggleWaitMs,
 				});
 				this.wallboxInfoList[iWB].PhaseSwitchDelay = phaseDecision.switchDelay;
 				// phase-switch control loop: show the current/target phase and the pending dwell counter

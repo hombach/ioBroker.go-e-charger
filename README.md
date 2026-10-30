@@ -239,6 +239,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 ### **WORK IN PROGRESS**
 
 - (typhosj) ChargeManager: the automatic 1-/3-phase switching now keeps a real gap between switching up and switching back down - for a 16 A wallbox both thresholds used to be the same value
+- (typhosj) ChargeManager: the automatic phase switching no longer switches down to one phase when the surplus would not be enough for one-phase charging either, waits 1 minute before switching up and 3 minutes before switching down, and never switches again before the charger's own minimum time between two switches has passed - every switch costs the charger a pause, and on some firmware versions it hangs in that pause
 
 ### 1.10.1 (2026-10-31)
 

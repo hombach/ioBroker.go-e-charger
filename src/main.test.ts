@@ -9,6 +9,8 @@ import {
 	releaseReadback,
 	calculateOptimalChargeCurrent,
 	chargePowerFromStatusV1,
+	chargerPauseMs,
+	DEFAULT_PHASE_TOGGLE_WAIT_MS,
 	type ChargeNowEndInput,
 	carryCurrentOverPhaseSwitch,
 	type ChargeManagerControllerInput,
@@ -1105,6 +1107,45 @@ describe("ChargeManager safety helpers", () => {
 			}
 		});
 
+		it("does not switch down when one phase could not charge either", () => {
+			// 2026-09-22 12:32: switched to one phase at 571 W with nothing charging, and the charger hung
+			const zoe = { minimumChargeCurrent: 8, maximumChargeCurrent: 16, switchDelay: PHASE_SWITCH_DELAY_CYCLES };
+			const onePhaseMinPower = 8 * PHASE_VOLTAGE; // 1840 W
+			for (const availablePower of [571, 0, -500, onePhaseMinPower - 1]) {
+				assert.deepEqual(decidePhaseSwitch(input({ ...zoe, currentPhases: 3, availablePower })), { targetPhases: 3, switchDelay: 0 });
+			}
+			assert.equal(decidePhaseSwitch(input({ ...zoe, currentPhases: 3, availablePower: onePhaseMinPower })).targetPhases, 1);
+		});
+
+		it("waits the separate dwell times for switching up and down", () => {
+			const delays = { upDelayCycles: 6, downDelayCycles: 18 };
+			const run = (state: Parameters<typeof decidePhaseSwitch>[0]): number => {
+				let cycles = 0;
+				while (decidePhaseSwitch(state).targetPhases === state.currentPhases) {
+					state = { ...state, switchDelay: decidePhaseSwitch(state).switchDelay };
+					cycles++;
+				}
+				return cycles;
+			};
+			assert.equal(run(input({ ...delays, currentPhases: 1, availablePower: onePhaseMaxPower })), 6);
+			assert.equal(run(input({ ...delays, currentPhases: 3, availablePower: threePhaseMinPower - 1 })), 18);
+			assert.equal(run(input({ ...delays, upDelayCycles: 0, currentPhases: 1, availablePower: onePhaseMaxPower })), 0);
+		});
+
+		it("falls back to the default dwell for an unusable dwell setting", () => {
+			for (const upDelayCycles of [Number.NaN, -1, Number.POSITIVE_INFINITY]) {
+				const atDefault = input({ upDelayCycles, currentPhases: 1, availablePower: onePhaseMaxPower, switchDelay: PHASE_SWITCH_DELAY_CYCLES - 1 });
+				assert.equal(decidePhaseSwitch(atDefault).targetPhases, 1);
+				assert.equal(decidePhaseSwitch({ ...atDefault, switchDelay: PHASE_SWITCH_DELAY_CYCLES }).targetPhases, 3);
+			}
+		});
+
+		it("never switches while blocked, and starts the dwell over", () => {
+			const due = { switchDelay: PHASE_SWITCH_DELAY_CYCLES, blocked: true };
+			assert.deepEqual(decidePhaseSwitch(input({ ...due, currentPhases: 1, availablePower: onePhaseMaxPower })), { targetPhases: 1, switchDelay: 0 });
+			assert.deepEqual(decidePhaseSwitch(input({ ...due, currentPhases: 3, availablePower: 2000 })), { targetPhases: 3, switchDelay: 0 });
+		});
+
 		it("leaves invalid inputs untouched", () => {
 			assert.deepEqual(decidePhaseSwitch(input({ currentPhases: 2, availablePower: 10000 })), { targetPhases: 2, switchDelay: 0 });
 			assert.equal(decidePhaseSwitch(input({ currentPhases: 1, availablePower: Number.NaN, switchDelay: 3 })).targetPhases, 1);
@@ -1643,6 +1684,16 @@ describe("ChargeManager safety helpers", () => {
 		it("never counts a missing power reading as idle", () => {
 			const decision = decideChargeNowEnd(input({ carState: 4, chargePower: Number.NaN, state: { sawVehicle: true, idleDelay: 2 } }));
 			assert.equal(decision.end, null);
+		});
+	});
+
+	describe("chargerPauseMs", () => {
+		it("takes a reported pause and falls back to the default for anything unusable", () => {
+			assert.equal(chargerPauseMs(600000, 1), 600000);
+			assert.equal(chargerPauseMs(0, 1), 0);
+			for (const value of [undefined, null, -1, Number.NaN, Number.POSITIVE_INFINITY, "600000"]) {
+				assert.equal(chargerPauseMs(value, DEFAULT_PHASE_TOGGLE_WAIT_MS), DEFAULT_PHASE_TOGGLE_WAIT_MS, String(value));
+			}
 		});
 	});
 
