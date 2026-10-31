@@ -17,6 +17,11 @@ export interface IWallboxInfo {
 	 */
 	readOnlyMode: boolean;
 	/**
+	 * Whether the last API V1 read reached the charger (`null` before the first read).
+	 * Mirrors `Wallbox_<n>.info.connection`, which is only written when this changes.
+	 */
+	Online: boolean | null;
+	/**
 	 * Firmware version
 	 */
 	Firmware: string;

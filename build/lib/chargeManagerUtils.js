@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateAvailableSurplusPower = calculateAvailableSurplusPower;
@@ -33,6 +33,7 @@ exports.limitTotalCurrent = limitTotalCurrent;
 exports.effectiveCurrentDemand = effectiveCurrentDemand;
 exports.parseWallboxIndex = parseWallboxIndex;
 exports.isConnectionError = isConnectionError;
+exports.connectionTransition = connectionTransition;
 exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 32;
 exports.START_CHARGE_CURRENT = 10;
@@ -494,5 +495,26 @@ function isConnectionError(error) {
         return true;
     }
     return typeof message === "string" && [...CONNECTION_ERROR_CODES].some(errorCode => message.includes(errorCode));
+}
+exports.LIVE_WALLBOX_STATES = [
+    "Power.Charge",
+    "Power.ChargeCurrentVolatile",
+    "Power.ChargingAllowed",
+    "Power.GridPhases",
+    "Power.GridFrequency",
+    "Power.MeasuredMaxPhaseCurrent",
+    "Power.VoltageL1",
+    "Power.VoltageL2",
+    "Power.VoltageL3",
+    "info.carState",
+    "info.carStateString",
+    "info.unlockedByRFIDNo",
+    "info.unlockedByRFIDName",
+];
+function connectionTransition(wasOnline, reachable) {
+    if (reachable) {
+        return wasOnline === true ? null : "came-online";
+    }
+    return wasOnline === false ? null : "went-offline";
 }
 //# sourceMappingURL=chargeManagerUtils.js.map
