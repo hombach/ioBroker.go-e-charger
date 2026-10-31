@@ -270,6 +270,16 @@ class go_e_charger extends utils.Adapter {
 				// init channel for settings and info states for each charger
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.info`, `Informations about go-eCharger`, `go-eCharger.png`, true);
 				await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.info.connection`, false, `Device connected`, "indicator.connected");
+				// read-only: shows which IP address the adapter uses for this charger (from the instance config)
+				await this.projectUtils.checkAndSetValue(
+					`Wallbox_${iWB}.info.ipAddress`,
+					wallBox.ipAddress,
+					`Configured IP address of charger`,
+					"info.ip",
+					false,
+					false,
+					true,
+				);
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Power`, `current wallbox power data`, `go-eCharger.png`, true);
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.Settings`, `states to dynamically adjust wallbox settings`, `go-eCharger.png`, true);
 				await this.projectUtils.checkAndSetChannel(`Wallbox_${iWB}.statistics`, `wallbox statistics data`, `go-eCharger.png`, true);
