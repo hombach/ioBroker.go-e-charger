@@ -28,6 +28,7 @@ import {
 	validateMaxAmpTotal,
 	parseWallboxIndex,
 	isConnectionError,
+	wallboxLabel,
 	connectionTransition,
 	LIVE_WALLBOX_STATES,
 	isVehicleDisconnected,
@@ -1799,6 +1800,30 @@ describe("ChargeManager safety helpers", () => {
 
 		it("has no duplicates", () => {
 			assert.equal(new Set(LIVE_WALLBOX_STATES).size, LIVE_WALLBOX_STATES.length);
+		});
+	});
+
+	describe("wallboxLabel", () => {
+		it("uses the configured name in quotes", () => {
+			assert.equal(wallboxLabel(1, "WEST - Tesla"), `"WEST - Tesla"`);
+			assert.equal(wallboxLabel(1, "  WEST - Tesla  "), `"WEST - Tesla"`);
+		});
+
+		it("appends the IP address when given", () => {
+			assert.equal(wallboxLabel(1, "WEST - Tesla", "192.168.11.181"), `"WEST - Tesla" (192.168.11.181)`);
+			assert.equal(wallboxLabel(0, "", "192.168.11.180"), `0 (192.168.11.180)`);
+		});
+
+		it("falls back to the wallbox number without a usable name", () => {
+			for (const name of [undefined, null, "", "   ", 42]) {
+				assert.equal(wallboxLabel(2, name), "2", JSON.stringify(name));
+			}
+		});
+
+		it("omits an empty or missing IP address", () => {
+			for (const ip of [undefined, null, "", "  "]) {
+				assert.equal(wallboxLabel(0, "Garage", ip), `"Garage"`, JSON.stringify(ip));
+			}
 		});
 	});
 });
