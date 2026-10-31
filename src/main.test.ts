@@ -5,10 +5,18 @@ import {
 	buildChargerCommands,
 	CAR_STATE_FINISHED,
 	enforceOffState,
+	FORCE_STATE_ON,
+	mayWritePhaseSwitch,
+	PHASE_SWITCH_DOWN_DELAY_MS,
+	PHASE_SWITCH_UP_DELAY_MS,
+	phaseSwitchDwellCycles,
+	planningPhases,
 	FORCE_STATE_NEUTRAL,
 	releaseReadback,
 	calculateOptimalChargeCurrent,
 	chargePowerFromStatusV1,
+	chargerPauseMs,
+	DEFAULT_PHASE_TOGGLE_WAIT_MS,
 	type ChargeNowEndInput,
 	carryCurrentOverPhaseSwitch,
 	type ChargeManagerControllerInput,
@@ -17,6 +25,8 @@ import {
 	decideChargeNowEnd,
 	decideIdleRelease,
 	decidePhaseSwitch,
+	decisionAfterPhaseSwitch,
+	type ChargeManagerDecision,
 	describeHold,
 	dropUnchangedChargerCommands,
 	effectiveCurrentDemand,
@@ -43,6 +53,7 @@ import {
 	PHASE_MODE_AUTO,
 	autoPhaseSupported,
 	phaseModeOf,
+	PHASE_SWITCH_HYSTERESIS,
 	phaseModeToSend,
 	resolvePhaseModeWrite,
 	phaseVoltagesFromNrg,
@@ -1068,21 +1079,132 @@ describe("ChargeManager safety helpers", () => {
 			});
 		});
 
-		it("never inverts the band when the one-phase maximum is below the three-phase minimum", () => {
-			// a 16 A box: one-phase max 3680 W < three-phase min 4140 W -> up threshold floored at 4140 W
+		it("keeps a hysteresis band when the one-phase maximum is below the three-phase minimum", () => {
+			// a 16 A box: one-phase max 3680 W < three-phase min 4140 W -> up threshold is the
+			// three-phase minimum widened by PHASE_SWITCH_HYSTERESIS, not the bare minimum
 			const smallBox = { minimumChargeCurrent: MIN_CHARGE_CURRENT, maximumChargeCurrent: 16 };
-			// just below the three-phase minimum: no up-switch even with the dwell already elapsed
-			assert.equal(
-				decidePhaseSwitch(input({ ...smallBox, currentPhases: 1, availablePower: threePhaseMinPower - 1, switchDelay: PHASE_SWITCH_DELAY_CYCLES }))
-					.targetPhases,
-				1,
-			);
-			// at the three-phase minimum: the up-switch fires
-			assert.equal(
-				decidePhaseSwitch(input({ ...smallBox, currentPhases: 1, availablePower: threePhaseMinPower, switchDelay: PHASE_SWITCH_DELAY_CYCLES }))
-					.targetPhases,
-				3,
-			);
+			const upThreshold = threePhaseMinPower * PHASE_SWITCH_HYSTERESIS;
+			const elapsed = { switchDelay: PHASE_SWITCH_DELAY_CYCLES };
+			// inside the band, on either side of the bare three-phase minimum: no up-switch, even
+			// with the dwell already elapsed - this is the value both thresholds used to share
+			for (const availablePower of [threePhaseMinPower - 1, threePhaseMinPower, upThreshold - 1]) {
+				assert.equal(decidePhaseSwitch(input({ ...smallBox, ...elapsed, currentPhases: 1, availablePower })).targetPhases, 1);
+			}
+			// at the up threshold the switch fires
+			assert.equal(decidePhaseSwitch(input({ ...smallBox, ...elapsed, currentPhases: 1, availablePower: upThreshold })).targetPhases, 3);
+			// and three-phase charging is only given up below the three-phase minimum, not below the
+			// up threshold - otherwise the surplus would cross a single value in both directions
+			assert.equal(decidePhaseSwitch(input({ ...smallBox, ...elapsed, currentPhases: 3, availablePower: upThreshold - 1 })).targetPhases, 3);
+			assert.equal(decidePhaseSwitch(input({ ...smallBox, ...elapsed, currentPhases: 3, availablePower: threePhaseMinPower })).targetPhases, 3);
+			assert.equal(decidePhaseSwitch(input({ ...smallBox, ...elapsed, currentPhases: 3, availablePower: threePhaseMinPower - 1 })).targetPhases, 1);
+		});
+
+		it("never lets the band collapse, whatever the configured limits are", () => {
+			// the band had width zero for every wallbox whose maximum is at most three times its
+			// minimum, which is every 16 A box - a surplus sitting on that value flapped on the dwell
+			for (const minimumChargeCurrent of [6, 8, 10, 12, 16]) {
+				for (const maximumChargeCurrent of [16, 20, 32]) {
+					if (minimumChargeCurrent > maximumChargeCurrent) {
+						continue;
+					}
+					const limits = { minimumChargeCurrent, maximumChargeCurrent, switchDelay: PHASE_SWITCH_DELAY_CYCLES };
+					const downThreshold = minimumChargeCurrent * 3 * PHASE_VOLTAGE;
+					// the power that switches down must never also switch up
+					assert.equal(decidePhaseSwitch(input({ ...limits, currentPhases: 1, availablePower: downThreshold })).targetPhases, 1);
+				}
+			}
+		});
+
+		it("does not switch down when one phase could not charge either", () => {
+			// 2026-09-22 12:32: switched to one phase at 571 W with nothing charging, and the charger hung
+			const zoe = { minimumChargeCurrent: 8, maximumChargeCurrent: 16, switchDelay: PHASE_SWITCH_DELAY_CYCLES };
+			const onePhaseMinPower = 8 * PHASE_VOLTAGE; // 1840 W
+			for (const availablePower of [571, 0, -500, onePhaseMinPower - 1]) {
+				assert.deepEqual(decidePhaseSwitch(input({ ...zoe, currentPhases: 3, availablePower })), { targetPhases: 3, switchDelay: 0 });
+			}
+			assert.equal(decidePhaseSwitch(input({ ...zoe, currentPhases: 3, availablePower: onePhaseMinPower })).targetPhases, 1);
+		});
+
+		it("waits the separate dwell times for switching up and down", () => {
+			const delays = { upDelayCycles: 6, downDelayCycles: 18 };
+			const run = (state: Parameters<typeof decidePhaseSwitch>[0]): number => {
+				let cycles = 0;
+				while (decidePhaseSwitch(state).targetPhases === state.currentPhases) {
+					state = { ...state, switchDelay: decidePhaseSwitch(state).switchDelay };
+					cycles++;
+				}
+				return cycles;
+			};
+			assert.equal(run(input({ ...delays, currentPhases: 1, availablePower: onePhaseMaxPower })), 6);
+			assert.equal(run(input({ ...delays, currentPhases: 3, availablePower: threePhaseMinPower - 1 })), 18);
+			assert.equal(run(input({ ...delays, upDelayCycles: 0, currentPhases: 1, availablePower: onePhaseMaxPower })), 0);
+		});
+
+		it("falls back to the default dwell for an unusable dwell setting", () => {
+			for (const upDelayCycles of [Number.NaN, -1, Number.POSITIVE_INFINITY]) {
+				const atDefault = input({ upDelayCycles, currentPhases: 1, availablePower: onePhaseMaxPower, switchDelay: PHASE_SWITCH_DELAY_CYCLES - 1 });
+				assert.equal(decidePhaseSwitch(atDefault).targetPhases, 1);
+				assert.equal(decidePhaseSwitch({ ...atDefault, switchDelay: PHASE_SWITCH_DELAY_CYCLES }).targetPhases, 3);
+			}
+		});
+
+		it("never switches while blocked, and starts the dwell over", () => {
+			const due = { switchDelay: PHASE_SWITCH_DELAY_CYCLES, blocked: true };
+			assert.deepEqual(decidePhaseSwitch(input({ ...due, currentPhases: 1, availablePower: onePhaseMaxPower })), { targetPhases: 1, switchDelay: 0 });
+			assert.deepEqual(decidePhaseSwitch(input({ ...due, currentPhases: 3, availablePower: 2000 })), { targetPhases: 3, switchDelay: 0 });
+		});
+
+		describe("before the charge has started", () => {
+			// 2026-09-25 12:04: minimum 8 A, 6831 W surplus - above the three-phase minimum of 5520 W,
+			// below the three-phase start of 6900 W, so the ramp stopped at 8 A and never started; held off,
+			// the switch is only planned and needs no dwell (phaseSwitchDwellCycles)
+			const waiting = (overrides: Partial<Parameters<typeof decidePhaseSwitch>[0]> = {}): Parameters<typeof decidePhaseSwitch>[0] =>
+				input({
+					currentPhases: 3,
+					minimumChargeCurrent: 8,
+					maximumChargeCurrent: 16,
+					waitingForStart: true,
+					upDelayCycles: 0,
+					downDelayCycles: 0,
+					...overrides,
+				});
+			const target = (overrides: Partial<Parameters<typeof decidePhaseSwitch>[0]>): number => decidePhaseSwitch(waiting(overrides)).targetPhases;
+
+			it("switches to one phase when the surplus carries the minimum but not the start on three phases", () => {
+				assert.equal(target({ availablePower: 6831 }), 1);
+			});
+
+			it("keeps three phases once the surplus carries the three-phase start", () => {
+				assert.equal(target({ availablePower: 6900 }), 3);
+				assert.equal(target({ availablePower: 6899 }), 1);
+			});
+
+			it("stays on three phases when one phase could not start either", () => {
+				assert.equal(target({ availablePower: 2300 }), 1);
+				assert.equal(target({ availablePower: 2299 }), 3);
+			});
+
+			it("switches up to three phases as soon as the surplus carries the three-phase start", () => {
+				assert.equal(target({ currentPhases: 1, availablePower: 6900 }), 3);
+				assert.equal(target({ currentPhases: 1, availablePower: 6899 }), 1);
+				// with the band of a running charge, a raised minimum of 12 A would wait for 10350 W
+				assert.equal(target({ currentPhases: 1, minimumChargeCurrent: 12, availablePower: 8280 }), 3);
+				assert.equal(target({ currentPhases: 1, minimumChargeCurrent: 12, availablePower: 8279 }), 1);
+			});
+
+			it("keeps the minimum as the floor while charging", () => {
+				assert.equal(target({ waitingForStart: false, availablePower: 5520 }), 3);
+				assert.equal(target({ waitingForStart: false, availablePower: 5519 }), 1);
+			});
+
+			it("uses a raised minimum above the start current as the floor", () => {
+				assert.equal(target({ minimumChargeCurrent: 12, availablePower: 8280 }), 3);
+				assert.equal(target({ minimumChargeCurrent: 12, availablePower: 8279 }), 1);
+			});
+
+			it("does not switch on an invalid surplus", () => {
+				assert.deepEqual(decidePhaseSwitch(waiting({ availablePower: Number.NaN })), { targetPhases: 3, switchDelay: 0 });
+			});
 		});
 
 		it("leaves invalid inputs untouched", () => {
@@ -1351,6 +1473,85 @@ describe("ChargeManager safety helpers", () => {
 
 		it("falls back to the wish on invalid input", () => {
 			assert.deepEqual(effectiveCurrentDemand({ ...base, measuredAmp: Number.NaN, wishAmp: 12 }), { demand: 12, reclaimDelay: 0 });
+		});
+	});
+
+	describe("decisionAfterPhaseSwitch", () => {
+		const stop: ChargeManagerDecision = {
+			action: "disable",
+			reason: "insufficient-surplus",
+			optimalCurrent: 7,
+			nextState: { currentAmp: 7, shutdownDelay: 0 },
+		};
+
+		it("goes on charging instead of stopping once the carried current reaches the minimum", () => {
+			assert.deepEqual(decisionAfterPhaseSwitch(stop, 16, 8), {
+				action: "enable",
+				reason: "charging-current",
+				optimalCurrent: 7,
+				nextState: { currentAmp: 16, shutdownDelay: 0 },
+			});
+			assert.equal(decisionAfterPhaseSwitch(stop, 8, 8).action, "enable");
+		});
+
+		it("still stops when the carried current stays below the minimum or is unusable", () => {
+			for (const carriedAmp of [7, 0, Number.NaN]) {
+				const decision = decisionAfterPhaseSwitch(stop, carriedAmp, 8);
+				assert.equal(decision.action, "disable", String(carriedAmp));
+				assert.equal(decision.nextState.shutdownDelay, 0);
+			}
+		});
+
+		it("only carries the current over for every other decision", () => {
+			const invalid: ChargeManagerDecision = {
+				action: "disable",
+				reason: "invalid-input",
+				optimalCurrent: null,
+				nextState: { currentAmp: 0, shutdownDelay: 0 },
+			};
+			assert.deepEqual(decisionAfterPhaseSwitch(invalid, 16, 8), { ...invalid, nextState: { currentAmp: 16, shutdownDelay: 0 } });
+			const hold: ChargeManagerDecision = { action: "hold", reason: "shutdown-delay", optimalCurrent: 7, nextState: { currentAmp: 7, shutdownDelay: 5 } };
+			assert.deepEqual(decisionAfterPhaseSwitch(hold, 16, 8), { ...hold, nextState: { currentAmp: 16, shutdownDelay: 5 } });
+		});
+
+		it("switches a three-phase charge down instead of stopping it when the shutdown delay runs out", () => {
+			// 2026-09-26 12:22:43: 8-16 A, three phases, 5109 W - the shutdown withdrew the release
+			// with the three-minute down dwell at 8 of 18 cycles, and one phase restarted 40 s later
+			const shared = {
+				solarPower: 5109 + 100,
+				houseConsumption: 0,
+				chargerPower: 0,
+				subtractChargerPower: false,
+				batterySoc: null,
+				minBatterySoc: 70,
+				batteryMode: "disabled" as const,
+				reservePower: 100,
+				maximumBatteryBonus: 2000,
+			};
+			const charging: FleetParticipant = {
+				phases: 3,
+				minimumChargeCurrent: 8,
+				maximumChargeCurrent: 16,
+				state: { currentAmp: 7, shutdownDelay: SHUTDOWN_DELAY_CYCLES },
+				claimsPower: true,
+				released: true,
+			};
+			const [decision] = decideChargeManagerFleet(shared, [charging]);
+			assert.equal(decision.action, "disable");
+			const phase = decidePhaseSwitch({
+				currentPhases: 3,
+				availablePower: decision.availablePower,
+				minimumChargeCurrent: 8,
+				maximumChargeCurrent: 16,
+				switchDelay: 7,
+				upDelayCycles: 6,
+				downDelayCycles: decision.reason === "insufficient-surplus" ? 0 : 18,
+			});
+			assert.equal(phase.targetPhases, 1);
+			const carriedAmp = carryCurrentOverPhaseSwitch(decision.nextState.currentAmp, 3, 1, 8, 16, decision.availablePower);
+			const after = decisionAfterPhaseSwitch(decision, carriedAmp, 8);
+			assert.equal(after.action, "enable");
+			assert.ok(after.nextState.currentAmp * PHASE_VOLTAGE <= 5109, `${after.nextState.currentAmp} A on one phase`);
 		});
 	});
 
@@ -1623,6 +1824,60 @@ describe("ChargeManager safety helpers", () => {
 		it("never counts a missing power reading as idle", () => {
 			const decision = decideChargeNowEnd(input({ carState: 4, chargePower: Number.NaN, state: { sawVehicle: true, idleDelay: 2 } }));
 			assert.equal(decision.end, null);
+		});
+	});
+
+	describe("chargerPauseMs", () => {
+		it("takes a reported pause and falls back to the default for anything unusable", () => {
+			assert.equal(chargerPauseMs(600000, 1), 600000);
+			assert.equal(chargerPauseMs(0, 1), 0);
+			for (const value of [undefined, null, -1, Number.NaN, Number.POSITIVE_INFINITY, "600000"]) {
+				assert.equal(chargerPauseMs(value, DEFAULT_PHASE_TOGGLE_WAIT_MS), DEFAULT_PHASE_TOGGLE_WAIT_MS, String(value));
+			}
+		});
+	});
+
+	describe("planningPhases", () => {
+		it("plans with a decided switch that waits for the release", () => {
+			assert.equal(planningPhases(1, 3), 1);
+			assert.equal(planningPhases(3, 1), 3);
+		});
+
+		it("falls back to the reported phase count without a usable pending switch", () => {
+			for (const pending of [null, 0, 2, 4, -1, Number.NaN]) {
+				assert.equal(planningPhases(pending, 3), 3, String(pending));
+			}
+		});
+	});
+
+	describe("phaseSwitchDwellCycles", () => {
+		it("keeps the dwell while charging is forced on", () => {
+			assert.equal(phaseSwitchDwellCycles(PHASE_SWITCH_DOWN_DELAY_MS, 10000, FORCE_STATE_ON), 18);
+			assert.equal(phaseSwitchDwellCycles(PHASE_SWITCH_UP_DELAY_MS, 7000, FORCE_STATE_ON), 9);
+		});
+
+		it("plans a switch at once while the charger is held off or its state is unknown", () => {
+			// 2026-09-23 15:15-15:18: three minutes of dwell before a PV start on one phase
+			for (const forceState of [FORCE_STATE_NEUTRAL, 1, 3, Number.NaN, "2", null, undefined]) {
+				assert.equal(phaseSwitchDwellCycles(PHASE_SWITCH_DOWN_DELAY_MS, 10000, forceState), 0, String(forceState));
+			}
+		});
+	});
+
+	describe("mayWritePhaseSwitch", () => {
+		it("switches while the release is active and stays active", () => {
+			// 2026-09-22 13:56: 1 -> 3 phases during a charge, charging again after 20 seconds
+			assert.equal(mayWritePhaseSwitch(FORCE_STATE_ON, "enable"), true);
+			assert.equal(mayWritePhaseSwitch(FORCE_STATE_ON, "hold"), true);
+		});
+
+		it("never switches a charger that is held off or about to be", () => {
+			for (const forceState of [FORCE_STATE_NEUTRAL, 1, 3, Number.NaN, "2", null, undefined]) {
+				for (const action of ["enable", "hold", "disable"] as const) {
+					assert.equal(mayWritePhaseSwitch(forceState, action), false, `frc ${String(forceState)}, ${action}`);
+				}
+			}
+			assert.equal(mayWritePhaseSwitch(FORCE_STATE_ON, "disable"), false);
 		});
 	});
 
