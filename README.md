@@ -221,6 +221,13 @@ While the budget is active, the adapter also **follows the actually measured cha
 
 > This is a conservative per-phase-agnostic model: every ampere counts against one budget regardless of which phase it lands on. It never exceeds the fuse rating, but with loads spread across phases it may leave some capacity unused.
 
+## Migrating from the go-e adapter
+
+Coming from the adapter [ioBroker.go-e](https://github.com/MK-2001/ioBroker.go-e)? The migration guide maps datapoints and settings, answers common questions (go-e app mode, HTTP API v1/v2, sign of the input values, running both adapters in parallel with read-only mode) and lists what is not supported yet:
+
+- [Migration guide (English)](https://github.com/hombach/ioBroker.go-e-charger/blob/master/docu/migration-from-go-e.md)
+- [Umstiegsanleitung (Deutsch)](https://github.com/hombach/ioBroker.go-e-charger/blob/master/docu/migration-from-go-e_de.md)
+
 ## Sentry
 
 This adapter employs Sentry libraries to automatically report exceptions and code errors to the developers. For more details and information on how to disable error reporting, please consult the [Sentry-Plugin Documentation](https://github.com/ioBroker/plugin-sentry#plugin-sentry)!
@@ -236,6 +243,10 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+
+- (HombachC) added a migration guide from the go-e adapter (ioBroker.go-e) in English and German
+
 ### 1.10.1 (2026-10-31)
 
 - (HombachC) an unreachable charger (e.g. without power) is now shown offline: its info.connection turns false, live readings are cleared and it is left out of ChargeManager and current budget until it answers again; the error is logged once instead of every cycle
