@@ -34,6 +34,12 @@ export interface IWallboxInfo {
 	 */
 	HardwareMin3: boolean;
 	/**
+	 * Whether the ChargeManager switches phases automatically (`Settings.PhaseMode` = 0). Only ever true
+	 * when the instance settings allow automatic switching for this wallbox and the hardware supports it
+	 * (or is not known yet, because the charger has not answered since adapter start).
+	 */
+	AutoPhase: boolean;
+	/**
 	 * GridPhases
 	 */
 	GridPhases: number;

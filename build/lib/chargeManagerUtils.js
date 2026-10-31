@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateAvailableSurplusPower = calculateAvailableSurplusPower;
@@ -21,6 +21,9 @@ exports.releaseReadback = releaseReadback;
 exports.enforceOffState = enforceOffState;
 exports.carryCurrentOverPhaseSwitch = carryCurrentOverPhaseSwitch;
 exports.phaseModeToSend = phaseModeToSend;
+exports.resolvePhaseModeWrite = resolvePhaseModeWrite;
+exports.autoPhaseSupported = autoPhaseSupported;
+exports.phaseModeOf = phaseModeOf;
 exports.isVehicleDisconnected = isVehicleDisconnected;
 exports.gridFrequencyFromStatus = gridFrequencyFromStatus;
 exports.phaseVoltagesFromNrg = phaseVoltagesFromNrg;
@@ -348,6 +351,22 @@ function phaseModeToSend(charge3Phase, enabledPhases) {
         return null;
     }
     return charge3Phase ? 2 : 1;
+}
+exports.PHASE_MODE_AUTO = 0;
+function resolvePhaseModeWrite(value, autoAllowed, enabledPhases) {
+    if (value === 1 || value === 3) {
+        return { auto: false, charge3Phase: value === 3 };
+    }
+    if (value === exports.PHASE_MODE_AUTO && autoAllowed) {
+        return { auto: true, managedCharge3Phase: enabledPhases === 3 };
+    }
+    return null;
+}
+function autoPhaseSupported(hardwareMin3, online) {
+    return hardwareMin3 || online !== true;
+}
+function phaseModeOf(auto, charge3Phase) {
+    return auto ? exports.PHASE_MODE_AUTO : charge3Phase ? 3 : 1;
 }
 function isVehicleDisconnected(carState) {
     return carState === 1;

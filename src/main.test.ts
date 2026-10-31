@@ -40,7 +40,11 @@ import {
 	RECLAIM_DELAY_CYCLES,
 	type TotalCurrentParticipant,
 	PHASE_SWITCH_DELAY_CYCLES,
+	PHASE_MODE_AUTO,
+	autoPhaseSupported,
+	phaseModeOf,
 	phaseModeToSend,
+	resolvePhaseModeWrite,
 	phaseVoltagesFromNrg,
 	PHASE_VOLTAGE,
 	RELEASE_RETRY_INTERVAL,
@@ -1432,6 +1436,58 @@ describe("ChargeManager safety helpers", () => {
 			// and the gap between retries never grows beyond the interval
 			const gaps = writtenAt.slice(1).map((cycle, i) => cycle - writtenAt[i]);
 			assert.equal(Math.max(...gaps), RELEASE_RETRY_INTERVAL);
+		});
+	});
+
+	describe("resolvePhaseModeWrite", () => {
+		it("fixes one or three phases and ends automatic switching", () => {
+			assert.deepEqual(resolvePhaseModeWrite(1, true, 3), { auto: false, charge3Phase: false });
+			assert.deepEqual(resolvePhaseModeWrite(3, true, 1), { auto: false, charge3Phase: true });
+			assert.deepEqual(resolvePhaseModeWrite(3, false, 0), { auto: false, charge3Phase: true });
+		});
+
+		it("enables automatic switching only when the wallbox allows it", () => {
+			assert.deepEqual(resolvePhaseModeWrite(PHASE_MODE_AUTO, true, 1), { auto: true, managedCharge3Phase: false });
+			assert.equal(resolvePhaseModeWrite(PHASE_MODE_AUTO, false, 1), null);
+		});
+
+		it("starts automatic switching from the active phase count, so a running three-phase charge stays three-phase", () => {
+			assert.deepEqual(resolvePhaseModeWrite(PHASE_MODE_AUTO, true, 3), { auto: true, managedCharge3Phase: true });
+			// unknown phase count (psm not reported): no three-phase claim
+			assert.deepEqual(resolvePhaseModeWrite(PHASE_MODE_AUTO, true, 0), { auto: true, managedCharge3Phase: false });
+		});
+
+		it("rejects every other value", () => {
+			for (const value of [2, -1, 4, 1.5, Number.NaN, "0", "1", "3", true, false, null, undefined]) {
+				assert.equal(resolvePhaseModeWrite(value, true, 3), null, String(value));
+			}
+		});
+	});
+
+	describe("autoPhaseSupported", () => {
+		it("keeps automatic switching on gen 3+ hardware", () => {
+			assert.equal(autoPhaseSupported(true, true), true);
+		});
+
+		it("drops it for a charger that answered without API V2", () => {
+			assert.equal(autoPhaseSupported(false, true), false);
+		});
+
+		it("keeps it while the hardware is not known yet", () => {
+			assert.equal(autoPhaseSupported(false, false), true);
+			assert.equal(autoPhaseSupported(false, null), true);
+		});
+	});
+
+	describe("phaseModeOf", () => {
+		it("reports automatic before the manual phase request", () => {
+			assert.equal(phaseModeOf(true, true), PHASE_MODE_AUTO);
+			assert.equal(phaseModeOf(true, false), PHASE_MODE_AUTO);
+		});
+
+		it("reports the manual phase request otherwise", () => {
+			assert.equal(phaseModeOf(false, true), 3);
+			assert.equal(phaseModeOf(false, false), 1);
 		});
 	});
 
