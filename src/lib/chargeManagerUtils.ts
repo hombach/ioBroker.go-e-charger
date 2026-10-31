@@ -1329,3 +1329,20 @@ export function connectionTransition(wasOnline: boolean | null, reachable: boole
 	}
 	return wasOnline === false ? null : "went-offline";
 }
+
+/**
+ * Identifies a wallbox in log messages: its configured name in quotes, or its index in the
+ * wallbox list (the `n` of `Wallbox_<n>`) when no name is configured, optionally followed by
+ * its IP address.
+ *
+ * @param index Index of the wallbox in the configuration list (`wallBoxList`)
+ * @param name Configured charger name (`wallBoxList[n].chargerName`), may be empty or missing
+ * @param ipAddress Configured IP address to append in parentheses, omitted when empty
+ * @returns e.g. `"WEST - Tesla" (192.168.11.181)`, `"WEST - Tesla"`, `1 (192.168.11.181)` or `1`
+ */
+export function wallboxLabel(index: number, name?: unknown, ipAddress?: unknown): string {
+	const trimmedName = typeof name === "string" ? name.trim() : "";
+	const label = trimmedName ? `"${trimmedName}"` : String(index);
+	const trimmedIp = typeof ipAddress === "string" ? ipAddress.trim() : "";
+	return trimmedIp ? `${label} (${trimmedIp})` : label;
+}
