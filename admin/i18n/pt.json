@@ -2,7 +2,7 @@
 	"ERR_maxCurrentBelowMin": "A corrente máxima deve ser maior ou igual à mínima",
 	"ERR_minCurrentAboveMax": "A corrente mínima deve ser menor ou igual à máxima",
 	"LBL_autoPhaseSwitch": "Comutação automática 1/3 fases (hardware ger. 3+)",
-	"LBL_autoPhaseSwitchHelp": "Permite que o ChargeManager alterne esta wallbox entre carregamento monofásico e trifásico conforme o excedente disponível. Apenas para hardware de geração 3 ou mais recente; interrompe brevemente o carregamento a cada comutação.",
+	"LBL_autoPhaseSwitchHelp": "Disponibiliza para esta wallbox a comutação automática entre carregamento monofásico e trifásico. Settings.PhaseMode seleciona então monofásico fixo (1), trifásico fixo (3) ou automático (0, padrão). Apenas para hardware de geração 3 ou superior; interrompe brevemente o carregamento em cada comutação.",
 	"LBL_stopWhenCarIdle": "Retirar a autorização quando o veículo deixa de carregar",
 	"LBL_stopWhenCarIdleHelp": "Se o veículo não consumir potência durante 5 minutos apesar da autorização de carga, o ChargeManager retira-a até o veículo ser desligado ou o excedente terminar. Ajuda veículos como o Renault Zoe, que de outro modo permanecem em modo de carga. Um ChargeNOW em curso desliga-se sozinho em vez disso.",
 	"LBL_batteryMode": "Modo da bateria doméstica",

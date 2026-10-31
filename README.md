@@ -150,6 +150,7 @@ After the adapter has started, use the writable states below. Replace instance `
 | `go-e-charger.0.Wallbox_0.Settings.ChargeNOW`     | Forces charging; switches ChargeManager off                     |
 | `go-e-charger.0.Wallbox_0.Settings.ChargeCurrent` | Current used by ChargeNOW                                       |
 | `go-e-charger.0.Wallbox_0.Settings.Charge3Phase`  | Selects one-phase or three-phase charging on supported hardware |
+| `go-e-charger.0.Wallbox_0.Settings.PhaseMode`     | `1` / `3` fixes the phase count, `0` switches automatically     |
 
 For surplus charging, set `ChargeManager` to `true`. ChargeNOW charges at the configured `ChargeCurrent` without considering the available surplus. The two modes are exclusive: switching one on switches the other off.
 
@@ -172,7 +173,13 @@ Enable **automatic 1-/3-phase switching** per wallbox (gen 3+ only, off by defau
 - It switches **down to one phase** once the surplus can no longer sustain the three-phase minimum (~4.1 kW at 6 A), so a shrinking surplus keeps charging one-phase instead of stopping.
 - The gap between those thresholds plus a dwell time prevents rapid back-and-forth switching, which would interrupt charging each time.
 
-While the option is enabled the adapter controls `Charge3Phase` for that wallbox; leave it disabled to keep selecting the phase mode manually. Because a switch briefly interrupts charging and not every vehicle handles it gracefully, it is opt-in.
+The option makes automatic switching available; `Settings.PhaseMode` selects it at runtime without restarting the adapter:
+
+- `0`: automatic switching (only accepted while the option is enabled and on gen 3+ hardware; the default then), starts from the phase count the charger is using
+- `1`: fixed one-phase charging, sets `Charge3Phase` to `false`
+- `3`: fixed three-phase charging, sets `Charge3Phase` to `true`
+
+In automatic mode the ChargeManager picks the phase count without changing `Charge3Phase`, which keeps applying to ChargeNOW. Writing `Charge3Phase` directly does not end automatic mode. Because a switch briefly interrupts charging and not every vehicle handles it gracefully, the option is off by default.
 
 #### Operating modes
 
@@ -235,6 +242,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (HombachC) an unreachable charger (e.g. without power) is now shown offline: its info.connection turns false, live readings are cleared and it is left out of ChargeManager and current budget until it answers again; the error is logged once instead of every cycle
 - (HombachC) added read-only state info.ipAddress with the configured IP address of each charger
 - (HombachC) log messages now name a charger by its configured name (e.g. charger "WEST - Tesla" (192.168.11.181)) instead of its number; the number is only used when no name is configured
+- (typhosj) ChargeManager: new state `Settings.PhaseMode` switches between fixed one-phase, fixed three-phase and automatic phase switching at runtime; the instance option now only makes the automatic mode available
 
 ### 1.10.0 (2026-10-29)
 
