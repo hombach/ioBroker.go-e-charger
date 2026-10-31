@@ -34,6 +34,7 @@ exports.effectiveCurrentDemand = effectiveCurrentDemand;
 exports.parseWallboxIndex = parseWallboxIndex;
 exports.isConnectionError = isConnectionError;
 exports.connectionTransition = connectionTransition;
+exports.wallboxLabel = wallboxLabel;
 exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 32;
 exports.START_CHARGE_CURRENT = 10;
@@ -516,5 +517,11 @@ function connectionTransition(wasOnline, reachable) {
         return wasOnline === true ? null : "came-online";
     }
     return wasOnline === false ? null : "went-offline";
+}
+function wallboxLabel(index, name, ipAddress) {
+    const trimmedName = typeof name === "string" ? name.trim() : "";
+    const label = trimmedName ? `"${trimmedName}"` : String(index);
+    const trimmedIp = typeof ipAddress === "string" ? ipAddress.trim() : "";
+    return trimmedIp ? `${label} (${trimmedIp})` : label;
 }
 //# sourceMappingURL=chargeManagerUtils.js.map
