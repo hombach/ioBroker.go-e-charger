@@ -124,6 +124,7 @@ class go_e_charger extends utils.Adapter {
                 Firmware: "0",
                 Hardware: "V2",
                 HardwareMin3: false,
+                AutoPhase: false,
                 GridPhases: 0,
                 ChargeNOW: false,
                 ChargeManager: false,
@@ -209,6 +210,25 @@ class go_e_charger extends utils.Adapter {
                 }
                 this.wallboxInfoList[iWB].ChargeCurrent = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeCurrent`);
                 this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.Charge3Phase`);
+                const phaseModeId = `Wallbox_${iWB}.Settings.PhaseMode`;
+                await this.extendObject(phaseModeId, {
+                    type: "state",
+                    common: {
+                        name: "PhaseMode",
+                        type: "number",
+                        role: "level",
+                        desc: `Phase mode: 1 = one phase, 3 = three phases, 0 = automatic switching (if enabled in the instance settings)`,
+                        read: true,
+                        write: true,
+                        states: { 0: "automatic", 1: "1-phase", 3: "3-phase" },
+                    },
+                    native: {},
+                });
+                const storedPhaseMode = (await this.getStateAsync(phaseModeId))?.val ?? chargeManagerUtils_1.PHASE_MODE_AUTO;
+                const info = this.wallboxInfoList[iWB];
+                info.AutoPhase = Boolean(wallBox.autoPhaseSwitch) && storedPhaseMode === chargeManagerUtils_1.PHASE_MODE_AUTO && (0, chargeManagerUtils_1.autoPhaseSupported)(info.HardwareMin3, info.Online);
+                info.ManagedCharge3Phase = info.EnabledPhases === 3;
+                this.syncPhaseMode(iWB);
             }
         }
         catch (e) {
@@ -320,11 +340,33 @@ class go_e_charger extends utils.Adapter {
                                                 this.wallboxInfoList[chargerNo].Charge3Phase = state.val;
                                                 this.log.debug(`settings state changed to Charge3Phase: ${this.wallboxInfoList[chargerNo].Charge3Phase}`);
                                                 void this.setState(id, state.val, true);
+                                                this.syncPhaseMode(chargerNo);
                                             }
                                             else {
                                                 this.log.warn(`Wrong type for Charge3Phase: ${state.val}`);
                                             }
                                             break;
+                                        case "PhaseMode": {
+                                            const info = this.wallboxInfoList[chargerNo];
+                                            const mode = (0, chargeManagerUtils_1.resolvePhaseModeWrite)(state.val, Boolean(this.config.wallBoxList[chargerNo].autoPhaseSwitch) && info.HardwareMin3, info.EnabledPhases);
+                                            if (mode) {
+                                                info.AutoPhase = mode.auto;
+                                                info.PhaseSwitchDelay = 0;
+                                                if (mode.auto) {
+                                                    info.ManagedCharge3Phase = mode.managedCharge3Phase;
+                                                }
+                                                else {
+                                                    info.Charge3Phase = mode.charge3Phase;
+                                                    void this.setState(`Wallbox_${chargerNo}.Settings.Charge3Phase`, mode.charge3Phase, true);
+                                                }
+                                                this.log.debug(`settings state changed to PhaseMode: ${state.val}`);
+                                            }
+                                            else {
+                                                this.log.warn(`Wrong value for PhaseMode: ${state.val} (1 = one phase, 3 = three phases, 0 = automatic if enabled in the instance settings on a gen 3+ charger)`);
+                                            }
+                                            this.syncPhaseMode(chargerNo);
+                                            break;
+                                        }
                                         default:
                                             this.log.debug(`unknown value for setting type: ${settingType}`);
                                     }
@@ -453,6 +495,10 @@ class go_e_charger extends utils.Adapter {
                 if (this.wallboxInfoList[iWB].HardwareMin3 || wasOnline === false) {
                     await this.Read_ChargerAPIV2(iWB);
                 }
+                if (this.wallboxInfoList[iWB].AutoPhase && !(0, chargeManagerUtils_1.autoPhaseSupported)(this.wallboxInfoList[iWB].HardwareMin3, this.wallboxInfoList[iWB].Online)) {
+                    this.wallboxInfoList[iWB].AutoPhase = false;
+                    this.syncPhaseMode(iWB);
+                }
                 if (this.wallboxInfoList[iWB].ChargeNOW) {
                     await this.endChargeNowWhenDone(iWB);
                 }
@@ -530,7 +576,7 @@ class go_e_charger extends utils.Adapter {
                     }
                     else if (plan?.decision) {
                         const decision = plan.decision;
-                        const useAutoPhase = this.config.wallBoxList[iWB].autoPhaseSwitch && info.HardwareMin3;
+                        const useAutoPhase = info.AutoPhase && info.HardwareMin3;
                         const targetPhase = useAutoPhase ? info.ManagedCharge3Phase : info.Charge3Phase;
                         await this.Switch_3Phases(targetPhase, iWB);
                         if (budgetActive && !hasVehicle) {
@@ -639,6 +685,10 @@ class go_e_charger extends utils.Adapter {
             return fallback;
         }
         return value;
+    }
+    syncPhaseMode(iWB) {
+        const info = this.wallboxInfoList[iWB];
+        void this.setState(`Wallbox_${iWB}.Settings.PhaseMode`, (0, chargeManagerUtils_1.phaseModeOf)(info.AutoPhase, info.Charge3Phase), true);
     }
     resetIdleRelease(iWB) {
         this.wallboxInfoList[iWB].IdleReleaseDelay = 0;
@@ -1054,9 +1104,7 @@ class go_e_charger extends utils.Adapter {
             const decision = decisions[index];
             const carState = this.wallboxInfoList[iWB].CarState;
             this.log.debug(`ChargeManager charger ${this.wallboxLabel(iWB)}: surplus ${Math.round(decision.availablePower)} W → optimal ${decision.optimalCurrent ?? 0} A, ramp ${decision.nextState.currentAmp} A, action=${decision.action} (${decision.reason}), car=${carState}`);
-            if (this.config.wallBoxList[iWB].autoPhaseSwitch &&
-                this.wallboxInfoList[iWB].HardwareMin3 &&
-                !(0, chargeManagerUtils_1.isVehicleDisconnected)(this.wallboxInfoList[iWB].CarState)) {
+            if (this.wallboxInfoList[iWB].AutoPhase && this.wallboxInfoList[iWB].HardwareMin3 && !(0, chargeManagerUtils_1.isVehicleDisconnected)(this.wallboxInfoList[iWB].CarState)) {
                 const participant = participants[index];
                 const phaseDecision = (0, chargeManagerUtils_1.decidePhaseSwitch)({
                     currentPhases: this.wallboxInfoList[iWB].EnabledPhases,

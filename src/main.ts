@@ -39,6 +39,7 @@ import {
 	withdrawReleaseWithModesOff,
 	phaseModeToSend,
 	PHASE_MODE_AUTO,
+	autoPhaseSupported,
 	phaseModeOf,
 	resolvePhaseModeWrite,
 	phaseVoltagesFromNrg,
@@ -348,7 +349,8 @@ class go_e_charger extends utils.Adapter {
 				this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.Charge3Phase`); // Get enable of 3 phases for charging override
 
 				// PhaseMode: 1 / 3 fix the phase count through Charge3Phase, 0 hands it to the automatic switching.
-				// A wallbox with automatic switching enabled starts in automatic mode unless the user fixed a phase count.
+				// A wallbox with automatic switching enabled starts in automatic mode unless the user fixed a phase count
+				// or it answered as a charger before gen 3; the automatic switching starts from the active phase count.
 				const phaseModeId = `Wallbox_${iWB}.Settings.PhaseMode`;
 				await this.extendObject(phaseModeId, {
 					type: "state",
@@ -364,7 +366,9 @@ class go_e_charger extends utils.Adapter {
 					native: {},
 				});
 				const storedPhaseMode = (await this.getStateAsync(phaseModeId))?.val ?? PHASE_MODE_AUTO;
-				this.wallboxInfoList[iWB].AutoPhase = Boolean(wallBox.autoPhaseSwitch) && storedPhaseMode === PHASE_MODE_AUTO;
+				const info = this.wallboxInfoList[iWB];
+				info.AutoPhase = Boolean(wallBox.autoPhaseSwitch) && storedPhaseMode === PHASE_MODE_AUTO && autoPhaseSupported(info.HardwareMin3, info.Online);
+				info.ManagedCharge3Phase = info.EnabledPhases === 3;
 				this.syncPhaseMode(iWB);
 			} // next wallbox
 		} catch (e) {
@@ -517,18 +521,25 @@ class go_e_charger extends utils.Adapter {
 											}
 											break;
 										case "PhaseMode": {
-											const mode = resolvePhaseModeWrite(state.val, Boolean(this.config.wallBoxList[chargerNo].autoPhaseSwitch));
+											const info = this.wallboxInfoList[chargerNo];
+											const mode = resolvePhaseModeWrite(
+												state.val,
+												Boolean(this.config.wallBoxList[chargerNo].autoPhaseSwitch) && info.HardwareMin3,
+												info.EnabledPhases,
+											);
 											if (mode) {
-												this.wallboxInfoList[chargerNo].AutoPhase = mode.auto;
-												this.wallboxInfoList[chargerNo].PhaseSwitchDelay = 0;
-												if (mode.charge3Phase !== undefined) {
-													this.wallboxInfoList[chargerNo].Charge3Phase = mode.charge3Phase;
+												info.AutoPhase = mode.auto;
+												info.PhaseSwitchDelay = 0;
+												if (mode.auto) {
+													info.ManagedCharge3Phase = mode.managedCharge3Phase;
+												} else {
+													info.Charge3Phase = mode.charge3Phase;
 													void this.setState(`Wallbox_${chargerNo}.Settings.Charge3Phase`, mode.charge3Phase, true);
 												}
 												this.log.debug(`settings state changed to PhaseMode: ${state.val}`);
 											} else {
 												this.log.warn(
-													`Wrong value for PhaseMode: ${state.val} (1 = one phase, 3 = three phases, 0 = automatic if enabled in the instance settings)`,
+													`Wrong value for PhaseMode: ${state.val} (1 = one phase, 3 = three phases, 0 = automatic if enabled in the instance settings on a gen 3+ charger)`,
 												);
 											}
 											// confirm the effective mode, which is the previous one after a rejected write
@@ -685,6 +696,11 @@ class go_e_charger extends utils.Adapter {
 				// a charger that was unreachable (e.g. at adapter start) is probed on API V2 once it is back
 				if (this.wallboxInfoList[iWB].HardwareMin3 || wasOnline === false) {
 					await this.Read_ChargerAPIV2(iWB);
+				}
+				// a charger unreachable at adapter start kept its automatic mode until its hardware is known
+				if (this.wallboxInfoList[iWB].AutoPhase && !autoPhaseSupported(this.wallboxInfoList[iWB].HardwareMin3, this.wallboxInfoList[iWB].Online)) {
+					this.wallboxInfoList[iWB].AutoPhase = false;
+					this.syncPhaseMode(iWB);
 				}
 				if (this.wallboxInfoList[iWB].ChargeNOW) {
 					// before the planning, so a ChargeNOW that ends here is handled like one switched off

@@ -894,17 +894,35 @@ export const PHASE_MODE_AUTO = 0;
  * Resolves a user write to `Settings.PhaseMode`.
  *
  * @param value The written value: 1 or 3 fixes the phase count, {@link PHASE_MODE_AUTO} selects automatic switching
- * @param autoAllowed Whether automatic switching is enabled for this wallbox in the instance settings (and supported)
- * @returns Whether automatic switching is on and, for a fixed mode, the manual phase request; `null` rejects the write
+ * @param autoAllowed Whether automatic switching is enabled for this wallbox in the instance settings and the hardware is gen 3+
+ * @param enabledPhases The phase count the charger currently reports
+ * @returns Whether automatic switching is on and either the manual phase request (fixed mode) or the phase the
+ * automatic switching starts from, so switching to automatic mid-charge keeps the active phase count; `null` rejects the write
  */
-export function resolvePhaseModeWrite(value: unknown, autoAllowed: boolean): { auto: boolean; charge3Phase?: boolean } | null {
+export function resolvePhaseModeWrite(
+	value: unknown,
+	autoAllowed: boolean,
+	enabledPhases: number,
+): { auto: false; charge3Phase: boolean } | { auto: true; managedCharge3Phase: boolean } | null {
 	if (value === 1 || value === 3) {
 		return { auto: false, charge3Phase: value === 3 };
 	}
 	if (value === PHASE_MODE_AUTO && autoAllowed) {
-		return { auto: true };
+		return { auto: true, managedCharge3Phase: enabledPhases === 3 };
 	}
 	return null;
+}
+
+/**
+ * Whether automatic switching may stay on for a charger: it is gen 3+, or its hardware is not known yet
+ * because it has not answered so far (e.g. without power at adapter start).
+ *
+ * @param hardwareMin3 Whether the charger answered on API V2
+ * @param online Whether the charger answered on API V1 (`null` before the first read)
+ * @returns `false` only for a charger that answered and is not gen 3+
+ */
+export function autoPhaseSupported(hardwareMin3: boolean, online: boolean | null): boolean {
+	return hardwareMin3 || online !== true;
 }
 
 /**

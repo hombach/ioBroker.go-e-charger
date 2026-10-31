@@ -175,7 +175,7 @@ Enable **automatic 1-/3-phase switching** per wallbox (gen 3+ only, off by defau
 
 The option makes automatic switching available; `Settings.PhaseMode` selects it at runtime without restarting the adapter:
 
-- `0`: automatic switching (only accepted while the option is enabled; the default then)
+- `0`: automatic switching (only accepted while the option is enabled and on gen 3+ hardware; the default then), starts from the phase count the charger is using
 - `1`: fixed one-phase charging, sets `Charge3Phase` to `false`
 - `3`: fixed three-phase charging, sets `Charge3Phase` to `true`
 
