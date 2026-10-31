@@ -106,20 +106,20 @@
       "es": "go-eCharger",
       "pl": "go-eCharger",
       "uk": "go-eCharger",
-      "zh-cn": "导 言"
+      "zh-cn": "go-eCharger"
     },
     "desc": {
-      "en": "Adapter for reading go-eCharger data",
-      "de": "Adapter zum Lesen von go-eCharger-Daten",
-      "ru": "Адаптер для чтения данных go-eCharger",
-      "pt": "Adaptador para leitura de dados do go-eCharger",
-      "nl": "Adapter voor het lezen van go-eCharger-gegevens",
-      "fr": "Adaptateur pour lire les données de go-eCharger",
-      "it": "Adattatore per la lettura di dati go-eCharger",
-      "es": "Adaptador para leer datos de go-eCharger",
-      "pl": "Adapter do odczytu danych go-eCharger",
-      "uk": "Адаптер для читання даних go-eCharger",
-      "zh-cn": "用于读取go-eCharger数据的适配器"
+      "en": "go-e Charger (HOME, Gemini): PV surplus charging, 1/3-phase switching, multiple wallboxes, load management, home battery",
+      "de": "go-e Charger (HOME, Gemini): PV-Überschussladen, 1/3-Phasenumschaltung, mehrere Wallboxen, Lastmanagement, Hausakku",
+      "ru": "go-e Charger (HOME, Gemini): зарядка от излишков солнечной энергии, переключение 1/3 фаз, несколько зарядных станций, управление нагрузкой, домашний аккумулятор",
+      "pt": "go-e Charger (HOME, Gemini): carregamento com excedente fotovoltaico, comutação de 1/3 fases, várias wallboxes, gestão de carga, bateria doméstica",
+      "nl": "go-e Charger (HOME, Gemini): laden met PV-overschot, 1/3-fase-omschakeling, meerdere wallboxen, laadbeheer, thuisbatterij",
+      "fr": "go-e Charger (HOME, Gemini) : recharge avec le surplus photovoltaïque, commutation 1/3 phases, plusieurs bornes, gestion de la charge, batterie domestique",
+      "it": "go-e Charger (HOME, Gemini): ricarica con surplus fotovoltaico, commutazione 1/3 fasi, più wallbox, gestione dei carichi, batteria domestica",
+      "es": "go-e Charger (HOME, Gemini): carga con excedente fotovoltaico, conmutación de 1/3 fases, varios wallbox, gestión de carga, batería doméstica",
+      "pl": "go-e Charger (HOME, Gemini): ładowanie z nadwyżki PV, przełączanie 1/3 faz, wiele wallboxów, zarządzanie obciążeniem, magazyn energii",
+      "uk": "go-e Charger (HOME, Gemini): заряджання від надлишку сонячної енергії, перемикання 1/3 фаз, кілька зарядних станцій, керування навантаженням, домашній акумулятор",
+      "zh-cn": "go-e Charger（HOME、Gemini）：光伏余电充电、1/3 相切换、多台充电桩、负载管理、家用储能电池"
     },
     "authors": [
       "Christian Hombach <go-eCharger@homba.ch>"
@@ -127,8 +127,16 @@
     "keywords": [
       "go-e",
       "go-eCharger",
+      "go-e Charger",
+      "Gemini",
       "wallbox",
-      "solar-power"
+      "ev charger",
+      "pv surplus",
+      "solar charging",
+      "Überschussladen",
+      "phase switching",
+      "load management",
+      "home battery"
     ],
     "licenseInformation": {
       "license": "MIT",

@@ -1,7 +1,7 @@
 {
   "name": "iobroker.go-e-charger",
   "version": "1.10.1",
-  "description": "Adapter for reading go-eCharger data",
+  "description": "go-e Charger (HOME, Gemini): PV surplus charging, 1/3-phase switching, multiple wallboxes, load management, home battery",
   "author": {
     "name": "Hombach",
     "email": "go-e-charger@Homba.ch"
@@ -10,8 +10,16 @@
   "license": "MIT",
   "keywords": [
     "ioBroker",
+    "go-e",
     "go-e charger",
+    "go-eCharger",
+    "Gemini",
     "wallbox",
+    "ev charger",
+    "pv surplus",
+    "solar charging",
+    "phase switching",
+    "load management",
     "Smart Home",
     "home automation"
   ],
