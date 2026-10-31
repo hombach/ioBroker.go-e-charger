@@ -120,6 +120,7 @@ class go_e_charger extends utils.Adapter {
                 ID: index,
                 ipAddress: wallboxConfig.ipAddress,
                 readOnlyMode: wallboxConfig.readOnlyMode,
+                Online: null,
                 Firmware: "0",
                 Hardware: "V2",
                 HardwareMin3: false,
@@ -194,9 +195,10 @@ class go_e_charger extends utils.Adapter {
                 await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Settings.Charge3Phase`, false, `Setting 3-phase charging`, "switch", true, true);
                 if (wallBox.ipAddress) {
                     await this.Read_ChargerAPIV1(iWB);
-                    await this.Read_ChargerAPIV2(iWB);
+                    if (this.wallboxInfoList[iWB].Online !== false) {
+                        await this.Read_ChargerAPIV2(iWB);
+                    }
                     this.log.info(`IP address charger ${iWB} found in config: ${wallBox.ipAddress}`);
-                    void this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
                     await this.projectUtils.checkAndSetValueNumber(`Wallbox_${iWB}.Settings.ChargeCurrent`, this.wallboxInfoList[iWB].MinAmp, `charge current output`, "A", "level.current", true, true, true, this.wallboxInfoList[iWB].MinAmp, this.wallboxInfoList[iWB].MaxAmp, 1);
                 }
                 this.wallboxInfoList[iWB].ChargeNOW = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.ChargeNOW`);
@@ -442,8 +444,12 @@ class go_e_charger extends utils.Adapter {
                 if (!this.wallboxInfoList[iWB].ChargeManager || this.wallboxInfoList[iWB].ChargeNOW) {
                     this.wallboxInfoList[iWB].BatteryReady = false;
                 }
+                const wasOnline = this.wallboxInfoList[iWB].Online;
                 await this.Read_ChargerAPIV1(iWB);
-                if (this.wallboxInfoList[iWB].HardwareMin3) {
+                if (this.wallboxInfoList[iWB].Online === false) {
+                    continue;
+                }
+                if (this.wallboxInfoList[iWB].HardwareMin3 || wasOnline === false) {
                     await this.Read_ChargerAPIV2(iWB);
                 }
                 if (this.wallboxInfoList[iWB].ChargeNOW) {
@@ -470,7 +476,14 @@ class go_e_charger extends utils.Adapter {
                     this.resetIdleRelease(iWB);
                     info.ChargeManagerRunning = false;
                 }
-                if (info.ChargeNOW && (0, chargeManagerUtils_1.isVehicleDisconnected)(info.CarState)) {
+                if (info.Online === false) {
+                    info.ChargeManagerRunning = false;
+                    info.SetAmp = 0;
+                    info.DelayOff = 0;
+                    this.resetIdleRelease(iWB);
+                    await this.setChargeState(iWB, `Charger unreachable`);
+                }
+                else if (info.ChargeNOW && (0, chargeManagerUtils_1.isVehicleDisconnected)(info.CarState)) {
                     await this.setChargeState(iWB, `ChargeNOW waiting for vehicle`);
                 }
                 else if (info.ChargeNOW) {
@@ -689,8 +702,9 @@ class go_e_charger extends utils.Adapter {
             const result = JSON.parse(response.data);
             this.log.debug(`Read charger ${iWB} API V1: ${response.data}`);
             await this.ParseStatusAPIV1(result, iWB);
+            await this.setWallboxReachable(iWB);
         })
-            .catch(error => {
+            .catch(async (error) => {
             this.wallboxInfoList[iWB].Reported = {};
             this.wallboxInfoList[iWB].ChargePower = Number.NaN;
             this.wallboxInfoList[iWB].RequestedAllow = null;
@@ -700,14 +714,43 @@ class go_e_charger extends utils.Adapter {
                 return;
             }
             if (error.message && error.message.includes("EHOSTUNREACH")) {
-                this.log.error(`Charger unreachable error when calling go-eCharger API: ${error}`);
                 this.wallboxInfoList[iWB].Firmware = `EHostUnreach`;
             }
-            else {
-                this.log.error(`Error in calling go-e charger ${iWB} API: ${error}`);
-            }
-            this.log.error(`Please verify IP address of charger ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} !!!`);
+            await this.setWallboxUnreachable(iWB, error);
         });
+    }
+    async setWallboxReachable(iWB) {
+        const info = this.wallboxInfoList[iWB];
+        if ((0, chargeManagerUtils_1.connectionTransition)(info.Online, true) === null) {
+            return;
+        }
+        const wasOffline = info.Online === false;
+        info.Online = true;
+        await this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
+        if (wasOffline) {
+            this.log.info(`Charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}) is reachable again`);
+        }
+    }
+    async setWallboxUnreachable(iWB, error) {
+        const info = this.wallboxInfoList[iWB];
+        const ipAddress = this.config.wallBoxList[iWB].ipAddress;
+        if ((0, chargeManagerUtils_1.connectionTransition)(info.Online, false) === null) {
+            this.log.debug(`Charger ${iWB} (${ipAddress}) still unreachable: ${String(error)}`);
+            return;
+        }
+        info.Online = false;
+        this.log.error(`Charger ${iWB} unreachable when calling go-eCharger API: ${String(error)}`);
+        this.log.error(`Please verify IP address of charger ${iWB}: ${ipAddress} !!! Further errors are logged at debug level until it is reachable again.`);
+        info.CarState = 0;
+        info.MeasuredMaxChargeAmp = 0;
+        info.ForceState = Number.NaN;
+        await this.setState(`Wallbox_${iWB}.info.connection`, { val: false, ack: true });
+        for (const state of chargeManagerUtils_1.LIVE_WALLBOX_STATES) {
+            const id = `Wallbox_${iWB}.${state}`;
+            if (await this.getObjectAsync(id)) {
+                await this.setState(id, { val: null, ack: true });
+            }
+        }
     }
     async ParseStatusAPIV1(status, iWB) {
         const basePath = `Wallbox_${iWB}`;
@@ -935,7 +978,7 @@ class go_e_charger extends utils.Adapter {
     }
     async planChargeManagerCycle() {
         const plans = new Array(this.config.wallBoxList.length).fill(undefined);
-        const candidates = [...this.config.wallBoxList.keys()].filter(iWB => this.wallboxInfoList[iWB].ChargeManager && !this.wallboxInfoList[iWB].ChargeNOW);
+        const candidates = [...this.config.wallBoxList.keys()].filter(iWB => this.wallboxInfoList[iWB].ChargeManager && !this.wallboxInfoList[iWB].ChargeNOW && this.wallboxInfoList[iWB].Online !== false);
         if (!candidates.length) {
             return plans;
         }

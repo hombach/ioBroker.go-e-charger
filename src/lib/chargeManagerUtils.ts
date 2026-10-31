@@ -1283,3 +1283,49 @@ export function isConnectionError(error: unknown): boolean {
 	}
 	return typeof message === "string" && [...CONNECTION_ERROR_CODES].some(errorCode => message.includes(errorCode));
 }
+
+/**
+ * States of a wallbox (relative to `Wallbox_<n>`) that only carry a live reading of the charger.
+ * They are reset to `null` when the charger becomes unreachable, so no stale value (e.g. the last
+ * charging power or grid voltage) is presented as current. Charger settings that persist on the
+ * charger (`Power.ChargeCurrent`, `Power.EnabledPhases`, `info.accessControlState`), identity data
+ * (`info.firmwareVersion`, `info.hardwareVersion`, hardware current limits), the adapter's own
+ * `Settings.*` and all `statistics.*` (energy totals, reboot counter, RFID cards) are kept.
+ * `null` is a valid value for every state type in ioBroker and means "no value known".
+ */
+export const LIVE_WALLBOX_STATES: readonly string[] = [
+	"Power.Charge",
+	"Power.ChargeCurrentVolatile",
+	"Power.ChargingAllowed",
+	"Power.GridPhases",
+	"Power.GridFrequency",
+	"Power.MeasuredMaxPhaseCurrent",
+	"Power.VoltageL1",
+	"Power.VoltageL2",
+	"Power.VoltageL3",
+	"info.carState",
+	"info.carStateString",
+	"info.unlockedByRFIDNo",
+	"info.unlockedByRFIDName",
+];
+
+/** Change of a wallbox's reachability that has to be published, see {@link connectionTransition}. */
+export type ConnectionTransition = "went-offline" | "came-online" | null;
+
+/**
+ * Decides whether a charger read changes the published reachability of the wallbox.
+ *
+ * Only a change is reported, so `info.connection` is written, the live states are cleared and the
+ * error is logged once per outage instead of on every cycle. Before the first read the
+ * reachability is unknown (`null`); the first read then always reports its result.
+ *
+ * @param wasOnline Reachability after the previous read, `null` before the first read
+ * @param reachable Whether the current read reached the charger
+ * @returns `"went-offline"` / `"came-online"` on a change, `null` when nothing changed
+ */
+export function connectionTransition(wasOnline: boolean | null, reachable: boolean): ConnectionTransition {
+	if (reachable) {
+		return wasOnline === true ? null : "came-online";
+	}
+	return wasOnline === false ? null : "went-offline";
+}

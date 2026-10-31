@@ -40,6 +40,8 @@ import {
 	phaseModeToSend,
 	phaseVoltagesFromNrg,
 	isConnectionError,
+	connectionTransition,
+	LIVE_WALLBOX_STATES,
 	IDLE_RELEASE_DELAY_MS,
 	START_CHARGE_CURRENT,
 	type TotalCurrentAllocation,
@@ -181,6 +183,7 @@ class go_e_charger extends utils.Adapter {
 				ID: index,
 				ipAddress: wallboxConfig.ipAddress,
 				readOnlyMode: wallboxConfig.readOnlyMode,
+				Online: null,
 				Firmware: "0",
 				Hardware: "V2",
 				HardwareMin3: false,
@@ -298,9 +301,12 @@ class go_e_charger extends utils.Adapter {
 
 				if (wallBox.ipAddress) {
 					await this.Read_ChargerAPIV1(iWB);
-					await this.Read_ChargerAPIV2(iWB);
+					// an unreachable charger cannot answer on API V2 either - skip the misleading "gen 1/2" warning
+					if (this.wallboxInfoList[iWB].Online !== false) {
+						await this.Read_ChargerAPIV2(iWB);
+					}
 					this.log.info(`IP address charger ${iWB} found in config: ${wallBox.ipAddress}`);
-					void this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
+					// Wallbox_<n>.info.connection is set by the read above (and confirmed in firstStart)
 					// the charger read may have tightened the current limits (hardware/cable) - refresh the ChargeCurrent range
 					await this.projectUtils.checkAndSetValueNumber(
 						`Wallbox_${iWB}.Settings.ChargeCurrent`,
@@ -615,8 +621,14 @@ class go_e_charger extends utils.Adapter {
 				if (!this.wallboxInfoList[iWB].ChargeManager || this.wallboxInfoList[iWB].ChargeNOW) {
 					this.wallboxInfoList[iWB].BatteryReady = false;
 				}
+				const wasOnline = this.wallboxInfoList[iWB].Online;
 				await this.Read_ChargerAPIV1(iWB);
-				if (this.wallboxInfoList[iWB].HardwareMin3) {
+				if (this.wallboxInfoList[iWB].Online === false) {
+					// unreachable: no API V2 read, no ChargeNOW end check on missing data - handled in the second pass
+					continue;
+				}
+				// a charger that was unreachable (e.g. at adapter start) is probed on API V2 once it is back
+				if (this.wallboxInfoList[iWB].HardwareMin3 || wasOnline === false) {
 					await this.Read_ChargerAPIV2(iWB);
 				}
 				if (this.wallboxInfoList[iWB].ChargeNOW) {
@@ -661,7 +673,15 @@ class go_e_charger extends utils.Adapter {
 					this.resetIdleRelease(iWB);
 					info.ChargeManagerRunning = false;
 				}
-				if (info.ChargeNOW && isVehicleDisconnected(info.CarState)) {
+				if (info.Online === false) {
+					// unreachable charger: nothing can be sent, it takes no part in the surplus or the current
+					// budget, and the ChargeManager seeds its state from the charger again once it is back
+					info.ChargeManagerRunning = false;
+					info.SetAmp = 0;
+					info.DelayOff = 0;
+					this.resetIdleRelease(iWB);
+					await this.setChargeState(iWB, `Charger unreachable`);
+				} else if (info.ChargeNOW && isVehicleDisconnected(info.CarState)) {
 					// nothing is sent while ChargeNOW waits for a vehicle, so the charger is not woken;
 					// the release goes out in the cycle the vehicle is plugged in
 					await this.setChargeState(iWB, `ChargeNOW waiting for vehicle`);
@@ -1030,8 +1050,9 @@ class go_e_charger extends utils.Adapter {
 				const result = JSON.parse(response.data);
 				this.log.debug(`Read charger ${iWB} API V1: ${response.data}`);
 				await this.ParseStatusAPIV1(result, iWB);
+				await this.setWallboxReachable(iWB);
 			})
-			.catch(error => {
+			.catch(async error => {
 				// without a fresh read every command is sent again, and no check runs on an old power reading
 				this.wallboxInfoList[iWB].Reported = {};
 				this.wallboxInfoList[iWB].ChargePower = Number.NaN;
@@ -1045,13 +1066,63 @@ class go_e_charger extends utils.Adapter {
 					return;
 				}
 				if (error.message && error.message.includes("EHOSTUNREACH")) {
-					this.log.error(`Charger unreachable error when calling go-eCharger API: ${error}`);
 					this.wallboxInfoList[iWB].Firmware = `EHostUnreach`;
-				} else {
-					this.log.error(`Error in calling go-e charger ${iWB} API: ${error}`);
 				}
-				this.log.error(`Please verify IP address of charger ${iWB}: ${this.config.wallBoxList[iWB].ipAddress} !!!`);
+				await this.setWallboxUnreachable(iWB, error);
 			});
+	}
+
+	/**
+	 * Marks a wallbox as reachable after a successful API V1 read. `info.connection` is only written
+	 * when the reachability changes, and a recovery from an outage is logged once.
+	 *
+	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
+	 */
+	private async setWallboxReachable(iWB: number): Promise<void> {
+		const info = this.wallboxInfoList[iWB];
+		if (connectionTransition(info.Online, true) === null) {
+			return;
+		}
+		const wasOffline = info.Online === false;
+		info.Online = true;
+		await this.setState(`Wallbox_${iWB}.info.connection`, { val: true, ack: true });
+		if (wasOffline) {
+			this.log.info(`Charger ${iWB} (${this.config.wallBoxList[iWB].ipAddress}) is reachable again`);
+		}
+	}
+
+	/**
+	 * Marks a wallbox as unreachable after an API V1 connection error.
+	 *
+	 * On the change to unreachable the error is logged once, `info.connection` is set to false (so
+	 * the device shows offline in the object tree) and all live readings ({@link LIVE_WALLBOX_STATES})
+	 * are reset to `null` instead of showing stale values. While the outage lasts, further errors are
+	 * only logged at debug level, so a charger without power does not flood the log every cycle.
+	 *
+	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
+	 * @param error - The connection error of the failed request
+	 */
+	private async setWallboxUnreachable(iWB: number, error: unknown): Promise<void> {
+		const info = this.wallboxInfoList[iWB];
+		const ipAddress = this.config.wallBoxList[iWB].ipAddress;
+		if (connectionTransition(info.Online, false) === null) {
+			this.log.debug(`Charger ${iWB} (${ipAddress}) still unreachable: ${String(error)}`);
+			return;
+		}
+		info.Online = false;
+		this.log.error(`Charger ${iWB} unreachable when calling go-eCharger API: ${String(error)}`);
+		this.log.error(`Please verify IP address of charger ${iWB}: ${ipAddress} !!! Further errors are logged at debug level until it is reachable again.`);
+		// internal live data: no vehicle known, nothing drawn - so neither the surplus nor the current budget counts it
+		info.CarState = 0;
+		info.MeasuredMaxChargeAmp = 0;
+		info.ForceState = Number.NaN;
+		await this.setState(`Wallbox_${iWB}.info.connection`, { val: false, ack: true });
+		for (const state of LIVE_WALLBOX_STATES) {
+			const id = `Wallbox_${iWB}.${state}`;
+			if (await this.getObjectAsync(id)) {
+				await this.setState(id, { val: null, ack: true });
+			}
+		}
 	}
 
 	/**
@@ -1679,7 +1750,11 @@ class go_e_charger extends utils.Adapter {
 	 */
 	private async planChargeManagerCycle(): Promise<(WallboxChargePlan | undefined)[]> {
 		const plans: (WallboxChargePlan | undefined)[] = new Array(this.config.wallBoxList.length).fill(undefined);
-		const candidates = [...this.config.wallBoxList.keys()].filter(iWB => this.wallboxInfoList[iWB].ChargeManager && !this.wallboxInfoList[iWB].ChargeNOW);
+		// an unreachable charger is left out, so its last power reading is neither added back to the
+		// surplus nor does it reserve surplus for a vehicle it can no longer charge
+		const candidates = [...this.config.wallBoxList.keys()].filter(
+			iWB => this.wallboxInfoList[iWB].ChargeManager && !this.wallboxInfoList[iWB].ChargeNOW && this.wallboxInfoList[iWB].Online !== false,
+		);
 		if (!candidates.length) {
 			return plans;
 		}

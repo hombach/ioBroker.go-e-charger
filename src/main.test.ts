@@ -28,6 +28,8 @@ import {
 	validateMaxAmpTotal,
 	parseWallboxIndex,
 	isConnectionError,
+	connectionTransition,
+	LIVE_WALLBOX_STATES,
 	isVehicleDisconnected,
 	IDLE_CHARGE_POWER,
 	type IdleReleaseInput,
@@ -1723,6 +1725,80 @@ describe("ChargeManager safety helpers", () => {
 			for (const value of [undefined, null, "ECONNREFUSED", 42, {}]) {
 				assert.equal(isConnectionError(value), false, JSON.stringify(value));
 			}
+		});
+	});
+
+	describe("connectionTransition", () => {
+		it("reports the first read in either direction", () => {
+			assert.equal(connectionTransition(null, true), "came-online");
+			assert.equal(connectionTransition(null, false), "went-offline");
+		});
+
+		it("reports a change only once", () => {
+			assert.equal(connectionTransition(true, false), "went-offline");
+			assert.equal(connectionTransition(false, false), null);
+			assert.equal(connectionTransition(false, true), "came-online");
+			assert.equal(connectionTransition(true, true), null);
+		});
+
+		it("follows an outage through repeated cycles with exactly one change each way", () => {
+			const reads = [true, true, false, false, false, true, true];
+			let online: boolean | null = null;
+			const changes: string[] = [];
+			for (const reachable of reads) {
+				const transition = connectionTransition(online, reachable);
+				if (transition) {
+					changes.push(transition);
+					online = transition === "came-online";
+				}
+			}
+			assert.deepEqual(changes, ["came-online", "went-offline", "came-online"]);
+		});
+	});
+
+	describe("LIVE_WALLBOX_STATES", () => {
+		it("contains the live readings that must not stay stale while a charger is unreachable", () => {
+			for (const state of [
+				"Power.Charge",
+				"Power.ChargeCurrentVolatile",
+				"Power.ChargingAllowed",
+				"Power.GridPhases",
+				"Power.GridFrequency",
+				"Power.MeasuredMaxPhaseCurrent",
+				"Power.VoltageL1",
+				"Power.VoltageL2",
+				"Power.VoltageL3",
+				"info.carState",
+				"info.carStateString",
+				"info.unlockedByRFIDNo",
+				"info.unlockedByRFIDName",
+			]) {
+				assert.ok(LIVE_WALLBOX_STATES.includes(state), state);
+			}
+		});
+
+		it("keeps settings, statistics, identity data, persistent charger settings and the connection itself", () => {
+			for (const state of LIVE_WALLBOX_STATES) {
+				assert.ok(!state.startsWith("Settings."), state);
+				assert.ok(!state.startsWith("statistics."), state);
+			}
+			for (const state of [
+				"info.connection",
+				"info.chargeState",
+				"info.firmwareVersion",
+				"info.hardwareVersion",
+				"info.hardwareMaxChargeCurrent",
+				"info.hardwareMinChargeCurrent",
+				"info.accessControlState",
+				"Power.ChargeCurrent",
+				"Power.EnabledPhases",
+			]) {
+				assert.ok(!LIVE_WALLBOX_STATES.includes(state), state);
+			}
+		});
+
+		it("has no duplicates", () => {
+			assert.equal(new Set(LIVE_WALLBOX_STATES).size, LIVE_WALLBOX_STATES.length);
 		});
 	});
 });
