@@ -273,6 +273,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (HombachC) added grid meter input for ChargeManager: one signed grid power value (import positive, export negative) instead of PV generation and house consumption, with Negate, Ack-only and maximum age options (#919)
 - (HombachC) added Negate options for the solar power and home power consumption objects and restructured the ChargeManager settings page into the blocks surplus input, home battery and surplus control, with units on all value fields (#919)
 - (HombachC) added a migration guide from the go-e adapter (ioBroker.go-e) in English and German
+- (HombachC) fixed the RFID card energy (statistics.RFID<n>.chargedEnergy) on gen 3+ chargers freezing at the value read at adapter start: it is now read from the API V2 card keys in Wh precision, with an API V1 fallback refreshed every cycle (#889)
 
 ### 1.10.1 (2026-10-31)
 

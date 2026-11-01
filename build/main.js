@@ -131,6 +131,7 @@ class go_e_charger extends utils.Adapter {
                 Firmware: "0",
                 Hardware: "V2",
                 HardwareMin3: false,
+                RfidFromV2: false,
                 AutoPhase: false,
                 GridPhases: 0,
                 ChargeNOW: false,
@@ -937,8 +938,10 @@ class go_e_charger extends utils.Adapter {
         if (status.ast !== undefined && status.ast !== null) {
             void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
         }
+        if ((0, chargeManagerUtils_1.rfidCardsFromV1)(this.wallboxInfoList[iWB].HardwareMin3, this.wallboxInfoList[iWB].RfidFromV2)) {
+            await this.writeRfidCards((0, chargeManagerUtils_1.parseRfidCardsV1)(status), basePath);
+        }
         if (!this.wallboxInfoList[iWB].HardwareMin3) {
-            await this.parseAndSetRFIDData(status, basePath);
             if (status.uby !== undefined && status.uby !== null) {
                 await this.setUnlockedByRFID(Number(status.uby), basePath);
             }
@@ -953,32 +956,22 @@ class go_e_charger extends utils.Adapter {
         }
         await this.projectUtils.checkAndSetValue(`${basePath}.info.unlockedByRFIDName`, cardName, `Name of current session RFID chip`, "text");
     }
-    async parseAndSetRFIDData(status, basePath) {
-        const rfidIds = ["rca", "rcr", "rcd", "rc4", "rc5", "rc6", "rc7", "rc8", "rc9", "rc1"];
-        const rfidNames = ["rna", "rnm", "rne", "rn4", "rn5", "rn6", "rn7", "rn8", "rn9", "rn1"];
-        const rfidEnergy = ["eca", "ecr", "ecd", "ec4", "ec5", "ec6", "ec7", "ec8", "ec9", "ec1"];
-        for (let i = 0; i < 10; i++) {
-            const cardId = status[rfidIds[i]]?.toString().trim();
-            const cardName = status[rfidNames[i]]?.toString().trim();
-            const energyRaw = status[rfidEnergy[i]];
-            if (!cardId || cardId === "0") {
-                continue;
+    async writeRfidCards(cards, basePath) {
+        for (const card of cards) {
+            const channelPath = `${basePath}.statistics.RFID${card.cardNumber}`;
+            await this.projectUtils.checkAndSetChannel(channelPath, card.name || `Card ${card.cardNumber}`);
+            await this.projectUtils.checkAndSetValueNumber(`${channelPath}.chargedEnergy`, card.energyKWh, `Charged energy for RFID chip ${card.cardNumber}`, "kWh", "value.energy.consumed");
+            if (card.cardId !== undefined) {
+                await this.projectUtils.checkAndSetValue(`${channelPath}.cardId`, card.cardId, `RFID Card ID ${card.cardNumber}`);
             }
-            const cardNumber = i + 1;
-            const channelPath = `${basePath}.statistics.RFID${cardNumber}`;
-            await this.projectUtils.checkAndSetChannel(channelPath, cardName || `Card ${cardNumber}`);
-            await this.projectUtils.checkAndSetValueNumber(`${channelPath}.chargedEnergy`, Number(energyRaw) / 10 || 0, `Charged energy for RFID chip ${cardNumber}`, "kWh", "value.energy.consumed");
-            if (cardId !== "n/a") {
-                await this.projectUtils.checkAndSetValue(`${channelPath}.cardId`, cardId, `RFID Card ID ${cardNumber}`);
-            }
-            if (cardName && cardName !== "n/a") {
-                await this.projectUtils.checkAndSetValue(`${channelPath}.cardName`, cardName, `RFID Card Name ${cardNumber}`);
+            if (card.name !== undefined) {
+                await this.projectUtils.checkAndSetValue(`${channelPath}.cardName`, card.name, `RFID Card Name ${card.cardNumber}`);
             }
         }
     }
     async Read_ChargerAPIV2(iWB) {
         await axiosInstance
-            .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,frc,modelStatus,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,fhz,trx,ast,ama,cbl,mca,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`, {
+            .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,frc,modelStatus,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,fhz,trx,ast,ama,cbl,mca,${chargeManagerUtils_1.RFID_V2_FILTER_KEYS.join(",")}`, {
             transformResponse: r => r,
         })
             .then(async (response) => {
@@ -1027,7 +1020,11 @@ class go_e_charger extends utils.Adapter {
         if (status.ast !== undefined && status.ast !== null) {
             void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
         }
-        await this.parseAndSetRFIDData(status, basePath);
+        const rfidCards = (0, chargeManagerUtils_1.parseRfidCardsV2)(status);
+        this.wallboxInfoList[iWB].RfidFromV2 = rfidCards !== null;
+        if (rfidCards !== null) {
+            await this.writeRfidCards(rfidCards, basePath);
+        }
         if (status.trx !== undefined) {
             await this.setUnlockedByRFID(status.trx === null ? 0 : Number(status.trx), basePath);
         }

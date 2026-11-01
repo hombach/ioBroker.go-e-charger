@@ -60,6 +60,11 @@ import {
 	START_CHARGE_CURRENT,
 	type TotalCurrentAllocation,
 	type TotalCurrentParticipant,
+	parseRfidCardsV1,
+	parseRfidCardsV2,
+	rfidCardsFromV1,
+	RFID_V2_FILTER_KEYS,
+	type RfidCardReading,
 } from "./lib/chargeManagerUtils";
 import { ProjectUtils, type IWallboxInfo } from "./lib/projectUtils";
 
@@ -211,6 +216,7 @@ class go_e_charger extends utils.Adapter {
 				Firmware: "0",
 				Hardware: "V2",
 				HardwareMin3: false,
+				RfidFromV2: false,
 				AutoPhase: false,
 				GridPhases: 0,
 				ChargeNOW: false,
@@ -1528,9 +1534,13 @@ class go_e_charger extends utils.Adapter {
 			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
 		}
 
-		// on gen 1/2 the RFID data (incl. the authorizing card) comes from API V1; gen 3+ uses API V2 instead
+		// the per-card RFID data comes from API V1 on gen 1/2, and on gen 3+ as long as the last API V2
+		// read did not deliver its own card keys (fallback, refreshed every cycle - see #889)
+		if (rfidCardsFromV1(this.wallboxInfoList[iWB].HardwareMin3, this.wallboxInfoList[iWB].RfidFromV2)) {
+			await this.writeRfidCards(parseRfidCardsV1(status), basePath);
+		}
+		// on gen 1/2 the authorizing card comes from API V1 ("uby"); gen 3+ uses API V2 ("trx") instead
 		if (!this.wallboxInfoList[iWB].HardwareMin3) {
-			await this.parseAndSetRFIDData(status, basePath);
 			if (status.uby !== undefined && status.uby !== null) {
 				await this.setUnlockedByRFID(Number(status.uby), basePath);
 			}
@@ -1556,108 +1566,32 @@ class go_e_charger extends utils.Adapter {
 	}
 
 	/**
-	 * Parses RFID card data from an API status object and updates the corresponding states.
-	 * Used by both API V1 (Gen 1/2 chargers) and API V2 (Gen 3+ chargers).
+	 * Writes the RFID cards read from an API status to `statistics.RFID{n}` (charged energy in kWh,
+	 * card name and - API V1 only - card ID). A card ID already known from API V1 is never overwritten,
+	 * as API V2 only reports whether a card is learned.
 	 *
-	 * @param status - Status object containing optional RFID fields
-	 * @param status.rca - RFID card 1 ID
-	 * @param status.rcr - RFID card 2 ID
-	 * @param status.rcd - RFID card 3 ID
-	 * @param status.rc4 - RFID card 4 ID
-	 * @param status.rc5 - RFID card 5 ID
-	 * @param status.rc6 - RFID card 6 ID
-	 * @param status.rc7 - RFID card 7 ID
-	 * @param status.rc8 - RFID card 8 ID
-	 * @param status.rc9 - RFID card 9 ID
-	 * @param status.rc1 - RFID card 10 ID
-	 * @param status.rna - RFID card 1 name
-	 * @param status.rnm - RFID card 2 name
-	 * @param status.rne - RFID card 3 name
-	 * @param status.rn4 - RFID card 4 name
-	 * @param status.rn5 - RFID card 5 name
-	 * @param status.rn6 - RFID card 6 name
-	 * @param status.rn7 - RFID card 7 name
-	 * @param status.rn8 - RFID card 8 name
-	 * @param status.rn9 - RFID card 9 name
-	 * @param status.rn1 - RFID card 10 name
-	 * @param status.eca - RFID card 1 energy (raw, divide by 10 for kWh)
-	 * @param status.ecr - RFID card 2 energy (raw, divide by 10 for kWh)
-	 * @param status.ecd - RFID card 3 energy (raw, divide by 10 for kWh)
-	 * @param status.ec4 - RFID card 4 energy (raw, divide by 10 for kWh)
-	 * @param status.ec5 - RFID card 5 energy (raw, divide by 10 for kWh)
-	 * @param status.ec6 - RFID card 6 energy (raw, divide by 10 for kWh)
-	 * @param status.ec7 - RFID card 7 energy (raw, divide by 10 for kWh)
-	 * @param status.ec8 - RFID card 8 energy (raw, divide by 10 for kWh)
-	 * @param status.ec9 - RFID card 9 energy (raw, divide by 10 for kWh)
-	 * @param status.ec1 - RFID card 10 energy (raw, divide by 10 for kWh)
+	 * @param cards - cards from `parseRfidCardsV1` or `parseRfidCardsV2`
 	 * @param basePath - Base state path for the wallbox (e.g. "Wallbox_0")
 	 */
-	private async parseAndSetRFIDData(
-		status: {
-			rca?: string;
-			rcr?: string;
-			rcd?: string;
-			rc4?: string;
-			rc5?: string;
-			rc6?: string;
-			rc7?: string;
-			rc8?: string;
-			rc9?: string;
-			rc1?: string;
-			rna?: string;
-			rnm?: string;
-			rne?: string;
-			rn4?: string;
-			rn5?: string;
-			rn6?: string;
-			rn7?: string;
-			rn8?: string;
-			rn9?: string;
-			rn1?: string;
-			eca?: number;
-			ecr?: number;
-			ecd?: number;
-			ec4?: number;
-			ec5?: number;
-			ec6?: number;
-			ec7?: number;
-			ec8?: number;
-			ec9?: number;
-			ec1?: number;
-		},
-		basePath: string,
-	): Promise<void> {
-		const rfidIds = ["rca", "rcr", "rcd", "rc4", "rc5", "rc6", "rc7", "rc8", "rc9", "rc1"];
-		const rfidNames = ["rna", "rnm", "rne", "rn4", "rn5", "rn6", "rn7", "rn8", "rn9", "rn1"];
-		const rfidEnergy = ["eca", "ecr", "ecd", "ec4", "ec5", "ec6", "ec7", "ec8", "ec9", "ec1"];
-
-		for (let i = 0; i < 10; i++) {
-			const cardId = (status[rfidIds[i] as keyof typeof status] as string | undefined)?.toString().trim();
-			const cardName = (status[rfidNames[i] as keyof typeof status] as string | undefined)?.toString().trim();
-			const energyRaw = status[rfidEnergy[i] as keyof typeof status] as number | undefined;
-
-			if (!cardId || cardId === "0") {
-				continue;
-			}
-
-			const cardNumber = i + 1;
+	private async writeRfidCards(cards: RfidCardReading[], basePath: string): Promise<void> {
+		for (const card of cards) {
 			// The channel ID is built from the numeric card index and is therefore safe.
 			// If channels were ever created from external data instead (e.g. the card name),
 			// the segment MUST be sanitized first: this.projectUtils.sanitizeIdSegment(cardName)
-			const channelPath = `${basePath}.statistics.RFID${cardNumber}`;
-			await this.projectUtils.checkAndSetChannel(channelPath, cardName || `Card ${cardNumber}`);
+			const channelPath = `${basePath}.statistics.RFID${card.cardNumber}`;
+			await this.projectUtils.checkAndSetChannel(channelPath, card.name || `Card ${card.cardNumber}`);
 			await this.projectUtils.checkAndSetValueNumber(
 				`${channelPath}.chargedEnergy`,
-				Number(energyRaw) / 10 || 0,
-				`Charged energy for RFID chip ${cardNumber}`,
+				card.energyKWh,
+				`Charged energy for RFID chip ${card.cardNumber}`,
 				"kWh",
 				"value.energy.consumed",
 			);
-			if (cardId !== "n/a") {
-				await this.projectUtils.checkAndSetValue(`${channelPath}.cardId`, cardId, `RFID Card ID ${cardNumber}`);
+			if (card.cardId !== undefined) {
+				await this.projectUtils.checkAndSetValue(`${channelPath}.cardId`, card.cardId, `RFID Card ID ${card.cardNumber}`);
 			}
-			if (cardName && cardName !== "n/a") {
-				await this.projectUtils.checkAndSetValue(`${channelPath}.cardName`, cardName, `RFID Card Name ${cardNumber}`);
+			if (card.name !== undefined) {
+				await this.projectUtils.checkAndSetValue(`${channelPath}.cardName`, card.name, `RFID Card Name ${card.cardNumber}`);
 			}
 		}
 	}
@@ -1673,7 +1607,7 @@ class go_e_charger extends utils.Adapter {
 	async Read_ChargerAPIV2(iWB: number): Promise<void> {
 		await axiosInstance
 			.get(
-				`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,frc,modelStatus,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,fhz,trx,ast,ama,cbl,mca,rca,rcr,rcd,rc4,rc5,rc6,rc7,rc8,rc9,rc1,rna,rnm,rne,rn4,rn5,rn6,rn7,rn8,rn9,rn1,eca,ecr,ecd,ec4,ec5,ec6,ec7,ec8,ec9,ec1`,
+				`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=alw,frc,modelStatus,acu,eto,amp,rbc,rbt,car,pha,fwv,nrg,psm,typ,fhz,trx,ast,ama,cbl,mca,${RFID_V2_FILTER_KEYS.join(",")}`,
 				{
 					transformResponse: r => r,
 				},
@@ -1717,36 +1651,7 @@ class go_e_charger extends utils.Adapter {
 	 * @param status.ama - Absolute maximum charging current the charger accepts
 	 * @param status.cbl - Cable current limit (0 = no cable coding)
 	 * @param status.mca - Minimum charging current the charger accepts
-	 * @param status.rca - RFID card 1 ID
-	 * @param status.rcr - RFID card 2 ID
-	 * @param status.rcd - RFID card 3 ID
-	 * @param status.rc4 - RFID card 4 ID
-	 * @param status.rc5 - RFID card 5 ID
-	 * @param status.rc6 - RFID card 6 ID
-	 * @param status.rc7 - RFID card 7 ID
-	 * @param status.rc8 - RFID card 8 ID
-	 * @param status.rc9 - RFID card 9 ID
-	 * @param status.rc1 - RFID card 10 ID
-	 * @param status.rna - RFID card 1 name
-	 * @param status.rnm - RFID card 2 name
-	 * @param status.rne - RFID card 3 name
-	 * @param status.rn4 - RFID card 4 name
-	 * @param status.rn5 - RFID card 5 name
-	 * @param status.rn6 - RFID card 6 name
-	 * @param status.rn7 - RFID card 7 name
-	 * @param status.rn8 - RFID card 8 name
-	 * @param status.rn9 - RFID card 9 name
-	 * @param status.rn1 - RFID card 10 name
-	 * @param status.eca - RFID card 1 energy (raw, divide by 10 for kWh)
-	 * @param status.ecr - RFID card 2 energy (raw, divide by 10 for kWh)
-	 * @param status.ecd - RFID card 3 energy (raw, divide by 10 for kWh)
-	 * @param status.ec4 - RFID card 4 energy (raw, divide by 10 for kWh)
-	 * @param status.ec5 - RFID card 5 energy (raw, divide by 10 for kWh)
-	 * @param status.ec6 - RFID card 6 energy (raw, divide by 10 for kWh)
-	 * @param status.ec7 - RFID card 7 energy (raw, divide by 10 for kWh)
-	 * @param status.ec8 - RFID card 8 energy (raw, divide by 10 for kWh)
-	 * @param status.ec9 - RFID card 9 energy (raw, divide by 10 for kWh)
-	 * @param status.ec1 - RFID card 10 energy (raw, divide by 10 for kWh)
+	 * @param status.cards - RFID cards array of `{ name, energy (Wh), cardId (bool) }` (firmware below 60)
 	 * @param iWB - Index of the charger in the configuration list.
 	 */
 	private async ParseStatusAPIV2(
@@ -1760,36 +1665,9 @@ class go_e_charger extends utils.Adapter {
 			ama?: number;
 			cbl?: number;
 			mca?: number;
-			rca?: string;
-			rcr?: string;
-			rcd?: string;
-			rc4?: string;
-			rc5?: string;
-			rc6?: string;
-			rc7?: string;
-			rc8?: string;
-			rc9?: string;
-			rc1?: string;
-			rna?: string;
-			rnm?: string;
-			rne?: string;
-			rn4?: string;
-			rn5?: string;
-			rn6?: string;
-			rn7?: string;
-			rn8?: string;
-			rn9?: string;
-			rn1?: string;
-			eca?: number;
-			ecr?: number;
-			ecd?: number;
-			ec4?: number;
-			ec5?: number;
-			ec6?: number;
-			ec7?: number;
-			ec8?: number;
-			ec9?: number;
-			ec1?: number;
+			cards?: unknown;
+			// firmware 60.0+: c<i>n (name), c<i>e (energy in Wh), c<i>i (card learned) for i = 0-9
+			[rfidKey: `c${number}${"n" | "e" | "i"}`]: unknown;
 		},
 		iWB: number,
 	): Promise<void> {
@@ -1826,7 +1704,13 @@ class go_e_charger extends utils.Adapter {
 		if (status.ast !== undefined && status.ast !== null) {
 			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
 		}
-		await this.parseAndSetRFIDData(status, basePath);
+		// RFID cards: API V2 has its own card keys ("cards" below firmware 60, "c<i>n/e/i" from 60.0) - the
+		// V1 keys rca/eca/... do not exist there. Without them the V1 read keeps refreshing the cards (#889).
+		const rfidCards = parseRfidCardsV2(status);
+		this.wallboxInfoList[iWB].RfidFromV2 = rfidCards !== null;
+		if (rfidCards !== null) {
+			await this.writeRfidCards(rfidCards, basePath);
+		}
 		// API V2 exposes the authorizing card as "trx" (not "uby"): null = no transaction, 0 = without card,
 		// otherwise cardIndex + 1 - matching the 1-based RFID{n} channel numbering
 		if (status.trx !== undefined) {

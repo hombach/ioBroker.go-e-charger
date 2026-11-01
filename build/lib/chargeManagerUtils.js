@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.RFID_V2_FILTER_KEYS = exports.RFID_CARD_SLOTS = exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateAvailableSurplusPower = calculateAvailableSurplusPower;
@@ -43,6 +43,9 @@ exports.acceptGridMeterState = acceptGridMeterState;
 exports.evaluateGridMeterReading = evaluateGridMeterReading;
 exports.surplusInputsFromGridMeter = surplusInputsFromGridMeter;
 exports.negatePowerValue = negatePowerValue;
+exports.parseRfidCardsV1 = parseRfidCardsV1;
+exports.parseRfidCardsV2 = parseRfidCardsV2;
+exports.rfidCardsFromV1 = rfidCardsFromV1;
 exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 32;
 exports.START_CHARGE_CURRENT = 10;
@@ -598,5 +601,69 @@ function negatePowerValue(value, negate) {
         return value;
     }
     return 0 - value;
+}
+exports.RFID_CARD_SLOTS = 10;
+const RFID_V1_ID_KEYS = ["rca", "rcr", "rcd", "rc4", "rc5", "rc6", "rc7", "rc8", "rc9", "rc1"];
+const RFID_V1_NAME_KEYS = ["rna", "rnm", "rne", "rn4", "rn5", "rn6", "rn7", "rn8", "rn9", "rn1"];
+const RFID_V1_ENERGY_KEYS = ["eca", "ecr", "ecd", "ec4", "ec5", "ec6", "ec7", "ec8", "ec9", "ec1"];
+exports.RFID_V2_FILTER_KEYS = ["cards", ...Array.from({ length: exports.RFID_CARD_SLOTS }, (_, i) => [`c${i}n`, `c${i}e`, `c${i}i`]).flat()];
+function cleanCardName(name) {
+    if (typeof name !== "string" && typeof name !== "number") {
+        return undefined;
+    }
+    const trimmed = String(name).trim();
+    return trimmed && trimmed !== "n/a" ? trimmed : undefined;
+}
+function whToKWh(energy) {
+    const wh = Number(energy);
+    return Number.isFinite(wh) && wh > 0 ? Math.round(wh) / 1000 : 0;
+}
+function parseRfidCardsV1(status) {
+    const cards = [];
+    for (let i = 0; i < exports.RFID_CARD_SLOTS; i++) {
+        const rawId = status[RFID_V1_ID_KEYS[i]];
+        const cardId = typeof rawId === "string" || typeof rawId === "number" ? String(rawId).trim() : "";
+        if (!cardId || cardId === "0") {
+            continue;
+        }
+        const energy = Number(status[RFID_V1_ENERGY_KEYS[i]]) / 10;
+        cards.push({
+            cardNumber: i + 1,
+            name: cleanCardName(status[RFID_V1_NAME_KEYS[i]]),
+            energyKWh: Number.isFinite(energy) ? energy : 0,
+            cardId: cardId !== "n/a" ? cardId : undefined,
+        });
+    }
+    return cards;
+}
+function parseRfidCardsV2(status) {
+    const slots = [];
+    const hasPerCardKeys = Array.from({ length: exports.RFID_CARD_SLOTS }, (_, i) => i).some(i => status[`c${i}e`] !== undefined || status[`c${i}n`] !== undefined || status[`c${i}i`] !== undefined);
+    if (hasPerCardKeys) {
+        for (let i = 0; i < exports.RFID_CARD_SLOTS; i++) {
+            slots.push({ name: status[`c${i}n`], energy: status[`c${i}e`], learned: status[`c${i}i`] });
+        }
+    }
+    else if (Array.isArray(status.cards)) {
+        for (const card of status.cards.slice(0, exports.RFID_CARD_SLOTS)) {
+            const entry = card !== null && typeof card === "object" ? card : {};
+            slots.push({ name: entry.name, energy: entry.energy, learned: entry.cardId });
+        }
+    }
+    else {
+        return null;
+    }
+    const cards = [];
+    slots.forEach((slot, i) => {
+        const energyKWh = whToKWh(slot.energy);
+        if (slot.learned !== true && energyKWh <= 0) {
+            return;
+        }
+        cards.push({ cardNumber: i + 1, name: cleanCardName(slot.name), energyKWh });
+    });
+    return cards;
+}
+function rfidCardsFromV1(hardwareMin3, rfidFromV2) {
+    return !hardwareMin3 || !rfidFromV2;
 }
 //# sourceMappingURL=chargeManagerUtils.js.map
