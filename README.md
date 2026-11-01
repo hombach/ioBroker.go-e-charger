@@ -74,10 +74,10 @@ The adapter also reads the current caps reported by each charger – the absolut
 
 ChargeManager calculates the charging current from numeric ioBroker states supplied by an energy-management, inverter, meter, or user-created data source. It does not depend on a particular vendor, but the selected states must represent the quantities described below.
 
-Configure the object IDs of the following states:
+The ChargeManager configuration page is organized in three blocks along the flow of the settings: **Surplus input** (source and its objects), **Home battery** (mode, SoC object and battery tuning) and **Surplus control** (grid reserve and minimum current). Select the **Surplus source** in the first block and configure the object IDs of the following states:
 
-- currently available solar power [W]
-- current home power consumption [W]
+- _PV generation and house consumption_ (default): currently available solar power [W] and current home power consumption [W]
+- _Grid meter (signed import/export)_: current grid power [W], see [Grid meter input](#grid-meter-input) below
 - current state of charge of your home battery [%] (only required in the battery-aware modes, see _Home battery mode_ below)
 
 #### Input requirements
@@ -88,7 +88,7 @@ Configure the object IDs of the following states:
 | Home power consumption       | Total current household demand | W    | Positive consumption |
 | Home battery state of charge | Current battery charge level   | %    | 0 to 100             |
 
-All configured states must contain numeric values. Power values in kW must be converted to W before they are selected. A grid import/export state cannot be used directly because ChargeManager currently expects separate generation and consumption values.
+All configured states must contain numeric values. Power values in kW must be converted to W before they are selected. If a source reports PV generation or household consumption with the opposite sign, enable **Negate solar power** or **Negate home power consumption** next to the object (default off). If only a single grid import/export value is available, use the grid meter input instead of the two values above.
 
 If no home battery is installed, set the **Home battery mode** to _Disabled_ (see below). No battery state of charge has to be configured, and ChargeManager charges purely from the available PV surplus. The former helper-state workaround (a constant state set to `Settings.Setpoint_HomeBatSoC`) is no longer needed.
 
@@ -97,6 +97,23 @@ If no home battery is installed, set the **Home battery mode** to _Disabled_ (se
 Enable **Charger consumption is included in the home power consumption value** when the selected home-consumption state rises by approximately the charging power after charging starts. ChargeManager then adds the measured wallbox power back before calculating the available surplus. This prevents the controller from treating its own charging load as additional household demand.
 
 Leave the option disabled when the selected state already excludes wallbox consumption.
+
+#### Grid meter input
+
+Many installations only provide one signed value at the grid connection point (smart meter, Shelly 3EM, inverter `P_Grid`, …). Set **Surplus source** to _Grid meter (signed import/export)_ and select this state as **grid power** [W]:
+
+| Grid power | Meaning                        |
+| ---------- | ------------------------------ |
+| positive   | import (drawing from the grid) |
+| negative   | export (feeding into the grid) |
+
+This is the same convention as the go-e API v2 (`pGrid < 0` = feeding the grid). The PV generation and home power consumption objects are then not used, even if they are still filled in.
+
+- **Negate grid power** – inverts the sign for sources that report export as positive and import as negative (e.g. a Fronius `P_Grid` that was used with "Negate" in the old go-e adapter).
+- **Only use acknowledged values (ack=true)** – ignores updates written with `ack=false` (e.g. commands from scripts); the last acknowledged value stays in use.
+- **Maximum grid power age** [s] (default 0 = off) – surplus charging stops when the grid power has not been updated within this time, so a dead meter cannot keep the car charging from the grid.
+
+The grid value always contains the power of the wallboxes, so ChargeManager always adds the measured wallbox power back (the option _Charger consumption is included_ is not used in this mode). A missing, non-numeric or too old grid value stops surplus charging, just like an invalid PV or consumption value. The adapter subscribes to the grid power state and uses its latest accepted value in every cycle.
 
 #### Calculation
 
@@ -107,6 +124,13 @@ available power =
     solar power
   - home power consumption
   + wallbox power, if it is included in home power consumption
+  - grid reserve
+  + battery bonus (Battery priority mode only)
+
+grid meter input:
+available power =
+  - grid power (import positive, export negative)
+  + wallbox power
   - grid reserve
   + battery bonus (Battery priority mode only)
 
@@ -243,8 +267,11 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+
 ### **WORK IN PROGRESS**
 
+- (HombachC) added grid meter input for ChargeManager: one signed grid power value (import positive, export negative) instead of PV generation and house consumption, with Negate, Ack-only and maximum age options (#919)
+- (HombachC) added Negate options for the solar power and home power consumption objects and restructured the ChargeManager settings page into the blocks surplus input, home battery and surplus control, with units on all value fields (#919)
 - (HombachC) added a migration guide from the go-e adapter (ioBroker.go-e) in English and German
 - (HombachC) fixed the RFID card energy (statistics.RFID<n>.chargedEnergy) on gen 3+ chargers freezing at the value read at adapter start: it is now read from the API V2 card keys in Wh precision, with an API V1 fallback refreshed every cycle (#889)
 
