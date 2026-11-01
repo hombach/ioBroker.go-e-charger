@@ -34,6 +34,10 @@ export interface IWallboxInfo {
 	 */
 	HardwareMin3: boolean;
 	/**
+	 * The last API V2 read delivered RFID card data (`cards` or `c<i>n/e/i`), so the API V1 RFID keys are not needed
+	 */
+	RfidFromV2: boolean;
+	/**
 	 * Whether the ChargeManager switches phases automatically (`Settings.PhaseMode` = 0). Only ever true
 	 * when the instance settings allow automatic switching for this wallbox and the hardware supports it
 	 * (or is not known yet, because the charger has not answered since adapter start).
