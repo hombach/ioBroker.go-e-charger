@@ -42,6 +42,7 @@ exports.resolveGridInputMode = resolveGridInputMode;
 exports.acceptGridMeterState = acceptGridMeterState;
 exports.evaluateGridMeterReading = evaluateGridMeterReading;
 exports.surplusInputsFromGridMeter = surplusInputsFromGridMeter;
+exports.negatePowerValue = negatePowerValue;
 exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 32;
 exports.START_CHARGE_CURRENT = 10;
@@ -591,5 +592,11 @@ function surplusInputsFromGridMeter(gridPower) {
         houseConsumption: 0,
         subtractChargerPower: true,
     };
+}
+function negatePowerValue(value, negate) {
+    if (!negate || typeof value !== "number" || !Number.isFinite(value)) {
+        return value;
+    }
+    return 0 - value;
 }
 //# sourceMappingURL=chargeManagerUtils.js.map

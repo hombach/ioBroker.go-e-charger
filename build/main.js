@@ -1116,10 +1116,10 @@ class go_e_charger extends utils.Adapter {
             ({ solarPower, houseConsumption, subtractChargerPower } = (0, chargeManagerUtils_1.surplusInputsFromGridMeter)(gridPower));
         }
         else {
-            solarPower = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower);
-            this.log.debug(`Got external state of solar power: ${solarPower} W`);
-            houseConsumption = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption);
-            this.log.debug(`Got external state of house power consumption: ${houseConsumption} W`);
+            solarPower = (0, chargeManagerUtils_1.negatePowerValue)(await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower), !!this.config.solarPowerNegate);
+            this.log.debug(`Got external state of solar power: ${solarPower} W${this.config.solarPowerNegate ? " (negated)" : ""}`);
+            houseConsumption = (0, chargeManagerUtils_1.negatePowerValue)(await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption), !!this.config.homePowerConsumptionNegate);
+            this.log.debug(`Got external state of house power consumption: ${houseConsumption} W${this.config.homePowerConsumptionNegate ? " (negated)" : ""}`);
         }
         const batteryState = chargeManagerBatteryMode === "disabled" ? null : await this.projectUtils.asyncGetForeignState(this.config.stateHomeBatSoc);
         const batterySocAgeMs = batteryState ? Date.now() - batteryState.ts : null;

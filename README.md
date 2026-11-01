@@ -74,7 +74,7 @@ The adapter also reads the current caps reported by each charger – the absolut
 
 ChargeManager calculates the charging current from numeric ioBroker states supplied by an energy-management, inverter, meter, or user-created data source. It does not depend on a particular vendor, but the selected states must represent the quantities described below.
 
-Select the **Surplus input** on the ChargeManager configuration page and configure the object IDs of the following states:
+The ChargeManager configuration page is organized in three blocks along the flow of the settings: **Surplus input** (source and its objects), **Home battery** (mode, SoC object and battery tuning) and **Surplus control** (grid reserve and minimum current). Select the **Surplus source** in the first block and configure the object IDs of the following states:
 
 - _PV generation and house consumption_ (default): currently available solar power [W] and current home power consumption [W]
 - _Grid meter (signed import/export)_: current grid power [W], see [Grid meter input](#grid-meter-input) below
@@ -88,7 +88,7 @@ Select the **Surplus input** on the ChargeManager configuration page and configu
 | Home power consumption       | Total current household demand | W    | Positive consumption |
 | Home battery state of charge | Current battery charge level   | %    | 0 to 100             |
 
-All configured states must contain numeric values. Power values in kW must be converted to W before they are selected. If only a single grid import/export value is available, use the grid meter input instead of the two values above.
+All configured states must contain numeric values. Power values in kW must be converted to W before they are selected. If a source reports PV generation or household consumption with the opposite sign, enable **Negate solar power** or **Negate home power consumption** next to the object (default off). If only a single grid import/export value is available, use the grid meter input instead of the two values above.
 
 If no home battery is installed, set the **Home battery mode** to _Disabled_ (see below). No battery state of charge has to be configured, and ChargeManager charges purely from the available PV surplus. The former helper-state workaround (a constant state set to `Settings.Setpoint_HomeBatSoC`) is no longer needed.
 
@@ -100,7 +100,7 @@ Leave the option disabled when the selected state already excludes wallbox consu
 
 #### Grid meter input
 
-Many installations only provide one signed value at the grid connection point (smart meter, Shelly 3EM, inverter `P_Grid`, …). Set **Surplus input** to _Grid meter (signed import/export)_ and select this state as **grid power** [W]:
+Many installations only provide one signed value at the grid connection point (smart meter, Shelly 3EM, inverter `P_Grid`, …). Set **Surplus source** to _Grid meter (signed import/export)_ and select this state as **grid power** [W]:
 
 | Grid power | Meaning                        |
 | ---------- | ------------------------------ |
@@ -271,6 +271,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 ### **WORK IN PROGRESS**
 
 - (HombachC) added grid meter input for ChargeManager: one signed grid power value (import positive, export negative) instead of PV generation and house consumption, with Negate, Ack-only and maximum age options (#919)
+- (HombachC) added Negate options for the solar power and home power consumption objects and restructured the ChargeManager settings page into the blocks surplus input, home battery and surplus control, with units on all value fields (#919)
 - (HombachC) added a migration guide from the go-e adapter (ioBroker.go-e) in English and German
 
 ### 1.10.1 (2026-10-31)

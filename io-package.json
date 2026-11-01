@@ -179,6 +179,8 @@
     "stateHomeBatSoc": "",
     "stateHomeSolarPower": "",
     "stateHomePowerConsumption": "",
+    "solarPowerNegate": false,
+    "homePowerConsumptionNegate": false,
     "subtractSelfConsumption": true,
     "gridMode": "pvAndConsumption",
     "stateGridPower": "",

@@ -1543,3 +1543,20 @@ export function surplusInputsFromGridMeter(gridPower: number | null): { solarPow
 		subtractChargerPower: true,
 	};
 }
+
+/**
+ * Applies the Negate option of a power input (PV generation, household consumption).
+ *
+ * Only a finite number is negated; anything else is returned unchanged, so the surplus calculation
+ * still rejects it as invalid input. A negated zero stays 0 instead of -0.
+ *
+ * @param value Raw state value of the power input
+ * @param negate Whether the Negate option is enabled for this input
+ * @returns The (negated) value
+ */
+export function negatePowerValue<T>(value: T, negate: boolean): T | number {
+	if (!negate || typeof value !== "number" || !Number.isFinite(value)) {
+		return value;
+	}
+	return 0 - value;
+}

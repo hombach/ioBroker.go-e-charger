@@ -29,6 +29,7 @@ import {
 	gridFrequencyFromStatus,
 	resolveGridInputMode,
 	surplusInputsFromGridMeter,
+	negatePowerValue,
 	MAX_AMP_TOTAL,
 	MAX_CHARGE_CURRENT,
 	evaluateBatteryAvailability,
@@ -1969,10 +1970,14 @@ class go_e_charger extends utils.Adapter {
 			const gridPower = this.readGridMeter();
 			({ solarPower, houseConsumption, subtractChargerPower } = surplusInputsFromGridMeter(gridPower));
 		} else {
-			solarPower = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower);
-			this.log.debug(`Got external state of solar power: ${solarPower} W`);
-			houseConsumption = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption);
-			this.log.debug(`Got external state of house power consumption: ${houseConsumption} W`);
+			// Negate (default off) inverts sources that report the value with the opposite sign
+			solarPower = negatePowerValue(await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower), !!this.config.solarPowerNegate);
+			this.log.debug(`Got external state of solar power: ${solarPower} W${this.config.solarPowerNegate ? " (negated)" : ""}`);
+			houseConsumption = negatePowerValue(
+				await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption),
+				!!this.config.homePowerConsumptionNegate,
+			);
+			this.log.debug(`Got external state of house power consumption: ${houseConsumption} W${this.config.homePowerConsumptionNegate ? " (negated)" : ""}`);
 		}
 
 		// the battery state is identical for every charger, so read it once per cycle

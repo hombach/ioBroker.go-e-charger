@@ -17,7 +17,8 @@
 					"md": 6,
 					"lg": 6,
 					"xl": 6,
-					"newLine": true
+					"newLine": true,
+					"unit": "ms"
 				},
 				"maxChargeCurrent": {
 					"type": "number",
@@ -162,6 +163,17 @@
 			"type": "panel",
 			"label": "LBL_chargeManagerSettings",
 			"items": {
+				"_headerSurplusInput": {
+					"type": "header",
+					"text": "LBL_headerSurplusInput",
+					"size": 5,
+					"xs": 12,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12,
+					"newLine": true
+				},
 				"gridMode": {
 					"type": "select",
 					"label": "LBL_gridMode",
@@ -178,11 +190,70 @@
 						}
 					],
 					"xs": 12,
-					"sm": 6,
+					"sm": 12,
 					"md": 6,
 					"lg": 6,
 					"xl": 6,
 					"newLine": true
+				},
+				"stateHomeSolarPower": {
+					"type": "objectId",
+					"label": "LBL_stateHomeSolarPower",
+					"xs": 12,
+					"sm": 8,
+					"md": 8,
+					"lg": 8,
+					"xl": 8,
+					"newLine": true,
+					"hidden": "data.gridMode === 'gridMeter'"
+				},
+				"solarPowerNegate": {
+					"type": "checkbox",
+					"label": "LBL_solarPowerNegate",
+					"help": "LBL_solarPowerNegateHelp",
+					"default": false,
+					"xs": 12,
+					"sm": 4,
+					"md": 4,
+					"lg": 4,
+					"xl": 4,
+					"newLine": false,
+					"hidden": "data.gridMode === 'gridMeter'"
+				},
+				"stateHomePowerConsumption": {
+					"type": "objectId",
+					"label": "LBL_stateHomePowerConsumption",
+					"xs": 12,
+					"sm": 8,
+					"md": 8,
+					"lg": 8,
+					"xl": 8,
+					"newLine": true,
+					"hidden": "data.gridMode === 'gridMeter'"
+				},
+				"homePowerConsumptionNegate": {
+					"type": "checkbox",
+					"label": "LBL_homePowerConsumptionNegate",
+					"help": "LBL_homePowerConsumptionNegateHelp",
+					"default": false,
+					"xs": 12,
+					"sm": 4,
+					"md": 4,
+					"lg": 4,
+					"xl": 4,
+					"newLine": false,
+					"hidden": "data.gridMode === 'gridMeter'"
+				},
+				"subtractSelfConsumption": {
+					"type": "checkbox",
+					"label": "LBL_subtractSelfConsumption",
+					"xs": 12,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12,
+					"newLine": true,
+					"hidden": "data.gridMode === 'gridMeter'"
 				},
 				"stateGridPower": {
 					"type": "objectId",
@@ -190,11 +261,37 @@
 					"help": "LBL_stateGridPowerHelp",
 					"default": "",
 					"xs": 12,
-					"sm": 6,
+					"sm": 12,
 					"md": 6,
 					"lg": 6,
 					"xl": 6,
 					"newLine": true,
+					"hidden": "data.gridMode !== 'gridMeter'"
+				},
+				"gridPowerNegate": {
+					"type": "checkbox",
+					"label": "LBL_gridPowerNegate",
+					"help": "LBL_gridPowerNegateHelp",
+					"default": false,
+					"xs": 12,
+					"sm": 6,
+					"md": 3,
+					"lg": 3,
+					"xl": 3,
+					"newLine": false,
+					"hidden": "data.gridMode !== 'gridMeter'"
+				},
+				"gridPowerAckOnly": {
+					"type": "checkbox",
+					"label": "LBL_gridPowerAckOnly",
+					"help": "LBL_gridPowerAckOnlyHelp",
+					"default": false,
+					"xs": 12,
+					"sm": 6,
+					"md": 3,
+					"lg": 3,
+					"xl": 3,
+					"newLine": false,
 					"hidden": "data.gridMode !== 'gridMeter'"
 				},
 				"gridPowerMaxAgeSeconds": {
@@ -211,56 +308,19 @@
 					"md": 6,
 					"lg": 6,
 					"xl": 6,
-					"newLine": false,
-					"hidden": "data.gridMode !== 'gridMeter'"
-				},
-				"gridPowerNegate": {
-					"type": "checkbox",
-					"label": "LBL_gridPowerNegate",
-					"help": "LBL_gridPowerNegateHelp",
-					"default": false,
-					"xs": 12,
-					"sm": 6,
-					"md": 6,
-					"lg": 6,
-					"xl": 6,
 					"newLine": true,
 					"hidden": "data.gridMode !== 'gridMeter'"
 				},
-				"gridPowerAckOnly": {
-					"type": "checkbox",
-					"label": "LBL_gridPowerAckOnly",
-					"help": "LBL_gridPowerAckOnlyHelp",
-					"default": false,
+				"_headerHomeBattery": {
+					"type": "header",
+					"text": "LBL_headerHomeBattery",
+					"size": 5,
 					"xs": 12,
-					"sm": 6,
-					"md": 6,
-					"lg": 6,
-					"xl": 6,
-					"newLine": false,
-					"hidden": "data.gridMode !== 'gridMeter'"
-				},
-				"stateHomeSolarPower": {
-					"type": "objectId",
-					"label": "LBL_stateHomeSolarPower",
-					"xs": 12,
-					"sm": 6,
-					"md": 6,
-					"lg": 6,
-					"xl": 6,
-					"newLine": true,
-					"hidden": "data.gridMode === 'gridMeter'"
-				},
-				"stateHomeBatSoc": {
-					"type": "objectId",
-					"label": "LBL_stateHomeBatSoc",
-					"xs": 12,
-					"sm": 6,
-					"md": 6,
-					"lg": 6,
-					"xl": 6,
-					"newLine": false,
-					"hidden": "data.batteryMode === 'disabled'"
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12,
+					"newLine": true
 				},
 				"batteryMode": {
 					"type": "select",
@@ -284,33 +344,81 @@
 						}
 					],
 					"xs": 12,
-					"sm": 6,
+					"sm": 12,
 					"md": 6,
 					"lg": 6,
 					"xl": 6,
 					"newLine": true
 				},
-				"stateHomePowerConsumption": {
+				"stateHomeBatSoc": {
 					"type": "objectId",
-					"label": "LBL_stateHomePowerConsumption",
+					"label": "LBL_stateHomeBatSoc",
+					"xs": 12,
+					"sm": 8,
+					"md": 8,
+					"lg": 8,
+					"xl": 8,
+					"newLine": true,
+					"hidden": "data.batteryMode === 'disabled'"
+				},
+				"batterySocHysteresis": {
+					"type": "number",
+					"label": "LBL_batterySocHysteresis",
+					"default": 0,
+					"min": 0,
+					"max": 20,
+					"step": 0.5,
+					"unit": "%",
 					"xs": 12,
 					"sm": 6,
 					"md": 6,
 					"lg": 6,
 					"xl": 6,
 					"newLine": true,
-					"hidden": "data.gridMode === 'gridMeter'"
+					"hidden": "data.batteryMode === 'disabled'"
 				},
-				"subtractSelfConsumption": {
-					"type": "checkbox",
-					"label": "LBL_subtractSelfConsumption",
+				"batterySocMaxAgeSeconds": {
+					"type": "number",
+					"label": "LBL_batterySocMaxAgeSeconds",
+					"default": 0,
+					"min": 0,
+					"max": 86400,
+					"step": 1,
+					"unit": "s",
 					"xs": 12,
 					"sm": 6,
 					"md": 6,
 					"lg": 6,
 					"xl": 6,
 					"newLine": false,
-					"hidden": "data.gridMode === 'gridMeter'"
+					"hidden": "data.batteryMode === 'disabled'"
+				},
+				"chargeManagerMaxBatteryBonus": {
+					"type": "number",
+					"label": "LBL_chargeManagerMaxBatteryBonus",
+					"default": 2000,
+					"min": 0,
+					"max": 10000,
+					"step": 100,
+					"unit": "W",
+					"xs": 12,
+					"sm": 6,
+					"md": 6,
+					"lg": 6,
+					"xl": 6,
+					"newLine": true,
+					"hidden": "data.batteryMode !== 'priority'"
+				},
+				"_headerSurplusControl": {
+					"type": "header",
+					"text": "LBL_headerSurplusControl",
+					"size": 5,
+					"xs": 12,
+					"sm": 12,
+					"md": 12,
+					"lg": 12,
+					"xl": 12,
+					"newLine": true
 				},
 				"chargeManagerReservePower": {
 					"type": "number",
@@ -327,22 +435,6 @@
 					"xl": 6,
 					"newLine": true
 				},
-				"chargeManagerMaxBatteryBonus": {
-					"type": "number",
-					"label": "LBL_chargeManagerMaxBatteryBonus",
-					"default": 2000,
-					"min": 0,
-					"max": 10000,
-					"step": 100,
-					"unit": "W",
-					"xs": 12,
-					"sm": 6,
-					"md": 6,
-					"lg": 6,
-					"xl": 6,
-					"newLine": false,
-					"hidden": "data.batteryMode !== 'priority'"
-				},
 				"chargeManagerMinCurrent": {
 					"type": "number",
 					"label": "LBL_chargeManagerMinCurrent",
@@ -354,38 +446,6 @@
 					"validator": "data.chargeManagerMinCurrent <= data.maxChargeCurrent",
 					"validatorNoSaveOnError": true,
 					"validatorErrorText": "ERR_minCurrentAboveMax",
-					"xs": 12,
-					"sm": 6,
-					"md": 6,
-					"lg": 6,
-					"xl": 6,
-					"newLine": true
-				},
-				"batterySocHysteresis": {
-					"type": "number",
-					"label": "LBL_batterySocHysteresis",
-					"default": 0,
-					"min": 0,
-					"max": 20,
-					"step": 0.5,
-					"unit": "%",
-					"hidden": "data.batteryMode === 'disabled'",
-					"xs": 12,
-					"sm": 6,
-					"md": 6,
-					"lg": 6,
-					"xl": 6,
-					"newLine": true
-				},
-				"batterySocMaxAgeSeconds": {
-					"type": "number",
-					"label": "LBL_batterySocMaxAgeSeconds",
-					"default": 0,
-					"min": 0,
-					"max": 86400,
-					"step": 1,
-					"unit": "s",
-					"hidden": "data.batteryMode === 'disabled'",
 					"xs": 12,
 					"sm": 6,
 					"md": 6,

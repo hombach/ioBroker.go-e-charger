@@ -61,6 +61,7 @@ import {
 	acceptGridMeterState,
 	calculateAvailableSurplusPower,
 	evaluateGridMeterReading,
+	negatePowerValue,
 	resolveGridInputMode,
 	surplusInputsFromGridMeter,
 } from "./lib/chargeManagerUtils";
@@ -2019,5 +2020,43 @@ describe("grid meter input (#919)", () => {
 			assert.equal(decision.action, "disable");
 			assert.equal(decision.reason, "invalid-input");
 		});
+	});
+});
+
+describe("negatePowerValue (Negate for solar power and home power consumption)", () => {
+	it("leaves the value unchanged without Negate", () => {
+		assert.equal(negatePowerValue(-2500, false), -2500);
+		assert.equal(negatePowerValue(1800, false), 1800);
+	});
+
+	it("inverts the sign with Negate", () => {
+		assert.equal(negatePowerValue(-2500, true), 2500);
+		assert.equal(negatePowerValue(1800, true), -1800);
+		assert.ok(Object.is(negatePowerValue(0, true), 0));
+	});
+
+	it("passes invalid values through, so the surplus calculation still rejects them", () => {
+		for (const value of [null, undefined, "-2500", Number.NaN, Number.NEGATIVE_INFINITY]) {
+			assert.ok(Object.is(negatePowerValue(value, true), value), JSON.stringify(value));
+		}
+	});
+
+	it("turns a negative PV value into the same surplus as a positive one", () => {
+		const shared = {
+			chargerPower: 0,
+			subtractChargerPower: false,
+			batterySoc: null,
+			minBatterySoc: 70,
+			batteryMode: "disabled" as const,
+			reservePower: 100,
+			maximumBatteryBonus: 2000,
+		};
+		const negated = calculateAvailableSurplusPower({
+			...shared,
+			solarPower: negatePowerValue(-6000, true),
+			houseConsumption: negatePowerValue(-1500, true),
+		});
+		assert.equal(negated, calculateAvailableSurplusPower({ ...shared, solarPower: 6000, houseConsumption: 1500 }));
+		assert.equal(negated, 4400);
 	});
 });
