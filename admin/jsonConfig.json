@@ -162,6 +162,84 @@
 			"type": "panel",
 			"label": "LBL_chargeManagerSettings",
 			"items": {
+				"gridMode": {
+					"type": "select",
+					"label": "LBL_gridMode",
+					"help": "LBL_gridModeHelp",
+					"default": "pvAndConsumption",
+					"options": [
+						{
+							"label": "LBL_gridModePvAndConsumption",
+							"value": "pvAndConsumption"
+						},
+						{
+							"label": "LBL_gridModeGridMeter",
+							"value": "gridMeter"
+						}
+					],
+					"xs": 12,
+					"sm": 6,
+					"md": 6,
+					"lg": 6,
+					"xl": 6,
+					"newLine": true
+				},
+				"stateGridPower": {
+					"type": "objectId",
+					"label": "LBL_stateGridPower",
+					"help": "LBL_stateGridPowerHelp",
+					"default": "",
+					"xs": 12,
+					"sm": 6,
+					"md": 6,
+					"lg": 6,
+					"xl": 6,
+					"newLine": true,
+					"hidden": "data.gridMode !== 'gridMeter'"
+				},
+				"gridPowerMaxAgeSeconds": {
+					"type": "number",
+					"label": "LBL_gridPowerMaxAgeSeconds",
+					"help": "LBL_gridPowerMaxAgeSecondsHelp",
+					"default": 0,
+					"min": 0,
+					"max": 86400,
+					"step": 1,
+					"unit": "s",
+					"xs": 12,
+					"sm": 6,
+					"md": 6,
+					"lg": 6,
+					"xl": 6,
+					"newLine": false,
+					"hidden": "data.gridMode !== 'gridMeter'"
+				},
+				"gridPowerNegate": {
+					"type": "checkbox",
+					"label": "LBL_gridPowerNegate",
+					"help": "LBL_gridPowerNegateHelp",
+					"default": false,
+					"xs": 12,
+					"sm": 6,
+					"md": 6,
+					"lg": 6,
+					"xl": 6,
+					"newLine": true,
+					"hidden": "data.gridMode !== 'gridMeter'"
+				},
+				"gridPowerAckOnly": {
+					"type": "checkbox",
+					"label": "LBL_gridPowerAckOnly",
+					"help": "LBL_gridPowerAckOnlyHelp",
+					"default": false,
+					"xs": 12,
+					"sm": 6,
+					"md": 6,
+					"lg": 6,
+					"xl": 6,
+					"newLine": false,
+					"hidden": "data.gridMode !== 'gridMeter'"
+				},
 				"stateHomeSolarPower": {
 					"type": "objectId",
 					"label": "LBL_stateHomeSolarPower",
@@ -170,7 +248,8 @@
 					"md": 6,
 					"lg": 6,
 					"xl": 6,
-					"newLine": true
+					"newLine": true,
+					"hidden": "data.gridMode === 'gridMeter'"
 				},
 				"stateHomeBatSoc": {
 					"type": "objectId",
@@ -219,7 +298,8 @@
 					"md": 6,
 					"lg": 6,
 					"xl": 6,
-					"newLine": true
+					"newLine": true,
+					"hidden": "data.gridMode === 'gridMeter'"
 				},
 				"subtractSelfConsumption": {
 					"type": "checkbox",
@@ -229,7 +309,8 @@
 					"md": 6,
 					"lg": 6,
 					"xl": 6,
-					"newLine": false
+					"newLine": false,
+					"hidden": "data.gridMode === 'gridMeter'"
 				},
 				"chargeManagerReservePower": {
 					"type": "number",

@@ -20,7 +20,15 @@ import {
 	DEFAULT_RESERVE_POWER,
 	effectiveCurrentDemand,
 	type FleetParticipant,
+	acceptGridMeterState,
+	evaluateGridMeterReading,
+	type GridInputMode,
+	type GridMeterOptions,
+	type GridMeterReading,
+	type GridMeterSample,
 	gridFrequencyFromStatus,
+	resolveGridInputMode,
+	surplusInputsFromGridMeter,
 	MAX_AMP_TOTAL,
 	MAX_CHARGE_CURRENT,
 	evaluateBatteryAvailability,
@@ -79,6 +87,10 @@ let maxAmpTotal = 0;
 let chargeManagerBatteryMode: BatteryMode = "priority";
 let chargeManagerBatterySocHysteresis = 0;
 let chargeManagerBatterySocMaxAgeSeconds = 0;
+let chargeManagerGridMode: GridInputMode = "pvAndConsumption";
+let gridPowerStateId = "";
+let gridMeterOptions: GridMeterOptions = { negate: false, ackOnly: false };
+let gridPowerMaxAgeSeconds = 0;
 
 class go_e_charger extends utils.Adapter {
 	private projectUtils = new ProjectUtils(this);
@@ -86,6 +98,10 @@ class go_e_charger extends utils.Adapter {
 	wallboxInfoList: IWallboxInfo[] = [];
 	private stateMachineTimeout: ioBroker.Timeout | undefined;
 	private isUnloading = false;
+	/** Last accepted reading of the grid meter state (grid meter mode only) */
+	private gridMeterSample: GridMeterSample | null = null;
+	/** Reason of the last grid meter check in the ChargeManager cycle, so a change is logged only once */
+	private gridMeterReason: GridMeterReading["reason"] | null = null;
 
 	/****************************************************************************************
 	 * @param {Partial<utils.AdapterOptions>} [options={}]
@@ -174,6 +190,8 @@ class go_e_charger extends utils.Adapter {
 		this.log.debug(
 			`ChargeManager battery mode: ${chargeManagerBatteryMode}, SoC hysteresis: ${chargeManagerBatterySocHysteresis}%, max SoC age: ${chargeManagerBatterySocMaxAgeSeconds} s`,
 		);
+
+		await this.setupGridMeterInput();
 
 		const wallBoxList = Array.isArray(this.config.wallBoxList) ? this.config.wallBoxList : [];
 		// normalize the config to the guarded array so all later accesses (firstStart, StateMachine,
@@ -432,6 +450,11 @@ class go_e_charger extends utils.Adapter {
 	 */
 	private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
 		try {
+			// the grid meter is a foreign state, so it is handled before the own (ack=false) settings
+			if (chargeManagerGridMode === "gridMeter" && id === gridPowerStateId) {
+				this.updateGridMeterSample(state, "update");
+				return;
+			}
 			if (state) {
 				// The state was changed - this.subscribeStates(`Settings.*`);  -  "go-e-charger.0.Settings.Setpoint_HomeBatSoC"
 				// The state was changed - this.subscribeStates(`Wallbox*.`);  -  "go-e-charger.0.Wallbox_0.Settings.ChargeNOW"
@@ -866,6 +889,99 @@ class go_e_charger extends utils.Adapter {
 			this.scheduleStateMachine();
 		}
 	} // END StateMachine
+
+	/**
+	 * Resolves the ChargeManager surplus input mode and, in the grid meter mode, subscribes to the
+	 * grid power state and reads its current value. Without a grid meter configuration nothing
+	 * changes: the PV generation and household consumption states are read as before.
+	 *
+	 * @async
+	 */
+	private async setupGridMeterInput(): Promise<void> {
+		const resolution = resolveGridInputMode(this.config.gridMode, this.config.stateGridPower);
+		if (resolution.fallback === "invalid-mode") {
+			this.log.warn(`Config gridMode is invalid (${JSON.stringify(this.config.gridMode)}); using PV generation and house consumption`);
+		} else if (resolution.fallback === "missing-grid-state") {
+			this.log.warn(`Grid meter mode selected, but no grid power object ID configured; using PV generation and house consumption`);
+		}
+		chargeManagerGridMode = resolution.mode;
+		if (chargeManagerGridMode !== "gridMeter") {
+			this.log.debug(`ChargeManager surplus input: PV generation and house consumption`);
+			return;
+		}
+
+		gridPowerStateId = this.config.stateGridPower.trim();
+		gridMeterOptions = { negate: !!this.config.gridPowerNegate, ackOnly: !!this.config.gridPowerAckOnly };
+		gridPowerMaxAgeSeconds = this.validateBoundedIntConfig(this.config.gridPowerMaxAgeSeconds, 0, 0, 86400, "gridPowerMaxAgeSeconds");
+		this.log.info(
+			`ChargeManager surplus input: grid meter ${gridPowerStateId} (import positive, export negative${gridMeterOptions.negate ? ", negated" : ""}${gridMeterOptions.ackOnly ? ", ack-only" : ""}, max age ${gridPowerMaxAgeSeconds ? `${gridPowerMaxAgeSeconds} s` : "unchecked"})`,
+		);
+		if (this.config.stateHomeSolarPower || this.config.stateHomePowerConsumption) {
+			this.log.info(`Grid meter mode: the configured PV generation and house consumption objects are ignored`);
+		}
+		if (!this.config.subtractSelfConsumption) {
+			this.log.debug(`Grid meter mode: the wallbox power is always added back, the option "charger consumption included" is ignored`);
+		}
+
+		try {
+			if (!(await this.getForeignObjectAsync(gridPowerStateId))) {
+				this.log.warn(`Grid power object ${gridPowerStateId} does not exist - ChargeManager will not charge until it delivers values`);
+			}
+			this.subscribeForeignStates(gridPowerStateId);
+			this.updateGridMeterSample(await this.getForeignStateAsync(gridPowerStateId), "initial");
+		} catch (error) {
+			this.log.error(`Error setting up grid power object ${gridPowerStateId}: ${String(error)}`);
+		}
+	}
+
+	/**
+	 * Applies Negate and Ack-only to an update of the grid meter state and keeps it when it is usable.
+	 * An update skipped by Ack-only leaves the last accepted reading in place (it then ages out via the
+	 * maximum age); a missing or non-numeric value discards it, so surplus charging stops.
+	 *
+	 * @param state - State update, `null`/`undefined` when the state is missing or was deleted
+	 * @param source - Whether this is the initial read at adapter start or a subscribed update
+	 */
+	private updateGridMeterSample(state: ioBroker.State | null | undefined, source: "initial" | "update"): void {
+		const update = acceptGridMeterState(state, gridMeterOptions);
+		if (update.sample) {
+			this.gridMeterSample = update.sample;
+			return;
+		}
+		if (update.reason !== "not-acknowledged") {
+			// a deleted state or a non-numeric value means the current grid power is unknown; only an
+			// unacknowledged update (Ack-only) keeps the last confirmed reading
+			this.gridMeterSample = null;
+		}
+		this.log.debug(`Grid power ${source} from ${gridPowerStateId} not used (${update.reason}): ${JSON.stringify(state?.val)} (ack=${state?.ack})`);
+	}
+
+	/**
+	 * Returns the grid power for this ChargeManager cycle, or `null` when there is no usable reading
+	 * (none yet, rejected values only, or older than the configured maximum age). A change of the
+	 * availability is logged once.
+	 *
+	 * @returns Grid power in W (import positive, export negative), or `null`
+	 */
+	private readGridMeter(): number | null {
+		const reading = evaluateGridMeterReading(this.gridMeterSample, Date.now(), gridPowerMaxAgeSeconds);
+		if (reading.reason !== this.gridMeterReason) {
+			if (reading.reason === "available") {
+				if (this.gridMeterReason !== null) {
+					this.log.info(`Grid power from ${gridPowerStateId} is available again`);
+				}
+			} else {
+				this.log.warn(
+					reading.reason === "stale"
+						? `Grid power from ${gridPowerStateId} is older than ${gridPowerMaxAgeSeconds} s - ChargeManager stops surplus charging until it is updated`
+						: `No usable grid power from ${gridPowerStateId}${gridMeterOptions.ackOnly ? " (ack-only)" : ""} - ChargeManager stops surplus charging until it delivers a numeric value`,
+				);
+			}
+			this.gridMeterReason = reading.reason;
+		}
+		this.log.debug(`Got grid power: ${reading.gridPower ?? "n/a"} W (import positive, export negative)`);
+		return reading.gridPower;
+	}
 
 	/**
 	 * Validates a non-negative numeric config value and falls back to a default when it is
@@ -1847,10 +1963,17 @@ class go_e_charger extends utils.Adapter {
 			return plans;
 		}
 
-		solarPower = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower);
-		this.log.debug(`Got external state of solar power: ${solarPower} W`);
-		houseConsumption = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption);
-		this.log.debug(`Got external state of house power consumption: ${houseConsumption} W`);
+		// grid meter mode: the signed grid power replaces PV generation and household consumption
+		let subtractChargerPower = this.config.subtractSelfConsumption;
+		if (chargeManagerGridMode === "gridMeter") {
+			const gridPower = this.readGridMeter();
+			({ solarPower, houseConsumption, subtractChargerPower } = surplusInputsFromGridMeter(gridPower));
+		} else {
+			solarPower = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower);
+			this.log.debug(`Got external state of solar power: ${solarPower} W`);
+			houseConsumption = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption);
+			this.log.debug(`Got external state of house power consumption: ${houseConsumption} W`);
+		}
 
 		// the battery state is identical for every charger, so read it once per cycle
 		const batteryState = chargeManagerBatteryMode === "disabled" ? null : await this.projectUtils.asyncGetForeignState(this.config.stateHomeBatSoc);
@@ -1923,7 +2046,7 @@ class go_e_charger extends utils.Adapter {
 				solarPower,
 				houseConsumption,
 				chargerPower: fleetChargePower,
-				subtractChargerPower: this.config.subtractSelfConsumption,
+				subtractChargerPower,
 				batterySoc,
 				minBatterySoc: minHomeBatVal,
 				batteryMode: chargeManagerBatteryMode,

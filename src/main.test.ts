@@ -58,6 +58,11 @@ import {
 	updateReleaseRejects,
 	updateShutdownDelay,
 	withdrawReleaseWithModesOff,
+	acceptGridMeterState,
+	calculateAvailableSurplusPower,
+	evaluateGridMeterReading,
+	resolveGridInputMode,
+	surplusInputsFromGridMeter,
 } from "./lib/chargeManagerUtils";
 
 describe("ChargeManager safety helpers", () => {
@@ -1880,6 +1885,139 @@ describe("ChargeManager safety helpers", () => {
 			for (const ip of [undefined, null, "", "  "]) {
 				assert.equal(wallboxLabel(0, "Garage", ip), `"Garage"`, JSON.stringify(ip));
 			}
+		});
+	});
+});
+
+describe("grid meter input (#919)", () => {
+	const plain = { negate: false, ackOnly: false };
+
+	describe("resolveGridInputMode", () => {
+		it("keeps PV generation and house consumption for existing configurations", () => {
+			assert.deepEqual(resolveGridInputMode(undefined, undefined), { mode: "pvAndConsumption", fallback: null });
+			assert.deepEqual(resolveGridInputMode("pvAndConsumption", "smartmeter.0.power"), { mode: "pvAndConsumption", fallback: null });
+		});
+
+		it("uses the grid meter only when selected and configured", () => {
+			assert.deepEqual(resolveGridInputMode("gridMeter", "smartmeter.0.power"), { mode: "gridMeter", fallback: null });
+		});
+
+		it("falls back to PV generation and house consumption without a grid power object", () => {
+			for (const id of [undefined, null, "", "   "]) {
+				assert.deepEqual(resolveGridInputMode("gridMeter", id), { mode: "pvAndConsumption", fallback: "missing-grid-state" }, JSON.stringify(id));
+			}
+		});
+
+		it("rejects an unknown mode", () => {
+			assert.deepEqual(resolveGridInputMode("grid", "smartmeter.0.power"), { mode: "pvAndConsumption", fallback: "invalid-mode" });
+		});
+	});
+
+	describe("acceptGridMeterState", () => {
+		it("keeps import positive and export negative", () => {
+			assert.deepEqual(acceptGridMeterState({ val: 1200, ack: true, ts: 1000 }, plain), { sample: { power: 1200, ts: 1000 }, reason: "accepted" });
+			assert.deepEqual(acceptGridMeterState({ val: -3000, ack: true, ts: 1000 }, plain), { sample: { power: -3000, ts: 1000 }, reason: "accepted" });
+		});
+
+		it("inverts the sign with Negate", () => {
+			const negate = { negate: true, ackOnly: false };
+			assert.equal(acceptGridMeterState({ val: 3000, ack: true, ts: 1 }, negate).sample?.power, -3000);
+			assert.equal(acceptGridMeterState({ val: -500, ack: true, ts: 1 }, negate).sample?.power, 500);
+			assert.ok(Object.is(acceptGridMeterState({ val: 0, ack: true, ts: 1 }, negate).sample?.power, 0));
+		});
+
+		it("skips unacknowledged updates with Ack-only", () => {
+			const ackOnly = { negate: false, ackOnly: true };
+			assert.deepEqual(acceptGridMeterState({ val: -3000, ack: false, ts: 1 }, ackOnly), { sample: null, reason: "not-acknowledged" });
+			assert.equal(acceptGridMeterState({ val: -3000, ack: true, ts: 1 }, ackOnly).reason, "accepted");
+			// without Ack-only the source's ack flag does not matter
+			assert.equal(acceptGridMeterState({ val: -3000, ack: false, ts: 1 }, plain).reason, "accepted");
+		});
+
+		it("rejects missing and non-numeric values", () => {
+			assert.equal(acceptGridMeterState(null, plain).reason, "missing");
+			assert.equal(acceptGridMeterState(undefined, plain).reason, "missing");
+			for (const val of [null, "-3000", true, Number.NaN, Number.POSITIVE_INFINITY, {}]) {
+				assert.deepEqual(acceptGridMeterState({ val, ack: true, ts: 1 }, plain), { sample: null, reason: "invalid" }, JSON.stringify(val));
+			}
+		});
+	});
+
+	describe("evaluateGridMeterReading", () => {
+		const now = 1_000_000;
+
+		it("has no reading before the first accepted value", () => {
+			assert.deepEqual(evaluateGridMeterReading(null, now, 0), { gridPower: null, reason: "missing" });
+		});
+
+		it("ignores the age when the check is disabled", () => {
+			assert.deepEqual(evaluateGridMeterReading({ power: -2000, ts: 0 }, now, 0), { gridPower: -2000, reason: "available" });
+		});
+
+		it("rejects a reading older than the maximum age", () => {
+			assert.deepEqual(evaluateGridMeterReading({ power: -2000, ts: now - 30_000 }, now, 30), { gridPower: -2000, reason: "available" });
+			assert.deepEqual(evaluateGridMeterReading({ power: -2000, ts: now - 30_001 }, now, 30), { gridPower: null, reason: "stale" });
+			// a timestamp in the future is not trusted either
+			assert.equal(evaluateGridMeterReading({ power: -2000, ts: now + 1 }, now, 30).reason, "stale");
+		});
+	});
+
+	describe("surplus from the grid meter", () => {
+		const shared = {
+			chargerPower: 0,
+			batterySoc: null,
+			minBatterySoc: 70,
+			batteryMode: "disabled" as const,
+			reservePower: 100,
+			maximumBatteryBonus: 2000,
+		};
+
+		it("turns export into surplus", () => {
+			// 3000 W export, wallbox idle: 3000 - 100 reserve
+			assert.equal(calculateAvailableSurplusPower({ ...shared, ...surplusInputsFromGridMeter(-3000) }), 2900);
+			// 500 W import: no surplus
+			assert.equal(calculateAvailableSurplusPower({ ...shared, ...surplusInputsFromGridMeter(500) }), -600);
+		});
+
+		it("adds the wallbox power back, because the grid meter contains it", () => {
+			// wallbox draws 4140 W (6 A three-phase), the house still exports 700 W: 4840 W minus the reserve are available
+			// independent of subtractSelfConsumption, so the controller does not oscillate
+			const inputs = surplusInputsFromGridMeter(-700);
+			assert.equal(inputs.subtractChargerPower, true);
+			assert.equal(calculateAvailableSurplusPower({ ...shared, ...inputs, chargerPower: 4140 }), 4740);
+		});
+
+		it("matches the PV-and-consumption calculation for the same situation", () => {
+			// PV 6000 W, house 1500 W (without wallbox), wallbox 2300 W: grid = 1500 + 2300 - 6000 = -2200 W
+			const pvMode = calculateAvailableSurplusPower({
+				...shared,
+				solarPower: 6000,
+				houseConsumption: 1500 + 2300,
+				chargerPower: 2300,
+				subtractChargerPower: true,
+			});
+			const gridMode = calculateAvailableSurplusPower({ ...shared, ...surplusInputsFromGridMeter(-2200), chargerPower: 2300 });
+			assert.equal(gridMode, pvMode);
+		});
+
+		it("adds the battery bonus as in the PV-and-consumption mode", () => {
+			const priority = { ...shared, batteryMode: "priority" as const, batterySoc: 85, minBatterySoc: 70 };
+			// bonus = 2000 / 30 * 15 = 1000 W
+			assert.equal(calculateAvailableSurplusPower({ ...priority, ...surplusInputsFromGridMeter(-1000) }), 1900);
+		});
+
+		it("treats a missing reading as invalid input, so the ChargeManager does not charge", () => {
+			assert.equal(calculateAvailableSurplusPower({ ...shared, ...surplusInputsFromGridMeter(null) }), null);
+			const decision = decideChargeManager({
+				...shared,
+				...surplusInputsFromGridMeter(null),
+				maximumChargeCurrent: 16,
+				minimumChargeCurrent: MIN_CHARGE_CURRENT,
+				phases: 3,
+				state: { currentAmp: 10, shutdownDelay: 0 },
+			});
+			assert.equal(decision.action, "disable");
+			assert.equal(decision.reason, "invalid-input");
 		});
 	});
 });
