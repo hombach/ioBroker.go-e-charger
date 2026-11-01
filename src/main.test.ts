@@ -58,6 +58,10 @@ import {
 	updateReleaseRejects,
 	updateShutdownDelay,
 	withdrawReleaseWithModesOff,
+	parseRfidCardsV1,
+	parseRfidCardsV2,
+	rfidCardsFromV1,
+	RFID_V2_FILTER_KEYS,
 } from "./lib/chargeManagerUtils";
 
 describe("ChargeManager safety helpers", () => {
@@ -1879,6 +1883,79 @@ describe("ChargeManager safety helpers", () => {
 		it("omits an empty or missing IP address", () => {
 			for (const ip of [undefined, null, "", "  "]) {
 				assert.equal(wallboxLabel(0, "Garage", ip), `"Garage"`, JSON.stringify(ip));
+			}
+		});
+	});
+
+	describe("RFID cards (#889)", () => {
+		it("API V2 firmware 60+: reads c<i>n / c<i>e (Wh -> kWh) / c<i>i and maps slot 0-9 to card 1-10", () => {
+			const status: Record<string, unknown> = {};
+			for (let i = 0; i < 10; i++) {
+				status[`c${i}n`] = "n/a";
+				status[`c${i}e`] = 0;
+				status[`c${i}i`] = false;
+			}
+			status.c0n = "tesla";
+			status.c0e = 9961890;
+			status.c0i = true;
+			status.c9n = "guest";
+			status.c9e = 1234.4;
+			status.c9i = true;
+			assert.deepEqual(parseRfidCardsV2(status), [
+				{ cardNumber: 1, name: "tesla", energyKWh: 9961.89 },
+				{ cardNumber: 10, name: "guest", energyKWh: 1.234 },
+			]);
+		});
+
+		it("API V2 firmware below 60: reads the cards array { name, energy (Wh), cardId }", () => {
+			const cards = [
+				{ name: "n/a", energy: 45801, cardId: true },
+				{ name: "Car 2", energy: 0, cardId: true },
+				...Array.from({ length: 8 }, () => ({ name: "n/a", energy: 0, cardId: false })),
+			];
+			assert.deepEqual(parseRfidCardsV2({ cards }), [
+				{ cardNumber: 1, name: undefined, energyKWh: 45.801 },
+				{ cardNumber: 2, name: "Car 2", energyKWh: 0 },
+			]);
+		});
+
+		it("API V2: keeps a slot that still holds energy, skips empty slots and never reports a card ID", () => {
+			const result = parseRfidCardsV2({ cards: [{ name: "old", energy: 500, cardId: false }, null, { energy: "x", cardId: false }] });
+			assert.ok(result?.every(card => card.cardId === undefined));
+			assert.deepEqual(result, [{ cardNumber: 1, name: "old", energyKWh: 0.5 }]);
+		});
+
+		it("API V2: returns null when the status holds neither card form (fallback to API V1)", () => {
+			assert.equal(parseRfidCardsV2({ psm: 2, typ: "11kW", trx: null }), null);
+			assert.equal(parseRfidCardsV2({ rca: "abc", eca: 1400 }), null);
+			assert.deepEqual(parseRfidCardsV2({ cards: [] }), []);
+		});
+
+		it("API V1: reads rca/rna/eca (0.1 kWh) and skips slots without card ID", () => {
+			assert.deepEqual(parseRfidCardsV1({ rca: "04ab", rna: "tesla", eca: 99536, rcr: "", ecr: 50, rcd: "0", rc4: "n/a", rn4: "n/a", ec4: "1400" }), [
+				{ cardNumber: 1, name: "tesla", energyKWh: 9953.6, cardId: "04ab" },
+				{ cardNumber: 4, name: undefined, energyKWh: 140, cardId: undefined },
+			]);
+		});
+
+		it("falls back to the API V1 RFID keys every cycle unless API V2 delivered card data", () => {
+			assert.equal(rfidCardsFromV1(false, false), true, "gen 1/2");
+			assert.equal(rfidCardsFromV1(false, true), true, "gen 1/2 (flag irrelevant)");
+			assert.equal(rfidCardsFromV1(true, false), true, "gen 3+ without V2 card keys");
+			assert.equal(rfidCardsFromV1(true, true), false, "gen 3+ with V2 card keys");
+		});
+
+		it("requests the real API V2 card keys instead of the API V1 ones", () => {
+			assert.ok(RFID_V2_FILTER_KEYS.includes("cards"));
+			for (const key of ["c0n", "c0e", "c0i", "c9n", "c9e", "c9i"]) {
+				assert.ok(RFID_V2_FILTER_KEYS.includes(key), key);
+			}
+			assert.equal(RFID_V2_FILTER_KEYS.length, 31);
+			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
+			const filter = /api\/status\?filter=([^`]*)`/.exec(source)?.[1] ?? "";
+			assert.ok(filter.includes("RFID_V2_FILTER_KEYS"), "V2 filter uses RFID_V2_FILTER_KEYS");
+			for (const v1Key of ["rca", "rna", "eca", "ec1"]) {
+				assert.ok(!filter.split(/[,$]/).includes(v1Key), `V2 filter still requests ${v1Key}`);
 			}
 		});
 	});

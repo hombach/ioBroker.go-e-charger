@@ -1395,3 +1395,122 @@ export function wallboxLabel(index: number, name?: unknown, ipAddress?: unknown)
 	const trimmedIp = typeof ipAddress === "string" ? ipAddress.trim() : "";
 	return trimmedIp ? `${label} (${trimmedIp})` : label;
 }
+
+/** Number of RFID card slots of a go-e charger (cards 1-10). */
+export const RFID_CARD_SLOTS = 10;
+
+/** One RFID card slot read from a charger status, ready to be written to `statistics.RFID{cardNumber}`. */
+export interface RfidCardReading {
+	/** 1-based card number, the `n` of `statistics.RFID<n>` (matches `uby` and `trx`) */
+	cardNumber: number;
+	/** Card name, `undefined` when the charger reports none (empty or `"n/a"`) */
+	name?: string;
+	/** Charged energy on this card in kWh */
+	energyKWh: number;
+	/** Card ID as reported by API V1, `undefined` when unknown (API V2 never exposes the ID itself) */
+	cardId?: string;
+}
+
+const RFID_V1_ID_KEYS = ["rca", "rcr", "rcd", "rc4", "rc5", "rc6", "rc7", "rc8", "rc9", "rc1"];
+const RFID_V1_NAME_KEYS = ["rna", "rnm", "rne", "rn4", "rn5", "rn6", "rn7", "rn8", "rn9", "rn1"];
+const RFID_V1_ENERGY_KEYS = ["eca", "ecr", "ecd", "ec4", "ec5", "ec6", "ec7", "ec8", "ec9", "ec1"];
+
+/**
+ * The RFID card keys requested from API V2: the `cards` array (firmware below 60) and the
+ * per-card keys `c<i>n` (name), `c<i>e` (energy in Wh) and `c<i>i` (card learned) introduced
+ * with firmware 60.0. A charger simply leaves out the keys its firmware does not know.
+ */
+export const RFID_V2_FILTER_KEYS: string[] = ["cards", ...Array.from({ length: RFID_CARD_SLOTS }, (_, i) => [`c${i}n`, `c${i}e`, `c${i}i`]).flat()];
+
+function cleanCardName(name: unknown): string | undefined {
+	if (typeof name !== "string" && typeof name !== "number") {
+		return undefined;
+	}
+	const trimmed = String(name).trim();
+	return trimmed && trimmed !== "n/a" ? trimmed : undefined;
+}
+
+function whToKWh(energy: unknown): number {
+	const wh = Number(energy);
+	return Number.isFinite(wh) && wh > 0 ? Math.round(wh) / 1000 : 0;
+}
+
+/**
+ * Reads the RFID cards from an API V1 status (`rca…rc1` ID, `rna…rn1` name, `eca…ec1` energy in
+ * 0.1 kWh). Slots without a card ID (empty or `"0"`) are skipped.
+ *
+ * @param status API V1 status object
+ * @returns the cards found, in slot order
+ */
+export function parseRfidCardsV1(status: Record<string, unknown>): RfidCardReading[] {
+	const cards: RfidCardReading[] = [];
+	for (let i = 0; i < RFID_CARD_SLOTS; i++) {
+		const rawId = status[RFID_V1_ID_KEYS[i]];
+		const cardId = typeof rawId === "string" || typeof rawId === "number" ? String(rawId).trim() : "";
+		if (!cardId || cardId === "0") {
+			continue;
+		}
+		const energy = Number(status[RFID_V1_ENERGY_KEYS[i]]) / 10;
+		cards.push({
+			cardNumber: i + 1,
+			name: cleanCardName(status[RFID_V1_NAME_KEYS[i]]),
+			energyKWh: Number.isFinite(energy) ? energy : 0,
+			cardId: cardId !== "n/a" ? cardId : undefined,
+		});
+	}
+	return cards;
+}
+
+/**
+ * Reads the RFID cards from an API V2 status. Firmware 60.0+ reports `c<i>n` (name), `c<i>e`
+ * (energy in Wh) and `c<i>i` (true when a card is learned) per slot 0-9; older firmware reports
+ * the `cards` array of `{ name, energy, cardId }` objects (energy in Wh, `cardId` a boolean).
+ * Slot index 0-9 maps to card number 1-10. A slot is reported when a card is learned or when it
+ * still holds charged energy.
+ *
+ * @param status API V2 status object
+ * @returns the cards found, or `null` when the status contains neither form (so the caller can
+ *   fall back to the API V1 RFID keys)
+ */
+export function parseRfidCardsV2(status: Record<string, unknown>): RfidCardReading[] | null {
+	const slots: { name: unknown; energy: unknown; learned: unknown }[] = [];
+	const hasPerCardKeys = Array.from({ length: RFID_CARD_SLOTS }, (_, i) => i).some(
+		i => status[`c${i}e`] !== undefined || status[`c${i}n`] !== undefined || status[`c${i}i`] !== undefined,
+	);
+	if (hasPerCardKeys) {
+		for (let i = 0; i < RFID_CARD_SLOTS; i++) {
+			slots.push({ name: status[`c${i}n`], energy: status[`c${i}e`], learned: status[`c${i}i`] });
+		}
+	} else if (Array.isArray(status.cards)) {
+		for (const card of status.cards.slice(0, RFID_CARD_SLOTS) as unknown[]) {
+			const entry = card !== null && typeof card === "object" ? (card as Record<string, unknown>) : {};
+			slots.push({ name: entry.name, energy: entry.energy, learned: entry.cardId });
+		}
+	} else {
+		return null;
+	}
+
+	const cards: RfidCardReading[] = [];
+	slots.forEach((slot, i) => {
+		const energyKWh = whToKWh(slot.energy);
+		if (slot.learned !== true && energyKWh <= 0) {
+			return;
+		}
+		cards.push({ cardNumber: i + 1, name: cleanCardName(slot.name), energyKWh });
+	});
+	return cards;
+}
+
+/**
+ * Whether the RFID cards have to be taken from the API V1 status: always on gen 1/2 (no API V2),
+ * and on gen 3+ as long as the last API V2 read did not contain card data of its own. This
+ * fallback runs on every cycle, so the card energy never freezes at the value read at adapter
+ * start (#889).
+ *
+ * @param hardwareMin3 Charger is gen 3+ (API V2 answered)
+ * @param rfidFromV2 The last API V2 read delivered card data (`parseRfidCardsV2` returned a list)
+ * @returns `true` when the API V1 RFID keys (`rca…`, `eca…`) should be parsed
+ */
+export function rfidCardsFromV1(hardwareMin3: boolean, rfidFromV2: boolean): boolean {
+	return !hardwareMin3 || !rfidFromV2;
+}

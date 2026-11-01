@@ -246,6 +246,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 ### **WORK IN PROGRESS**
 
 - (HombachC) added a migration guide from the go-e adapter (ioBroker.go-e) in English and German
+- (HombachC) fixed the RFID card energy (statistics.RFID<n>.chargedEnergy) on gen 3+ chargers freezing at the value read at adapter start: it is now read from the API V2 card keys in Wh precision, with an API V1 fallback refreshed every cycle (#889)
 
 ### 1.10.1 (2026-10-31)
 
