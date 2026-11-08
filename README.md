@@ -272,6 +272,8 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 - (HombachC) added grid meter input for ChargeManager: one signed grid power value (import positive, export negative) instead of PV generation and house consumption, with Negate, Ack-only and maximum age options (#919)
 - (HombachC) added Negate options for the solar power and home power consumption objects and restructured the ChargeManager settings page into the blocks surplus input, home battery and surplus control, with units on all value fields (#919)
+- (hombach) updated iobroker/testing
+- (hombach) updated dependencies
 
 ### 1.10.2 (2026-11-01)
 
