@@ -74,7 +74,15 @@ The adapter also reads the current caps reported by each charger – the absolut
 
 ChargeManager calculates the charging current from numeric ioBroker states supplied by an energy-management, inverter, meter, or user-created data source. It does not depend on a particular vendor, but the selected states must represent the quantities described below.
 
-The ChargeManager configuration page is organized in three blocks along the flow of the settings: **Surplus input** (source and its objects), **Home battery** (mode, SoC object and battery tuning) and **Surplus control** (grid reserve and minimum current). Select the **Surplus source** in the first block and configure the object IDs of the following states:
+The ChargeManager configuration page is organized in three blocks that follow the flow of the calculation. Options sit directly next to the object they belong to, fields that do not apply to the current selection are hidden, and every value field shows its unit:
+
+| Block               | Settings                                                                                                                                                                                                                                                         |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Surplus input**   | **Surplus source**; for _PV generation and house consumption_: solar power and home power consumption objects, each with its Negate option, and _Charger consumption is included_; for _Grid meter_: grid power object with Negate, Ack-only and maximum age [s] |
+| **Home battery**    | **Home battery mode**; unless _Disabled_: SoC object, SoC hysteresis [%] and maximum SoC age [s]; in _Battery priority_ also the maximum battery bonus [W]                                                                                                       |
+| **Surplus control** | Grid reserve power [W] and minimum ChargeManager current [A]                                                                                                                                                                                                     |
+
+Select the **Surplus source** in the first block and configure the object IDs of the following states:
 
 - _PV generation and house consumption_ (default): currently available solar power [W] and current home power consumption [W]
 - _Grid meter (signed import/export)_: current grid power [W], see [Grid meter input](#grid-meter-input) below
@@ -271,7 +279,8 @@ If you enjoyed this project – or are just feeling generous – consider buying
 ### **WORK IN PROGRESS**
 
 - (HombachC) added grid meter input for ChargeManager: one signed grid power value (import positive, export negative) instead of PV generation and house consumption, with Negate, Ack-only and maximum age options (#919)
-- (HombachC) added Negate options for the solar power and home power consumption objects and restructured the ChargeManager settings page into the blocks surplus input, home battery and surplus control, with units on all value fields (#919)
+- (HombachC) added Negate options for the solar power and home power consumption objects (#919)
+- (HombachC) reorganized the ChargeManager configuration page into the logical blocks surplus input, home battery and surplus control: options are placed next to the object they belong to, settings that do not apply to the selected surplus source or home battery mode are hidden, and all value fields show their unit (#919)
 - (hombach) updated iobroker/testing
 - (hombach) updated dependencies
 
