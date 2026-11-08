@@ -243,6 +243,12 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+- (hombach) updated iobroker/testing
+- (hombach) updated dependencies
+
 ### 1.10.2 (2026-11-01)
 
 - (HombachC) added a migration guide from the go-e adapter (ioBroker.go-e) in English and German
