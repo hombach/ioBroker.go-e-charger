@@ -8,7 +8,14 @@ declare global {
 			stateHomeBatSoc: string;
 			stateHomeSolarPower: string;
 			stateHomePowerConsumption: string;
+			solarPowerNegate: boolean;
+			homePowerConsumptionNegate: boolean;
 			subtractSelfConsumption: boolean;
+			gridMode: "pvAndConsumption" | "gridMeter";
+			stateGridPower: string;
+			gridPowerNegate: boolean;
+			gridPowerAckOnly: boolean;
+			gridPowerMaxAgeSeconds: number;
 			chargeManagerReservePower: number;
 			chargeManagerMaxBatteryBonus: number;
 			chargeManagerMinCurrent: number;

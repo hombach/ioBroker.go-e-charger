@@ -38,6 +38,11 @@ exports.parseWallboxIndex = parseWallboxIndex;
 exports.isConnectionError = isConnectionError;
 exports.connectionTransition = connectionTransition;
 exports.wallboxLabel = wallboxLabel;
+exports.resolveGridInputMode = resolveGridInputMode;
+exports.acceptGridMeterState = acceptGridMeterState;
+exports.evaluateGridMeterReading = evaluateGridMeterReading;
+exports.surplusInputsFromGridMeter = surplusInputsFromGridMeter;
+exports.negatePowerValue = negatePowerValue;
 exports.parseRfidCardsV1 = parseRfidCardsV1;
 exports.parseRfidCardsV2 = parseRfidCardsV2;
 exports.rfidCardsFromV1 = rfidCardsFromV1;
@@ -545,6 +550,57 @@ function wallboxLabel(index, name, ipAddress) {
     const label = trimmedName ? `"${trimmedName}"` : String(index);
     const trimmedIp = typeof ipAddress === "string" ? ipAddress.trim() : "";
     return trimmedIp ? `${label} (${trimmedIp})` : label;
+}
+function resolveGridInputMode(mode, gridStateId) {
+    if (mode === undefined || mode === null || mode === "" || mode === "pvAndConsumption") {
+        return { mode: "pvAndConsumption", fallback: null };
+    }
+    if (mode !== "gridMeter") {
+        return { mode: "pvAndConsumption", fallback: "invalid-mode" };
+    }
+    if (typeof gridStateId !== "string" || !gridStateId.trim()) {
+        return { mode: "pvAndConsumption", fallback: "missing-grid-state" };
+    }
+    return { mode: "gridMeter", fallback: null };
+}
+function acceptGridMeterState(state, options) {
+    if (!state) {
+        return { sample: null, reason: "missing" };
+    }
+    if (options.ackOnly && state.ack !== true) {
+        return { sample: null, reason: "not-acknowledged" };
+    }
+    if (typeof state.val !== "number" || !Number.isFinite(state.val)) {
+        return { sample: null, reason: "invalid" };
+    }
+    const power = options.negate ? 0 - state.val : state.val;
+    const ts = typeof state.ts === "number" && Number.isFinite(state.ts) ? state.ts : Date.now();
+    return { sample: { power, ts }, reason: "accepted" };
+}
+function evaluateGridMeterReading(sample, nowMs, maximumAgeSeconds) {
+    if (!sample || !Number.isFinite(sample.power)) {
+        return { gridPower: null, reason: "missing" };
+    }
+    if (maximumAgeSeconds > 0) {
+        const ageMs = nowMs - sample.ts;
+        if (!Number.isFinite(ageMs) || ageMs < 0 || ageMs > maximumAgeSeconds * 1000) {
+            return { gridPower: null, reason: "stale" };
+        }
+    }
+    return { gridPower: sample.power, reason: "available" };
+}
+function surplusInputsFromGridMeter(gridPower) {
+    return {
+        solarPower: gridPower === null ? Number.NaN : 0 - gridPower,
+        houseConsumption: 0,
+        subtractChargerPower: true,
+    };
+}
+function negatePowerValue(value, negate) {
+    if (!negate || typeof value !== "number" || !Number.isFinite(value)) {
+        return value;
+    }
+    return 0 - value;
 }
 exports.RFID_CARD_SLOTS = 10;
 const RFID_V1_ID_KEYS = ["rca", "rcr", "rcd", "rc4", "rc5", "rc6", "rc7", "rc8", "rc9", "rc1"];

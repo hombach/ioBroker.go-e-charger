@@ -56,11 +56,17 @@ let maxAmpTotal = 0;
 let chargeManagerBatteryMode = "priority";
 let chargeManagerBatterySocHysteresis = 0;
 let chargeManagerBatterySocMaxAgeSeconds = 0;
+let chargeManagerGridMode = "pvAndConsumption";
+let gridPowerStateId = "";
+let gridMeterOptions = { negate: false, ackOnly: false };
+let gridPowerMaxAgeSeconds = 0;
 class go_e_charger extends utils.Adapter {
     projectUtils = new projectUtils_1.ProjectUtils(this);
     wallboxInfoList = [];
     stateMachineTimeout;
     isUnloading = false;
+    gridMeterSample = null;
+    gridMeterReason = null;
     constructor(options = {}) {
         super({
             ...options,
@@ -110,6 +116,7 @@ class go_e_charger extends utils.Adapter {
         chargeManagerBatterySocHysteresis = this.validateNonNegativeConfig(this.config.batterySocHysteresis, 0, "batterySocHysteresis");
         chargeManagerBatterySocMaxAgeSeconds = this.validateBoundedIntConfig(this.config.batterySocMaxAgeSeconds, 0, 0, 86400, "batterySocMaxAgeSeconds");
         this.log.debug(`ChargeManager battery mode: ${chargeManagerBatteryMode}, SoC hysteresis: ${chargeManagerBatterySocHysteresis}%, max SoC age: ${chargeManagerBatterySocMaxAgeSeconds} s`);
+        await this.setupGridMeterInput();
         const wallBoxList = Array.isArray(this.config.wallBoxList) ? this.config.wallBoxList : [];
         this.config.wallBoxList = wallBoxList;
         if (!wallBoxList.length) {
@@ -264,6 +271,10 @@ class go_e_charger extends utils.Adapter {
     }
     onStateChange(id, state) {
         try {
+            if (chargeManagerGridMode === "gridMeter" && id === gridPowerStateId) {
+                this.updateGridMeterSample(state, "update");
+                return;
+            }
             if (state) {
                 if (!state.ack) {
                     this.log.debug(`state change detected and parsing for id: ${id} - state: ${state.val}`);
@@ -629,6 +640,69 @@ class go_e_charger extends utils.Adapter {
         finally {
             this.scheduleStateMachine();
         }
+    }
+    async setupGridMeterInput() {
+        const resolution = (0, chargeManagerUtils_1.resolveGridInputMode)(this.config.gridMode, this.config.stateGridPower);
+        if (resolution.fallback === "invalid-mode") {
+            this.log.warn(`Config gridMode is invalid (${JSON.stringify(this.config.gridMode)}); using PV generation and house consumption`);
+        }
+        else if (resolution.fallback === "missing-grid-state") {
+            this.log.warn(`Grid meter mode selected, but no grid power object ID configured; using PV generation and house consumption`);
+        }
+        chargeManagerGridMode = resolution.mode;
+        if (chargeManagerGridMode !== "gridMeter") {
+            this.log.debug(`ChargeManager surplus input: PV generation and house consumption`);
+            return;
+        }
+        gridPowerStateId = this.config.stateGridPower.trim();
+        gridMeterOptions = { negate: !!this.config.gridPowerNegate, ackOnly: !!this.config.gridPowerAckOnly };
+        gridPowerMaxAgeSeconds = this.validateBoundedIntConfig(this.config.gridPowerMaxAgeSeconds, 0, 0, 86400, "gridPowerMaxAgeSeconds");
+        this.log.info(`ChargeManager surplus input: grid meter ${gridPowerStateId} (import positive, export negative${gridMeterOptions.negate ? ", negated" : ""}${gridMeterOptions.ackOnly ? ", ack-only" : ""}, max age ${gridPowerMaxAgeSeconds ? `${gridPowerMaxAgeSeconds} s` : "unchecked"})`);
+        if (this.config.stateHomeSolarPower || this.config.stateHomePowerConsumption) {
+            this.log.info(`Grid meter mode: the configured PV generation and house consumption objects are ignored`);
+        }
+        if (!this.config.subtractSelfConsumption) {
+            this.log.debug(`Grid meter mode: the wallbox power is always added back, the option "charger consumption included" is ignored`);
+        }
+        try {
+            if (!(await this.getForeignObjectAsync(gridPowerStateId))) {
+                this.log.warn(`Grid power object ${gridPowerStateId} does not exist - ChargeManager will not charge until it delivers values`);
+            }
+            this.subscribeForeignStates(gridPowerStateId);
+            this.updateGridMeterSample(await this.getForeignStateAsync(gridPowerStateId), "initial");
+        }
+        catch (error) {
+            this.log.error(`Error setting up grid power object ${gridPowerStateId}: ${String(error)}`);
+        }
+    }
+    updateGridMeterSample(state, source) {
+        const update = (0, chargeManagerUtils_1.acceptGridMeterState)(state, gridMeterOptions);
+        if (update.sample) {
+            this.gridMeterSample = update.sample;
+            return;
+        }
+        if (update.reason !== "not-acknowledged") {
+            this.gridMeterSample = null;
+        }
+        this.log.debug(`Grid power ${source} from ${gridPowerStateId} not used (${update.reason}): ${JSON.stringify(state?.val)} (ack=${state?.ack})`);
+    }
+    readGridMeter() {
+        const reading = (0, chargeManagerUtils_1.evaluateGridMeterReading)(this.gridMeterSample, Date.now(), gridPowerMaxAgeSeconds);
+        if (reading.reason !== this.gridMeterReason) {
+            if (reading.reason === "available") {
+                if (this.gridMeterReason !== null) {
+                    this.log.info(`Grid power from ${gridPowerStateId} is available again`);
+                }
+            }
+            else {
+                this.log.warn(reading.reason === "stale"
+                    ? `Grid power from ${gridPowerStateId} is older than ${gridPowerMaxAgeSeconds} s - ChargeManager stops surplus charging until it is updated`
+                    : `No usable grid power from ${gridPowerStateId}${gridMeterOptions.ackOnly ? " (ack-only)" : ""} - ChargeManager stops surplus charging until it delivers a numeric value`);
+            }
+            this.gridMeterReason = reading.reason;
+        }
+        this.log.debug(`Got grid power: ${reading.gridPower ?? "n/a"} W (import positive, export negative)`);
+        return reading.gridPower;
     }
     applyWallboxCurrentLimits(iWB) {
         const wallBox = this.config.wallBoxList[iWB];
@@ -1033,10 +1107,17 @@ class go_e_charger extends utils.Adapter {
         if (!candidates.length) {
             return plans;
         }
-        solarPower = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower);
-        this.log.debug(`Got external state of solar power: ${solarPower} W`);
-        houseConsumption = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption);
-        this.log.debug(`Got external state of house power consumption: ${houseConsumption} W`);
+        let subtractChargerPower = this.config.subtractSelfConsumption;
+        if (chargeManagerGridMode === "gridMeter") {
+            const gridPower = this.readGridMeter();
+            ({ solarPower, houseConsumption, subtractChargerPower } = (0, chargeManagerUtils_1.surplusInputsFromGridMeter)(gridPower));
+        }
+        else {
+            solarPower = (0, chargeManagerUtils_1.negatePowerValue)(await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower), !!this.config.solarPowerNegate);
+            this.log.debug(`Got external state of solar power: ${solarPower} W${this.config.solarPowerNegate ? " (negated)" : ""}`);
+            houseConsumption = (0, chargeManagerUtils_1.negatePowerValue)(await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption), !!this.config.homePowerConsumptionNegate);
+            this.log.debug(`Got external state of house power consumption: ${houseConsumption} W${this.config.homePowerConsumptionNegate ? " (negated)" : ""}`);
+        }
         const batteryState = chargeManagerBatteryMode === "disabled" ? null : await this.projectUtils.asyncGetForeignState(this.config.stateHomeBatSoc);
         const batterySocAgeMs = batteryState ? Date.now() - batteryState.ts : null;
         let batterySoc = null;
@@ -1089,7 +1170,7 @@ class go_e_charger extends utils.Adapter {
             solarPower,
             houseConsumption,
             chargerPower: fleetChargePower,
-            subtractChargerPower: this.config.subtractSelfConsumption,
+            subtractChargerPower,
             batterySoc,
             minBatterySoc: minHomeBatVal,
             batteryMode: chargeManagerBatteryMode,

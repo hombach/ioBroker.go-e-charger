@@ -1396,6 +1396,171 @@ export function wallboxLabel(index: number, name?: unknown, ipAddress?: unknown)
 	return trimmedIp ? `${label} (${trimmedIp})` : label;
 }
 
+/**
+ * Source of the ChargeManager surplus measurement:
+ * - `pvAndConsumption` – separate positive PV generation and household consumption states (default)
+ * - `gridMeter` – one signed grid power state (import positive, export negative)
+ */
+export type GridInputMode = "pvAndConsumption" | "gridMeter";
+
+/** Resolved surplus input mode of the instance configuration. */
+export interface GridInputModeResolution {
+	/** Mode the ChargeManager runs with */
+	mode: GridInputMode;
+	/**
+	 * Why the configured mode was not used: `invalid-mode` for an unknown mode value,
+	 * `missing-grid-state` for the grid meter mode without an object ID; `null` when the
+	 * configured mode is used as it is
+	 */
+	fallback: "invalid-mode" | "missing-grid-state" | null;
+}
+
+/**
+ * Resolves the surplus input mode from the instance configuration.
+ *
+ * The grid meter mode is only used when it is selected explicitly and a grid power object ID is
+ * configured; everything else runs the PV-and-consumption mode, so an existing configuration
+ * (without `gridMode`) behaves exactly as before. In the grid meter mode the PV and consumption
+ * object IDs are ignored, even when they are still filled in.
+ *
+ * @param mode Configured `gridMode`
+ * @param gridStateId Configured `stateGridPower`
+ * @returns The mode to run with and the reason for a fallback
+ */
+export function resolveGridInputMode(mode: unknown, gridStateId: unknown): GridInputModeResolution {
+	if (mode === undefined || mode === null || mode === "" || mode === "pvAndConsumption") {
+		return { mode: "pvAndConsumption", fallback: null };
+	}
+	if (mode !== "gridMeter") {
+		return { mode: "pvAndConsumption", fallback: "invalid-mode" };
+	}
+	if (typeof gridStateId !== "string" || !gridStateId.trim()) {
+		return { mode: "pvAndConsumption", fallback: "missing-grid-state" };
+	}
+	return { mode: "gridMeter", fallback: null };
+}
+
+/** Options applied to every update of the grid meter state. */
+export interface GridMeterOptions {
+	/** Invert the sign of the value (for sources that report export as positive) */
+	negate: boolean;
+	/** Only use updates confirmed by their source (`ack` = true) */
+	ackOnly: boolean;
+}
+
+/** Last accepted grid meter reading. */
+export interface GridMeterSample {
+	/** Grid power in W after Negate: import positive, export negative */
+	power: number;
+	/** Timestamp of the state update (`ts`, ms since epoch) */
+	ts: number;
+}
+
+/** Outcome of one grid meter state update. */
+export interface GridMeterUpdate {
+	/** Reading to keep, or `null` when the update is not used */
+	sample: GridMeterSample | null;
+	/** `accepted`, or why the update is not used */
+	reason: "accepted" | "missing" | "not-acknowledged" | "invalid";
+}
+
+/**
+ * Checks one update of the grid meter state and applies Negate.
+ *
+ * Only finite numbers are used; strings, booleans, `null` and `NaN` are rejected. With Ack-only an
+ * update with `ack` = false is skipped, so the last confirmed reading stays in use (and ages, see
+ * {@link evaluateGridMeterReading}).
+ *
+ * @param state State update as delivered by ioBroker, `null`/`undefined` when the state is missing or deleted
+ * @param options Negate and Ack-only
+ * @returns The reading to keep, or the reason why the update is not used
+ */
+export function acceptGridMeterState(state: { val?: unknown; ack?: boolean; ts?: number } | null | undefined, options: GridMeterOptions): GridMeterUpdate {
+	if (!state) {
+		return { sample: null, reason: "missing" };
+	}
+	if (options.ackOnly && state.ack !== true) {
+		return { sample: null, reason: "not-acknowledged" };
+	}
+	if (typeof state.val !== "number" || !Number.isFinite(state.val)) {
+		return { sample: null, reason: "invalid" };
+	}
+	// `0 - x` instead of `-x` keeps a negated zero reading at 0 instead of -0
+	const power = options.negate ? 0 - state.val : state.val;
+	const ts = typeof state.ts === "number" && Number.isFinite(state.ts) ? state.ts : Date.now();
+	return { sample: { power, ts }, reason: "accepted" };
+}
+
+/** Grid meter reading the ChargeManager may use this cycle. */
+export interface GridMeterReading {
+	/** Grid power in W (import positive, export negative), or `null` when it must not be used */
+	gridPower: number | null;
+	/** `available`, or why there is no usable reading */
+	reason: "available" | "missing" | "stale";
+}
+
+/**
+ * Decides whether the last accepted grid meter reading may drive the ChargeManager this cycle.
+ *
+ * Like the battery SoC age check, a reading older than `maximumAgeSeconds` is not used, so a dead
+ * meter cannot keep the car charging from the grid; `0` disables the age check.
+ *
+ * @param sample Last accepted reading, `null` when there is none
+ * @param nowMs Current time (ms since epoch)
+ * @param maximumAgeSeconds Maximum age of the reading in seconds, 0 = no check
+ * @returns The grid power to use, or why there is none
+ */
+export function evaluateGridMeterReading(sample: GridMeterSample | null, nowMs: number, maximumAgeSeconds: number): GridMeterReading {
+	if (!sample || !Number.isFinite(sample.power)) {
+		return { gridPower: null, reason: "missing" };
+	}
+	if (maximumAgeSeconds > 0) {
+		const ageMs = nowMs - sample.ts;
+		if (!Number.isFinite(ageMs) || ageMs < 0 || ageMs > maximumAgeSeconds * 1000) {
+			return { gridPower: null, reason: "stale" };
+		}
+	}
+	return { gridPower: sample.power, reason: "available" };
+}
+
+/**
+ * Maps a signed grid power onto the inputs of {@link calculateAvailableSurplusPower}.
+ *
+ * The grid meter sees the house with all wallboxes, so the export is the surplus left over after
+ * the wallboxes already took their share: `surplus = −grid + wallbox power − reserve (+ battery bonus)`.
+ * This is expressed as `solarPower = −grid`, `houseConsumption = 0` and the wallbox power always
+ * added back (`subtractChargerPower` = true, independent of `subtractSelfConsumption`); without
+ * adding it back the controller would see its own charging as missing surplus and oscillate.
+ * A missing reading yields `NaN`, which the surplus calculation rejects as invalid input.
+ *
+ * @param gridPower Grid power in W (import positive, export negative), `null` without a usable reading
+ * @returns Surplus inputs for the fleet calculation
+ */
+export function surplusInputsFromGridMeter(gridPower: number | null): { solarPower: number; houseConsumption: number; subtractChargerPower: boolean } {
+	return {
+		solarPower: gridPower === null ? Number.NaN : 0 - gridPower,
+		houseConsumption: 0,
+		subtractChargerPower: true,
+	};
+}
+
+/**
+ * Applies the Negate option of a power input (PV generation, household consumption).
+ *
+ * Only a finite number is negated; anything else is returned unchanged, so the surplus calculation
+ * still rejects it as invalid input. A negated zero stays 0 instead of -0.
+ *
+ * @param value Raw state value of the power input
+ * @param negate Whether the Negate option is enabled for this input
+ * @returns The (negated) value
+ */
+export function negatePowerValue<T>(value: T, negate: boolean): T | number {
+	if (!negate || typeof value !== "number" || !Number.isFinite(value)) {
+		return value;
+	}
+	return 0 - value;
+}
+
 /** Number of RFID card slots of a go-e charger (cards 1-10). */
 export const RFID_CARD_SLOTS = 10;
 
