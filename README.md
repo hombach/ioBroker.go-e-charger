@@ -26,6 +26,10 @@
 
 [![NPM](https://nodei.co/npm/iobroker.go-e-charger.png?downloads=true)](https://nodei.co/npm/iobroker.go-e-charger/)
 
+## Sentry
+
+This adapter employs Sentry libraries to automatically report exceptions and code errors to the developers. For more details and information on how to disable error reporting, please consult the [Sentry-Plugin Documentation](https://github.com/ioBroker/plugin-sentry#plugin-sentry)!
+
 ## ioBroker adapter for go-e Charger EV wallboxes
 
 This adapter integrates one or more go-e Charger wallboxes into your ioBroker home automation. It cyclically polls each wallbox via its local HTTP API, provides all relevant data as ioBroker states, and lets you control charging directly from your smart home.
@@ -228,10 +232,6 @@ Coming from the adapter [ioBroker.go-e](https://github.com/MK-2001/ioBroker.go-e
 - [Migration guide (English)](https://github.com/hombach/ioBroker.go-e-charger/blob/master/docu/migration-from-go-e.md)
 - [Umstiegsanleitung (Deutsch)](https://github.com/hombach/ioBroker.go-e-charger/blob/master/docu/migration-from-go-e_de.md)
 
-## Sentry
-
-This adapter employs Sentry libraries to automatically report exceptions and code errors to the developers. For more details and information on how to disable error reporting, please consult the [Sentry-Plugin Documentation](https://github.com/ioBroker/plugin-sentry#plugin-sentry)!
-
 ## Donate
 
 <a href="https://www.paypal.com/donate/?hosted_button_id=76GBRV9BX5US8"><img src="https://raw.githubusercontent.com/Hombach/ioBroker.go-e-charger/master/docu/bluePayPal.svg" height="40"></a>
@@ -246,6 +246,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 ### **WORK IN PROGRESS**
 
+- (HombachC) moved the Sentry notice near the top of README.md to satisfy the repository checker (#938)
 - (hombach) updated iobroker/testing
 - (hombach) updated dependencies
 
