@@ -1570,7 +1570,9 @@ export const FORCE_STATE_ON = 2;
 /**
  * Fills the API V2 keys some firmware does not report from their equivalents, without changing the
  * input. Firmware 60.4 of the go-e CORE (#939) reports no `ast` and no `cbl`:
- * - `ast` (access state) falls back to `acs` (access control setting, 0 = open, 1 = RFID/App needed)
+ * - `ast` (access state) falls back to `acs` (access control setting) - only for 0 = open and 1 = RFID/App
+ *   needed, which mean the same in both. `acs` 2 is "EVCMS" on firmware 60.4, while API V1 `ast` 2 means
+ *   "electricity price / automatic", so it is not mapped.
  * - `cbl` (cable current limit) falls back to `cll.cableCurrentLimit`
  *
  * @param status API V2 status object
@@ -1578,7 +1580,7 @@ export const FORCE_STATE_ON = 2;
  */
 export function normalizeStatusV2(status: Record<string, unknown>): Record<string, unknown> {
 	const normalized: Record<string, unknown> = { ...status };
-	if ((normalized.ast === undefined || normalized.ast === null) && typeof status.acs === "number") {
+	if ((normalized.ast === undefined || normalized.ast === null) && (status.acs === 0 || status.acs === 1)) {
 		normalized.ast = status.acs;
 	}
 	const currentLimits = status.cll;
@@ -1627,6 +1629,11 @@ export interface StatusV1FromV2 {
  * Converts an API V2 phase array into the API V1 phase bit field. API V2 reports six flags: L1-L3
  * after the contactor (index 0-2) and L1-L3 before it (index 3-5), which are exactly bits 0-5 of API V1.
  *
+ * NOTE: go-e does not document the layout of the API V2 array (the key list only says "phases"). The
+ * order is taken from the documented API V1 / Modbus bit field (0b00ABCDEF, F = L1 after the contactor)
+ * and fits the only real reading so far: an idle go-e CORE 60.4 with `[false,false,false,true,true,true]`
+ * (supply present, contactor open).
+ *
  * @param pha `pha` of the API V2 status (array of booleans); an API V1 number is passed through
  * @returns the API V1 bit field, 0 when unknown
  */
@@ -1645,6 +1652,10 @@ export function phaseFlagsFromV2(pha: unknown): number {
  * reused unchanged. Both have the same layout - U L1-L3, N (V), I L1-L3 (A), P L1-L3, N, total, pf
  * L1-L3, N - but API V1 reports currents in 0.1 A, phase powers in 0.1 kW and the total power in 0.01 kW,
  * while API V2 uses A and W.
+ *
+ * NOTE: the go-e API V2 documentation names the order of the entries but no units. V, A and W are what
+ * evcc and real chargers use. The power factors (index 12-15, `%` in API V1) are passed through
+ * unscaled - their API V2 unit is not documented, and the adapter does not use them.
  *
  * @param nrg `nrg` of the API V2 status
  * @returns the array in API V1 units; entries that are not numbers become `NaN`
@@ -1703,7 +1714,7 @@ export function statusV1FromV2(status: Record<string, unknown>): StatusV1FromV2 
 /** One write to a charger over HTTP API v2 (`/api/set?<key>=<value>`). */
 export interface ApiV2Write {
 	/** API V2 key */
-	key: "frc" | "amp";
+	key: "frc" | "amp" | "trx";
 	/** value to write */
 	value: number;
 }
@@ -1776,7 +1787,7 @@ export function describeApiHttpError(status: number | null, api: ChargerApiMode)
 	}
 	const apiName = api === "v1" ? "HTTP API v1" : "HTTP API v2";
 	if (status === 401 || status === 403) {
-		return `the charger refuses access to its ${apiName} (HTTP ${status}). Password protection (authentication) of the local HTTP API is not supported by the adapter yet - allow local API access without password in the go-e app if possible`;
+		return `the charger refuses access to its ${apiName} (HTTP ${status}) - probably password protection (hsa, not documented by go-e). Authentication of the local HTTP API is not supported by the adapter yet - allow local API access without password in the go-e app if possible`;
 	}
 	if (status === 404) {
 		return api === "v1"
@@ -1784,4 +1795,86 @@ export function describeApiHttpError(status: number | null, api: ChargerApiMode)
 			: `the charger does not offer ${apiName} (HTTP 404) - enable "HTTP API v2" in the go-e app`;
 	}
 	return `the charger answered ${apiName} with HTTP ${status}`;
+}
+
+/** go-e API V2 `modelStatus` "NotChargingBecauseAccessControlWait": the charger waits for an RFID card or the app */
+export const MODEL_STATUS_ACCESS_CONTROL_WAIT = 2;
+
+/** car states with a vehicle plugged in: 2 = charging, 3 = waiting for the car, 4 = charge finished */
+const CAR_STATES_PLUGGED_IN: readonly number[] = [2, 3, 4];
+
+/**
+ * Whether a charger refuses to charge because it waits for RFID/app authorization. go-e: "force state
+ * is only considered after the authentication is either disabled, or enabled and authenticated"
+ * (go-eCharger-API-v2 issue #218), so a force state "on" cannot start such a charger.
+ *
+ * @param modelStatus `modelStatus` of the last API V2 read (`NaN` when unknown)
+ * @returns true while the charger waits for authorization
+ */
+export function waitsForAuthorization(modelStatus: number): boolean {
+	return modelStatus === MODEL_STATUS_ACCESS_CONTROL_WAIT;
+}
+
+/** Inputs of {@link apiV2AuthorizeWrite} */
+export interface ApiV2AuthorizeInput {
+	/** the instance option "start transaction without RFID" of this charger */
+	enabled: boolean;
+	/** API the charger is used with */
+	apiMode: ChargerApiMode;
+	/** `trx` of the last API V2 read: `null` = no transaction, `undefined` = not reported */
+	transaction: number | null | undefined;
+	/** car state of the last read */
+	carState: number;
+}
+
+/**
+ * The write that starts a charging transaction without an RFID card (`trx=0`) before a charge release
+ * on a charger that is used over API V2 only (#939). go-e documents `trx` as "null when no transaction,
+ * 0 when without card"; writing 0 starts a transaction like the app does, and the charger clears it
+ * when the vehicle is unplugged.
+ *
+ * This bypasses the RFID/app access protection of the charger, so it is only sent when the user enabled
+ * it for the charger, for a charge release (`alw` 1), while no transaction runs and a vehicle is plugged in.
+ *
+ * @param command charger command about to be sent
+ * @param input state of the charger and the option
+ * @returns the `trx` write to send before the release, or `null`
+ */
+export function apiV2AuthorizeWrite(command: ChargerCommand, input: ApiV2AuthorizeInput): ApiV2Write | null {
+	if (!input.enabled || input.apiMode !== "v2" || command.parameter !== "alw" || command.value !== 1) {
+		return null;
+	}
+	if (input.transaction !== null || !CAR_STATES_PLUGGED_IN.includes(input.carState)) {
+		return null;
+	}
+	return { key: "trx", value: 0 };
+}
+
+/**
+ * The rejection a charger sent with an HTTP error status on an API V2 write. go-e answers `/api/set` with
+ * a JSON object holding `true` or an error text per key; the HTTP status of a rejection is not documented.
+ *
+ * @param error error caught around an `/api/set` request
+ * @param key the written key
+ * @returns the rejection text, or `null` when the error carries no JSON answer for the key
+ */
+export function apiV2ErrorRejection(error: unknown, key: string): string | null {
+	const status = httpStatusOf(error);
+	if (status === null) {
+		return null;
+	}
+	const data = (error as { response?: { data?: unknown } }).response?.data;
+	let result: unknown = data;
+	if (typeof data === "string") {
+		try {
+			result = JSON.parse(data);
+		} catch {
+			return null;
+		}
+	}
+	if (typeof result !== "object" || result === null || !(key in result)) {
+		return null;
+	}
+	const rejection = apiV2WriteRejection(result, key);
+	return rejection === null ? null : `HTTP ${status}, ${rejection}`;
 }

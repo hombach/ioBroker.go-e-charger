@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
 	buildChargerCommands,
@@ -74,6 +74,10 @@ import {
 	nrgV1FromV2,
 	phaseFlagsFromV2,
 	statusV1FromV2,
+	apiV2AuthorizeWrite,
+	apiV2ErrorRejection,
+	waitsForAuthorization,
+	MODEL_STATUS_ACCESS_CONTROL_WAIT,
 } from "./lib/chargeManagerUtils";
 
 describe("ChargeManager safety helpers", () => {
@@ -2131,7 +2135,8 @@ describe("ChargeManager safety helpers", () => {
 			assert.equal(describeApiHttpError(null, "v2"), null);
 			for (const status of [401, 403]) {
 				const hint = describeApiHttpError(status, "v2") ?? "";
-				assert.match(hint, /authentication/);
+				assert.match(hint, /[Aa]uthentication/);
+				assert.match(hint, /probably password protection \(hsa, not documented by go-e\)/);
 				assert.match(hint, /HTTP API v2/);
 				assert.ok(!/IP address/.test(hint));
 			}
@@ -2171,6 +2176,76 @@ describe("ChargeManager safety helpers", () => {
 			assert.deepEqual([...API_V2_PROBE_KEYS], ["fwv", "typ"]);
 			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
 			assert.ok(source.includes("[...API_V2_ONLY_STATUS_KEYS, ...RFID_V2_FILTER_KEYS]"), "API V2 only read requests the RFID card keys");
+		});
+
+		it("maps only acs 0/1 into the access state - acs 2 (EVCMS) is not 'electricity price / automatic'", () => {
+			assert.equal(normalizeStatusV2({ acs: 0 }).ast, 0);
+			assert.equal(normalizeStatusV2({ acs: 1 }).ast, 1);
+			assert.equal(normalizeStatusV2({ acs: 2 }).ast, undefined);
+			assert.equal(normalizeStatusV2({ acs: 2, ast: 2 }).ast, 2, "a reported ast is kept");
+		});
+
+		it("passes the API V2 car states 0/null and 6 on, so they are not shown as error", () => {
+			const base = { ...coreStatus };
+			assert.equal(statusV1FromV2({ ...base, car: null }).car, "0");
+			assert.equal(statusV1FromV2({ ...base, car: 6 }).car, "6");
+			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
+			assert.ok(/case "0":[\s\S]{0,250}`Unknown`/.test(source), "car 0 is shown as Unknown");
+			assert.ok(/case "6":[\s\S]{0,250}`Initializing`/.test(source), "car 6 is shown as Initializing");
+		});
+
+		it("detects a charger that waits for RFID/app authorization from modelStatus", () => {
+			assert.equal(MODEL_STATUS_ACCESS_CONTROL_WAIT, 2);
+			assert.equal(waitsForAuthorization(2), true);
+			for (const modelStatus of [0, 3, 4, 12, Number.NaN]) {
+				assert.equal(waitsForAuthorization(modelStatus), false, String(modelStatus));
+			}
+		});
+
+		it("starts a transaction without RFID (trx=0) only when enabled, API V2 only, no transaction and a vehicle plugged in", () => {
+			const release = { parameter: "alw", value: 1 } as const;
+			const ready = { enabled: true, apiMode: "v2", transaction: null, carState: 3 } as const;
+			assert.deepEqual(apiV2AuthorizeWrite(release, ready), { key: "trx", value: 0 });
+			for (const carState of [2, 3, 4]) {
+				assert.deepEqual(apiV2AuthorizeWrite(release, { ...ready, carState }), { key: "trx", value: 0 }, `car ${carState}`);
+			}
+			assert.equal(apiV2AuthorizeWrite(release, { ...ready, enabled: false }), null, "option off (default)");
+			assert.equal(apiV2AuthorizeWrite(release, { ...ready, apiMode: "v1" }), null, "chargers with API V1");
+			assert.equal(apiV2AuthorizeWrite(release, { ...ready, transaction: 0 }), null, "transaction without card runs");
+			assert.equal(apiV2AuthorizeWrite(release, { ...ready, transaction: 2 }), null, "transaction with card runs");
+			assert.equal(apiV2AuthorizeWrite(release, { ...ready, transaction: undefined }), null, "trx not reported");
+			for (const carState of [0, 1, 5, 6]) {
+				assert.equal(apiV2AuthorizeWrite(release, { ...ready, carState }), null, `car ${carState}`);
+			}
+			assert.equal(apiV2AuthorizeWrite({ parameter: "alw", value: 0 }, ready), null, "never for a withdrawal");
+			assert.equal(apiV2AuthorizeWrite({ parameter: "amp", value: 10 }, ready), null, "never for the current");
+		});
+
+		it("reads the rejection text of an /api/set answer with an HTTP error status", () => {
+			const httpError = (status: number, data: unknown): unknown =>
+				Object.assign(new Error("Request failed"), { isAxiosError: true, response: { status, data } });
+			assert.equal(apiV2ErrorRejection(httpError(400, '{"frc":"value out of range"}'), "frc"), 'HTTP 400, answer "value out of range"');
+			assert.equal(apiV2ErrorRejection(httpError(400, { amp: "invalid" }), "amp"), 'HTTP 400, answer "invalid"');
+			assert.equal(apiV2ErrorRejection(httpError(403, "<html>Forbidden</html>"), "frc"), null, "no JSON answer - HTTP hint instead");
+			assert.equal(apiV2ErrorRejection(httpError(400, '{"psm":true}'), "frc"), null, "no answer for the key");
+			assert.equal(apiV2ErrorRejection(httpError(400, '{"frc":true}'), "frc"), null);
+			assert.equal(apiV2ErrorRejection(new Error("timeout"), "frc"), null);
+		});
+
+		it("offers the trx option per charger in the admin, next to the release behaviour, in every admin language", () => {
+			const jsonConfig = JSON.parse(readFileSync(join(__dirname, "..", "admin", "jsonConfig.json"), "utf8"));
+			const items = jsonConfig.items._StandardTab.items.wallBoxList.items as { attr: string; default?: unknown; newLine?: boolean }[];
+			const index = items.findIndex(item => item.attr === "startTransactionWithoutRfid");
+			assert.ok(index > 0, "option in the charger list");
+			assert.equal(items[index].default, false);
+			assert.equal(items[index - 1].attr, "stopWhenCarIdle", "same row as the release withdrawal");
+			assert.ok(!items[index].newLine);
+			for (const file of readdirSync(join(__dirname, "..", "admin", "i18n"))) {
+				const texts = JSON.parse(readFileSync(join(__dirname, "..", "admin", "i18n", file), "utf8"));
+				for (const key of ["LBL_startTransactionWithoutRfid", "LBL_startTransactionWithoutRfidHelp", "LBL_startTransactionWithoutRfidTooltip"]) {
+					assert.ok(typeof texts[key] === "string" && texts[key].length > 0, `${file}: ${key}`);
+				}
+			}
 		});
 	});
 });

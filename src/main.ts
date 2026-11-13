@@ -59,13 +59,17 @@ import {
 	API_DETECT_RETRY_CYCLES,
 	API_V2_ONLY_STATUS_KEYS,
 	API_V2_PROBE_KEYS,
+	apiV2AuthorizeWrite,
+	apiV2ErrorRejection,
 	apiV2WriteFor,
 	apiV2WriteRejection,
+	type ApiV2Write,
 	type ChargerApiMode,
 	describeApiHttpError,
 	httpStatusOf,
 	normalizeStatusV2,
 	statusV1FromV2,
+	waitsForAuthorization,
 } from "./lib/chargeManagerUtils";
 import { ProjectUtils, type IWallboxInfo } from "./lib/projectUtils";
 
@@ -211,6 +215,9 @@ class go_e_charger extends utils.Adapter {
 				ApiMode: "v1",
 				ApiDetected: false,
 				ApiDetectCountdown: API_DETECT_RETRY_CYCLES,
+				ModelStatus: Number.NaN,
+				Transaction: undefined,
+				AuthWaitLogged: false,
 				AutoPhase: false,
 				GridPhases: 0,
 				ChargeNOW: false,
@@ -1200,6 +1207,8 @@ class go_e_charger extends utils.Adapter {
 		if (api === "v2") {
 			// the force state comes from the same read - the adapter must not act on an old one
 			info.ForceState = Number.NaN;
+			info.ModelStatus = Number.NaN;
+			info.Transaction = undefined;
 		}
 		const apiName = api === "v1" ? "API V1" : "API V2";
 		if (!isConnectionError(error)) {
@@ -1394,6 +1403,14 @@ class go_e_charger extends utils.Adapter {
 					"text",
 				);
 				break;
+			case "0":
+				// API V2: 0 = unknown, null = no connection to the charge controller (both passed on as "0")
+				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Unknown`, `State of connected car`, "text");
+				break;
+			case "6":
+				// API V2 (firmware 60.4+): the charge controller is initializing
+				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Initializing`, `State of connected car`, "text");
+				break;
 			default:
 				await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Error`, `State of connected car`, `text`);
 		}
@@ -1411,7 +1428,11 @@ class go_e_charger extends utils.Adapter {
 		this.wallboxInfoList[iWB].ReleaseRejects = updateReleaseRejects(Number(status.alw), this.wallboxInfoList[iWB].RequestedAllow, rejectsBefore);
 		if (rejectsBefore < RELEASE_RETRY_LIMIT && this.wallboxInfoList[iWB].ReleaseRejects >= RELEASE_RETRY_LIMIT) {
 			this.log.info(
-				`Charger ${this.wallboxLabel(iWB)}: the charge release was ignored ${this.wallboxInfoList[iWB].ReleaseRejects} times in a row - still retrying, but only every ${RELEASE_RETRY_INTERVAL} cycles from now on`,
+				`Charger ${this.wallboxLabel(iWB)}: the charge release was ignored ${this.wallboxInfoList[iWB].ReleaseRejects} times in a row - still retrying, but only every ${RELEASE_RETRY_INTERVAL} cycles from now on${
+					waitsForAuthorization(this.wallboxInfoList[iWB].ModelStatus)
+						? " - the charger waits for RFID/app authorization and ignores the force state until it is authorized"
+						: ""
+				}`,
 			);
 		}
 		switch (status.alw) {
@@ -1470,7 +1491,8 @@ class go_e_charger extends utils.Adapter {
 		this.wallboxInfoList[iWB].MeasuredMaxChargeAmp = Math.round(measuredMaxPhaseCurrent);
 		this.wallboxInfoList[iWB].Firmware = status.fwv;
 		void this.projectUtils.checkAndSetValue(`${basePath}.info.firmwareVersion`, status.fwv, `Firmware version of charger`, `info.firmware`);
-		// access control: 0 = open, 1 = RFID/App required, 2 = electricity price/automatic
+		// access control (API V1 ast): 0 = open, 1 = RFID/App required, 2 = electricity price/automatic.
+		// Chargers without API V1 only get 0/1 from acs - acs 2 (EVCMS) is not mapped (see normalizeStatusV2)
 		if (status.ast !== undefined && status.ast !== null) {
 			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
 		}
@@ -1590,6 +1612,7 @@ class go_e_charger extends utils.Adapter {
 	 * @param status - The API V2 status object returned by the wallbox.
 	 * @param status.psm - Phase switching mode (1 = single-phase, 2 = three-phase).
 	 * @param status.frc - Force state (0 = neutral, 1 = off, 2 = on).
+	 * @param status.modelStatus - Reason why the charger charges or not (2 = waits for RFID/app authorization)
 	 * @param status.typ - Hardware version or type identifier.
 	 * @param status.fhz - Grid frequency in Hz, 0 if unknown
 	 * @param status.trx - Transaction: null = none, 0 = without card, otherwise cardIndex + 1 (API V2 equivalent of V1 uby)
@@ -1604,6 +1627,7 @@ class go_e_charger extends utils.Adapter {
 		status: {
 			psm: number;
 			frc?: number;
+			modelStatus?: number;
 			typ: string;
 			fhz?: unknown;
 			trx?: number | null;
@@ -1646,7 +1670,8 @@ class go_e_charger extends utils.Adapter {
 		}
 		// hardware current caps: absolute max (ama) tightened by the cable coding (cbl, 0 = no cable), plus the min charging current (mca)
 		this.setWallboxHardwareLimits(iWB, this.combineHardwareMax(Number(status.ama), Number(status.cbl)), Number(status.mca), basePath);
-		// access control: 0 = open, 1 = RFID/App required, 2 = electricity price/automatic
+		// access control (API V1 ast): 0 = open, 1 = RFID/App required, 2 = electricity price/automatic.
+		// Chargers without API V1 only get 0/1 from acs - acs 2 (EVCMS) is not mapped (see normalizeStatusV2)
 		if (status.ast !== undefined && status.ast !== null) {
 			void this.projectUtils.checkAndSetValueNumber(`${basePath}.info.accessControlState`, Number(status.ast), `Access control state`, "", "value");
 		}
@@ -1662,7 +1687,34 @@ class go_e_charger extends utils.Adapter {
 		if (status.trx !== undefined) {
 			await this.setUnlockedByRFID(status.trx === null ? 0 : Number(status.trx), basePath);
 		}
+		this.wallboxInfoList[iWB].Transaction = status.trx === undefined || status.trx === null ? status.trx : Number(status.trx);
+		this.wallboxInfoList[iWB].ModelStatus = typeof status.modelStatus === "number" ? status.modelStatus : Number.NaN;
+		this.logAuthorizationWait(iWB);
 		this.log.debug(`got and parsed go-e charger ${this.wallboxLabel(iWB)} data with API V2`);
+	}
+
+	/**
+	 * Logs once per wait that a charger the adapter released waits for RFID/app authorization (API V2
+	 * `modelStatus` 2). Such a charger ignores the force state until it is authorized (go-e), so the
+	 * adapter's release alone cannot start it.
+	 *
+	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
+	 */
+	private logAuthorizationWait(iWB: number): void {
+		const info = this.wallboxInfoList[iWB];
+		const waiting = info.ReleasedByAdapter && waitsForAuthorization(info.ModelStatus);
+		if (waiting && !info.AuthWaitLogged) {
+			const option =
+				info.ApiMode === "v2"
+					? this.config.wallBoxList[iWB].startTransactionWithoutRfid
+						? " - starting a transaction without RFID (trx=0) with the next release"
+						: ` - authorize with an RFID card or the go-e app, or enable "Start transaction without RFID" for this charger`
+					: " - authorize with an RFID card or the go-e app";
+			this.log.info(
+				`Charger ${this.wallboxLabel(iWB, true)} waits for RFID/app authorization: the charge release (force state) is ignored until it is authorized${option}`,
+			);
+		}
+		info.AuthWaitLogged = waiting;
 	}
 
 	/**
@@ -1840,6 +1892,15 @@ class go_e_charger extends utils.Adapter {
 			// a charger without API V1 takes the release as force state and the current as amp (#939)
 			const v2Write = apiMode === "v2" ? apiV2WriteFor(command) : null;
 			const written = v2Write ? `${v2Write.key}=${v2Write.value}` : `${command.parameter}=${command.value}`;
+			const authorize = apiV2AuthorizeWrite(command, {
+				enabled: Boolean(this.config.wallBoxList[iWB].startTransactionWithoutRfid),
+				apiMode,
+				transaction: this.wallboxInfoList[iWB].Transaction,
+				carState: this.wallboxInfoList[iWB].CarState,
+			});
+			if (authorize !== null) {
+				await this.writeApiV2(iWB, authorize);
+			}
 			try {
 				const response = await axiosInstance.get(
 					v2Write
@@ -1867,6 +1928,11 @@ class go_e_charger extends utils.Adapter {
 					await this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrent`, current, `Charge current output`, "A", "level.current");
 				}
 			} catch (error) {
+				const rejection = v2Write ? apiV2ErrorRejection(error, v2Write.key) : null;
+				if (rejection !== null) {
+					this.log.warn(`Charger ${this.wallboxLabel(iWB, true)} rejected ${written}: ${rejection}`);
+					return;
+				}
 				if (!isConnectionError(error)) {
 					// the write reached the charger - only its answer could not be read
 					this.log.warn(
@@ -1885,6 +1951,35 @@ class go_e_charger extends utils.Adapter {
 			}
 		}
 	} // END Charge_Config
+
+	/**
+	 * Sends one extra API V2 write that is not a charger command, e.g. `trx=0` before a release (#939).
+	 * A failure is logged; the release is sent anyway.
+	 *
+	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
+	 * @param write - API V2 key and value
+	 * @returns whether the charger confirmed the write
+	 */
+	private async writeApiV2(iWB: number, write: ApiV2Write): Promise<boolean> {
+		const written = `${write.key}=${write.value}`;
+		try {
+			const response = await axiosInstance.get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/set?${written}`, { transformResponse: r => r });
+			const rejection = apiV2WriteRejection(response.data, write.key);
+			if (rejection !== null) {
+				this.log.warn(`Charger ${this.wallboxLabel(iWB, true)} rejected ${written}: ${rejection}`);
+				return false;
+			}
+			this.log.info(`Charger ${this.wallboxLabel(iWB)}: started a transaction without RFID (${written}) for the charge release`);
+			// the next read reports the transaction - until then it is not started a second time
+			this.wallboxInfoList[iWB].Transaction = write.value;
+			return true;
+		} catch (error) {
+			const rejection = apiV2ErrorRejection(error, write.key);
+			const hint = rejection ?? describeApiHttpError(httpStatusOf(error), "v2") ?? String(error);
+			this.log.warn(`Charger ${this.wallboxLabel(iWB, true)}: could not send ${written}: ${hint}`);
+			return false;
+		}
+	}
 
 	/**
 	 * Plans one ChargeManager cycle for the whole fleet.

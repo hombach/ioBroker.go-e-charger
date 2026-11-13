@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FORCE_STATE_ON = exports.FORCE_STATE_OFF = exports.API_DETECT_RETRY_CYCLES = exports.API_V2_ONLY_STATUS_KEYS = exports.API_V2_PROBE_KEYS = exports.RFID_V2_FILTER_KEYS = exports.RFID_CARD_SLOTS = exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.MODEL_STATUS_ACCESS_CONTROL_WAIT = exports.FORCE_STATE_ON = exports.FORCE_STATE_OFF = exports.API_DETECT_RETRY_CYCLES = exports.API_V2_ONLY_STATUS_KEYS = exports.API_V2_PROBE_KEYS = exports.RFID_V2_FILTER_KEYS = exports.RFID_CARD_SLOTS = exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateAvailableSurplusPower = calculateAvailableSurplusPower;
@@ -49,6 +49,9 @@ exports.apiV2WriteFor = apiV2WriteFor;
 exports.apiV2WriteRejection = apiV2WriteRejection;
 exports.httpStatusOf = httpStatusOf;
 exports.describeApiHttpError = describeApiHttpError;
+exports.waitsForAuthorization = waitsForAuthorization;
+exports.apiV2AuthorizeWrite = apiV2AuthorizeWrite;
+exports.apiV2ErrorRejection = apiV2ErrorRejection;
 exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 32;
 exports.START_CHARGE_CURRENT = 10;
@@ -648,7 +651,7 @@ exports.FORCE_STATE_OFF = 1;
 exports.FORCE_STATE_ON = 2;
 function normalizeStatusV2(status) {
     const normalized = { ...status };
-    if ((normalized.ast === undefined || normalized.ast === null) && typeof status.acs === "number") {
+    if ((normalized.ast === undefined || normalized.ast === null) && (status.acs === 0 || status.acs === 1)) {
         normalized.ast = status.acs;
     }
     const currentLimits = status.cll;
@@ -745,7 +748,7 @@ function describeApiHttpError(status, api) {
     }
     const apiName = api === "v1" ? "HTTP API v1" : "HTTP API v2";
     if (status === 401 || status === 403) {
-        return `the charger refuses access to its ${apiName} (HTTP ${status}). Password protection (authentication) of the local HTTP API is not supported by the adapter yet - allow local API access without password in the go-e app if possible`;
+        return `the charger refuses access to its ${apiName} (HTTP ${status}) - probably password protection (hsa, not documented by go-e). Authentication of the local HTTP API is not supported by the adapter yet - allow local API access without password in the go-e app if possible`;
     }
     if (status === 404) {
         return api === "v1"
@@ -753,5 +756,40 @@ function describeApiHttpError(status, api) {
             : `the charger does not offer ${apiName} (HTTP 404) - enable "HTTP API v2" in the go-e app`;
     }
     return `the charger answered ${apiName} with HTTP ${status}`;
+}
+exports.MODEL_STATUS_ACCESS_CONTROL_WAIT = 2;
+const CAR_STATES_PLUGGED_IN = [2, 3, 4];
+function waitsForAuthorization(modelStatus) {
+    return modelStatus === exports.MODEL_STATUS_ACCESS_CONTROL_WAIT;
+}
+function apiV2AuthorizeWrite(command, input) {
+    if (!input.enabled || input.apiMode !== "v2" || command.parameter !== "alw" || command.value !== 1) {
+        return null;
+    }
+    if (input.transaction !== null || !CAR_STATES_PLUGGED_IN.includes(input.carState)) {
+        return null;
+    }
+    return { key: "trx", value: 0 };
+}
+function apiV2ErrorRejection(error, key) {
+    const status = httpStatusOf(error);
+    if (status === null) {
+        return null;
+    }
+    const data = error.response?.data;
+    let result = data;
+    if (typeof data === "string") {
+        try {
+            result = JSON.parse(data);
+        }
+        catch {
+            return null;
+        }
+    }
+    if (typeof result !== "object" || result === null || !(key in result)) {
+        return null;
+    }
+    const rejection = apiV2WriteRejection(result, key);
+    return rejection === null ? null : `HTTP ${status}, ${rejection}`;
 }
 //# sourceMappingURL=chargeManagerUtils.js.map

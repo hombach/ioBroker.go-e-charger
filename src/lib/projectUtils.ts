@@ -52,6 +52,21 @@ export interface IWallboxInfo {
 	 */
 	ApiDetectCountdown: number;
 	/**
+	 * `modelStatus` of the last API V2 read - why the charger charges or not (2 = waits for RFID/app
+	 * authorization); `NaN` when unknown
+	 */
+	ModelStatus: number;
+	/**
+	 * `trx` of the last API V2 read: `null` = no transaction, 0 = without card, otherwise card index + 1;
+	 * `undefined` when not reported
+	 */
+	Transaction: number | null | undefined;
+	/**
+	 * Whether the "waits for RFID/app authorization" hint was logged for the current wait, so it is logged
+	 * once per wait and not every cycle
+	 */
+	AuthWaitLogged: boolean;
+	/**
 	 * Whether the ChargeManager switches phases automatically (`Settings.PhaseMode` = 0). Only ever true
 	 * when the instance settings allow automatic switching for this wallbox and the hardware supports it
 	 * (or is not known yet, because the charger has not answered since adapter start).
