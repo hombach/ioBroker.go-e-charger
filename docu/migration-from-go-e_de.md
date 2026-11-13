@@ -66,7 +66,7 @@ Hier nicht aufgeführte Datenpunkte des go-e-Adapters (Temperaturen, Fehlercode,
 ## FAQ
 
 **Welche HTTP-API muss ich in der go-e-App aktivieren?**
-Für Hardware-Generation 3 und 4 „HTTP API v1“ aktivieren (erforderlich). Für Phasenumschaltung, Netzfrequenz und den Hardware-Mindeststrom zusätzlich „HTTP API v2“. Ältere Charger (Gen 2) stellen API v1 ohne diese Einstellung bereit.
+Für Hardware-Generation 3 und 4 „HTTP API v1“ aktivieren (erforderlich). Für Phasenumschaltung, Netzfrequenz und den Hardware-Mindeststrom zusätzlich „HTTP API v2“. Ältere Charger (Gen 2) stellen API v1 ohne diese Einstellung bereit. Charger ohne HTTP API v1 (z. B. go-e Charger CORE / PRO mit Firmware 60.x) werden automatisch erkannt und nur über „HTTP API v2“ angesprochen – dort „HTTP API v2“ aktivieren.
 
 **Welchen Modus soll ich in der go-e-App wählen (Eco oder Basic)?**
 go-e-charger steuert den Charger selbst (Ladefreigabe und flüchtiger Ladestrom). Funktionen im Charger, die ebenfalls Laden starten, stoppen oder begrenzen – PV-Überschuss (Eco-Modus mit der PV-Logik des Chargers), strompreisabhängiges Laden oder Lade-Timer – können dem ChargeManager entgegenwirken. Bei Nutzung des ChargeManagers diese Charger-Funktionen ausgeschaltet lassen und den Basis-/Standard-Lademodus verwenden; über das Laden entscheiden dann ChargeNOW und ChargeManager.

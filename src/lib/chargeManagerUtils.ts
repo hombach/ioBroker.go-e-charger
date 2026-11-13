@@ -1514,3 +1514,274 @@ export function parseRfidCardsV2(status: Record<string, unknown>): RfidCardReadi
 export function rfidCardsFromV1(hardwareMin3: boolean, rfidFromV2: boolean): boolean {
 	return !hardwareMin3 || !rfidFromV2;
 }
+
+/**
+ * HTTP API a charger is read and controlled with.
+ *
+ * - `v1`: HTTP API v1 (`/status`, `/mqtt`) for all reads and writes, plus HTTP API v2 on gen 3+ for
+ *   phase switching, force state, RFID and other extras - the behaviour of all versions before #939.
+ * - `v2`: HTTP API v2 only (`/api/status`, `/api/set`), for chargers without API v1 such as the
+ *   go-e Charger CORE / PRO (firmware 60.x, #939).
+ */
+export type ChargerApiMode = "v1" | "v2";
+
+/** API V2 keys requested to detect whether a charger answers on HTTP API v2 at all */
+export const API_V2_PROBE_KEYS: readonly string[] = ["fwv", "typ"];
+
+/**
+ * API V2 keys read every cycle from a charger without API V1. These are the keys of the regular API V2
+ * read plus the ones that replace API V1 data: `acs` (access control, the API V2 counterpart of `ast`)
+ * and `cll` (current limits, holds the cable current limit when `cbl` is missing). The RFID card keys
+ * {@link RFID_V2_FILTER_KEYS} are appended by the caller.
+ */
+export const API_V2_ONLY_STATUS_KEYS: readonly string[] = [
+	"alw",
+	"frc",
+	"modelStatus",
+	"acu",
+	"eto",
+	"amp",
+	"rbc",
+	"rbt",
+	"car",
+	"pha",
+	"fwv",
+	"nrg",
+	"psm",
+	"typ",
+	"fhz",
+	"trx",
+	"ast",
+	"acs",
+	"ama",
+	"cbl",
+	"cll",
+	"mca",
+];
+
+/** API V2 detection is retried every this many cycles for a charger that never answered since adapter start */
+export const API_DETECT_RETRY_CYCLES = 6;
+
+/** go-e `frc` (forceState) value "off": the charger does not charge */
+export const FORCE_STATE_OFF = 1;
+/** go-e `frc` (forceState) value "on": the charger releases charging */
+export const FORCE_STATE_ON = 2;
+
+/**
+ * Fills the API V2 keys some firmware does not report from their equivalents, without changing the
+ * input. Firmware 60.4 of the go-e CORE (#939) reports no `ast` and no `cbl`:
+ * - `ast` (access state) falls back to `acs` (access control setting, 0 = open, 1 = RFID/App needed)
+ * - `cbl` (cable current limit) falls back to `cll.cableCurrentLimit`
+ *
+ * @param status API V2 status object
+ * @returns a shallow copy with the fallbacks applied
+ */
+export function normalizeStatusV2(status: Record<string, unknown>): Record<string, unknown> {
+	const normalized: Record<string, unknown> = { ...status };
+	if ((normalized.ast === undefined || normalized.ast === null) && typeof status.acs === "number") {
+		normalized.ast = status.acs;
+	}
+	const currentLimits = status.cll;
+	if ((normalized.cbl === undefined || normalized.cbl === null) && typeof currentLimits === "object" && currentLimits !== null) {
+		const cableLimit = (currentLimits as Record<string, unknown>).cableCurrentLimit;
+		if (typeof cableLimit === "number" && Number.isFinite(cableLimit)) {
+			normalized.cbl = cableLimit;
+		}
+	}
+	return normalized;
+}
+
+/** API V1 shaped status built from an API V2 status, see {@link statusV1FromV2} */
+export interface StatusV1FromV2 {
+	/** reboot counter */
+	rbc: number;
+	/** time since boot in ms */
+	rbt: number;
+	/** car state as API V1 string ("0" = unknown/error) */
+	car: string;
+	/** requested current in A */
+	amp: number;
+	/** API V2 has no volatile current - the requested current is reported instead */
+	amx: number;
+	/** charge release as API V1 string ("1" / "0"), `""` when unknown */
+	alw: string;
+	/** API V1 phase bit field (bits 0-2 after, bits 3-5 before the contactor) */
+	pha: number;
+	/** total energy in 0.1 kWh */
+	eto: number;
+	/** API V1 energy array (currents in 0.1 A, phase powers in 0.1 kW, total power in 0.01 kW) */
+	nrg: number[];
+	/** firmware version */
+	fwv: string;
+	/** access state */
+	ast?: number;
+	/** absolute maximum current in A */
+	ama?: number;
+	/** cable current limit in A */
+	cbl?: number;
+	/** API V2 has no `uby`; the authorizing card comes from `trx` */
+	uby?: undefined;
+}
+
+/**
+ * Converts an API V2 phase array into the API V1 phase bit field. API V2 reports six flags: L1-L3
+ * after the contactor (index 0-2) and L1-L3 before it (index 3-5), which are exactly bits 0-5 of API V1.
+ *
+ * @param pha `pha` of the API V2 status (array of booleans); an API V1 number is passed through
+ * @returns the API V1 bit field, 0 when unknown
+ */
+export function phaseFlagsFromV2(pha: unknown): number {
+	if (typeof pha === "number" && Number.isInteger(pha) && pha >= 0) {
+		return pha;
+	}
+	if (!Array.isArray(pha)) {
+		return 0;
+	}
+	return pha.slice(0, 6).reduce((flags: number, active: unknown, index: number) => (active === true || active === 1 ? flags | (1 << index) : flags), 0);
+}
+
+/**
+ * Converts the API V2 `nrg` array into the units of API V1, so the existing API V1 parsing can be
+ * reused unchanged. Both have the same layout - U L1-L3, N (V), I L1-L3 (A), P L1-L3, N, total, pf
+ * L1-L3, N - but API V1 reports currents in 0.1 A, phase powers in 0.1 kW and the total power in 0.01 kW,
+ * while API V2 uses A and W.
+ *
+ * @param nrg `nrg` of the API V2 status
+ * @returns the array in API V1 units; entries that are not numbers become `NaN`
+ */
+export function nrgV1FromV2(nrg: unknown[]): number[] {
+	return nrg.map((raw, index) => {
+		const value = typeof raw === "number" ? raw : typeof raw === "string" && raw.trim() !== "" ? Number(raw) : Number.NaN;
+		if (!Number.isFinite(value)) {
+			return Number.NaN;
+		}
+		if (index >= 4 && index <= 6) {
+			return value * 10; // A -> 0.1 A
+		}
+		if (index >= 7 && index <= 10) {
+			return value / 100; // W -> 0.1 kW
+		}
+		if (index === 11) {
+			return value / 10; // W -> 0.01 kW
+		}
+		return value;
+	});
+}
+
+/**
+ * Builds an API V1 shaped status from an API V2 status, for chargers without API V1 (#939). The API V1
+ * parsing then writes exactly the same states with the same units as for every other charger.
+ *
+ * @param status API V2 status object (after {@link normalizeStatusV2})
+ * @returns the API V1 shaped status
+ * @throws {Error} when the status has no `nrg` array (not a usable charger status)
+ */
+export function statusV1FromV2(status: Record<string, unknown>): StatusV1FromV2 {
+	if (!Array.isArray(status.nrg)) {
+		throw new Error("API V2 status without nrg array");
+	}
+	const alw = status.alw === true || status.alw === 1 ? "1" : status.alw === false || status.alw === 0 ? "0" : "";
+	const eto = Number(status.eto);
+	const optionalNumber = (value: unknown): number | undefined => (typeof value === "number" && Number.isFinite(value) ? value : undefined);
+	return {
+		rbc: Number(status.rbc),
+		rbt: Number(status.rbt),
+		car: typeof status.car === "number" || typeof status.car === "string" ? String(status.car) : "0",
+		amp: Number(status.amp),
+		amx: Number(status.amp),
+		alw,
+		pha: phaseFlagsFromV2(status.pha),
+		eto: status.eto === null || status.eto === undefined || !Number.isFinite(eto) ? Number.NaN : eto / 100, // Wh -> 0.1 kWh
+		nrg: nrgV1FromV2(status.nrg as unknown[]),
+		fwv: typeof status.fwv === "string" ? status.fwv : typeof status.fwv === "number" ? String(status.fwv) : "",
+		ast: optionalNumber(status.ast),
+		ama: optionalNumber(status.ama),
+		cbl: optionalNumber(status.cbl),
+	};
+}
+
+/** One write to a charger over HTTP API v2 (`/api/set?<key>=<value>`). */
+export interface ApiV2Write {
+	/** API V2 key */
+	key: "frc" | "amp";
+	/** value to write */
+	value: number;
+}
+
+/**
+ * Translates a charger command into its HTTP API v2 write. API V2 has no writable `alw` and no `amx`:
+ * the charge release is given with force state "on" and withdrawn with force state "off" - which is
+ * what an API V1 `alw` write does on gen 3+ chargers - and the current is written to `amp`. Force state
+ * "neutral", where the charger decides by itself, is never written.
+ *
+ * @param command command from {@link buildChargerCommands}
+ * @returns the API V2 key and value to write
+ */
+export function apiV2WriteFor(command: ChargerCommand): ApiV2Write {
+	if (command.parameter === "alw") {
+		return { key: "frc", value: command.value === 1 ? FORCE_STATE_ON : FORCE_STATE_OFF };
+	}
+	return { key: "amp", value: command.value };
+}
+
+/**
+ * Whether the charger accepted an HTTP API v2 write. `/api/set` answers with a JSON object holding
+ * `true` for every accepted key, or an error message string.
+ *
+ * @param responseData raw response body of `/api/set`
+ * @param key the key that was written
+ * @returns `null` when accepted, otherwise the reason as text
+ */
+export function apiV2WriteRejection(responseData: unknown, key: string): string | null {
+	let result: unknown = responseData;
+	if (typeof responseData === "string") {
+		try {
+			result = JSON.parse(responseData);
+		} catch {
+			return `invalid answer ${JSON.stringify(responseData.slice(0, 100))}`;
+		}
+	}
+	if (typeof result !== "object" || result === null) {
+		return `invalid answer ${JSON.stringify(result)}`;
+	}
+	const value = (result as Record<string, unknown>)[key];
+	return value === true ? null : `answer ${JSON.stringify(value ?? null)}`;
+}
+
+/**
+ * HTTP status code of a failed charger request, when the charger answered at all.
+ *
+ * @param error error caught around a charger request
+ * @returns the HTTP status, or `null` for timeouts, connection problems and other errors
+ */
+export function httpStatusOf(error: unknown): number | null {
+	if (typeof error !== "object" || error === null) {
+		return null;
+	}
+	const status = (error as { response?: { status?: unknown } }).response?.status;
+	return typeof status === "number" && Number.isInteger(status) ? status : null;
+}
+
+/**
+ * Explains an HTTP error status the charger answered with. A charger that answers with an HTTP status
+ * is reachable, so asking to verify its IP address would point in the wrong direction.
+ *
+ * @param status HTTP status from {@link httpStatusOf}
+ * @param api which HTTP API was called
+ * @returns the hint, or `null` when there was no HTTP answer
+ */
+export function describeApiHttpError(status: number | null, api: ChargerApiMode): string | null {
+	if (status === null) {
+		return null;
+	}
+	const apiName = api === "v1" ? "HTTP API v1" : "HTTP API v2";
+	if (status === 401 || status === 403) {
+		return `the charger refuses access to its ${apiName} (HTTP ${status}). Password protection (authentication) of the local HTTP API is not supported by the adapter yet - allow local API access without password in the go-e app if possible`;
+	}
+	if (status === 404) {
+		return api === "v1"
+			? `the charger does not offer ${apiName} (HTTP 404) - enable "HTTP API v1" in the go-e app. Chargers without API v1 (e.g. go-e CORE / PRO) are used over API v2 automatically when "HTTP API v2" is enabled`
+			: `the charger does not offer ${apiName} (HTTP 404) - enable "HTTP API v2" in the go-e app`;
+	}
+	return `the charger answered ${apiName} with HTTP ${status}`;
+}

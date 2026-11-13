@@ -38,6 +38,20 @@ export interface IWallboxInfo {
 	 */
 	RfidFromV2: boolean;
 	/**
+	 * HTTP API the charger is read and controlled with: `v1` (API V1, plus API V2 on gen 3+) or `v2`
+	 * (API V2 only, for chargers without API V1 such as the go-e CORE / PRO - #939)
+	 */
+	ApiMode: "v1" | "v2";
+	/**
+	 * Whether the API of the charger is known: it answered on API V1, or on API V2 while API V1 failed.
+	 * While false, a charger that does not answer on API V1 is probed on API V2 again every few cycles.
+	 */
+	ApiDetected: boolean;
+	/**
+	 * Cycles until the next API V2 detection of a charger whose API is not known yet
+	 */
+	ApiDetectCountdown: number;
+	/**
 	 * Whether the ChargeManager switches phases automatically (`Settings.PhaseMode` = 0). Only ever true
 	 * when the instance settings allow automatic switching for this wallbox and the hardware supports it
 	 * (or is not known yet, because the charger has not answered since adapter start).

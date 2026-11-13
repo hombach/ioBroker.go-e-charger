@@ -62,6 +62,18 @@ import {
 	parseRfidCardsV2,
 	rfidCardsFromV1,
 	RFID_V2_FILTER_KEYS,
+	API_V2_ONLY_STATUS_KEYS,
+	API_V2_PROBE_KEYS,
+	apiV2WriteFor,
+	apiV2WriteRejection,
+	describeApiHttpError,
+	FORCE_STATE_OFF,
+	FORCE_STATE_ON,
+	httpStatusOf,
+	normalizeStatusV2,
+	nrgV1FromV2,
+	phaseFlagsFromV2,
+	statusV1FromV2,
 } from "./lib/chargeManagerUtils";
 
 describe("ChargeManager safety helpers", () => {
@@ -1957,6 +1969,208 @@ describe("ChargeManager safety helpers", () => {
 			for (const v1Key of ["rca", "rna", "eca", "ec1"]) {
 				assert.ok(!filter.split(/[,$]/).includes(v1Key), `V2 filter still requests ${v1Key}`);
 			}
+		});
+	});
+	describe("chargers without API V1 (#939)", () => {
+		// sanitized /api/status of a go-e Charger CORE (typ go-eCharger_Phoenix, styp core_cable, firmware 60.4) -
+		// only the keys the adapter reads, no IDs, addresses, names or tokens
+		const coreStatus = JSON.parse(readFileSync(join(__dirname, "..", "test", "fixtures", "api-v2-status-core-60.4.json"), "utf8")) as Record<
+			string,
+			unknown
+		>;
+
+		it("uses a sanitized fixture without identifying data", () => {
+			assert.equal(coreStatus.typ, "go-eCharger_Phoenix");
+			assert.equal(coreStatus.fwv, "60.4");
+			assert.equal(coreStatus.hla, undefined, "no legacy API switch on this firmware");
+			for (const key of [
+				"sse",
+				"imei",
+				"imsi",
+				"iccid",
+				"macs",
+				"maca",
+				"macp",
+				"obm",
+				"wifis",
+				"ccw",
+				"mia",
+				"cle",
+				"fna",
+				"ffna",
+				"host",
+				"CN",
+				"tab",
+				"wan",
+			]) {
+				assert.ok(!(key in coreStatus), `fixture must not contain ${key}`);
+			}
+			assert.ok(!/\d+\.\d+\.\d+\.\d+/.test(JSON.stringify(coreStatus)), "fixture must not contain IP addresses");
+		});
+
+		it("fills the missing ast and cbl from acs and cll without changing the input", () => {
+			const normalized = normalizeStatusV2(coreStatus);
+			assert.equal(normalized.ast, 1, "acs 1 = RFID/App needed");
+			assert.equal(normalized.cbl, 32, "cll.cableCurrentLimit");
+			assert.equal(coreStatus.ast, undefined);
+			assert.equal(coreStatus.cbl, undefined);
+			// reported values win over the fallbacks
+			const reported = normalizeStatusV2({ ...coreStatus, ast: 0, cbl: 13 });
+			assert.equal(reported.ast, 0);
+			assert.equal(reported.cbl, 13);
+			assert.equal(normalizeStatusV2({ acs: "x", cll: null }).ast, undefined);
+		});
+
+		it("converts the API V2 phase array into the API V1 bit field", () => {
+			assert.equal(phaseFlagsFromV2(coreStatus.pha), 56, "L1-L3 before the contactor = bits 3-5");
+			assert.equal(phaseFlagsFromV2([true, true, true, true, true, true]), 63);
+			assert.equal(phaseFlagsFromV2([true, false, false, true, false, false]), 9);
+			assert.equal(phaseFlagsFromV2(56), 56, "API V1 number passes through");
+			assert.equal(phaseFlagsFromV2(null), 0);
+			assert.equal(phaseFlagsFromV2("56"), 0);
+		});
+
+		it("converts the API V2 nrg units (A, W) into API V1 units (0.1 A, 0.1 kW, 0.01 kW)", () => {
+			// three-phase charge at 15.9 A, 3.6 kW per phase, 10.98 kW in total
+			const nrg = nrgV1FromV2([230, 231, 229, 0, 15.9, 16, 15.8, 3600, 3700, 3680, 0, 10980, 99, 98, 97, 0]);
+			assert.deepEqual(nrg.slice(0, 4), [230, 231, 229, 0], "voltages unchanged");
+			assert.deepEqual(
+				nrg.slice(4, 7).map(value => Math.round(value)),
+				[159, 160, 158],
+				"currents in 0.1 A",
+			);
+			assert.deepEqual(nrg.slice(7, 11), [36, 37, 36.8, 0], "phase powers in 0.1 kW");
+			assert.equal(nrg[11], 1098, "total power in 0.01 kW");
+			assert.deepEqual(nrg.slice(12), [99, 98, 97, 0], "power factors unchanged");
+			assert.equal(chargePowerFromStatusV1(nrg), 10980, "the API V1 power reading yields the API V2 watts");
+			assert.ok(Number.isNaN(nrgV1FromV2([null, "x"])[0]));
+			assert.equal(nrgV1FromV2(["230"])[0], 230);
+		});
+
+		it("builds an API V1 shaped status from the CORE status", () => {
+			const status = statusV1FromV2(normalizeStatusV2(coreStatus));
+			assert.equal(status.car, "1", "car state as API V1 string");
+			assert.equal(status.alw, "0", "alw false");
+			assert.equal(status.amp, 10);
+			assert.equal(status.amx, 10, "no volatile current in API V2 - amp instead");
+			assert.equal(status.pha, 56);
+			assert.equal(status.eto / 10, 40.47, "40470 Wh = 40.47 kWh after the API V1 scaling");
+			assert.equal(status.fwv, "60.4");
+			assert.equal(status.ast, 1);
+			assert.equal(status.ama, 16);
+			assert.equal(status.cbl, 32);
+			assert.equal(status.rbc, 6);
+			assert.equal(status.rbt, 29471961);
+			assert.equal(status.uby, undefined, "the authorizing card comes from trx");
+			assert.equal(chargePowerFromStatusV1(status.nrg), 0, "idle charger");
+			assert.deepEqual(phaseVoltagesFromNrg(status.nrg, status.pha), [223.56, 235.69, 225.86]);
+		});
+
+		it("maps the remaining API V2 value forms", () => {
+			const base = { nrg: [] };
+			assert.equal(statusV1FromV2({ ...base, alw: true }).alw, "1");
+			assert.equal(statusV1FromV2({ ...base, alw: 1 }).alw, "1");
+			assert.equal(statusV1FromV2({ ...base, alw: 0 }).alw, "0");
+			assert.equal(statusV1FromV2({ ...base }).alw, "", "unknown release is not reported as withdrawn");
+			assert.equal(statusV1FromV2({ ...base, car: null }).car, "0", "internal error");
+			assert.equal(statusV1FromV2({ ...base, car: 2 }).car, "2");
+			assert.ok(Number.isNaN(statusV1FromV2({ ...base }).eto));
+			assert.equal(statusV1FromV2({ ...base, fwv: 60 }).fwv, "60");
+			assert.throws(() => statusV1FromV2({ car: 1 }), /nrg/);
+		});
+
+		it("gives the release as force state on/off and the current as amp, never force state neutral", () => {
+			assert.equal(FORCE_STATE_OFF, 1);
+			assert.equal(FORCE_STATE_ON, 2);
+			assert.deepEqual(apiV2WriteFor({ parameter: "alw", value: 1 }), { key: "frc", value: FORCE_STATE_ON });
+			assert.deepEqual(apiV2WriteFor({ parameter: "alw", value: 0 }), { key: "frc", value: FORCE_STATE_OFF });
+			assert.deepEqual(apiV2WriteFor({ parameter: "amx", value: 12 }), { key: "amp", value: 12 });
+			assert.deepEqual(apiV2WriteFor({ parameter: "amp", value: 6 }), { key: "amp", value: 6 });
+			const writes = (buildChargerCommands(true, 10, "60.4") ?? []).map(apiV2WriteFor);
+			assert.deepEqual(
+				writes,
+				[
+					{ key: "amp", value: 10 },
+					{ key: "frc", value: FORCE_STATE_ON },
+				],
+				"current before the release, as with API V1",
+			);
+			assert.deepEqual((buildChargerCommands(false, 10, "60.4") ?? []).map(apiV2WriteFor), [{ key: "frc", value: FORCE_STATE_OFF }]);
+			assert.ok(!writes.some(write => write.key === "frc" && write.value === FORCE_STATE_NEUTRAL));
+		});
+
+		it("does not re-send an unchanged release or current read back from the CORE status", () => {
+			const status = statusV1FromV2(normalizeStatusV2(coreStatus));
+			// the CORE reports frc 0 (neutral): no readback, so the withdrawal is always sent
+			const reported = { alw: releaseReadback(Number(status.alw), coreStatus.frc), amp: status.amp, amx: status.amx };
+			assert.deepEqual(dropUnchangedChargerCommands([{ parameter: "alw", value: 0 }], reported), [{ parameter: "alw", value: 0 }]);
+			assert.equal(enforceOffState(coreStatus.frc, false), true, "frc 0 without own release is held off");
+			// after the adapter gave force state off, the charger reports frc 1 and alw false
+			const off = { alw: releaseReadback(0, FORCE_STATE_OFF), amp: 10, amx: 10 };
+			assert.deepEqual(dropUnchangedChargerCommands([{ parameter: "alw", value: 0 }], off), []);
+			assert.deepEqual(dropUnchangedChargerCommands([{ parameter: "amx", value: 10 }], off), [], "current already set");
+			assert.deepEqual(dropUnchangedChargerCommands([{ parameter: "amx", value: 11 }], off), [{ parameter: "amx", value: 11 }]);
+		});
+
+		it("recognizes accepted and rejected /api/set answers", () => {
+			assert.equal(apiV2WriteRejection(`{"frc":true}`, "frc"), null);
+			assert.equal(apiV2WriteRejection({ amp: true }, "amp"), null);
+			assert.equal(apiV2WriteRejection(`{"amp":"value out of range"}`, "amp"), `answer "value out of range"`);
+			assert.equal(apiV2WriteRejection(`{}`, "frc"), "answer null");
+			assert.match(apiV2WriteRejection("<html>", "frc") ?? "", /invalid answer/);
+			assert.match(apiV2WriteRejection("null", "frc") ?? "", /invalid answer/);
+		});
+
+		it("reads the HTTP status of a failed request and explains it without pointing at the IP address", () => {
+			const axiosError = (status?: number): unknown =>
+				Object.assign(new Error("Request failed"), { isAxiosError: true, response: status ? { status } : undefined });
+			assert.equal(httpStatusOf(axiosError(404)), 404);
+			assert.equal(httpStatusOf(axiosError()), null, "timeout - no answer");
+			assert.equal(httpStatusOf(new Error("ECONNREFUSED")), null);
+			assert.equal(httpStatusOf(null), null);
+			assert.equal(describeApiHttpError(null, "v2"), null);
+			for (const status of [401, 403]) {
+				const hint = describeApiHttpError(status, "v2") ?? "";
+				assert.match(hint, /authentication/);
+				assert.match(hint, /HTTP API v2/);
+				assert.ok(!/IP address/.test(hint));
+			}
+			assert.match(describeApiHttpError(404, "v1") ?? "", /enable "HTTP API v1".*API v2 automatically/);
+			assert.match(describeApiHttpError(404, "v2") ?? "", /enable "HTTP API v2"/);
+			assert.match(describeApiHttpError(500, "v1") ?? "", /HTTP 500/);
+		});
+
+		it("requests every key the API V2 only read needs", () => {
+			for (const key of [
+				"alw",
+				"frc",
+				"car",
+				"amp",
+				"eto",
+				"nrg",
+				"pha",
+				"fwv",
+				"typ",
+				"psm",
+				"trx",
+				"ama",
+				"cbl",
+				"cll",
+				"ast",
+				"acs",
+				"mca",
+				"rbc",
+				"rbt",
+				"fhz",
+			]) {
+				assert.ok(API_V2_ONLY_STATUS_KEYS.includes(key), key);
+			}
+			for (const key of API_V2_ONLY_STATUS_KEYS) {
+				assert.ok(!["rca", "rna", "eca", "uby", "amx"].includes(key), `${key} is an API V1 key`);
+			}
+			assert.deepEqual([...API_V2_PROBE_KEYS], ["fwv", "typ"]);
+			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
+			assert.ok(source.includes("[...API_V2_ONLY_STATUS_KEYS, ...RFID_V2_FILTER_KEYS]"), "API V2 only read requests the RFID card keys");
 		});
 	});
 });
