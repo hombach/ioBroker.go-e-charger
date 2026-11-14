@@ -78,6 +78,7 @@ import {
 	apiV2ErrorRejection,
 	waitsForAuthorization,
 	MODEL_STATUS_ACCESS_CONTROL_WAIT,
+	isStatusV1Answer,
 } from "./lib/chargeManagerUtils";
 
 describe("ChargeManager safety helpers", () => {
@@ -2176,6 +2177,26 @@ describe("ChargeManager safety helpers", () => {
 			assert.deepEqual([...API_V2_PROBE_KEYS], ["fwv", "typ"]);
 			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
 			assert.ok(source.includes("[...API_V2_ONLY_STATUS_KEYS, ...RFID_V2_FILTER_KEYS]"), "API V2 only read requests the RFID card keys");
+		});
+
+		it("counts /status as API V1 only for a JSON object with API V1 keys (go-e CORE answers with a WebSocket error text)", () => {
+			const coreAnswer = "The WebSocket handshake Upgrade field is missing";
+			assert.equal(isStatusV1Answer(coreAnswer), false, "HTTP 200 with the plain text of the go-e CORE");
+			assert.equal(isStatusV1Answer(""), false);
+			assert.equal(isStatusV1Answer("{}"), false, "JSON object without API V1 keys");
+			assert.equal(isStatusV1Answer('{"error":"not found"}'), false);
+			assert.equal(isStatusV1Answer('{"fwv":"60.4","typ":"go-eCharger_Phoenix"}'), false, "API V2 style object");
+			assert.equal(isStatusV1Answer("[1,2]"), false);
+			assert.equal(isStatusV1Answer("null"), false);
+			assert.equal(isStatusV1Answer("42"), false);
+			assert.equal(isStatusV1Answer(undefined), false);
+			assert.equal(isStatusV1Answer('{"car":"1","amp":"16","fwv":"060.6","alw":"0"}'), true, "API V1 status");
+			assert.equal(isStatusV1Answer({ car: "2", amp: "10", fwv: "054.7" }), true, "already parsed");
+			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
+			const detect = source.slice(source.indexOf("private async detectApiMode"), source.indexOf("async Read_ChargerAPIV2Only"));
+			assert.ok(detect.includes("isStatusV1Answer(response.data)"), "detection checks the /status answer");
+			// a non-2xx answer (e.g. 400/426 with the same text) makes axios throw - also no API V1
+			assert.ok(/for \(let attempt[\s\S]*catch \(error\) \{\s*v1Error = error;/.test(detect));
 		});
 
 		it("maps only acs 0/1 into the access state - acs 2 (EVCMS) is not 'electricity price / automatic'", () => {

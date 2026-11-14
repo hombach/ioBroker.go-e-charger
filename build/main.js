@@ -1043,7 +1043,9 @@ class go_e_charger extends utils.Adapter {
         for (let attempt = 0; attempt < 2; attempt++) {
             try {
                 const response = await axiosInstance.get(`http://${ipAddress}/status`, { transformResponse: r => r });
-                JSON.parse(response.data);
+                if (!(0, chargeManagerUtils_1.isStatusV1Answer)(response.data)) {
+                    throw new Error(`no API V1 status: ${JSON.stringify(String(response.data).slice(0, 80))}`);
+                }
                 info.ApiDetected = true;
                 this.log.debug(`Charger ${this.wallboxLabel(iWB)} answers on API V1 and API V2 - using API V1 with API V2 extras`);
                 return info.ApiMode;

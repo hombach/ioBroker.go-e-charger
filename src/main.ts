@@ -67,6 +67,7 @@ import {
 	type ChargerApiMode,
 	describeApiHttpError,
 	httpStatusOf,
+	isStatusV1Answer,
 	normalizeStatusV2,
 	statusV1FromV2,
 	waitsForAuthorization,
@@ -1748,7 +1749,10 @@ class go_e_charger extends utils.Adapter {
 		for (let attempt = 0; attempt < 2; attempt++) {
 			try {
 				const response = await axiosInstance.get(`http://${ipAddress}/status`, { transformResponse: r => r });
-				JSON.parse(response.data);
+				// only a real API V1 status counts - the go-e CORE answers /status with a WebSocket error text (#939)
+				if (!isStatusV1Answer(response.data)) {
+					throw new Error(`no API V1 status: ${JSON.stringify(String(response.data).slice(0, 80))}`);
+				}
 				info.ApiDetected = true;
 				this.log.debug(`Charger ${this.wallboxLabel(iWB)} answers on API V1 and API V2 - using API V1 with API V2 extras`);
 				return info.ApiMode;

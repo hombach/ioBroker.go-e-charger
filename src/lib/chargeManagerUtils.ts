@@ -1878,3 +1878,29 @@ export function apiV2ErrorRejection(error: unknown, key: string): string | null 
 	const rejection = apiV2WriteRejection(result, key);
 	return rejection === null ? null : `HTTP ${status}, ${rejection}`;
 }
+
+/** Keys every API V1 `/status` answer has; a charger only counts as having API V1 when its answer has them */
+export const API_V1_STATUS_KEYS: readonly string[] = ["car", "amp", "fwv"];
+
+/**
+ * Whether an answer to `/status` is a real API V1 status. The go-e CORE (firmware 60.4, #939) has no
+ * API V1 and answers `/status` with the text "The WebSocket handshake Upgrade field is missing" -
+ * possibly even with HTTP 200 - and other firmware may answer with JSON that is not an API V1 status.
+ *
+ * @param data raw response body of `/status` (string) or an already parsed value
+ * @returns true only for a JSON object holding all of {@link API_V1_STATUS_KEYS}
+ */
+export function isStatusV1Answer(data: unknown): boolean {
+	let result: unknown = data;
+	if (typeof data === "string") {
+		try {
+			result = JSON.parse(data);
+		} catch {
+			return false;
+		}
+	}
+	if (typeof result !== "object" || result === null || Array.isArray(result)) {
+		return false;
+	}
+	return API_V1_STATUS_KEYS.every(key => key in result);
+}
