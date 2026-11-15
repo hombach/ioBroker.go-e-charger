@@ -1531,8 +1531,10 @@ export const API_V2_PROBE_KEYS: readonly string[] = ["fwv", "typ"];
 /**
  * API V2 keys read every cycle from a charger without API V1. These are the keys of the regular API V2
  * read plus the ones that replace API V1 data: `acs` (access control, the API V2 counterpart of `ast`)
- * and `cll` (current limits, holds the cable current limit when `cbl` is missing). The RFID card keys
- * {@link RFID_V2_FILTER_KEYS} are appended by the caller.
+ * and `cll` (current limits, holds the cable current limit). `ast`, `cbl` and `cards` are not requested:
+ * the go-e CORE 60.4 has none of them and answers a filter with keys it does not know with HTTP 400
+ * (#939); {@link normalizeStatusV2} derives `ast` and `cbl` from `acs` and `cll`. The full filter is
+ * {@link API_V2_ONLY_FILTER_KEYS}.
  */
 export const API_V2_ONLY_STATUS_KEYS: readonly string[] = [
 	"alw",
@@ -1551,13 +1553,41 @@ export const API_V2_ONLY_STATUS_KEYS: readonly string[] = [
 	"typ",
 	"fhz",
 	"trx",
-	"ast",
 	"acs",
 	"ama",
-	"cbl",
 	"cll",
 	"mca",
 ];
+
+/** RFID card keys of firmware 60.0+ (`c<i>n/e/i`), without the `cards` array that firmware 60.0 removed */
+export const RFID_V2_CARD_SLOT_KEYS: readonly string[] = RFID_V2_FILTER_KEYS.filter(key => key !== "cards");
+
+/** Filter of the read of a charger without API V1: {@link API_V2_ONLY_STATUS_KEYS} plus the RFID card slots */
+export const API_V2_ONLY_FILTER_KEYS: readonly string[] = [...API_V2_ONLY_STATUS_KEYS, ...RFID_V2_CARD_SLOT_KEYS];
+
+/**
+ * URL of the status read of a charger without API V1.
+ *
+ * @param ipAddress IP address (and optional port) of the charger
+ * @param unfiltered read the full status without a filter (after the charger refused the filter)
+ * @returns the `/api/status` URL
+ */
+export function apiV2OnlyStatusUrl(ipAddress: string, unfiltered: boolean): string {
+	return unfiltered ? `http://${ipAddress}/api/status` : `http://${ipAddress}/api/status?filter=${API_V2_ONLY_FILTER_KEYS.join(",")}`;
+}
+
+/**
+ * Whether a failed filtered read of a charger without API V1 is retried without a filter: only for HTTP
+ * 400, which firmware 60.x answers to a filter it does not accept (#939). Timeouts, connection problems
+ * and other HTTP errors are a different problem that an unfiltered read does not solve.
+ *
+ * @param error error of the filtered read
+ * @param unfiltered whether the read already was unfiltered
+ * @returns true to retry once without filter
+ */
+export function retryApiV2Unfiltered(error: unknown, unfiltered: boolean): boolean {
+	return !unfiltered && httpStatusOf(error) === 400;
+}
 
 /** API V2 detection is retried every this many cycles for a charger that never answered since adapter start */
 export const API_DETECT_RETRY_CYCLES = 6;

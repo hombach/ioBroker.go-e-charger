@@ -128,6 +128,7 @@ class go_e_charger extends utils.Adapter {
                 ApiMode: "v1",
                 ApiDetected: false,
                 ApiDetectCountdown: chargeManagerUtils_1.API_DETECT_RETRY_CYCLES,
+                ApiV2Unfiltered: false,
                 ModelStatus: Number.NaN,
                 Transaction: undefined,
                 AuthWaitLogged: false,
@@ -1062,9 +1063,23 @@ class go_e_charger extends utils.Adapter {
         return info.ApiMode;
     }
     async Read_ChargerAPIV2Only(iWB) {
+        const info = this.wallboxInfoList[iWB];
+        const ipAddress = this.config.wallBoxList[iWB].ipAddress;
         try {
-            const response = await axiosInstance.get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=${[...chargeManagerUtils_1.API_V2_ONLY_STATUS_KEYS, ...chargeManagerUtils_1.RFID_V2_FILTER_KEYS].join(",")}`, { transformResponse: r => r });
-            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2 (no API V1): ${response.data}`);
+            let response;
+            try {
+                response = await axiosInstance.get((0, chargeManagerUtils_1.apiV2OnlyStatusUrl)(ipAddress, info.ApiV2Unfiltered), { transformResponse: r => r });
+            }
+            catch (error) {
+                if (!(0, chargeManagerUtils_1.retryApiV2Unfiltered)(error, info.ApiV2Unfiltered)) {
+                    throw error;
+                }
+                response = await axiosInstance.get((0, chargeManagerUtils_1.apiV2OnlyStatusUrl)(ipAddress, true), { transformResponse: r => r });
+                JSON.parse(response.data);
+                info.ApiV2Unfiltered = true;
+                this.log.info(`Charger ${this.wallboxLabel(iWB, true)} refuses the filtered HTTP API v2 status (HTTP 400) but answers the full status - reading it without filter from now on`);
+            }
+            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2 (no API V1): ${info.ApiV2Unfiltered ? `full status, ${String(response.data).length} characters` : response.data}`);
             const status = (0, chargeManagerUtils_1.normalizeStatusV2)(JSON.parse(response.data));
             this.wallboxInfoList[iWB].HardwareMin3 = true;
             await this.ParseStatusAPIV1((0, chargeManagerUtils_1.statusV1FromV2)(status), iWB);

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.API_V1_STATUS_KEYS = exports.MODEL_STATUS_ACCESS_CONTROL_WAIT = exports.FORCE_STATE_ON = exports.FORCE_STATE_OFF = exports.API_DETECT_RETRY_CYCLES = exports.API_V2_ONLY_STATUS_KEYS = exports.API_V2_PROBE_KEYS = exports.RFID_V2_FILTER_KEYS = exports.RFID_CARD_SLOTS = exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.API_V1_STATUS_KEYS = exports.MODEL_STATUS_ACCESS_CONTROL_WAIT = exports.FORCE_STATE_ON = exports.FORCE_STATE_OFF = exports.API_DETECT_RETRY_CYCLES = exports.API_V2_ONLY_FILTER_KEYS = exports.RFID_V2_CARD_SLOT_KEYS = exports.API_V2_ONLY_STATUS_KEYS = exports.API_V2_PROBE_KEYS = exports.RFID_V2_FILTER_KEYS = exports.RFID_CARD_SLOTS = exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateAvailableSurplusPower = calculateAvailableSurplusPower;
@@ -41,6 +41,8 @@ exports.wallboxLabel = wallboxLabel;
 exports.parseRfidCardsV1 = parseRfidCardsV1;
 exports.parseRfidCardsV2 = parseRfidCardsV2;
 exports.rfidCardsFromV1 = rfidCardsFromV1;
+exports.apiV2OnlyStatusUrl = apiV2OnlyStatusUrl;
+exports.retryApiV2Unfiltered = retryApiV2Unfiltered;
 exports.normalizeStatusV2 = normalizeStatusV2;
 exports.phaseFlagsFromV2 = phaseFlagsFromV2;
 exports.nrgV1FromV2 = nrgV1FromV2;
@@ -640,13 +642,19 @@ exports.API_V2_ONLY_STATUS_KEYS = [
     "typ",
     "fhz",
     "trx",
-    "ast",
     "acs",
     "ama",
-    "cbl",
     "cll",
     "mca",
 ];
+exports.RFID_V2_CARD_SLOT_KEYS = exports.RFID_V2_FILTER_KEYS.filter(key => key !== "cards");
+exports.API_V2_ONLY_FILTER_KEYS = [...exports.API_V2_ONLY_STATUS_KEYS, ...exports.RFID_V2_CARD_SLOT_KEYS];
+function apiV2OnlyStatusUrl(ipAddress, unfiltered) {
+    return unfiltered ? `http://${ipAddress}/api/status` : `http://${ipAddress}/api/status?filter=${exports.API_V2_ONLY_FILTER_KEYS.join(",")}`;
+}
+function retryApiV2Unfiltered(error, unfiltered) {
+    return !unfiltered && httpStatusOf(error) === 400;
+}
 exports.API_DETECT_RETRY_CYCLES = 6;
 exports.FORCE_STATE_OFF = 1;
 exports.FORCE_STATE_ON = 2;

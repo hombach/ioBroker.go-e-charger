@@ -52,6 +52,11 @@ export interface IWallboxInfo {
 	 */
 	ApiDetectCountdown: number;
 	/**
+	 * The charger refused the filtered API V2 read with HTTP 400 and answered the full status - it is read
+	 * without filter from then on (API V2 only, #939)
+	 */
+	ApiV2Unfiltered: boolean;
+	/**
 	 * `modelStatus` of the last API V2 read - why the charger charges or not (2 = waits for RFID/app
 	 * authorization); `NaN` when unknown
 	 */

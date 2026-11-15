@@ -57,7 +57,8 @@ import {
 	RFID_V2_FILTER_KEYS,
 	type RfidCardReading,
 	API_DETECT_RETRY_CYCLES,
-	API_V2_ONLY_STATUS_KEYS,
+	apiV2OnlyStatusUrl,
+	retryApiV2Unfiltered,
 	API_V2_PROBE_KEYS,
 	apiV2AuthorizeWrite,
 	apiV2ErrorRejection,
@@ -216,6 +217,7 @@ class go_e_charger extends utils.Adapter {
 				ApiMode: "v1",
 				ApiDetected: false,
 				ApiDetectCountdown: API_DETECT_RETRY_CYCLES,
+				ApiV2Unfiltered: false,
 				ModelStatus: Number.NaN,
 				Transaction: undefined,
 				AuthWaitLogged: false,
@@ -1780,12 +1782,28 @@ class go_e_charger extends utils.Adapter {
 	 * @param iWB - Index of the wallbox in the configuration list (`wallBoxList`)
 	 */
 	async Read_ChargerAPIV2Only(iWB: number): Promise<void> {
+		const info = this.wallboxInfoList[iWB];
+		const ipAddress = this.config.wallBoxList[iWB].ipAddress;
 		try {
-			const response = await axiosInstance.get(
-				`http://${this.config.wallBoxList[iWB].ipAddress}/api/status?filter=${[...API_V2_ONLY_STATUS_KEYS, ...RFID_V2_FILTER_KEYS].join(",")}`,
-				{ transformResponse: r => r },
+			let response;
+			try {
+				response = await axiosInstance.get(apiV2OnlyStatusUrl(ipAddress, info.ApiV2Unfiltered), { transformResponse: r => r });
+			} catch (error) {
+				if (!retryApiV2Unfiltered(error, info.ApiV2Unfiltered)) {
+					throw error;
+				}
+				// firmware 60.x answers a filter with a key it does not know with HTTP 400 (#939) - try the full status
+				response = await axiosInstance.get(apiV2OnlyStatusUrl(ipAddress, true), { transformResponse: r => r });
+				JSON.parse(response.data);
+				info.ApiV2Unfiltered = true;
+				this.log.info(
+					`Charger ${this.wallboxLabel(iWB, true)} refuses the filtered HTTP API v2 status (HTTP 400) but answers the full status - reading it without filter from now on`,
+				);
+			}
+			// the full status holds network and device details - only the filtered answer is logged
+			this.log.debug(
+				`Read charger ${this.wallboxLabel(iWB)} API V2 (no API V1): ${info.ApiV2Unfiltered ? `full status, ${String(response.data).length} characters` : response.data}`,
 			);
-			this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2 (no API V1): ${response.data}`);
 			const status = normalizeStatusV2(JSON.parse(response.data));
 			this.wallboxInfoList[iWB].HardwareMin3 = true;
 			await this.ParseStatusAPIV1(statusV1FromV2(status), iWB);

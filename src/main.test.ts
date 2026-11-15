@@ -79,6 +79,10 @@ import {
 	waitsForAuthorization,
 	MODEL_STATUS_ACCESS_CONTROL_WAIT,
 	isStatusV1Answer,
+	API_V2_ONLY_FILTER_KEYS,
+	RFID_V2_CARD_SLOT_KEYS,
+	apiV2OnlyStatusUrl,
+	retryApiV2Unfiltered,
 } from "./lib/chargeManagerUtils";
 
 describe("ChargeManager safety helpers", () => {
@@ -2147,28 +2151,7 @@ describe("ChargeManager safety helpers", () => {
 		});
 
 		it("requests every key the API V2 only read needs", () => {
-			for (const key of [
-				"alw",
-				"frc",
-				"car",
-				"amp",
-				"eto",
-				"nrg",
-				"pha",
-				"fwv",
-				"typ",
-				"psm",
-				"trx",
-				"ama",
-				"cbl",
-				"cll",
-				"ast",
-				"acs",
-				"mca",
-				"rbc",
-				"rbt",
-				"fhz",
-			]) {
+			for (const key of ["alw", "frc", "car", "amp", "eto", "nrg", "pha", "fwv", "typ", "psm", "trx", "ama", "cll", "acs", "mca", "rbc", "rbt", "fhz"]) {
 				assert.ok(API_V2_ONLY_STATUS_KEYS.includes(key), key);
 			}
 			for (const key of API_V2_ONLY_STATUS_KEYS) {
@@ -2176,7 +2159,37 @@ describe("ChargeManager safety helpers", () => {
 			}
 			assert.deepEqual([...API_V2_PROBE_KEYS], ["fwv", "typ"]);
 			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
-			assert.ok(source.includes("[...API_V2_ONLY_STATUS_KEYS, ...RFID_V2_FILTER_KEYS]"), "API V2 only read requests the RFID card keys");
+			assert.ok(source.includes("apiV2OnlyStatusUrl(ipAddress, info.ApiV2Unfiltered)"), "API V2 only read uses the API V2 only filter");
+		});
+
+		it("asks a charger without API V1 only for keys the go-e CORE 60.4 knows - no ast, cbl or cards (#939)", () => {
+			for (const key of ["ast", "cbl", "cards"]) {
+				assert.ok(!API_V2_ONLY_FILTER_KEYS.includes(key), key);
+			}
+			assert.equal(RFID_V2_CARD_SLOT_KEYS.length, 30);
+			for (const key of API_V2_ONLY_FILTER_KEYS) {
+				assert.ok(key in coreStatus, `${key} is in the status of the go-e CORE 60.4`);
+			}
+			assert.equal(new Set(API_V2_ONLY_FILTER_KEYS).size, API_V2_ONLY_FILTER_KEYS.length, "no key twice");
+			const url = apiV2OnlyStatusUrl("<IP>", false);
+			assert.ok(url.startsWith("http://<IP>/api/status?filter=alw,frc,modelStatus,"));
+			assert.ok(url.endsWith(",c9n,c9e,c9i"));
+			assert.equal(apiV2OnlyStatusUrl("<IP>", true), "http://<IP>/api/status");
+			// the read of chargers with API V1 (Gemini) keeps its filter including ast, cbl and cards
+			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
+			assert.ok(source.includes("trx,ast,ama,cbl,mca,${RFID_V2_FILTER_KEYS.join"));
+		});
+
+		it("retries a refused filtered read once without filter - only for HTTP 400", () => {
+			const httpError = (status?: number): unknown =>
+				Object.assign(new Error("Request failed"), { isAxiosError: true, response: status ? { status, data: "" } : undefined });
+			assert.equal(retryApiV2Unfiltered(httpError(400), false), true);
+			assert.equal(retryApiV2Unfiltered(httpError(400), true), false, "already unfiltered - no second retry");
+			for (const status of [401, 403, 404, 500]) {
+				assert.equal(retryApiV2Unfiltered(httpError(status), false), false, String(status));
+			}
+			assert.equal(retryApiV2Unfiltered(httpError(), false), false, "timeout");
+			assert.equal(retryApiV2Unfiltered(new SyntaxError("Unexpected token"), false), false, "unreadable answer");
 		});
 
 		it("counts /status as API V1 only for a JSON object with API V1 keys (go-e CORE answers with a WebSocket error text)", () => {
