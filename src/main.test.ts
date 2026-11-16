@@ -1,6 +1,8 @@
 import { strict as assert } from "node:assert";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import axios, { AxiosError, type AxiosAdapter, type AxiosResponse } from "axios";
+import { attachHttpDebugLog, httpBodyLength, httpFailureLine, httpRequestLine, httpResponseLine, HTTP_DEBUG_BODY_LIMIT } from "./lib/httpDebugLog";
 import {
 	buildChargerCommands,
 	CAR_STATE_FINISHED,
@@ -2280,6 +2282,65 @@ describe("ChargeManager safety helpers", () => {
 					assert.ok(typeof texts[key] === "string" && texts[key].length > 0, `${file}: ${key}`);
 				}
 			}
+		});
+	});
+
+	describe("debug log of every HTTP request (#939)", () => {
+		const url = "http://192.0.2.10/api/status?filter=alw,c0n";
+
+		it("formats the request, success and failure lines without successful bodies", () => {
+			assert.equal(httpRequestLine("get", "http://192.0.2.10/status"), "HTTP GET http://192.0.2.10/status");
+			assert.equal(httpBodyLength('{"c0n":"Private Name"}'), 22);
+			assert.equal(httpBodyLength(undefined), 0);
+			const success = httpResponseLine(url, 200, 41.6, '{"alw":false,"c0n":"Private Name"}');
+			assert.equal(success, `HTTP 200 in 42 ms, 34 chars: ${url}`);
+			assert.ok(!success.includes("Private Name"), "no body of a successful answer");
+			const answer = "The WebSocket handshake Upgrade field is missing";
+			const failure = httpFailureLine("http://192.0.2.10/status", { response: { status: 400, data: answer } }, 12);
+			assert.equal(failure, `HTTP 400 in 12 ms: http://192.0.2.10/status - answer (48 chars): ${JSON.stringify(answer)}`);
+			const long = httpFailureLine(url, { response: { status: 500, data: "x".repeat(1000) } }, Number.NaN);
+			assert.ok(long.includes(`(1000 chars): "${"x".repeat(HTTP_DEBUG_BODY_LIMIT)}..."`));
+			assert.ok(long.includes("in ? ms"));
+			assert.equal(
+				httpFailureLine(url, Object.assign(new Error("timeout of 5000ms exceeded"), { code: "ECONNABORTED" }), 5003),
+				`HTTP request failed after 5003 ms: ${url} - ECONNABORTED: timeout of 5000ms exceeded`,
+			);
+		});
+
+		it("logs URL, status, duration and length of every request of the axios instance", async () => {
+			let clock = 1000;
+			const lines: string[] = [];
+			const adapter: AxiosAdapter = config => {
+				clock += 25;
+				if (String(config.url).endsWith("/status")) {
+					const response = {
+						status: 400,
+						statusText: "Bad Request",
+						headers: {},
+						config,
+						data: "The WebSocket handshake Upgrade field is missing",
+					} as AxiosResponse;
+					return Promise.reject(new AxiosError("Request failed with status code 400", "ERR_BAD_REQUEST", config, null, response));
+				}
+				return Promise.resolve({ status: 200, statusText: "OK", headers: {}, config, data: '{"frc":true,"c0n":"Private Name"}' } as AxiosResponse);
+			};
+			const instance = axios.create({ adapter, timeout: 5000 });
+			attachHttpDebugLog(
+				instance,
+				message => lines.push(message),
+				() => clock,
+			);
+			await instance.get("http://192.0.2.10/api/set?frc=2", { transformResponse: r => r });
+			await assert.rejects(instance.get("http://192.0.2.10/status", { transformResponse: r => r }));
+			assert.deepEqual(lines, [
+				"HTTP GET http://192.0.2.10/api/set?frc=2",
+				"HTTP 200 in 25 ms, 33 chars: http://192.0.2.10/api/set?frc=2",
+				"HTTP GET http://192.0.2.10/status",
+				'HTTP 400 in 25 ms: http://192.0.2.10/status - answer (48 chars): "The WebSocket handshake Upgrade field is missing"',
+			]);
+			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
+			assert.ok(source.includes("attachHttpDebugLog(axiosInstance, message => this.log.debug(message))"), "attached to the adapter's axios instance");
+			assert.ok(!/log\.debug\([^)]*\$\{response\.data\}/.test(source), "no successful body in the debug log");
 		});
 	});
 });

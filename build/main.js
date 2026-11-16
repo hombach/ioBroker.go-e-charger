@@ -39,6 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const utils = __importStar(require("@iobroker/adapter-core"));
 const axios_1 = __importDefault(require("axios"));
 const chargeManagerUtils_1 = require("./lib/chargeManagerUtils");
+const httpDebugLog_1 = require("./lib/httpDebugLog");
 const projectUtils_1 = require("./lib/projectUtils");
 const axiosInstance = axios_1.default.create({
     timeout: 5000,
@@ -72,6 +73,7 @@ class go_e_charger extends utils.Adapter {
         this.wallboxInfoList = [];
     }
     async onReady() {
+        (0, httpDebugLog_1.attachHttpDebugLog)(axiosInstance, message => this.log.debug(message));
         if (!this.config.cycleTime) {
             this.log.warn(`Cycletime not configured or zero - will be set to 10 seconds`);
             this.config.cycleTime = 10000;
@@ -773,7 +775,7 @@ class go_e_charger extends utils.Adapter {
             .get(`http://${this.config.wallBoxList[iWB].ipAddress}/status`, { transformResponse: r => r })
             .then(async (response) => {
             const result = JSON.parse(response.data);
-            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V1: ${response.data}`);
+            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V1`);
             await this.ParseStatusAPIV1(result, iWB);
             this.wallboxInfoList[iWB].ApiDetected = true;
             await this.setWallboxReachable(iWB);
@@ -947,7 +949,7 @@ class go_e_charger extends utils.Adapter {
         })
             .then(async (response) => {
             const result = JSON.parse(response.data);
-            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2: ${response.data}`);
+            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2`);
             this.wallboxInfoList[iWB].HardwareMin3 = true;
             try {
                 await this.ParseStatusAPIV2(result, iWB);
@@ -1079,7 +1081,7 @@ class go_e_charger extends utils.Adapter {
                 info.ApiV2Unfiltered = true;
                 this.log.info(`Charger ${this.wallboxLabel(iWB, true)} refuses the filtered HTTP API v2 status (HTTP 400) but answers the full status - reading it without filter from now on`);
             }
-            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2 (no API V1): ${info.ApiV2Unfiltered ? `full status, ${String(response.data).length} characters` : response.data}`);
+            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2 (no API V1)${info.ApiV2Unfiltered ? " without filter" : ""}`);
             const status = (0, chargeManagerUtils_1.normalizeStatusV2)(JSON.parse(response.data));
             this.wallboxInfoList[iWB].HardwareMin3 = true;
             await this.ParseStatusAPIV1((0, chargeManagerUtils_1.statusV1FromV2)(status), iWB);

@@ -73,6 +73,7 @@ import {
 	statusV1FromV2,
 	waitsForAuthorization,
 } from "./lib/chargeManagerUtils";
+import { attachHttpDebugLog } from "./lib/httpDebugLog";
 import { ProjectUtils, type IWallboxInfo } from "./lib/projectUtils";
 
 /** What the ChargeManager planned for one charger in the current cycle. */
@@ -128,6 +129,8 @@ class go_e_charger extends utils.Adapter {
 	 * Is called when databases are connected and adapter received configuration.
 	 */
 	private async onReady(): Promise<void> {
+		// every request to a charger: URL, then status, duration and response length (#939)
+		attachHttpDebugLog(axiosInstance, message => this.log.debug(message));
 		if (!this.config.cycleTime) {
 			this.log.warn(`Cycletime not configured or zero - will be set to 10 seconds`);
 			this.config.cycleTime = 10000;
@@ -1180,7 +1183,7 @@ class go_e_charger extends utils.Adapter {
 			.then(async response => {
 				//.status == 200
 				const result = JSON.parse(response.data);
-				this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V1: ${response.data}`);
+				this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V1`);
 				await this.ParseStatusAPIV1(result, iWB);
 				this.wallboxInfoList[iWB].ApiDetected = true;
 				await this.setWallboxReachable(iWB);
@@ -1581,7 +1584,7 @@ class go_e_charger extends utils.Adapter {
 			.then(async response => {
 				//.status == 200
 				const result = JSON.parse(response.data);
-				this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2: ${response.data}`);
+				this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2`);
 				this.wallboxInfoList[iWB].HardwareMin3 = true;
 				try {
 					await this.ParseStatusAPIV2(result, iWB);
@@ -1792,7 +1795,8 @@ class go_e_charger extends utils.Adapter {
 				if (!retryApiV2Unfiltered(error, info.ApiV2Unfiltered)) {
 					throw error;
 				}
-				// firmware 60.x answers a filter with a key it does not know with HTTP 400 (#939) - try the full status
+				// safety net: a go-e CORE 60.4 answered an earlier filter with HTTP 400 (suspected: the "cards" key,
+				// unconfirmed - unknown keys are ignored otherwise, #939) - try the full status
 				response = await axiosInstance.get(apiV2OnlyStatusUrl(ipAddress, true), { transformResponse: r => r });
 				JSON.parse(response.data);
 				info.ApiV2Unfiltered = true;
@@ -1800,10 +1804,8 @@ class go_e_charger extends utils.Adapter {
 					`Charger ${this.wallboxLabel(iWB, true)} refuses the filtered HTTP API v2 status (HTTP 400) but answers the full status - reading it without filter from now on`,
 				);
 			}
-			// the full status holds network and device details - only the filtered answer is logged
-			this.log.debug(
-				`Read charger ${this.wallboxLabel(iWB)} API V2 (no API V1): ${info.ApiV2Unfiltered ? `full status, ${String(response.data).length} characters` : response.data}`,
-			);
+			// URL, status, duration and length of every request are logged by attachHttpDebugLog - not the body
+			this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2 (no API V1)${info.ApiV2Unfiltered ? " without filter" : ""}`);
 			const status = normalizeStatusV2(JSON.parse(response.data));
 			this.wallboxInfoList[iWB].HardwareMin3 = true;
 			await this.ParseStatusAPIV1(statusV1FromV2(status), iWB);

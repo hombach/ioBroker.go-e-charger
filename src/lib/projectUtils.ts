@@ -53,7 +53,7 @@ export interface IWallboxInfo {
 	ApiDetectCountdown: number;
 	/**
 	 * The charger refused the filtered API V2 read with HTTP 400 and answered the full status - it is read
-	 * without filter from then on (API V2 only, #939)
+	 * without filter from then on (API V2 only, safety net for #939)
 	 */
 	ApiV2Unfiltered: boolean;
 	/**
