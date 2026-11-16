@@ -167,6 +167,8 @@ On hardware generation 3 and newer, `Charge3Phase` selects the phase mode:
 - `false`: one-phase charging
 - `true`: three-phase charging
 
+The go-e app also offers the charger's own automatic phase switching (`psm` 0, shown as "auto"). The adapter deliberately overrides it with a fixed one- or three-phase mode (`psm` 1/2) as soon as ChargeNOW or the ChargeManager controls the charger, because the charger's own switching causes trouble with several chargers on rotated phases. The override is logged once. While a charger is set to automatic phase switching, `Power.EnabledPhases` shows the phases it charges on (0 while idle).
+
 Because the current implementation starts charging when its internal target exceeds 9 A, the effective starting point is 10 A. This requires approximately 2.3 kW in one-phase mode or 6.9 kW in three-phase mode after the reserve and battery adjustments. One-phase mode therefore provides a wider operating range for smaller PV systems or variable weather.
 
 ##### Automatic phase switching
@@ -246,6 +248,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 ### **WORK IN PROGRESS**
 
+- (HombachC) a charger set to its own automatic phase switching (`psm` 0) is still switched to the fixed phase mode of the adapter on purpose - this is now logged once; `Power.EnabledPhases` shows the phases in use instead of 0 while the charger is set to automatic phase switching
 - (HombachC) moved the Sentry notice near the top of README.md to satisfy the repository checker (#938)
 - (hombach) updated iobroker/testing
 - (hombach) updated dependencies
