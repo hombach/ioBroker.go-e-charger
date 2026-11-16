@@ -62,6 +62,10 @@ import {
 	parseRfidCardsV2,
 	rfidCardsFromV1,
 	RFID_V2_FILTER_KEYS,
+	activePhasesFromFlags,
+	enabledPhasesState,
+	phaseAutoOverrideNotice,
+	PHASE_SWITCH_MODE_CHARGER_AUTO,
 } from "./lib/chargeManagerUtils";
 
 describe("ChargeManager safety helpers", () => {
@@ -1957,6 +1961,60 @@ describe("ChargeManager safety helpers", () => {
 			for (const v1Key of ["rca", "rna", "eca", "ec1"]) {
 				assert.ok(!filter.split(/[,$]/).includes(v1Key), `V2 filter still requests ${v1Key}`);
 			}
+		});
+	});
+
+	describe("charger's own automatic phase switching (psm 0)", () => {
+		it("counts the phases in use from pha bits 0-2 (after the contactor)", () => {
+			assert.equal(activePhasesFromFlags(0b111000), 0, "idle: supply on three phases, contactor open");
+			assert.equal(activePhasesFromFlags(0b111111), 3);
+			assert.equal(activePhasesFromFlags(0b111001), 1);
+			assert.equal(activePhasesFromFlags(0b001001), 1);
+			assert.equal(activePhasesFromFlags(0b111011), 2);
+			assert.equal(activePhasesFromFlags("63"), 3, "API V1 values may arrive as strings");
+			for (const pha of [undefined, null, Number.NaN, -1, 1.5, "x"]) {
+				assert.equal(activePhasesFromFlags(pha), 0, String(pha));
+			}
+		});
+
+		it("shows the fixed phase mode, or with psm 0 the phases in use", () => {
+			assert.equal(enabledPhasesState(1, 3), 1, "fixed one phase");
+			assert.equal(enabledPhasesState(2, 0), 3, "fixed three phases, also while idle");
+			assert.equal(enabledPhasesState(PHASE_SWITCH_MODE_CHARGER_AUTO, 3), 3, "charger auto, charging on three phases");
+			assert.equal(enabledPhasesState(0, 1), 1, "charger auto, charging on one phase");
+			assert.equal(enabledPhasesState(0, 0), 0, "charger auto, idle");
+			assert.equal(enabledPhasesState(undefined, 0), 0, "psm unknown");
+		});
+
+		it("logs the override of psm 0 once per automatic period", () => {
+			// simulates the latch of ParseStatusAPIV2 (reset on psm != 0) and logPhaseAutoOverride (set when logged)
+			let logged = false;
+			const notices: number[] = [];
+			const read = (psm: number): void => {
+				if (psm !== PHASE_SWITCH_MODE_CHARGER_AUTO) {
+					logged = false;
+				}
+			};
+			const write = (psm: number, cycle: number): void => {
+				if (phaseAutoOverrideNotice(psm, logged)) {
+					logged = true;
+					notices.push(cycle);
+				}
+			};
+			read(0);
+			write(0, 1); // first override: hint
+			write(0, 2); // write rejected or repeated before the next read: no second hint
+			read(1); // the charger now reports the adapter's mode
+			read(1);
+			read(0); // the user re-enabled auto in the go-e app
+			write(0, 3); // hint again
+			assert.deepEqual(notices, [1, 3]);
+			assert.equal(phaseAutoOverrideNotice(1, false), false, "no hint for a fixed mode");
+			assert.equal(phaseAutoOverrideNotice(Number.NaN, false), false, "no hint while psm is unknown");
+			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
+			assert.ok(source.includes("this.logPhaseAutoOverride(iWB, psm);"), "Switch_3Phases logs the override");
+			assert.ok(/if \(status\.psm !== PHASE_SWITCH_MODE_CHARGER_AUTO\) \{[\s\S]{0,150}PhaseAutoNoticeLogged = false;/.test(source), "latch reset");
+			assert.ok(source.includes("enabledPhasesState(status.psm, this.wallboxInfoList[iWB].ActivePhases)"), "state from enabledPhasesState");
 		});
 	});
 });

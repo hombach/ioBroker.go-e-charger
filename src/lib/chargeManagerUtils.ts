@@ -1514,3 +1514,49 @@ export function parseRfidCardsV2(status: Record<string, unknown>): RfidCardReadi
 export function rfidCardsFromV1(hardwareMin3: boolean, rfidFromV2: boolean): boolean {
 	return !hardwareMin3 || !rfidFromV2;
 }
+
+/** go-e `psm` value of the charger's own automatic phase switching (shown as "auto" in the go-e app) */
+export const PHASE_SWITCH_MODE_CHARGER_AUTO = 0;
+
+/**
+ * Number of phases the charger charges on: API V1 `pha` bits 0-2 (L1-L3 after the contactor).
+ *
+ * @param pha API V1 `pha` bit field
+ * @returns 0-3, 0 while the contactor is open or the value is unknown
+ */
+export function activePhasesFromFlags(pha: unknown): number {
+	const flags = Number(pha);
+	return Number.isInteger(flags) && flags >= 0 ? [1, 2, 4].filter(bit => (flags & bit) !== 0).length : 0;
+}
+
+/**
+ * Value of the state `Power.EnabledPhases`: the fixed phase mode of the charger, or - while the charger
+ * switches the phases itself (`psm` 0) - the phases it charges on. The internal phase count used to
+ * decide phase writes stays the fixed mode (0 for `psm` 0).
+ *
+ * @param psm `psm` the charger reports (1 = one phase, 2 = three phases, 0 = automatic)
+ * @param activePhases phases in use, see {@link activePhasesFromFlags}
+ * @returns 1 or 3 for a fixed mode, otherwise the phases in use (0 while idle)
+ */
+export function enabledPhasesState(psm: unknown, activePhases: number): number {
+	if (psm === 1) {
+		return 1;
+	}
+	if (psm === 2) {
+		return 3;
+	}
+	return activePhases;
+}
+
+/**
+ * Whether to log that a phase write overrides the charger's own automatic phase switching (`psm` 0).
+ * The adapter overrides it on purpose; the hint is logged once until the charger reports another
+ * `psm` and then automatic mode again (e.g. re-enabled in the go-e app).
+ *
+ * @param psm `psm` the charger last reported
+ * @param alreadyLogged whether the hint was logged for the current automatic period
+ * @returns true to log the hint now
+ */
+export function phaseAutoOverrideNotice(psm: unknown, alreadyLogged: boolean): boolean {
+	return psm === PHASE_SWITCH_MODE_CHARGER_AUTO && !alreadyLogged;
+}
