@@ -2045,17 +2045,28 @@ describe("ChargeManager safety helpers", () => {
 			// three-phase charge at 15.9 A, 3.6 kW per phase, 10.98 kW in total
 			const nrg = nrgV1FromV2([230, 231, 229, 0, 15.9, 16, 15.8, 3600, 3700, 3680, 0, 10980, 99, 98, 97, 0]);
 			assert.deepEqual(nrg.slice(0, 4), [230, 231, 229, 0], "voltages unchanged");
-			assert.deepEqual(
-				nrg.slice(4, 7).map(value => Math.round(value)),
-				[159, 160, 158],
-				"currents in 0.1 A",
-			);
-			assert.deepEqual(nrg.slice(7, 11), [36, 37, 36.8, 0], "phase powers in 0.1 kW");
+			assert.deepEqual(nrg.slice(4, 7), [159, 160, 158], "currents in 0.1 A");
+			assert.deepEqual(nrg.slice(7, 11), [36, 37, 37, 0], "phase powers in 0.1 kW");
 			assert.equal(nrg[11], 1098, "total power in 0.01 kW");
 			assert.deepEqual(nrg.slice(12), [99, 98, 97, 0], "power factors unchanged");
 			assert.equal(chargePowerFromStatusV1(nrg), 10980, "the API V1 power reading yields the API V2 watts");
 			assert.ok(Number.isNaN(nrgV1FromV2([null, "x"])[0]));
 			assert.equal(nrgV1FromV2(["230"])[0], 230);
+		});
+
+		it("rounds the API V2 float readings to the API V1 resolution (go-e CORE 60.4 while charging)", () => {
+			const nrg = nrgV1FromV2([230.45, 229.87, 231.06, 1.62, 9.52499962, 9.4, 9.38, 2161.4, 2149.9, 2175.08, 0, 6486.381836, 0.99, 0.98, 0.97, 0]);
+			assert.deepEqual(nrg.slice(0, 4), [230.45, 229.87, 231.06, 1.62], "voltages not rounded to whole volts");
+			assert.deepEqual(nrg.slice(4, 7), [95, 94, 94], "currents in whole 0.1 A");
+			assert.deepEqual(nrg.slice(7, 11), [22, 21, 22, 0], "phase powers in whole 0.1 kW");
+			assert.equal(nrg[11], 649, "total power in whole 0.01 kW");
+			assert.deepEqual(nrg.slice(12), [0.99, 0.98, 0.97, 0], "power factors passed through");
+			for (const value of nrg.slice(4, 12)) {
+				assert.ok(Number.isInteger(value), String(value));
+			}
+			assert.equal(chargePowerFromStatusV1(nrg), 6490, "Power.Charge in W like an API V1 charger, not 6486.381836");
+			assert.equal(Math.max(...nrg.slice(4, 7)) / 10, 9.5, "MeasuredMaxPhaseCurrent 9.5 A, not 9.52499962");
+			assert.deepEqual(phaseVoltagesFromNrg(nrg, 56), [230.45, 229.87, 231.06], "voltages with 0.01 V like the Gemini");
 		});
 
 		it("builds an API V1 shaped status from the CORE status", () => {

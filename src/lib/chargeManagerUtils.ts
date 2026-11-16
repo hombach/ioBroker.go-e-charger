@@ -1683,7 +1683,10 @@ export function phaseFlagsFromV2(pha: unknown): number {
  * Converts the API V2 `nrg` array into the units of API V1, so the existing API V1 parsing can be
  * reused unchanged. Both have the same layout - U L1-L3, N (V), I L1-L3 (A), P L1-L3, N, total, pf
  * L1-L3, N - but API V1 reports currents in 0.1 A, phase powers in 0.1 kW and the total power in 0.01 kW,
- * while API V2 uses A and W.
+ * while API V2 uses A and W. API V2 reports floats (e.g. 6486.381836 W, 9.52499962 A), so the converted
+ * currents and powers are rounded to the integer steps of API V1 - the states then show the same
+ * resolution as on API V1 chargers (power in 10 W steps, currents in 0.1 A). Voltages are passed on
+ * unrounded: {@link phaseVoltagesFromNrg} rounds them to 0.01 V, as for the floats of a Gemini's API V1.
  *
  * NOTE: the go-e API V2 documentation names the order of the entries but no units. V, A and W are what
  * evcc and real chargers use. The power factors (index 12-15, `%` in API V1) are passed through
@@ -1699,13 +1702,13 @@ export function nrgV1FromV2(nrg: unknown[]): number[] {
 			return Number.NaN;
 		}
 		if (index >= 4 && index <= 6) {
-			return value * 10; // A -> 0.1 A
+			return Math.round(value * 10); // A -> 0.1 A
 		}
 		if (index >= 7 && index <= 10) {
-			return value / 100; // W -> 0.1 kW
+			return Math.round(value / 100); // W -> 0.1 kW
 		}
 		if (index === 11) {
-			return value / 10; // W -> 0.01 kW
+			return Math.round(value / 10); // W -> 0.01 kW
 		}
 		return value;
 	});

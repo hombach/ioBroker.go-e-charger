@@ -688,13 +688,13 @@ function nrgV1FromV2(nrg) {
             return Number.NaN;
         }
         if (index >= 4 && index <= 6) {
-            return value * 10;
+            return Math.round(value * 10);
         }
         if (index >= 7 && index <= 10) {
-            return value / 100;
+            return Math.round(value / 100);
         }
         if (index === 11) {
-            return value / 10;
+            return Math.round(value / 10);
         }
         return value;
     });
