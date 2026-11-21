@@ -26,6 +26,10 @@
 
 [![NPM](https://nodei.co/npm/iobroker.go-e-charger.png?downloads=true)](https://nodei.co/npm/iobroker.go-e-charger/)
 
+## Sentry
+
+This adapter employs Sentry libraries to automatically report exceptions and code errors to the developers. For more details and information on how to disable error reporting, please consult the [Sentry-Plugin Documentation](https://github.com/ioBroker/plugin-sentry#plugin-sentry)!
+
 ## ioBroker adapter for go-e Charger EV wallboxes
 
 This adapter integrates one or more go-e Charger wallboxes into your ioBroker home automation. It cyclically polls each wallbox via its local HTTP API, provides all relevant data as ioBroker states, and lets you control charging directly from your smart home.
@@ -49,8 +53,10 @@ Tested with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055
 
 ### Requirements
 
-- For hardware generation 3 and 4 you have to enable "HTTP API v1" in your go-e app.
+- For hardware generation 3 and 4 (e.g. HOME+, HOMEfix, Gemini) you have to enable "HTTP API v1" in your go-e app.
 - For phase switching you additionally have to enable "HTTP API v2" in your go-e app (hardware generation 3 and newer).
+- Chargers without HTTP API v1 (e.g. go-e Charger CORE / PRO with firmware 60.x) are detected automatically and read and controlled over "HTTP API v2" only, which has to be enabled in the go-e app. On these chargers the adapter gives and withdraws the charge release with the force state (`frc` on / off) and sets the charging current with `amp`. Password protection (authentication) of the local HTTP API is not supported yet; how the charger behaves with it (`hsa`) is not documented by go-e and unverified (a go-e CORE with firmware 60.4 answers local reads with `hsa` enabled, and its app offers no password setting).
+- A charger that requires RFID/app authorization ignores the charge release (force state) until it is authorized - the adapter logs this once. For chargers used over HTTP API v2 only, the option "Start transaction without RFID on API-v2-only chargers (trx=0)" in the charger settings starts a transaction without card before each release while a vehicle is plugged in. It is off by default, because it bypasses the RFID/app access protection of the charger.
 
 ## Configuration
 
@@ -195,6 +201,8 @@ On hardware generation 3 and newer, `Charge3Phase` selects the phase mode:
 - `false`: one-phase charging
 - `true`: three-phase charging
 
+The go-e app also offers the charger's own automatic phase switching (`psm` 0, shown as "auto"). The adapter deliberately overrides it with a fixed one- or three-phase mode (`psm` 1/2) as soon as ChargeNOW or the ChargeManager controls the charger, because the charger's own switching causes trouble with several chargers on rotated phases. The override is logged once. While a charger is set to automatic phase switching, `Power.EnabledPhases` shows the phases it charges on (0 while idle).
+
 Because the current implementation starts charging when its internal target exceeds 9 A, the effective starting point is 10 A. This requires approximately 2.3 kW in one-phase mode or 6.9 kW in three-phase mode after the reserve and battery adjustments. One-phase mode therefore provides a wider operating range for smaller PV systems or variable weather.
 
 ##### Automatic phase switching
@@ -260,10 +268,6 @@ Coming from the adapter [ioBroker.go-e](https://github.com/MK-2001/ioBroker.go-e
 - [Migration guide (English)](https://github.com/hombach/ioBroker.go-e-charger/blob/master/docu/migration-from-go-e.md)
 - [Umstiegsanleitung (Deutsch)](https://github.com/hombach/ioBroker.go-e-charger/blob/master/docu/migration-from-go-e_de.md)
 
-## Sentry
-
-This adapter employs Sentry libraries to automatically report exceptions and code errors to the developers. For more details and information on how to disable error reporting, please consult the [Sentry-Plugin Documentation](https://github.com/ioBroker/plugin-sentry#plugin-sentry)!
-
 ## Donate
 
 <a href="https://www.paypal.com/donate/?hosted_button_id=76GBRV9BX5US8"><img src="https://raw.githubusercontent.com/Hombach/ioBroker.go-e-charger/master/docu/bluePayPal.svg" height="40"></a>
@@ -281,6 +285,9 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (HombachC) added grid meter input for ChargeManager: one signed grid power value (import positive, export negative) instead of PV generation and house consumption, with Negate, Ack-only and maximum age options (#919)
 - (HombachC) added Negate options for the solar power and home power consumption objects (#919)
 - (HombachC) reorganized the ChargeManager configuration page into the logical blocks surplus input, home battery and surplus control: options are placed next to the object they belong to, settings that do not apply to the selected surplus source or home battery mode are hidden, and all value fields show their unit (#919)
+- (HombachC) added support for chargers without HTTP API v1 (e.g. go-e Charger CORE / PRO, firmware 60.x): they are detected automatically and read and controlled over HTTP API v2 only; HTTP error answers (e.g. 404 for a disabled API, 401/403 for probable password protection) are now logged with a hint instead of asking to verify the IP address; a charger waiting for RFID/app authorization is logged once, and the new charger option "Start transaction without RFID on API-v2-only chargers (trx=0)" (off by default) can authorize it; rejections of API v2 writes are logged with the charger's reason; car states "Initializing" and "Unknown" are no longer shown as "Error"; these chargers are no longer asked for `ast`, `cbl` and `cards` (the go-e CORE 60.4 has none of them, and unknown keys are ignored); the cause of an HTTP 400 on a go-e CORE 60.4 is unknown, and as a safety net a charger that refuses the filtered status with HTTP 400 is read without filter; every HTTP request to a charger is logged at debug level with URL, HTTP status, duration and response length (#939)
+- (HombachC) a charger set to its own automatic phase switching (`psm` 0) is still switched to the fixed phase mode of the adapter on purpose - this is now logged once; `Power.EnabledPhases` shows the phases in use instead of 0 while the charger is set to automatic phase switching
+- (HombachC) moved the Sentry notice near the top of README.md to satisfy the repository checker (#938)
 - (hombach) updated iobroker/testing
 - (hombach) updated dependencies
 

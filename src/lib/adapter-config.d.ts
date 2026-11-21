@@ -33,6 +33,7 @@ declare global {
 					minAmp: number;
 					autoPhaseSwitch: boolean;
 					stopWhenCarIdle?: boolean;
+					startTransactionWithoutRfid?: boolean;
 				},
 			];
 		}
