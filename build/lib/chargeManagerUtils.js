@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.API_V1_STATUS_KEYS = exports.MODEL_STATUS_ACCESS_CONTROL_WAIT = exports.FORCE_STATE_ON = exports.FORCE_STATE_OFF = exports.API_DETECT_RETRY_CYCLES = exports.API_V2_ONLY_FILTER_KEYS = exports.RFID_V2_CARD_SLOT_KEYS = exports.API_V2_ONLY_STATUS_KEYS = exports.API_V2_PROBE_KEYS = exports.RFID_V2_FILTER_KEYS = exports.RFID_CARD_SLOTS = exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.PHASE_SWITCH_MODE_CHARGER_AUTO = exports.API_V1_STATUS_KEYS = exports.MODEL_STATUS_ACCESS_CONTROL_WAIT = exports.FORCE_STATE_ON = exports.FORCE_STATE_OFF = exports.API_DETECT_RETRY_CYCLES = exports.API_V2_ONLY_FILTER_KEYS = exports.RFID_V2_CARD_SLOT_KEYS = exports.API_V2_ONLY_STATUS_KEYS = exports.API_V2_PROBE_KEYS = exports.RFID_V2_FILTER_KEYS = exports.RFID_CARD_SLOTS = exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateAvailableSurplusPower = calculateAvailableSurplusPower;
@@ -55,6 +55,9 @@ exports.waitsForAuthorization = waitsForAuthorization;
 exports.apiV2AuthorizeWrite = apiV2AuthorizeWrite;
 exports.apiV2ErrorRejection = apiV2ErrorRejection;
 exports.isStatusV1Answer = isStatusV1Answer;
+exports.activePhasesFromFlags = activePhasesFromFlags;
+exports.enabledPhasesState = enabledPhasesState;
+exports.phaseAutoOverrideNotice = phaseAutoOverrideNotice;
 exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 32;
 exports.START_CHARGE_CURRENT = 10;
@@ -816,5 +819,22 @@ function isStatusV1Answer(data) {
         return false;
     }
     return exports.API_V1_STATUS_KEYS.every(key => key in result);
+}
+exports.PHASE_SWITCH_MODE_CHARGER_AUTO = 0;
+function activePhasesFromFlags(pha) {
+    const flags = Number(pha);
+    return Number.isInteger(flags) && flags >= 0 ? [1, 2, 4].filter(bit => (flags & bit) !== 0).length : 0;
+}
+function enabledPhasesState(psm, activePhases) {
+    if (psm === 1) {
+        return 1;
+    }
+    if (psm === 2) {
+        return 3;
+    }
+    return activePhases;
+}
+function phaseAutoOverrideNotice(psm, alreadyLogged) {
+    return psm === exports.PHASE_SWITCH_MODE_CHARGER_AUTO && !alreadyLogged;
 }
 //# sourceMappingURL=chargeManagerUtils.js.map

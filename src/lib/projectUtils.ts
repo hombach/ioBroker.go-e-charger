@@ -112,6 +112,18 @@ export interface IWallboxInfo {
 	 */
 	EnabledPhases: number;
 	/**
+	 * `psm` the charger last reported (0 = its own automatic phase switching, 1 = one phase, 2 = three phases); `NaN` when unknown
+	 */
+	PhaseSwitchMode: number;
+	/**
+	 * Phases the charger charges on (API V1 `pha` bits 0-2, after the contactor)
+	 */
+	ActivePhases: number;
+	/**
+	 * Whether the hint that the adapter overrides the charger's automatic phase switching (`psm` 0) was logged
+	 */
+	PhaseAutoNoticeLogged: boolean;
+	/**
 	 * MeasuredMaxChargeAmp
 	 */
 	MeasuredMaxChargeAmp: number;

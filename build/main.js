@@ -143,6 +143,9 @@ class go_e_charger extends utils.Adapter {
                 Charge3Phase: false,
                 ManagedCharge3Phase: false,
                 EnabledPhases: 0,
+                PhaseSwitchMode: Number.NaN,
+                ActivePhases: 0,
+                PhaseAutoNoticeLogged: false,
                 MeasuredMaxChargeAmp: 0,
                 BatteryReady: false,
                 CarState: 0,
@@ -893,6 +896,7 @@ class go_e_charger extends utils.Adapter {
                 break;
         }
         this.wallboxInfoList[iWB].GridPhases = ((32 & status.pha) >> 5) + ((16 & status.pha) >> 4) + ((8 & status.pha) >> 3);
+        this.wallboxInfoList[iWB].ActivePhases = (0, chargeManagerUtils_1.activePhasesFromFlags)(status.pha);
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.GridPhases`, this.wallboxInfoList[iWB].GridPhases, `No of available grid phases`, "phase", "value");
         this.setWallboxHardwareLimits(iWB, this.combineHardwareMax(Number(status.ama), Number(status.cbl)), 0, basePath);
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.statistics.chargedEnergy`, status.eto / 10, `Totally charged in wallbox lifetime`, "kWh", "value.energy.consumed");
@@ -984,7 +988,11 @@ class go_e_charger extends utils.Adapter {
             default:
                 this.wallboxInfoList[iWB].EnabledPhases = 0;
         }
-        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.EnabledPhases`, this.wallboxInfoList[iWB].EnabledPhases, `No of enabled phases in go-e wallbox`, "phase", "value");
+        this.wallboxInfoList[iWB].PhaseSwitchMode = typeof status.psm === "number" ? status.psm : Number.NaN;
+        if (status.psm !== chargeManagerUtils_1.PHASE_SWITCH_MODE_CHARGER_AUTO) {
+            this.wallboxInfoList[iWB].PhaseAutoNoticeLogged = false;
+        }
+        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.EnabledPhases`, (0, chargeManagerUtils_1.enabledPhasesState)(status.psm, this.wallboxInfoList[iWB].ActivePhases), `No of enabled phases in go-e wallbox`, "phase", "value");
         this.log.debug(`got enabled phases for charger ${this.wallboxLabel(iWB)}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
         this.wallboxInfoList[iWB].ForceState = typeof status.frc === "number" ? status.frc : Number.NaN;
         this.wallboxInfoList[iWB].Reported.alw = (0, chargeManagerUtils_1.releaseReadback)(this.wallboxInfoList[iWB].Reported.alw, this.wallboxInfoList[iWB].ForceState);
@@ -1127,11 +1135,20 @@ class go_e_charger extends utils.Adapter {
             .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/set?psm=${psm}`, { transformResponse: r => r })
             .then(response => {
             this.log.debug(`Sent: PSM=${psm} to charger ${this.wallboxLabel(iWB)} → Response: ${response.statusText}`);
+            this.logPhaseAutoOverride(iWB, psm);
         })
             .catch(error => {
             this.log.warn(`Error: ${error} while setting 3 phases to charger ${this.wallboxLabel(iWB, true)} = ${Charge3Phase}`);
             this.log.error(`Please verify IP address of charger ${this.wallboxLabel(iWB, true)} !!!`);
         });
+    }
+    logPhaseAutoOverride(iWB, psm) {
+        const info = this.wallboxInfoList[iWB];
+        if (!(0, chargeManagerUtils_1.phaseAutoOverrideNotice)(info.PhaseSwitchMode, info.PhaseAutoNoticeLogged)) {
+            return;
+        }
+        info.PhaseAutoNoticeLogged = true;
+        this.log.info(`Charger ${this.wallboxLabel(iWB)}: the charger is set to automatic phase switching (psm 0) - the adapter switches it to ${psm === 2 ? "3-phase" : "1-phase"} (psm=${psm}) as set by Settings.Charge3Phase / Settings.PhaseMode`);
     }
     async Charge_Config(Allow, Ampere, LogMessage, iWB) {
         const basePath = `Wallbox_${iWB}`;
