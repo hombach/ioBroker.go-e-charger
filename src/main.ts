@@ -38,6 +38,10 @@ import {
 	updateReleaseRejects,
 	withdrawReleaseWithModesOff,
 	phaseModeToSend,
+	activePhasesFromFlags,
+	enabledPhasesState,
+	phaseAutoOverrideNotice,
+	PHASE_SWITCH_MODE_CHARGER_AUTO,
 	PHASE_MODE_AUTO,
 	autoPhaseSupported,
 	phaseModeOf,
@@ -207,6 +211,9 @@ class go_e_charger extends utils.Adapter {
 				Charge3Phase: false,
 				ManagedCharge3Phase: false,
 				EnabledPhases: 0,
+				PhaseSwitchMode: Number.NaN,
+				ActivePhases: 0,
+				PhaseAutoNoticeLogged: false,
 				MeasuredMaxChargeAmp: 0,
 				BatteryReady: false,
 				CarState: 0,
@@ -1365,6 +1372,7 @@ class go_e_charger extends utils.Adapter {
 				break;
 		}
 		this.wallboxInfoList[iWB].GridPhases = ((32 & status.pha) >> 5) + ((16 & status.pha) >> 4) + ((8 & status.pha) >> 3);
+		this.wallboxInfoList[iWB].ActivePhases = activePhasesFromFlags(status.pha);
 		void this.projectUtils.checkAndSetValueNumber(
 			`${basePath}.Power.GridPhases`,
 			this.wallboxInfoList[iWB].GridPhases,
@@ -1565,9 +1573,15 @@ class go_e_charger extends utils.Adapter {
 			default:
 				this.wallboxInfoList[iWB].EnabledPhases = 0;
 		}
+		this.wallboxInfoList[iWB].PhaseSwitchMode = typeof status.psm === "number" ? status.psm : Number.NaN;
+		if (status.psm !== PHASE_SWITCH_MODE_CHARGER_AUTO) {
+			// a later automatic mode (e.g. re-enabled in the go-e app) gets the hint again
+			this.wallboxInfoList[iWB].PhaseAutoNoticeLogged = false;
+		}
+		// with psm 0 (the charger switches itself) the state shows the phases in use, 0 while idle
 		void this.projectUtils.checkAndSetValueNumber(
 			`${basePath}.Power.EnabledPhases`,
-			this.wallboxInfoList[iWB].EnabledPhases,
+			enabledPhasesState(status.psm, this.wallboxInfoList[iWB].ActivePhases),
 			`No of enabled phases in go-e wallbox`,
 			"phase",
 			"value",
@@ -1629,11 +1643,31 @@ class go_e_charger extends utils.Adapter {
 			.then(response => {
 				//.status == 200
 				this.log.debug(`Sent: PSM=${psm} to charger ${this.wallboxLabel(iWB)} → Response: ${response.statusText}`);
+				this.logPhaseAutoOverride(iWB, psm);
 			})
 			.catch(error => {
 				this.log.warn(`Error: ${error} while setting 3 phases to charger ${this.wallboxLabel(iWB, true)} = ${Charge3Phase}`);
 				this.log.error(`Please verify IP address of charger ${this.wallboxLabel(iWB, true)} !!!`);
 			});
+	}
+
+	/**
+	 * Logs once per automatic period that a phase write overrides the charger's own automatic phase
+	 * switching (`psm` 0). The adapter does that on purpose: the charger's own switching causes trouble
+	 * with several chargers on rotated phases.
+	 *
+	 * @param iWB - Index of the charger in the configuration list
+	 * @param psm - The `psm` value that was written (1 = one phase, 2 = three phases)
+	 */
+	private logPhaseAutoOverride(iWB: number, psm: 1 | 2): void {
+		const info = this.wallboxInfoList[iWB];
+		if (!phaseAutoOverrideNotice(info.PhaseSwitchMode, info.PhaseAutoNoticeLogged)) {
+			return;
+		}
+		info.PhaseAutoNoticeLogged = true;
+		this.log.info(
+			`Charger ${this.wallboxLabel(iWB)}: the charger is set to automatic phase switching (psm 0) - the adapter switches it to ${psm === 2 ? "3-phase" : "1-phase"} (psm=${psm}) as set by Settings.Charge3Phase / Settings.PhaseMode`,
+		);
 	}
 
 	/*****************************************************************************************/
