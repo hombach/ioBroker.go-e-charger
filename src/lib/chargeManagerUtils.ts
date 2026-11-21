@@ -1533,9 +1533,9 @@ export const API_V2_PROBE_KEYS: readonly string[] = ["fwv", "typ"];
  * read plus the ones that replace API V1 data: `acs` (access control, the API V2 counterpart of `ast`)
  * and `cll` (current limits, holds the cable current limit). `ast`, `cbl` and `cards` are not requested:
  * the go-e CORE 60.4 has none of them; {@link normalizeStatusV2} derives `ast` and `cbl` from `acs` and
- * `cll`. The CORE silently ignores unknown keys like `ast` in a filter (`filter=fwv,ast` answers
- * `{"fwv":"60.4"}`), but answered the earlier filter, which also held `cards`, with HTTP 400 - `cards`
- * is the suspected cause, unconfirmed (#939). The full filter is {@link API_V2_ONLY_FILTER_KEYS}.
+ * `cll`. The CORE silently ignores unknown keys (`filter=fwv,ast` answers `{"fwv":"60.4"}`). The cause
+ * of an earlier HTTP 400 on a CORE 60.4 is unknown; the unfiltered retry is a safety net (#939). The
+ * full filter is {@link API_V2_ONLY_FILTER_KEYS}.
  */
 export const API_V2_ONLY_STATUS_KEYS: readonly string[] = [
 	"alw",
@@ -1579,8 +1579,8 @@ export function apiV2OnlyStatusUrl(ipAddress: string, unfiltered: boolean): stri
 
 /**
  * Whether a failed filtered read of a charger without API V1 is retried without a filter: only for HTTP
- * 400. A safety net: a go-e CORE 60.4 answered an earlier filter (with `cards`, the suspected cause,
- * unconfirmed) with HTTP 400 while it ignores unknown keys otherwise (#939). Timeouts, connection
+ * 400. A safety net: a go-e CORE 60.4 answered an earlier filter with HTTP 400; the cause is unknown,
+ * and unknown keys are ignored otherwise (#939). Timeouts, connection
  * problems and other HTTP errors are a different problem that an unfiltered read does not solve.
  *
  * @param error error of the filtered read

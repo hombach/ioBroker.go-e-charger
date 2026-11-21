@@ -1795,8 +1795,8 @@ class go_e_charger extends utils.Adapter {
 				if (!retryApiV2Unfiltered(error, info.ApiV2Unfiltered)) {
 					throw error;
 				}
-				// safety net: a go-e CORE 60.4 answered an earlier filter with HTTP 400 (suspected: the "cards" key,
-				// unconfirmed - unknown keys are ignored otherwise, #939) - try the full status
+				// safety net: a go-e CORE 60.4 answered an earlier filter with HTTP 400 (cause unknown; unknown keys
+				// are ignored, #939) - try the full status
 				response = await axiosInstance.get(apiV2OnlyStatusUrl(ipAddress, true), { transformResponse: r => r });
 				JSON.parse(response.data);
 				info.ApiV2Unfiltered = true;
