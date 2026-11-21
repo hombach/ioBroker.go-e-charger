@@ -53,8 +53,10 @@ Tested with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055
 
 ### Requirements
 
-- For hardware generation 3 and 4 you have to enable "HTTP API v1" in your go-e app.
+- For hardware generation 3 and 4 (e.g. HOME+, HOMEfix, Gemini) you have to enable "HTTP API v1" in your go-e app.
 - For phase switching you additionally have to enable "HTTP API v2" in your go-e app (hardware generation 3 and newer).
+- Chargers without HTTP API v1 (e.g. go-e Charger CORE / PRO with firmware 60.x) are detected automatically and read and controlled over "HTTP API v2" only, which has to be enabled in the go-e app. On these chargers the adapter gives and withdraws the charge release with the force state (`frc` on / off) and sets the charging current with `amp`. Password protection (authentication) of the local HTTP API is not supported yet; how the charger behaves with it (`hsa`) is not documented by go-e and unverified (a go-e CORE with firmware 60.4 answers local reads with `hsa` enabled, and its app offers no password setting).
+- A charger that requires RFID/app authorization ignores the charge release (force state) until it is authorized - the adapter logs this once. For chargers used over HTTP API v2 only, the option "Start transaction without RFID on API-v2-only chargers (trx=0)" in the charger settings starts a transaction without card before each release while a vehicle is plugged in. It is off by default, because it bypasses the RFID/app access protection of the charger.
 
 ## Configuration
 
@@ -248,6 +250,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 ### **WORK IN PROGRESS**
 
+- (HombachC) added support for chargers without HTTP API v1 (e.g. go-e Charger CORE / PRO, firmware 60.x): they are detected automatically and read and controlled over HTTP API v2 only; HTTP error answers (e.g. 404 for a disabled API, 401/403 for probable password protection) are now logged with a hint instead of asking to verify the IP address; a charger waiting for RFID/app authorization is logged once, and the new charger option "Start transaction without RFID on API-v2-only chargers (trx=0)" (off by default) can authorize it; rejections of API v2 writes are logged with the charger's reason; car states "Initializing" and "Unknown" are no longer shown as "Error"; these chargers are no longer asked for `ast`, `cbl` and `cards` (the go-e CORE 60.4 has none of them, and unknown keys are ignored); the cause of an HTTP 400 on a go-e CORE 60.4 is unknown, and as a safety net a charger that refuses the filtered status with HTTP 400 is read without filter; every HTTP request to a charger is logged at debug level with URL, HTTP status, duration and response length (#939)
 - (HombachC) a charger set to its own automatic phase switching (`psm` 0) is still switched to the fixed phase mode of the adapter on purpose - this is now logged once; `Power.EnabledPhases` shows the phases in use instead of 0 while the charger is set to automatic phase switching
 - (HombachC) moved the Sentry notice near the top of README.md to satisfy the repository checker (#938)
 - (hombach) updated iobroker/testing
