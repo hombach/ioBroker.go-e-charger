@@ -22,6 +22,7 @@ import {
 	mayWritePhaseSwitch,
 	phaseSwitchDwellCycles,
 	planningPhases,
+	phasesInUse,
 	releaseReadback,
 	DEFAULT_MAXIMUM_BATTERY_BONUS,
 	DEFAULT_RESERVE_POWER,
@@ -443,7 +444,7 @@ class go_e_charger extends utils.Adapter {
 				const storedPhaseMode = (await this.getStateAsync(phaseModeId))?.val ?? PHASE_MODE_AUTO;
 				const info = this.wallboxInfoList[iWB];
 				info.AutoPhase = Boolean(wallBox.autoPhaseSwitch) && storedPhaseMode === PHASE_MODE_AUTO && autoPhaseSupported(info.HardwareMin3, info.Online);
-				info.ManagedCharge3Phase = info.EnabledPhases === 3;
+				info.ManagedCharge3Phase = phasesInUse(info.EnabledPhases, info.PhaseSwitchMode, info.ActivePhases) === 3;
 				this.syncPhaseMode(iWB);
 			} // next wallbox
 		} catch (e) {
@@ -605,7 +606,7 @@ class go_e_charger extends utils.Adapter {
 											const mode = resolvePhaseModeWrite(
 												state.val,
 												Boolean(this.config.wallBoxList[chargerNo].autoPhaseSwitch) && info.HardwareMin3,
-												info.EnabledPhases,
+												phasesInUse(info.EnabledPhases, info.PhaseSwitchMode, info.ActivePhases),
 											);
 											if (mode) {
 												info.AutoPhase = mode.auto;
@@ -2291,10 +2292,14 @@ class go_e_charger extends utils.Adapter {
 			// the automatic decision, or the fixed phase count the user requested
 			const info = this.wallboxInfoList[iWB];
 			const autoPhase = info.AutoPhase && info.HardwareMin3;
-			const phases =
-				info.HardwareMin3 && info.EnabledPhases
-					? planningPhases(autoPhase ? info.PendingPhases : info.Charge3Phase ? 3 : 1, info.EnabledPhases)
-					: info.GridPhases;
+			// psm 0 (the charger switches itself) plans with the phases in use, or the grid phases while unknown
+			const plannedPhases = info.HardwareMin3
+				? planningPhases(
+						autoPhase ? info.PendingPhases : info.Charge3Phase ? 3 : 1,
+						phasesInUse(info.EnabledPhases, info.PhaseSwitchMode, info.ActivePhases),
+					)
+				: 0;
+			const phases = plannedPhases || info.GridPhases;
 
 			// only a charger with a connected vehicle (go-e car state 2 or 3) can turn the
 			// reserved surplus into charging power - the others must not block their neighbours
@@ -2349,7 +2354,9 @@ class go_e_charger extends utils.Adapter {
 			const info = this.wallboxInfoList[iWB];
 			if (info.AutoPhase && info.HardwareMin3 && !isVehicleDisconnected(info.CarState)) {
 				const participant = participants[index];
-				const plannedPhases = planningPhases(info.PendingPhases, info.EnabledPhases);
+				const inUse = phasesInUse(info.EnabledPhases, info.PhaseSwitchMode, info.ActivePhases);
+				// 0 while unknown (psm 0, not charging): the decision then picks the start phase from the surplus
+				const plannedPhases = planningPhases(info.PendingPhases, inUse);
 				const lastSwitch = info.LastPhaseSwitchMs;
 				const phaseDecision = decidePhaseSwitch({
 					currentPhases: plannedPhases,
@@ -2371,12 +2378,15 @@ class go_e_charger extends utils.Adapter {
 				info.PhaseSwitchDelay = phaseDecision.switchDelay;
 				// phase-switch control loop: show the current/target phase and the pending dwell counter
 				this.log.debug(
-					`ChargeManager charger ${this.wallboxLabel(iWB)} phase: ${info.EnabledPhases}p now, target ${phaseDecision.targetPhases}p, dwell ${phaseDecision.switchDelay}`,
+					`ChargeManager charger ${this.wallboxLabel(iWB)} phase: ${inUse}p now, target ${phaseDecision.targetPhases}p, dwell ${phaseDecision.switchDelay}`,
 				);
 				// the automatic decision is tracked internally and drives the charger via Switch_3Phases;
 				// it must never overwrite the user's manual Settings.Charge3Phase request
-				info.ManagedCharge3Phase = phaseDecision.targetPhases === 3;
-				// kept until the charger reports it - the switch itself is only written with an active release
+				if (phaseDecision.targetPhases === 1 || phaseDecision.targetPhases === 3) {
+					info.ManagedCharge3Phase = phaseDecision.targetPhases === 3;
+				}
+				// kept until the charger reports it as its fixed mode (psm 0 is converted as well) - the
+				// switch itself is only written with an active release
 				info.PendingPhases = phaseDecision.targetPhases !== info.EnabledPhases ? phaseDecision.targetPhases : null;
 				if (phaseDecision.targetPhases !== plannedPhases) {
 					const surplus = Math.round(decision.availablePower);
@@ -2388,9 +2398,10 @@ class go_e_charger extends utils.Adapter {
 							: `ChargeManager: charger ${this.wallboxLabel(iWB)} will start with ${phaseDecision.targetPhases}-phase charging (surplus ${surplus} W) - the switch waits for the charge release`,
 					);
 					// the current sent with the switch belongs to the new phase count
+					// (an unknown phase count was allocated with the grid phases)
 					const carriedAmp = carryCurrentOverPhaseSwitch(
 						decision.nextState.currentAmp,
-						plannedPhases,
+						plannedPhases || info.GridPhases,
 						phaseDecision.targetPhases,
 						participant.minimumChargeCurrent,
 						participant.maximumChargeCurrent,

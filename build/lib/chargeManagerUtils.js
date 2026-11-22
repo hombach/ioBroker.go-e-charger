@@ -65,6 +65,7 @@ exports.waitsForAuthorization = waitsForAuthorization;
 exports.apiV2AuthorizeWrite = apiV2AuthorizeWrite;
 exports.apiV2ErrorRejection = apiV2ErrorRejection;
 exports.isStatusV1Answer = isStatusV1Answer;
+exports.phasesInUse = phasesInUse;
 exports.activePhasesFromFlags = activePhasesFromFlags;
 exports.enabledPhasesState = enabledPhasesState;
 exports.phaseAutoOverrideNotice = phaseAutoOverrideNotice;
@@ -269,8 +270,7 @@ function decideChargeManagerFleet(shared, participants) {
     });
 }
 function decidePhaseSwitch(input) {
-    if (input.blocked === true ||
-        (input.currentPhases !== 1 && input.currentPhases !== 3) ||
+    if ((input.currentPhases !== 0 && input.currentPhases !== 1 && input.currentPhases !== 3) ||
         !Number.isFinite(input.availablePower) ||
         !Number.isFinite(input.minimumChargeCurrent) ||
         !Number.isFinite(input.maximumChargeCurrent)) {
@@ -279,6 +279,12 @@ function decidePhaseSwitch(input) {
     const floorCurrent = input.waitingForStart ? resolveStartChargeCurrent(input.minimumChargeCurrent, input.maximumChargeCurrent) : input.minimumChargeCurrent;
     const threePhaseMinPower = floorCurrent * 3 * exports.PHASE_VOLTAGE;
     const upThreshold = Math.max(input.maximumChargeCurrent * exports.PHASE_VOLTAGE, input.waitingForStart ? threePhaseMinPower : threePhaseMinPower * exports.PHASE_SWITCH_HYSTERESIS);
+    if (input.currentPhases === 0) {
+        return { targetPhases: input.availablePower >= upThreshold ? 3 : 1, switchDelay: 0 };
+    }
+    if (input.blocked === true) {
+        return { targetPhases: input.currentPhases, switchDelay: 0 };
+    }
     let targetPhases = input.currentPhases;
     if (input.currentPhases === 1 && input.availablePower >= upThreshold) {
         targetPhases = 3;
@@ -910,6 +916,12 @@ function isStatusV1Answer(data) {
     return exports.API_V1_STATUS_KEYS.every(key => key in result);
 }
 exports.PHASE_SWITCH_MODE_CHARGER_AUTO = 0;
+function phasesInUse(enabledPhases, phaseSwitchMode, activePhases) {
+    if (enabledPhases === 1 || enabledPhases === 3) {
+        return enabledPhases;
+    }
+    return phaseSwitchMode === exports.PHASE_SWITCH_MODE_CHARGER_AUTO && (activePhases === 1 || activePhases === 3) ? activePhases : 0;
+}
 function activePhasesFromFlags(pha) {
     const flags = Number(pha);
     return Number.isInteger(flags) && flags >= 0 ? [1, 2, 4].filter(bit => (flags & bit) !== 0).length : 0;

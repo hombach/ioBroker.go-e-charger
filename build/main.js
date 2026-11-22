@@ -255,7 +255,7 @@ class go_e_charger extends utils.Adapter {
                 const storedPhaseMode = (await this.getStateAsync(phaseModeId))?.val ?? chargeManagerUtils_1.PHASE_MODE_AUTO;
                 const info = this.wallboxInfoList[iWB];
                 info.AutoPhase = Boolean(wallBox.autoPhaseSwitch) && storedPhaseMode === chargeManagerUtils_1.PHASE_MODE_AUTO && (0, chargeManagerUtils_1.autoPhaseSupported)(info.HardwareMin3, info.Online);
-                info.ManagedCharge3Phase = info.EnabledPhases === 3;
+                info.ManagedCharge3Phase = (0, chargeManagerUtils_1.phasesInUse)(info.EnabledPhases, info.PhaseSwitchMode, info.ActivePhases) === 3;
                 this.syncPhaseMode(iWB);
             }
         }
@@ -380,7 +380,7 @@ class go_e_charger extends utils.Adapter {
                                             break;
                                         case "PhaseMode": {
                                             const info = this.wallboxInfoList[chargerNo];
-                                            const mode = (0, chargeManagerUtils_1.resolvePhaseModeWrite)(state.val, Boolean(this.config.wallBoxList[chargerNo].autoPhaseSwitch) && info.HardwareMin3, info.EnabledPhases);
+                                            const mode = (0, chargeManagerUtils_1.resolvePhaseModeWrite)(state.val, Boolean(this.config.wallBoxList[chargerNo].autoPhaseSwitch) && info.HardwareMin3, (0, chargeManagerUtils_1.phasesInUse)(info.EnabledPhases, info.PhaseSwitchMode, info.ActivePhases));
                                             if (mode) {
                                                 info.AutoPhase = mode.auto;
                                                 info.PhaseSwitchDelay = 0;
@@ -1400,9 +1400,10 @@ class go_e_charger extends utils.Adapter {
             batterySoc = batteryDecision.batterySoc;
             const info = this.wallboxInfoList[iWB];
             const autoPhase = info.AutoPhase && info.HardwareMin3;
-            const phases = info.HardwareMin3 && info.EnabledPhases
-                ? (0, chargeManagerUtils_1.planningPhases)(autoPhase ? info.PendingPhases : info.Charge3Phase ? 3 : 1, info.EnabledPhases)
-                : info.GridPhases;
+            const plannedPhases = info.HardwareMin3
+                ? (0, chargeManagerUtils_1.planningPhases)(autoPhase ? info.PendingPhases : info.Charge3Phase ? 3 : 1, (0, chargeManagerUtils_1.phasesInUse)(info.EnabledPhases, info.PhaseSwitchMode, info.ActivePhases))
+                : 0;
+            const phases = plannedPhases || info.GridPhases;
             const carState = this.wallboxInfoList[iWB].CarState;
             participants.push({
                 phases,
@@ -1438,7 +1439,8 @@ class go_e_charger extends utils.Adapter {
             const info = this.wallboxInfoList[iWB];
             if (info.AutoPhase && info.HardwareMin3 && !(0, chargeManagerUtils_1.isVehicleDisconnected)(info.CarState)) {
                 const participant = participants[index];
-                const plannedPhases = (0, chargeManagerUtils_1.planningPhases)(info.PendingPhases, info.EnabledPhases);
+                const inUse = (0, chargeManagerUtils_1.phasesInUse)(info.EnabledPhases, info.PhaseSwitchMode, info.ActivePhases);
+                const plannedPhases = (0, chargeManagerUtils_1.planningPhases)(info.PendingPhases, inUse);
                 const lastSwitch = info.LastPhaseSwitchMs;
                 const phaseDecision = (0, chargeManagerUtils_1.decidePhaseSwitch)({
                     currentPhases: plannedPhases,
@@ -1454,15 +1456,17 @@ class go_e_charger extends utils.Adapter {
                     waitingForStart: info.ForceState !== chargeManagerUtils_1.FORCE_STATE_ON,
                 });
                 info.PhaseSwitchDelay = phaseDecision.switchDelay;
-                this.log.debug(`ChargeManager charger ${this.wallboxLabel(iWB)} phase: ${info.EnabledPhases}p now, target ${phaseDecision.targetPhases}p, dwell ${phaseDecision.switchDelay}`);
-                info.ManagedCharge3Phase = phaseDecision.targetPhases === 3;
+                this.log.debug(`ChargeManager charger ${this.wallboxLabel(iWB)} phase: ${inUse}p now, target ${phaseDecision.targetPhases}p, dwell ${phaseDecision.switchDelay}`);
+                if (phaseDecision.targetPhases === 1 || phaseDecision.targetPhases === 3) {
+                    info.ManagedCharge3Phase = phaseDecision.targetPhases === 3;
+                }
                 info.PendingPhases = phaseDecision.targetPhases !== info.EnabledPhases ? phaseDecision.targetPhases : null;
                 if (phaseDecision.targetPhases !== plannedPhases) {
                     const surplus = Math.round(decision.availablePower);
                     this.log.debug(info.ForceState === chargeManagerUtils_1.FORCE_STATE_ON
                         ? `ChargeManager: switching charger ${this.wallboxLabel(iWB)} to ${phaseDecision.targetPhases}-phase charging (surplus ${surplus} W)`
                         : `ChargeManager: charger ${this.wallboxLabel(iWB)} will start with ${phaseDecision.targetPhases}-phase charging (surplus ${surplus} W) - the switch waits for the charge release`);
-                    const carriedAmp = (0, chargeManagerUtils_1.carryCurrentOverPhaseSwitch)(decision.nextState.currentAmp, plannedPhases, phaseDecision.targetPhases, participant.minimumChargeCurrent, participant.maximumChargeCurrent, decision.availablePower);
+                    const carriedAmp = (0, chargeManagerUtils_1.carryCurrentOverPhaseSwitch)(decision.nextState.currentAmp, plannedPhases || info.GridPhases, phaseDecision.targetPhases, participant.minimumChargeCurrent, participant.maximumChargeCurrent, decision.availablePower);
                     plans[iWB] = { decision: (0, chargeManagerUtils_1.decisionAfterPhaseSwitch)(decision, carriedAmp, participant.minimumChargeCurrent), batteryReason: "available" };
                 }
             }

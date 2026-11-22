@@ -547,7 +547,7 @@ export function decideChargeManagerFleet(shared: FleetSurplusInput, participants
 
 /** Input for the automatic one-/three-phase switching decision of a single wallbox. */
 export interface PhaseSwitchInput {
-	/** Number of phases the wallbox is charging with right now (1 or 3) */
+	/** Number of phases the wallbox is charging with right now (1 or 3, 0 if unknown - see {@link phasesInUse}) */
 	currentPhases: number;
 	/** PV surplus power available to this wallbox in watts, independent of the phase count */
 	availablePower: number;
@@ -605,13 +605,17 @@ export interface PhaseSwitchDecision {
  * is only planned then, not written (see {@link mayWritePhaseSwitch}), so both directions use the
  * same threshold without a band.
  *
+ * With an unknown phase count (0: the charger switches the phases itself, `psm` 0, and is not
+ * charging) the start phase follows the surplus at once, with the threshold of a one-phase charge.
+ * Treating 0 as one phase forced every such charger to one phase first, and the charger's minimum
+ * time between two switches then held a sunny start there for ten minutes.
+ *
  * @param input Current phase count, available surplus power and the pending-switch counter
  * @returns The phase count to use next cycle and the updated dwell counter
  */
 export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision {
 	if (
-		input.blocked === true ||
-		(input.currentPhases !== 1 && input.currentPhases !== 3) ||
+		(input.currentPhases !== 0 && input.currentPhases !== 1 && input.currentPhases !== 3) ||
 		!Number.isFinite(input.availablePower) ||
 		!Number.isFinite(input.minimumChargeCurrent) ||
 		!Number.isFinite(input.maximumChargeCurrent)
@@ -627,6 +631,14 @@ export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision 
 		input.maximumChargeCurrent * PHASE_VOLTAGE,
 		input.waitingForStart ? threePhaseMinPower : threePhaseMinPower * PHASE_SWITCH_HYSTERESIS,
 	);
+
+	if (input.currentPhases === 0) {
+		// no own switch to wait for and nothing to dwell on: so far the charger switched by itself
+		return { targetPhases: input.availablePower >= upThreshold ? 3 : 1, switchDelay: 0 };
+	}
+	if (input.blocked === true) {
+		return { targetPhases: input.currentPhases, switchDelay: 0 };
+	}
 
 	let targetPhases = input.currentPhases;
 	if (input.currentPhases === 1 && input.availablePower >= upThreshold) {
@@ -2234,6 +2246,23 @@ export function isStatusV1Answer(data: unknown): boolean {
 
 /** go-e `psm` value of the charger's own automatic phase switching (shown as "auto" in the go-e app) */
 export const PHASE_SWITCH_MODE_CHARGER_AUTO = 0;
+
+/**
+ * Phase count the charger charges with as far as the automatic switching is concerned: the fixed
+ * phase mode it reports, or - while it switches the phases itself (`psm` 0) - the phases in use.
+ * The phase write still compares with the fixed mode, so `psm` 0 is always converted to 1 or 2.
+ *
+ * @param enabledPhases Fixed phase count from `psm` (1 or 3, 0 for `psm` 0 or unknown)
+ * @param phaseSwitchMode `psm` the charger reports (`NaN` if unknown)
+ * @param activePhases Phases in use, see {@link activePhasesFromFlags}
+ * @returns 1 or 3, or 0 if unknown (e.g. `psm` 0 while the contactor is open)
+ */
+export function phasesInUse(enabledPhases: number, phaseSwitchMode: number, activePhases: number): number {
+	if (enabledPhases === 1 || enabledPhases === 3) {
+		return enabledPhases;
+	}
+	return phaseSwitchMode === PHASE_SWITCH_MODE_CHARGER_AUTO && (activePhases === 1 || activePhases === 3) ? activePhases : 0;
+}
 
 /**
  * Number of phases the charger charges on: API V1 `pha` bits 0-2 (L1-L3 after the contactor).
