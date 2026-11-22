@@ -53,8 +53,10 @@ Tested with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055
 
 ### Requirements
 
-- For hardware generation 3 and 4 you have to enable "HTTP API v1" in your go-e app.
+- For hardware generation 3 and 4 (e.g. HOME+, HOMEfix, Gemini) you have to enable "HTTP API v1" in your go-e app.
 - For phase switching you additionally have to enable "HTTP API v2" in your go-e app (hardware generation 3 and newer).
+- Chargers without HTTP API v1 (e.g. go-e Charger CORE / PRO with firmware 60.x) are detected automatically and read and controlled over "HTTP API v2" only, which has to be enabled in the go-e app. On these chargers the adapter gives and withdraws the charge release with the force state (`frc` on / off) and sets the charging current with `amp`. Password protection (authentication) of the local HTTP API is not supported yet; how the charger behaves with it (`hsa`) is not documented by go-e and unverified (a go-e CORE with firmware 60.4 answers local reads with `hsa` enabled, and its app offers no password setting).
+- A charger that requires RFID/app authorization ignores the charge release (force state) until it is authorized - the adapter logs this once. For chargers used over HTTP API v2 only, the option "Start transaction without RFID on API-v2-only chargers (trx=0)" in the charger settings starts a transaction without card before each release while a vehicle is plugged in. It is off by default, because it bypasses the RFID/app access protection of the charger.
 
 ## Configuration
 
@@ -78,10 +80,18 @@ The adapter also reads the current caps reported by each charger – the absolut
 
 ChargeManager calculates the charging current from numeric ioBroker states supplied by an energy-management, inverter, meter, or user-created data source. It does not depend on a particular vendor, but the selected states must represent the quantities described below.
 
-Configure the object IDs of the following states:
+The ChargeManager configuration page is organized in three blocks that follow the flow of the calculation. Options sit directly next to the object they belong to, fields that do not apply to the current selection are hidden, and every value field shows its unit:
 
-- currently available solar power [W]
-- current home power consumption [W]
+| Block               | Settings                                                                                                                                                                                                                                                         |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Surplus input**   | **Surplus source**; for _PV generation and house consumption_: solar power and home power consumption objects, each with its Negate option, and _Charger consumption is included_; for _Grid meter_: grid power object with Negate, Ack-only and maximum age [s] |
+| **Home battery**    | **Home battery mode**; unless _Disabled_: SoC object, SoC hysteresis [%] and maximum SoC age [s]; in _Battery priority_ also the maximum battery bonus [W]                                                                                                       |
+| **Surplus control** | Grid reserve power [W] and minimum ChargeManager current [A]                                                                                                                                                                                                     |
+
+Select the **Surplus source** in the first block and configure the object IDs of the following states:
+
+- _PV generation and house consumption_ (default): currently available solar power [W] and current home power consumption [W]
+- _Grid meter (signed import/export)_: current grid power [W], see [Grid meter input](#grid-meter-input) below
 - current state of charge of your home battery [%] (only required in the battery-aware modes, see _Home battery mode_ below)
 
 #### Input requirements
@@ -92,7 +102,7 @@ Configure the object IDs of the following states:
 | Home power consumption       | Total current household demand | W    | Positive consumption |
 | Home battery state of charge | Current battery charge level   | %    | 0 to 100             |
 
-All configured states must contain numeric values. Power values in kW must be converted to W before they are selected. A grid import/export state cannot be used directly because ChargeManager currently expects separate generation and consumption values.
+All configured states must contain numeric values. Power values in kW must be converted to W before they are selected. If a source reports PV generation or household consumption with the opposite sign, enable **Negate solar power** or **Negate home power consumption** next to the object (default off). If only a single grid import/export value is available, use the grid meter input instead of the two values above.
 
 If no home battery is installed, set the **Home battery mode** to _Disabled_ (see below). No battery state of charge has to be configured, and ChargeManager charges purely from the available PV surplus. The former helper-state workaround (a constant state set to `Settings.Setpoint_HomeBatSoC`) is no longer needed.
 
@@ -101,6 +111,23 @@ If no home battery is installed, set the **Home battery mode** to _Disabled_ (se
 Enable **Charger consumption is included in the home power consumption value** when the selected home-consumption state rises by approximately the charging power after charging starts. ChargeManager then adds the measured wallbox power back before calculating the available surplus. This prevents the controller from treating its own charging load as additional household demand.
 
 Leave the option disabled when the selected state already excludes wallbox consumption.
+
+#### Grid meter input
+
+Many installations only provide one signed value at the grid connection point (smart meter, Shelly 3EM, inverter `P_Grid`, …). Set **Surplus source** to _Grid meter (signed import/export)_ and select this state as **grid power** [W]:
+
+| Grid power | Meaning                        |
+| ---------- | ------------------------------ |
+| positive   | import (drawing from the grid) |
+| negative   | export (feeding into the grid) |
+
+This is the same convention as the go-e API v2 (`pGrid < 0` = feeding the grid). The PV generation and home power consumption objects are then not used, even if they are still filled in.
+
+- **Negate grid power** – inverts the sign for sources that report export as positive and import as negative (e.g. a Fronius `P_Grid` that was used with "Negate" in the old go-e adapter).
+- **Only use acknowledged values (ack=true)** – ignores updates written with `ack=false` (e.g. commands from scripts); the last acknowledged value stays in use.
+- **Maximum grid power age** [s] (default 0 = off) – surplus charging stops when the grid power has not been updated within this time, so a dead meter cannot keep the car charging from the grid.
+
+The grid value always contains the power of the wallboxes, so ChargeManager always adds the measured wallbox power back (the option _Charger consumption is included_ is not used in this mode). A missing, non-numeric or too old grid value stops surplus charging, just like an invalid PV or consumption value. The adapter subscribes to the grid power state and uses its latest accepted value in every cycle.
 
 #### Calculation
 
@@ -111,6 +138,13 @@ available power =
     solar power
   - home power consumption
   + wallbox power, if it is included in home power consumption
+  - grid reserve
+  + battery bonus (Battery priority mode only)
+
+grid meter input:
+available power =
+  - grid power (import positive, export negative)
+  + wallbox power
   - grid reserve
   + battery bonus (Battery priority mode only)
 
@@ -166,6 +200,8 @@ On hardware generation 3 and newer, `Charge3Phase` selects the phase mode:
 
 - `false`: one-phase charging
 - `true`: three-phase charging
+
+The go-e app also offers the charger's own automatic phase switching (`psm` 0, shown as "auto"). The adapter deliberately overrides it with a fixed one- or three-phase mode (`psm` 1/2) as soon as ChargeNOW or the ChargeManager controls the charger, because the charger's own switching causes trouble with several chargers on rotated phases. The override is logged once. While a charger is set to automatic phase switching, `Power.EnabledPhases` shows the phases it charges on (0 while idle).
 
 Because the current implementation starts charging when its internal target exceeds 9 A, the effective starting point is 10 A. This requires approximately 2.3 kW in one-phase mode or 6.9 kW in three-phase mode after the reserve and battery adjustments. One-phase mode therefore provides a wider operating range for smaller PV systems or variable weather.
 
@@ -246,6 +282,11 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 ### **WORK IN PROGRESS**
 
+- (HombachC) added grid meter input for ChargeManager: one signed grid power value (import positive, export negative) instead of PV generation and house consumption, with Negate, Ack-only and maximum age options (#919)
+- (HombachC) added Negate options for the solar power and home power consumption objects (#919)
+- (HombachC) reorganized the ChargeManager configuration page into the logical blocks surplus input, home battery and surplus control: options are placed next to the object they belong to, settings that do not apply to the selected surplus source or home battery mode are hidden, and all value fields show their unit (#919)
+- (HombachC) added support for chargers without HTTP API v1 (e.g. go-e Charger CORE / PRO, firmware 60.x): they are detected automatically and read and controlled over HTTP API v2 only; HTTP error answers (e.g. 404 for a disabled API, 401/403 for probable password protection) are now logged with a hint instead of asking to verify the IP address; a charger waiting for RFID/app authorization is logged once, and the new charger option "Start transaction without RFID on API-v2-only chargers (trx=0)" (off by default) can authorize it; rejections of API v2 writes are logged with the charger's reason; car states "Initializing" and "Unknown" are no longer shown as "Error"; these chargers are no longer asked for `ast`, `cbl` and `cards` (the go-e CORE 60.4 has none of them, and unknown keys are ignored); the cause of an HTTP 400 on a go-e CORE 60.4 is unknown, and as a safety net a charger that refuses the filtered status with HTTP 400 is read without filter; every HTTP request to a charger is logged at debug level with URL, HTTP status, duration and response length (#939)
+- (HombachC) a charger set to its own automatic phase switching (`psm` 0) is still switched to the fixed phase mode of the adapter on purpose - this is now logged once; `Power.EnabledPhases` shows the phases in use instead of 0 while the charger is set to automatic phase switching
 - (HombachC) moved the Sentry notice near the top of README.md to satisfy the repository checker (#938)
 - (hombach) updated iobroker/testing
 - (hombach) updated dependencies

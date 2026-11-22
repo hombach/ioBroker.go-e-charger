@@ -39,6 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const utils = __importStar(require("@iobroker/adapter-core"));
 const axios_1 = __importDefault(require("axios"));
 const chargeManagerUtils_1 = require("./lib/chargeManagerUtils");
+const httpDebugLog_1 = require("./lib/httpDebugLog");
 const projectUtils_1 = require("./lib/projectUtils");
 const axiosInstance = axios_1.default.create({
     timeout: 5000,
@@ -56,11 +57,17 @@ let maxAmpTotal = 0;
 let chargeManagerBatteryMode = "priority";
 let chargeManagerBatterySocHysteresis = 0;
 let chargeManagerBatterySocMaxAgeSeconds = 0;
+let chargeManagerGridMode = "pvAndConsumption";
+let gridPowerStateId = "";
+let gridMeterOptions = { negate: false, ackOnly: false };
+let gridPowerMaxAgeSeconds = 0;
 class go_e_charger extends utils.Adapter {
     projectUtils = new projectUtils_1.ProjectUtils(this);
     wallboxInfoList = [];
     stateMachineTimeout;
     isUnloading = false;
+    gridMeterSample = null;
+    gridMeterReason = null;
     constructor(options = {}) {
         super({
             ...options,
@@ -72,6 +79,7 @@ class go_e_charger extends utils.Adapter {
         this.wallboxInfoList = [];
     }
     async onReady() {
+        (0, httpDebugLog_1.attachHttpDebugLog)(axiosInstance, message => this.log.debug(message));
         if (!this.config.cycleTime) {
             this.log.warn(`Cycletime not configured or zero - will be set to 10 seconds`);
             this.config.cycleTime = 10000;
@@ -110,6 +118,7 @@ class go_e_charger extends utils.Adapter {
         chargeManagerBatterySocHysteresis = this.validateNonNegativeConfig(this.config.batterySocHysteresis, 0, "batterySocHysteresis");
         chargeManagerBatterySocMaxAgeSeconds = this.validateBoundedIntConfig(this.config.batterySocMaxAgeSeconds, 0, 0, 86400, "batterySocMaxAgeSeconds");
         this.log.debug(`ChargeManager battery mode: ${chargeManagerBatteryMode}, SoC hysteresis: ${chargeManagerBatterySocHysteresis}%, max SoC age: ${chargeManagerBatterySocMaxAgeSeconds} s`);
+        await this.setupGridMeterInput();
         const wallBoxList = Array.isArray(this.config.wallBoxList) ? this.config.wallBoxList : [];
         this.config.wallBoxList = wallBoxList;
         if (!wallBoxList.length) {
@@ -125,6 +134,13 @@ class go_e_charger extends utils.Adapter {
                 Hardware: "V2",
                 HardwareMin3: false,
                 RfidFromV2: false,
+                ApiMode: "v1",
+                ApiDetected: false,
+                ApiDetectCountdown: chargeManagerUtils_1.API_DETECT_RETRY_CYCLES,
+                ApiV2Unfiltered: false,
+                ModelStatus: Number.NaN,
+                Transaction: undefined,
+                AuthWaitLogged: false,
                 AutoPhase: false,
                 GridPhases: 0,
                 ChargeNOW: false,
@@ -134,6 +150,9 @@ class go_e_charger extends utils.Adapter {
                 Charge3Phase: false,
                 ManagedCharge3Phase: false,
                 EnabledPhases: 0,
+                PhaseSwitchMode: Number.NaN,
+                ActivePhases: 0,
+                PhaseAutoNoticeLogged: false,
                 MeasuredMaxChargeAmp: 0,
                 BatteryReady: false,
                 CarState: 0,
@@ -200,9 +219,14 @@ class go_e_charger extends utils.Adapter {
                 this.wallboxInfoList[iWB].Charge3Phase = await this.projectUtils.getStateValue(`Wallbox_${iWB}.Settings.Charge3Phase`);
                 await this.projectUtils.checkAndSetValueBoolean(`Wallbox_${iWB}.Settings.Charge3Phase`, false, `Setting 3-phase charging`, "switch", true, true);
                 if (wallBox.ipAddress) {
-                    await this.Read_ChargerAPIV1(iWB);
-                    if (this.wallboxInfoList[iWB].Online !== false) {
-                        await this.Read_ChargerAPIV2(iWB);
+                    if ((await this.detectApiMode(iWB)) === "v2") {
+                        await this.Read_ChargerAPIV2Only(iWB);
+                    }
+                    else {
+                        await this.Read_ChargerAPIV1(iWB);
+                        if (this.wallboxInfoList[iWB].Online !== false) {
+                            await this.Read_ChargerAPIV2(iWB);
+                        }
                     }
                     this.log.info(`IP address of charger ${this.wallboxLabel(iWB)} found in config: ${wallBox.ipAddress}`);
                     await this.projectUtils.checkAndSetValueNumber(`Wallbox_${iWB}.Settings.ChargeCurrent`, this.wallboxInfoList[iWB].MinAmp, `charge current output`, "A", "level.current", true, true, true, this.wallboxInfoList[iWB].MinAmp, this.wallboxInfoList[iWB].MaxAmp, 1);
@@ -267,6 +291,10 @@ class go_e_charger extends utils.Adapter {
     }
     onStateChange(id, state) {
         try {
+            if (chargeManagerGridMode === "gridMeter" && id === gridPowerStateId) {
+                this.updateGridMeterSample(state, "update");
+                return;
+            }
             if (state) {
                 if (!state.ack) {
                     this.log.debug(`state change detected and parsing for id: ${id} - state: ${state.val}`);
@@ -413,6 +441,9 @@ class go_e_charger extends utils.Adapter {
         let reachableChargers = 0;
         for (let iWB = 0; iWB < this.config.wallBoxList.length; iWB++) {
             this.log.debug(`Initial ReadCharger done, detected charger ${this.wallboxLabel(iWB)} firmware ${this.wallboxInfoList[iWB].Firmware}`);
+            if (this.wallboxInfoList[iWB].ApiMode === "v2" && this.wallboxInfoList[iWB].Online) {
+                this.log.info(`Charger ${this.wallboxLabel(iWB)} (${this.wallboxInfoList[iWB].Hardware}) is read and controlled over HTTP API v2 only`);
+            }
             switch (this.wallboxInfoList[iWB].Firmware) {
                 case "0":
                 case "EHostUnreach":
@@ -457,6 +488,8 @@ class go_e_charger extends utils.Adapter {
                                 Sentry?.withScope((scope) => {
                                     scope.setLevel("warning");
                                     scope.setTag("Firmware", this.wallboxInfoList[iWB].Firmware);
+                                    scope.setTag("Hardware", this.wallboxInfoList[iWB].Hardware);
+                                    scope.setTag("Api", this.wallboxInfoList[iWB].ApiMode);
                                     Sentry.captureMessage("Adapter go-e-Charger found unknown firmware", "warning");
                                 });
                         }
@@ -492,12 +525,9 @@ class go_e_charger extends utils.Adapter {
                     this.wallboxInfoList[iWB].BatteryReady = false;
                 }
                 const wasOnline = this.wallboxInfoList[iWB].Online;
-                await this.Read_ChargerAPIV1(iWB);
+                await this.readCharger(iWB, wasOnline);
                 if (this.wallboxInfoList[iWB].Online === false) {
                     continue;
-                }
-                if (this.wallboxInfoList[iWB].HardwareMin3 || wasOnline === false) {
-                    await this.Read_ChargerAPIV2(iWB);
                 }
                 if (this.wallboxInfoList[iWB].AutoPhase && !(0, chargeManagerUtils_1.autoPhaseSupported)(this.wallboxInfoList[iWB].HardwareMin3, this.wallboxInfoList[iWB].Online)) {
                     this.wallboxInfoList[iWB].AutoPhase = false;
@@ -558,7 +588,10 @@ class go_e_charger extends utils.Adapter {
                         info.SetAmp = chargeNowCurrent;
                         await this.Charge_Config("1", chargeNowCurrent, `activate go-eCharger for forced charging`, iWB);
                     }
-                    if (info.HardwareMin3) {
+                    if (info.ApiMode === "v2") {
+                        await this.Read_ChargerAPIV2Only(iWB);
+                    }
+                    else if (info.HardwareMin3) {
                         await this.Read_ChargerAPIV2(iWB);
                     }
                     await this.Switch_3Phases(info.Charge3Phase, iWB);
@@ -607,7 +640,12 @@ class go_e_charger extends utils.Adapter {
                             releaseSent = await this.Charge_Manager(iWB, decision);
                         }
                         if (!switchFirst && releaseSent) {
-                            await this.Read_ChargerAPIV2(iWB);
+                            if (info.ApiMode === "v2") {
+                                await this.Read_ChargerAPIV2Only(iWB);
+                            }
+                            else {
+                                await this.Read_ChargerAPIV2(iWB);
+                            }
                             if ((0, chargeManagerUtils_1.mayWritePhaseSwitch)(info.ForceState, decision.action)) {
                                 await this.Switch_3Phases(targetPhase, iWB);
                             }
@@ -642,6 +680,69 @@ class go_e_charger extends utils.Adapter {
         finally {
             this.scheduleStateMachine();
         }
+    }
+    async setupGridMeterInput() {
+        const resolution = (0, chargeManagerUtils_1.resolveGridInputMode)(this.config.gridMode, this.config.stateGridPower);
+        if (resolution.fallback === "invalid-mode") {
+            this.log.warn(`Config gridMode is invalid (${JSON.stringify(this.config.gridMode)}); using PV generation and house consumption`);
+        }
+        else if (resolution.fallback === "missing-grid-state") {
+            this.log.warn(`Grid meter mode selected, but no grid power object ID configured; using PV generation and house consumption`);
+        }
+        chargeManagerGridMode = resolution.mode;
+        if (chargeManagerGridMode !== "gridMeter") {
+            this.log.debug(`ChargeManager surplus input: PV generation and house consumption`);
+            return;
+        }
+        gridPowerStateId = this.config.stateGridPower.trim();
+        gridMeterOptions = { negate: !!this.config.gridPowerNegate, ackOnly: !!this.config.gridPowerAckOnly };
+        gridPowerMaxAgeSeconds = this.validateBoundedIntConfig(this.config.gridPowerMaxAgeSeconds, 0, 0, 86400, "gridPowerMaxAgeSeconds");
+        this.log.info(`ChargeManager surplus input: grid meter ${gridPowerStateId} (import positive, export negative${gridMeterOptions.negate ? ", negated" : ""}${gridMeterOptions.ackOnly ? ", ack-only" : ""}, max age ${gridPowerMaxAgeSeconds ? `${gridPowerMaxAgeSeconds} s` : "unchecked"})`);
+        if (this.config.stateHomeSolarPower || this.config.stateHomePowerConsumption) {
+            this.log.info(`Grid meter mode: the configured PV generation and house consumption objects are ignored`);
+        }
+        if (!this.config.subtractSelfConsumption) {
+            this.log.debug(`Grid meter mode: the wallbox power is always added back, the option "charger consumption included" is ignored`);
+        }
+        try {
+            if (!(await this.getForeignObjectAsync(gridPowerStateId))) {
+                this.log.warn(`Grid power object ${gridPowerStateId} does not exist - ChargeManager will not charge until it delivers values`);
+            }
+            this.subscribeForeignStates(gridPowerStateId);
+            this.updateGridMeterSample(await this.getForeignStateAsync(gridPowerStateId), "initial");
+        }
+        catch (error) {
+            this.log.error(`Error setting up grid power object ${gridPowerStateId}: ${String(error)}`);
+        }
+    }
+    updateGridMeterSample(state, source) {
+        const update = (0, chargeManagerUtils_1.acceptGridMeterState)(state, gridMeterOptions);
+        if (update.sample) {
+            this.gridMeterSample = update.sample;
+            return;
+        }
+        if (update.reason !== "not-acknowledged") {
+            this.gridMeterSample = null;
+        }
+        this.log.debug(`Grid power ${source} from ${gridPowerStateId} not used (${update.reason}): ${JSON.stringify(state?.val)} (ack=${state?.ack})`);
+    }
+    readGridMeter() {
+        const reading = (0, chargeManagerUtils_1.evaluateGridMeterReading)(this.gridMeterSample, Date.now(), gridPowerMaxAgeSeconds);
+        if (reading.reason !== this.gridMeterReason) {
+            if (reading.reason === "available") {
+                if (this.gridMeterReason !== null) {
+                    this.log.info(`Grid power from ${gridPowerStateId} is available again`);
+                }
+            }
+            else {
+                this.log.warn(reading.reason === "stale"
+                    ? `Grid power from ${gridPowerStateId} is older than ${gridPowerMaxAgeSeconds} s - ChargeManager stops surplus charging until it is updated`
+                    : `No usable grid power from ${gridPowerStateId}${gridMeterOptions.ackOnly ? " (ack-only)" : ""} - ChargeManager stops surplus charging until it delivers a numeric value`);
+            }
+            this.gridMeterReason = reading.reason;
+        }
+        this.log.debug(`Got grid power: ${reading.gridPower ?? "n/a"} W (import positive, export negative)`);
+        return reading.gridPower;
     }
     applyWallboxCurrentLimits(iWB) {
         const wallBox = this.config.wallBoxList[iWB];
@@ -769,24 +870,36 @@ class go_e_charger extends utils.Adapter {
             .get(`http://${this.config.wallBoxList[iWB].ipAddress}/status`, { transformResponse: r => r })
             .then(async (response) => {
             const result = JSON.parse(response.data);
-            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V1: ${response.data}`);
+            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V1`);
             await this.ParseStatusAPIV1(result, iWB);
+            this.wallboxInfoList[iWB].ApiDetected = true;
             await this.setWallboxReachable(iWB);
         })
             .catch(async (error) => {
-            this.wallboxInfoList[iWB].Reported = {};
-            this.wallboxInfoList[iWB].ChargePower = Number.NaN;
-            this.wallboxInfoList[iWB].RequestedAllow = null;
-            this.wallboxInfoList[iWB].ReleaseRejects = 0;
-            if (!(0, chargeManagerUtils_1.isConnectionError)(error)) {
-                this.log.error(`Unexpected API V1 response from charger ${this.wallboxLabel(iWB, true)}: ${error} - check firmware/API version`);
-                return;
-            }
-            if (error.message && error.message.includes("EHOSTUNREACH")) {
-                this.wallboxInfoList[iWB].Firmware = `EHostUnreach`;
-            }
-            await this.setWallboxUnreachable(iWB, error);
+            await this.handleStatusReadFailure(iWB, error, "v1");
         });
+    }
+    async handleStatusReadFailure(iWB, error, api) {
+        const info = this.wallboxInfoList[iWB];
+        info.Reported = {};
+        info.ChargePower = Number.NaN;
+        info.RequestedAllow = null;
+        info.ReleaseRejects = 0;
+        if (api === "v2") {
+            info.ForceState = Number.NaN;
+            info.ModelStatus = Number.NaN;
+            info.Transaction = undefined;
+        }
+        const apiName = api === "v1" ? "API V1" : "API V2";
+        if (!(0, chargeManagerUtils_1.isConnectionError)(error)) {
+            this.log.error(`Unexpected ${apiName} response from charger ${this.wallboxLabel(iWB, true)}: ${String(error)} - check firmware/API version`);
+            return;
+        }
+        const message = error.message;
+        if (typeof message === "string" && message.includes("EHOSTUNREACH")) {
+            info.Firmware = `EHostUnreach`;
+        }
+        await this.setWallboxUnreachable(iWB, error, api);
     }
     async setWallboxReachable(iWB) {
         const info = this.wallboxInfoList[iWB];
@@ -800,15 +913,23 @@ class go_e_charger extends utils.Adapter {
             this.log.info(`Charger ${this.wallboxLabel(iWB, true)} is reachable again`);
         }
     }
-    async setWallboxUnreachable(iWB, error) {
+    async setWallboxUnreachable(iWB, error, api = "v1") {
         const info = this.wallboxInfoList[iWB];
         if ((0, chargeManagerUtils_1.connectionTransition)(info.Online, false) === null) {
             this.log.debug(`Charger ${this.wallboxLabel(iWB, true)} still unreachable: ${String(error)}`);
             return;
         }
         info.Online = false;
-        this.log.error(`Charger ${this.wallboxLabel(iWB)} unreachable when calling go-eCharger API: ${String(error)}`);
-        this.log.error(`Please verify IP address of charger ${this.wallboxLabel(iWB, true)} !!! Further errors are logged at debug level until it is reachable again.`);
+        const httpHint = (0, chargeManagerUtils_1.describeApiHttpError)((0, chargeManagerUtils_1.httpStatusOf)(error), api);
+        if (httpHint !== null) {
+            this.log.error(`Charger ${this.wallboxLabel(iWB, true)} delivers no data: ${httpHint}. Further errors are logged at debug level until it answers again.`);
+        }
+        else {
+            this.log.error(`Charger ${this.wallboxLabel(iWB)} unreachable when calling go-eCharger API: ${String(error)}`);
+            this.log.error(api === "v1"
+                ? `Please verify IP address of charger ${this.wallboxLabel(iWB, true)} !!! Further errors are logged at debug level until it is reachable again.`
+                : `Please verify IP address of charger ${this.wallboxLabel(iWB, true)} and that "HTTP API v2" is enabled in the go-e app !!! Further errors are logged at debug level until it is reachable again.`);
+        }
         info.CarState = 0;
         info.MeasuredMaxChargeAmp = 0;
         info.ForceState = Number.NaN;
@@ -839,6 +960,12 @@ class go_e_charger extends utils.Adapter {
             case "4":
                 await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Charge finished, car still connected`, `State of connected car`, "text");
                 break;
+            case "0":
+                await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Unknown`, `State of connected car`, "text");
+                break;
+            case "6":
+                await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Initializing`, `State of connected car`, "text");
+                break;
             default:
                 await this.projectUtils.checkAndSetValue(`${basePath}.info.carStateString`, `Error`, `State of connected car`, `text`);
         }
@@ -848,7 +975,9 @@ class go_e_charger extends utils.Adapter {
         const rejectsBefore = this.wallboxInfoList[iWB].ReleaseRejects;
         this.wallboxInfoList[iWB].ReleaseRejects = (0, chargeManagerUtils_1.updateReleaseRejects)(Number(status.alw), this.wallboxInfoList[iWB].RequestedAllow, rejectsBefore);
         if (rejectsBefore < chargeManagerUtils_1.RELEASE_RETRY_LIMIT && this.wallboxInfoList[iWB].ReleaseRejects >= chargeManagerUtils_1.RELEASE_RETRY_LIMIT) {
-            this.log.info(`Charger ${this.wallboxLabel(iWB)}: the charge release was ignored ${this.wallboxInfoList[iWB].ReleaseRejects} times in a row - still retrying, but only every ${chargeManagerUtils_1.RELEASE_RETRY_INTERVAL} cycles from now on`);
+            this.log.info(`Charger ${this.wallboxLabel(iWB)}: the charge release was ignored ${this.wallboxInfoList[iWB].ReleaseRejects} times in a row - still retrying, but only every ${chargeManagerUtils_1.RELEASE_RETRY_INTERVAL} cycles from now on${(0, chargeManagerUtils_1.waitsForAuthorization)(this.wallboxInfoList[iWB].ModelStatus)
+                ? " - the charger waits for RFID/app authorization and ignores the force state until it is authorized"
+                : ""}`);
         }
         switch (status.alw) {
             case "0":
@@ -859,6 +988,7 @@ class go_e_charger extends utils.Adapter {
                 break;
         }
         this.wallboxInfoList[iWB].GridPhases = ((32 & status.pha) >> 5) + ((16 & status.pha) >> 4) + ((8 & status.pha) >> 3);
+        this.wallboxInfoList[iWB].ActivePhases = (0, chargeManagerUtils_1.activePhasesFromFlags)(status.pha);
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.GridPhases`, this.wallboxInfoList[iWB].GridPhases, `No of available grid phases`, "phase", "value");
         this.setWallboxHardwareLimits(iWB, this.combineHardwareMax(Number(status.ama), Number(status.cbl)), 0, basePath);
         void this.projectUtils.checkAndSetValueNumber(`${basePath}.statistics.chargedEnergy`, status.eto / 10, `Totally charged in wallbox lifetime`, "kWh", "value.energy.consumed");
@@ -915,7 +1045,7 @@ class go_e_charger extends utils.Adapter {
         })
             .then(async (response) => {
             const result = JSON.parse(response.data);
-            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2: ${response.data}`);
+            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2`);
             this.wallboxInfoList[iWB].HardwareMin3 = true;
             try {
                 await this.ParseStatusAPIV2(result, iWB);
@@ -928,6 +1058,11 @@ class go_e_charger extends utils.Adapter {
             this.wallboxInfoList[iWB].ForceState = Number.NaN;
             if (!(0, chargeManagerUtils_1.isConnectionError)(error)) {
                 this.log.warn(`Unexpected API V2 response from charger ${this.wallboxLabel(iWB, true)}: ${error} - check firmware/API version`);
+                return;
+            }
+            const status = (0, chargeManagerUtils_1.httpStatusOf)(error);
+            if (status === 401 || status === 403) {
+                this.log.warn(`API V2 of charger ${this.wallboxLabel(iWB, true)}: ${(0, chargeManagerUtils_1.describeApiHttpError)(status, "v2")}`);
                 return;
             }
             this.log.warn(`API V2 not reachable for charger ${this.wallboxLabel(iWB, true)} - normal for hardware gen 1/2; on gen 3+ enable "HTTP API v2" for phase switching and RFID session info. (${error})`);
@@ -945,7 +1080,11 @@ class go_e_charger extends utils.Adapter {
             default:
                 this.wallboxInfoList[iWB].EnabledPhases = 0;
         }
-        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.EnabledPhases`, this.wallboxInfoList[iWB].EnabledPhases, `No of enabled phases in go-e wallbox`, "phase", "value");
+        this.wallboxInfoList[iWB].PhaseSwitchMode = typeof status.psm === "number" ? status.psm : Number.NaN;
+        if (status.psm !== chargeManagerUtils_1.PHASE_SWITCH_MODE_CHARGER_AUTO) {
+            this.wallboxInfoList[iWB].PhaseAutoNoticeLogged = false;
+        }
+        void this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.EnabledPhases`, (0, chargeManagerUtils_1.enabledPhasesState)(status.psm, this.wallboxInfoList[iWB].ActivePhases), `No of enabled phases in go-e wallbox`, "phase", "value");
         this.log.debug(`got enabled phases for charger ${this.wallboxLabel(iWB)}: ${this.wallboxInfoList[iWB].EnabledPhases}`);
         this.wallboxInfoList[iWB].ForceState = typeof status.frc === "number" ? status.frc : Number.NaN;
         this.wallboxInfoList[iWB].Reported.alw = (0, chargeManagerUtils_1.releaseReadback)(this.wallboxInfoList[iWB].Reported.alw, this.wallboxInfoList[iWB].ForceState);
@@ -968,7 +1107,110 @@ class go_e_charger extends utils.Adapter {
         if (status.trx !== undefined) {
             await this.setUnlockedByRFID(status.trx === null ? 0 : Number(status.trx), basePath);
         }
+        this.wallboxInfoList[iWB].Transaction = status.trx === undefined || status.trx === null ? status.trx : Number(status.trx);
+        this.wallboxInfoList[iWB].ModelStatus = typeof status.modelStatus === "number" ? status.modelStatus : Number.NaN;
+        this.logAuthorizationWait(iWB);
         this.log.debug(`got and parsed go-e charger ${this.wallboxLabel(iWB)} data with API V2`);
+    }
+    logAuthorizationWait(iWB) {
+        const info = this.wallboxInfoList[iWB];
+        const waiting = info.ReleasedByAdapter && (0, chargeManagerUtils_1.waitsForAuthorization)(info.ModelStatus);
+        if (waiting && !info.AuthWaitLogged) {
+            const option = info.ApiMode === "v2"
+                ? this.config.wallBoxList[iWB].startTransactionWithoutRfid
+                    ? " - starting a transaction without RFID (trx=0) with the next release"
+                    : ` - authorize with an RFID card or the go-e app, or enable "Start transaction without RFID" for this charger`
+                : " - authorize with an RFID card or the go-e app";
+            this.log.info(`Charger ${this.wallboxLabel(iWB, true)} waits for RFID/app authorization: the charge release (force state) is ignored until it is authorized${option}`);
+        }
+        info.AuthWaitLogged = waiting;
+    }
+    async detectApiMode(iWB) {
+        const info = this.wallboxInfoList[iWB];
+        const ipAddress = this.config.wallBoxList[iWB].ipAddress;
+        info.ApiDetectCountdown = chargeManagerUtils_1.API_DETECT_RETRY_CYCLES;
+        try {
+            const response = await axiosInstance.get(`http://${ipAddress}/api/status?filter=${chargeManagerUtils_1.API_V2_PROBE_KEYS.join(",")}`, { transformResponse: r => r });
+            JSON.parse(response.data);
+        }
+        catch (error) {
+            const status = (0, chargeManagerUtils_1.httpStatusOf)(error);
+            if (status === 401 || status === 403) {
+                this.log.warn(`API V2 of charger ${this.wallboxLabel(iWB, true)}: ${(0, chargeManagerUtils_1.describeApiHttpError)(status, "v2")}`);
+            }
+            else {
+                this.log.debug(`Charger ${this.wallboxLabel(iWB)} does not answer on API V2 (${String(error)}) - using API V1`);
+            }
+            return info.ApiMode;
+        }
+        let v1Error;
+        for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+                const response = await axiosInstance.get(`http://${ipAddress}/status`, { transformResponse: r => r });
+                if (!(0, chargeManagerUtils_1.isStatusV1Answer)(response.data)) {
+                    throw new Error(`no API V1 status: ${JSON.stringify(String(response.data).slice(0, 80))}`);
+                }
+                info.ApiDetected = true;
+                this.log.debug(`Charger ${this.wallboxLabel(iWB)} answers on API V1 and API V2 - using API V1 with API V2 extras`);
+                return info.ApiMode;
+            }
+            catch (error) {
+                v1Error = error;
+            }
+        }
+        info.ApiMode = "v2";
+        info.ApiDetected = true;
+        info.HardwareMin3 = true;
+        const httpStatus = (0, chargeManagerUtils_1.httpStatusOf)(v1Error);
+        this.log.info(`Charger ${this.wallboxLabel(iWB, true)} answers on HTTP API v2 but not on HTTP API v1 (${httpStatus !== null ? `HTTP ${httpStatus}` : String(v1Error)}) - using HTTP API v2 only (e.g. go-e CORE / PRO)`);
+        return info.ApiMode;
+    }
+    async Read_ChargerAPIV2Only(iWB) {
+        const info = this.wallboxInfoList[iWB];
+        const ipAddress = this.config.wallBoxList[iWB].ipAddress;
+        try {
+            let response;
+            try {
+                response = await axiosInstance.get((0, chargeManagerUtils_1.apiV2OnlyStatusUrl)(ipAddress, info.ApiV2Unfiltered), { transformResponse: r => r });
+            }
+            catch (error) {
+                if (!(0, chargeManagerUtils_1.retryApiV2Unfiltered)(error, info.ApiV2Unfiltered)) {
+                    throw error;
+                }
+                response = await axiosInstance.get((0, chargeManagerUtils_1.apiV2OnlyStatusUrl)(ipAddress, true), { transformResponse: r => r });
+                JSON.parse(response.data);
+                info.ApiV2Unfiltered = true;
+                this.log.info(`Charger ${this.wallboxLabel(iWB, true)} refuses the filtered HTTP API v2 status (HTTP 400) but answers the full status - reading it without filter from now on`);
+            }
+            this.log.debug(`Read charger ${this.wallboxLabel(iWB)} API V2 (no API V1)${info.ApiV2Unfiltered ? " without filter" : ""}`);
+            const status = (0, chargeManagerUtils_1.normalizeStatusV2)(JSON.parse(response.data));
+            this.wallboxInfoList[iWB].HardwareMin3 = true;
+            await this.ParseStatusAPIV1((0, chargeManagerUtils_1.statusV1FromV2)(status), iWB);
+            await this.ParseStatusAPIV2(status, iWB);
+            await this.setWallboxReachable(iWB);
+        }
+        catch (error) {
+            await this.handleStatusReadFailure(iWB, error, "v2");
+        }
+    }
+    async readCharger(iWB, wasOnline) {
+        const info = this.wallboxInfoList[iWB];
+        if (info.ApiMode === "v2") {
+            await this.Read_ChargerAPIV2Only(iWB);
+            return;
+        }
+        await this.Read_ChargerAPIV1(iWB);
+        if (info.Online === false) {
+            if (!info.ApiDetected && --info.ApiDetectCountdown <= 0) {
+                if ((await this.detectApiMode(iWB)) === "v2") {
+                    await this.Read_ChargerAPIV2Only(iWB);
+                }
+            }
+            return;
+        }
+        if (info.HardwareMin3 || wasOnline === false) {
+            await this.Read_ChargerAPIV2(iWB);
+        }
     }
     async Switch_3Phases(Charge3Phase, iWB) {
         if (!this.wallboxInfoList[iWB].HardwareMin3) {
@@ -992,11 +1234,20 @@ class go_e_charger extends utils.Adapter {
             this.wallboxInfoList[iWB].LastPhaseSwitchMs = Date.now();
             this.log.info(`Charger ${this.wallboxLabel(iWB)}: switched to ${Charge3Phase ? 3 : 1}-phase charging`);
             this.log.debug(`Sent: PSM=${psm} to charger ${this.wallboxLabel(iWB)} → Response: ${response.statusText}`);
+            this.logPhaseAutoOverride(iWB, psm);
         })
             .catch(error => {
             this.log.warn(`Error: ${error} while setting 3 phases to charger ${this.wallboxLabel(iWB, true)} = ${Charge3Phase}`);
             this.log.error(`Please verify IP address of charger ${this.wallboxLabel(iWB, true)} !!!`);
         });
+    }
+    logPhaseAutoOverride(iWB, psm) {
+        const info = this.wallboxInfoList[iWB];
+        if (!(0, chargeManagerUtils_1.phaseAutoOverrideNotice)(info.PhaseSwitchMode, info.PhaseAutoNoticeLogged)) {
+            return;
+        }
+        info.PhaseAutoNoticeLogged = true;
+        this.log.info(`Charger ${this.wallboxLabel(iWB)}: the charger is set to automatic phase switching (psm 0) - the adapter switches it to ${psm === 2 ? "3-phase" : "1-phase"} (psm=${psm}) as set by Settings.Charge3Phase / Settings.PhaseMode`);
     }
     async Charge_Config(Allow, Ampere, LogMessage, iWB) {
         const basePath = `Wallbox_${iWB}`;
@@ -1022,11 +1273,32 @@ class go_e_charger extends utils.Adapter {
             return false;
         }
         this.log.debug(`${LogMessage}  -  ${Ampere} Ampere`);
+        const apiMode = this.wallboxInfoList[iWB].ApiMode;
         let releaseSent = false;
         for (const command of pending) {
+            const v2Write = apiMode === "v2" ? (0, chargeManagerUtils_1.apiV2WriteFor)(command) : null;
+            const written = v2Write ? `${v2Write.key}=${v2Write.value}` : `${command.parameter}=${command.value}`;
+            const authorize = (0, chargeManagerUtils_1.apiV2AuthorizeWrite)(command, {
+                enabled: Boolean(this.config.wallBoxList[iWB].startTransactionWithoutRfid),
+                apiMode,
+                transaction: this.wallboxInfoList[iWB].Transaction,
+                carState: this.wallboxInfoList[iWB].CarState,
+            });
+            if (authorize !== null) {
+                await this.writeApiV2(iWB, authorize);
+            }
             try {
-                const response = await axiosInstance.get(`http://${this.config.wallBoxList[iWB].ipAddress}/mqtt?payload=${command.parameter}=${command.value}`, { transformResponse: r => r });
-                this.log.debug(`Sent to charger ${this.wallboxLabel(iWB)}: ${command.parameter}=${command.value}`);
+                const response = await axiosInstance.get(v2Write
+                    ? `http://${this.config.wallBoxList[iWB].ipAddress}/api/set?${written}`
+                    : `http://${this.config.wallBoxList[iWB].ipAddress}/mqtt?payload=${written}`, { transformResponse: r => r });
+                this.log.debug(`Sent to charger ${this.wallboxLabel(iWB)}: ${written}`);
+                if (v2Write) {
+                    const rejection = (0, chargeManagerUtils_1.apiV2WriteRejection)(response.data, v2Write.key);
+                    if (rejection !== null) {
+                        this.log.warn(`Charger ${this.wallboxLabel(iWB, true)} rejected ${written}: ${rejection}`);
+                        return false;
+                    }
+                }
                 if (command.parameter === "alw") {
                     this.wallboxInfoList[iWB].RequestedAllow = command.value;
                     this.wallboxInfoList[iWB].Reported.alw = command.value;
@@ -1034,21 +1306,49 @@ class go_e_charger extends utils.Adapter {
                     await this.projectUtils.checkAndSetValueBoolean(`${basePath}.Power.ChargingAllowed`, command.value === 1, `Charging allowed`, `indicator`);
                 }
                 else {
-                    const result = JSON.parse(response.data);
-                    await this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrent`, Number(result.amp), `Charge current output`, "A", "level.current");
+                    const current = v2Write ? command.value : Number(JSON.parse(response.data).amp);
+                    await this.projectUtils.checkAndSetValueNumber(`${basePath}.Power.ChargeCurrent`, current, `Charge current output`, "A", "level.current");
                 }
             }
             catch (error) {
+                const rejection = v2Write ? (0, chargeManagerUtils_1.apiV2ErrorRejection)(error, v2Write.key) : null;
+                if (rejection !== null) {
+                    this.log.warn(`Charger ${this.wallboxLabel(iWB, true)} rejected ${written}: ${rejection}`);
+                    return false;
+                }
                 if (!(0, chargeManagerUtils_1.isConnectionError)(error)) {
-                    this.log.warn(`Unexpected response from charger ${this.wallboxLabel(iWB, true)} to ${command.parameter}=${command.value}: ${String(error)} - check firmware/API version`);
+                    this.log.warn(`Unexpected response from charger ${this.wallboxLabel(iWB, true)} to ${written}: ${String(error)} - check firmware/API version`);
                     return releaseSent;
                 }
-                this.log.warn(`Error: ${String(error)} by writing to charger ${this.wallboxLabel(iWB, true)}: ${command.parameter}=${command.value}`);
-                this.log.error(`Please verify IP address of charger ${this.wallboxLabel(iWB, true)} !!!`);
+                this.log.warn(`Error: ${String(error)} by writing to charger ${this.wallboxLabel(iWB, true)}: ${written}`);
+                const httpHint = (0, chargeManagerUtils_1.describeApiHttpError)((0, chargeManagerUtils_1.httpStatusOf)(error), apiMode);
+                this.log.error(httpHint !== null
+                    ? `Charger ${this.wallboxLabel(iWB, true)}: ${httpHint}`
+                    : `Please verify IP address of charger ${this.wallboxLabel(iWB, true)} !!!`);
                 return false;
             }
         }
         return releaseSent;
+    }
+    async writeApiV2(iWB, write) {
+        const written = `${write.key}=${write.value}`;
+        try {
+            const response = await axiosInstance.get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/set?${written}`, { transformResponse: r => r });
+            const rejection = (0, chargeManagerUtils_1.apiV2WriteRejection)(response.data, write.key);
+            if (rejection !== null) {
+                this.log.warn(`Charger ${this.wallboxLabel(iWB, true)} rejected ${written}: ${rejection}`);
+                return false;
+            }
+            this.log.info(`Charger ${this.wallboxLabel(iWB)}: started a transaction without RFID (${written}) for the charge release`);
+            this.wallboxInfoList[iWB].Transaction = write.value;
+            return true;
+        }
+        catch (error) {
+            const rejection = (0, chargeManagerUtils_1.apiV2ErrorRejection)(error, write.key);
+            const hint = rejection ?? (0, chargeManagerUtils_1.describeApiHttpError)((0, chargeManagerUtils_1.httpStatusOf)(error), "v2") ?? String(error);
+            this.log.warn(`Charger ${this.wallboxLabel(iWB, true)}: could not send ${written}: ${hint}`);
+            return false;
+        }
     }
     async planChargeManagerCycle() {
         const plans = new Array(this.config.wallBoxList.length).fill(undefined);
@@ -1056,10 +1356,17 @@ class go_e_charger extends utils.Adapter {
         if (!candidates.length) {
             return plans;
         }
-        solarPower = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower);
-        this.log.debug(`Got external state of solar power: ${solarPower} W`);
-        houseConsumption = await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption);
-        this.log.debug(`Got external state of house power consumption: ${houseConsumption} W`);
+        let subtractChargerPower = this.config.subtractSelfConsumption;
+        if (chargeManagerGridMode === "gridMeter") {
+            const gridPower = this.readGridMeter();
+            ({ solarPower, houseConsumption, subtractChargerPower } = (0, chargeManagerUtils_1.surplusInputsFromGridMeter)(gridPower));
+        }
+        else {
+            solarPower = (0, chargeManagerUtils_1.negatePowerValue)(await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomeSolarPower), !!this.config.solarPowerNegate);
+            this.log.debug(`Got external state of solar power: ${solarPower} W${this.config.solarPowerNegate ? " (negated)" : ""}`);
+            houseConsumption = (0, chargeManagerUtils_1.negatePowerValue)(await this.projectUtils.asyncGetForeignStateVal(this.config.stateHomePowerConsumption), !!this.config.homePowerConsumptionNegate);
+            this.log.debug(`Got external state of house power consumption: ${houseConsumption} W${this.config.homePowerConsumptionNegate ? " (negated)" : ""}`);
+        }
         const batteryState = chargeManagerBatteryMode === "disabled" ? null : await this.projectUtils.asyncGetForeignState(this.config.stateHomeBatSoc);
         const batterySocAgeMs = batteryState ? Date.now() - batteryState.ts : null;
         let batterySoc = null;
@@ -1116,7 +1423,7 @@ class go_e_charger extends utils.Adapter {
             solarPower,
             houseConsumption,
             chargerPower: fleetChargePower,
-            subtractChargerPower: this.config.subtractSelfConsumption,
+            subtractChargerPower,
             batterySoc,
             minBatterySoc: minHomeBatVal,
             batteryMode: chargeManagerBatteryMode,

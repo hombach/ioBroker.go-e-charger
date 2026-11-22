@@ -858,6 +858,8 @@ export function seedChargeManagerState(
 
 /** go-e `frc` (forceState) value for "neutral": the charger follows its own default and charges any vehicle */
 export const FORCE_STATE_NEUTRAL = 0;
+/** go-e `frc` (forceState) value "off": the charger does not charge */
+export const FORCE_STATE_OFF = 1;
 /** go-e `frc` (forceState) value that forces charging on - what the adapter's release sets */
 export const FORCE_STATE_ON = 2;
 
@@ -1526,6 +1528,171 @@ export function wallboxLabel(index: number, name?: unknown, ipAddress?: unknown)
 	return trimmedIp ? `${label} (${trimmedIp})` : label;
 }
 
+/**
+ * Source of the ChargeManager surplus measurement:
+ * - `pvAndConsumption` – separate positive PV generation and household consumption states (default)
+ * - `gridMeter` – one signed grid power state (import positive, export negative)
+ */
+export type GridInputMode = "pvAndConsumption" | "gridMeter";
+
+/** Resolved surplus input mode of the instance configuration. */
+export interface GridInputModeResolution {
+	/** Mode the ChargeManager runs with */
+	mode: GridInputMode;
+	/**
+	 * Why the configured mode was not used: `invalid-mode` for an unknown mode value,
+	 * `missing-grid-state` for the grid meter mode without an object ID; `null` when the
+	 * configured mode is used as it is
+	 */
+	fallback: "invalid-mode" | "missing-grid-state" | null;
+}
+
+/**
+ * Resolves the surplus input mode from the instance configuration.
+ *
+ * The grid meter mode is only used when it is selected explicitly and a grid power object ID is
+ * configured; everything else runs the PV-and-consumption mode, so an existing configuration
+ * (without `gridMode`) behaves exactly as before. In the grid meter mode the PV and consumption
+ * object IDs are ignored, even when they are still filled in.
+ *
+ * @param mode Configured `gridMode`
+ * @param gridStateId Configured `stateGridPower`
+ * @returns The mode to run with and the reason for a fallback
+ */
+export function resolveGridInputMode(mode: unknown, gridStateId: unknown): GridInputModeResolution {
+	if (mode === undefined || mode === null || mode === "" || mode === "pvAndConsumption") {
+		return { mode: "pvAndConsumption", fallback: null };
+	}
+	if (mode !== "gridMeter") {
+		return { mode: "pvAndConsumption", fallback: "invalid-mode" };
+	}
+	if (typeof gridStateId !== "string" || !gridStateId.trim()) {
+		return { mode: "pvAndConsumption", fallback: "missing-grid-state" };
+	}
+	return { mode: "gridMeter", fallback: null };
+}
+
+/** Options applied to every update of the grid meter state. */
+export interface GridMeterOptions {
+	/** Invert the sign of the value (for sources that report export as positive) */
+	negate: boolean;
+	/** Only use updates confirmed by their source (`ack` = true) */
+	ackOnly: boolean;
+}
+
+/** Last accepted grid meter reading. */
+export interface GridMeterSample {
+	/** Grid power in W after Negate: import positive, export negative */
+	power: number;
+	/** Timestamp of the state update (`ts`, ms since epoch) */
+	ts: number;
+}
+
+/** Outcome of one grid meter state update. */
+export interface GridMeterUpdate {
+	/** Reading to keep, or `null` when the update is not used */
+	sample: GridMeterSample | null;
+	/** `accepted`, or why the update is not used */
+	reason: "accepted" | "missing" | "not-acknowledged" | "invalid";
+}
+
+/**
+ * Checks one update of the grid meter state and applies Negate.
+ *
+ * Only finite numbers are used; strings, booleans, `null` and `NaN` are rejected. With Ack-only an
+ * update with `ack` = false is skipped, so the last confirmed reading stays in use (and ages, see
+ * {@link evaluateGridMeterReading}).
+ *
+ * @param state State update as delivered by ioBroker, `null`/`undefined` when the state is missing or deleted
+ * @param options Negate and Ack-only
+ * @returns The reading to keep, or the reason why the update is not used
+ */
+export function acceptGridMeterState(state: { val?: unknown; ack?: boolean; ts?: number } | null | undefined, options: GridMeterOptions): GridMeterUpdate {
+	if (!state) {
+		return { sample: null, reason: "missing" };
+	}
+	if (options.ackOnly && state.ack !== true) {
+		return { sample: null, reason: "not-acknowledged" };
+	}
+	if (typeof state.val !== "number" || !Number.isFinite(state.val)) {
+		return { sample: null, reason: "invalid" };
+	}
+	// `0 - x` instead of `-x` keeps a negated zero reading at 0 instead of -0
+	const power = options.negate ? 0 - state.val : state.val;
+	const ts = typeof state.ts === "number" && Number.isFinite(state.ts) ? state.ts : Date.now();
+	return { sample: { power, ts }, reason: "accepted" };
+}
+
+/** Grid meter reading the ChargeManager may use this cycle. */
+export interface GridMeterReading {
+	/** Grid power in W (import positive, export negative), or `null` when it must not be used */
+	gridPower: number | null;
+	/** `available`, or why there is no usable reading */
+	reason: "available" | "missing" | "stale";
+}
+
+/**
+ * Decides whether the last accepted grid meter reading may drive the ChargeManager this cycle.
+ *
+ * Like the battery SoC age check, a reading older than `maximumAgeSeconds` is not used, so a dead
+ * meter cannot keep the car charging from the grid; `0` disables the age check.
+ *
+ * @param sample Last accepted reading, `null` when there is none
+ * @param nowMs Current time (ms since epoch)
+ * @param maximumAgeSeconds Maximum age of the reading in seconds, 0 = no check
+ * @returns The grid power to use, or why there is none
+ */
+export function evaluateGridMeterReading(sample: GridMeterSample | null, nowMs: number, maximumAgeSeconds: number): GridMeterReading {
+	if (!sample || !Number.isFinite(sample.power)) {
+		return { gridPower: null, reason: "missing" };
+	}
+	if (maximumAgeSeconds > 0) {
+		const ageMs = nowMs - sample.ts;
+		if (!Number.isFinite(ageMs) || ageMs < 0 || ageMs > maximumAgeSeconds * 1000) {
+			return { gridPower: null, reason: "stale" };
+		}
+	}
+	return { gridPower: sample.power, reason: "available" };
+}
+
+/**
+ * Maps a signed grid power onto the inputs of {@link calculateAvailableSurplusPower}.
+ *
+ * The grid meter sees the house with all wallboxes, so the export is the surplus left over after
+ * the wallboxes already took their share: `surplus = −grid + wallbox power − reserve (+ battery bonus)`.
+ * This is expressed as `solarPower = −grid`, `houseConsumption = 0` and the wallbox power always
+ * added back (`subtractChargerPower` = true, independent of `subtractSelfConsumption`); without
+ * adding it back the controller would see its own charging as missing surplus and oscillate.
+ * A missing reading yields `NaN`, which the surplus calculation rejects as invalid input.
+ *
+ * @param gridPower Grid power in W (import positive, export negative), `null` without a usable reading
+ * @returns Surplus inputs for the fleet calculation
+ */
+export function surplusInputsFromGridMeter(gridPower: number | null): { solarPower: number; houseConsumption: number; subtractChargerPower: boolean } {
+	return {
+		solarPower: gridPower === null ? Number.NaN : 0 - gridPower,
+		houseConsumption: 0,
+		subtractChargerPower: true,
+	};
+}
+
+/**
+ * Applies the Negate option of a power input (PV generation, household consumption).
+ *
+ * Only a finite number is negated; anything else is returned unchanged, so the surplus calculation
+ * still rejects it as invalid input. A negated zero stays 0 instead of -0.
+ *
+ * @param value Raw state value of the power input
+ * @param negate Whether the Negate option is enabled for this input
+ * @returns The (negated) value
+ */
+export function negatePowerValue<T>(value: T, negate: boolean): T | number {
+	if (!negate || typeof value !== "number" || !Number.isFinite(value)) {
+		return value;
+	}
+	return 0 - value;
+}
+
 /** Number of RFID card slots of a go-e charger (cards 1-10). */
 export const RFID_CARD_SLOTS = 10;
 
@@ -1643,4 +1810,470 @@ export function parseRfidCardsV2(status: Record<string, unknown>): RfidCardReadi
  */
 export function rfidCardsFromV1(hardwareMin3: boolean, rfidFromV2: boolean): boolean {
 	return !hardwareMin3 || !rfidFromV2;
+}
+
+/**
+ * HTTP API a charger is read and controlled with.
+ *
+ * - `v1`: HTTP API v1 (`/status`, `/mqtt`) for all reads and writes, plus HTTP API v2 on gen 3+ for
+ *   phase switching, force state, RFID and other extras - the behaviour of all versions before #939.
+ * - `v2`: HTTP API v2 only (`/api/status`, `/api/set`), for chargers without API v1 such as the
+ *   go-e Charger CORE / PRO (firmware 60.x, #939).
+ */
+export type ChargerApiMode = "v1" | "v2";
+
+/** API V2 keys requested to detect whether a charger answers on HTTP API v2 at all */
+export const API_V2_PROBE_KEYS: readonly string[] = ["fwv", "typ"];
+
+/**
+ * API V2 keys read every cycle from a charger without API V1. These are the keys of the regular API V2
+ * read plus the ones that replace API V1 data: `acs` (access control, the API V2 counterpart of `ast`)
+ * and `cll` (current limits, holds the cable current limit). `ast`, `cbl` and `cards` are not requested:
+ * the go-e CORE 60.4 has none of them; {@link normalizeStatusV2} derives `ast` and `cbl` from `acs` and
+ * `cll`. The CORE silently ignores unknown keys (`filter=fwv,ast` answers `{"fwv":"60.4"}`). The cause
+ * of an earlier HTTP 400 on a CORE 60.4 is unknown; the unfiltered retry is a safety net (#939). The
+ * full filter is {@link API_V2_ONLY_FILTER_KEYS}.
+ */
+export const API_V2_ONLY_STATUS_KEYS: readonly string[] = [
+	"alw",
+	"frc",
+	"modelStatus",
+	"acu",
+	"eto",
+	"amp",
+	"rbc",
+	"rbt",
+	"car",
+	"pha",
+	"fwv",
+	"nrg",
+	"psm",
+	"typ",
+	"fhz",
+	"trx",
+	"acs",
+	"ama",
+	"cll",
+	"mca",
+];
+
+/** RFID card keys of firmware 60.0+ (`c<i>n/e/i`), without the `cards` array that firmware 60.0 removed */
+export const RFID_V2_CARD_SLOT_KEYS: readonly string[] = RFID_V2_FILTER_KEYS.filter(key => key !== "cards");
+
+/** Filter of the read of a charger without API V1: {@link API_V2_ONLY_STATUS_KEYS} plus the RFID card slots */
+export const API_V2_ONLY_FILTER_KEYS: readonly string[] = [...API_V2_ONLY_STATUS_KEYS, ...RFID_V2_CARD_SLOT_KEYS];
+
+/**
+ * URL of the status read of a charger without API V1.
+ *
+ * @param ipAddress IP address (and optional port) of the charger
+ * @param unfiltered read the full status without a filter (after the charger refused the filter)
+ * @returns the `/api/status` URL
+ */
+export function apiV2OnlyStatusUrl(ipAddress: string, unfiltered: boolean): string {
+	return unfiltered ? `http://${ipAddress}/api/status` : `http://${ipAddress}/api/status?filter=${API_V2_ONLY_FILTER_KEYS.join(",")}`;
+}
+
+/**
+ * Whether a failed filtered read of a charger without API V1 is retried without a filter: only for HTTP
+ * 400. A safety net: a go-e CORE 60.4 answered an earlier filter with HTTP 400; the cause is unknown,
+ * and unknown keys are ignored otherwise (#939). Timeouts, connection
+ * problems and other HTTP errors are a different problem that an unfiltered read does not solve.
+ *
+ * @param error error of the filtered read
+ * @param unfiltered whether the read already was unfiltered
+ * @returns true to retry once without filter
+ */
+export function retryApiV2Unfiltered(error: unknown, unfiltered: boolean): boolean {
+	return !unfiltered && httpStatusOf(error) === 400;
+}
+
+/** API V2 detection is retried every this many cycles for a charger that never answered since adapter start */
+export const API_DETECT_RETRY_CYCLES = 6;
+
+/**
+ * Fills the API V2 keys some firmware does not report from their equivalents, without changing the
+ * input. Firmware 60.4 of the go-e CORE (#939) reports no `ast` and no `cbl`:
+ * - `ast` (access state) falls back to `acs` (access control setting) - only for 0 = open and 1 = RFID/App
+ *   needed, which mean the same in both. `acs` 2 is "EVCMS" on firmware 60.4, while API V1 `ast` 2 means
+ *   "electricity price / automatic", so it is not mapped.
+ * - `cbl` (cable current limit) falls back to `cll.cableCurrentLimit`
+ *
+ * @param status API V2 status object
+ * @returns a shallow copy with the fallbacks applied
+ */
+export function normalizeStatusV2(status: Record<string, unknown>): Record<string, unknown> {
+	const normalized: Record<string, unknown> = { ...status };
+	if ((normalized.ast === undefined || normalized.ast === null) && (status.acs === 0 || status.acs === 1)) {
+		normalized.ast = status.acs;
+	}
+	const currentLimits = status.cll;
+	if ((normalized.cbl === undefined || normalized.cbl === null) && typeof currentLimits === "object" && currentLimits !== null) {
+		const cableLimit = (currentLimits as Record<string, unknown>).cableCurrentLimit;
+		if (typeof cableLimit === "number" && Number.isFinite(cableLimit)) {
+			normalized.cbl = cableLimit;
+		}
+	}
+	return normalized;
+}
+
+/** API V1 shaped status built from an API V2 status, see {@link statusV1FromV2} */
+export interface StatusV1FromV2 {
+	/** reboot counter */
+	rbc: number;
+	/** time since boot in ms */
+	rbt: number;
+	/** car state as API V1 string ("0" = unknown/error) */
+	car: string;
+	/** requested current in A */
+	amp: number;
+	/** API V2 has no volatile current - the requested current is reported instead */
+	amx: number;
+	/** charge release as API V1 string ("1" / "0"), `""` when unknown */
+	alw: string;
+	/** API V1 phase bit field (bits 0-2 after, bits 3-5 before the contactor) */
+	pha: number;
+	/** total energy in 0.1 kWh */
+	eto: number;
+	/** API V1 energy array (currents in 0.1 A, phase powers in 0.1 kW, total power in 0.01 kW) */
+	nrg: number[];
+	/** firmware version */
+	fwv: string;
+	/** access state */
+	ast?: number;
+	/** absolute maximum current in A */
+	ama?: number;
+	/** cable current limit in A */
+	cbl?: number;
+	/** API V2 has no `uby`; the authorizing card comes from `trx` */
+	uby?: undefined;
+}
+
+/**
+ * Converts an API V2 phase array into the API V1 phase bit field. API V2 reports six flags: L1-L3
+ * after the contactor (index 0-2) and L1-L3 before it (index 3-5), which are exactly bits 0-5 of API V1.
+ *
+ * NOTE: go-e does not document the layout of the API V2 array (the key list only says "phases"). The
+ * order is taken from the documented API V1 / Modbus bit field (0b00ABCDEF, F = L1 after the contactor)
+ * and fits the only real reading so far: an idle go-e CORE 60.4 with `[false,false,false,true,true,true]`
+ * (supply present, contactor open).
+ *
+ * @param pha `pha` of the API V2 status (array of booleans); an API V1 number is passed through
+ * @returns the API V1 bit field, 0 when unknown
+ */
+export function phaseFlagsFromV2(pha: unknown): number {
+	if (typeof pha === "number" && Number.isInteger(pha) && pha >= 0) {
+		return pha;
+	}
+	if (!Array.isArray(pha)) {
+		return 0;
+	}
+	return pha.slice(0, 6).reduce((flags: number, active: unknown, index: number) => (active === true || active === 1 ? flags | (1 << index) : flags), 0);
+}
+
+/**
+ * Converts the API V2 `nrg` array into the units of API V1, so the existing API V1 parsing can be
+ * reused unchanged. Both have the same layout - U L1-L3, N (V), I L1-L3 (A), P L1-L3, N, total, pf
+ * L1-L3, N - but API V1 reports currents in 0.1 A, phase powers in 0.1 kW and the total power in 0.01 kW,
+ * while API V2 uses A and W. API V2 reports floats (e.g. 6486.381836 W, 9.52499962 A), so the converted
+ * currents and powers are rounded to the integer steps of API V1 - the states then show the same
+ * resolution as on API V1 chargers (power in 10 W steps, currents in 0.1 A). Voltages are passed on
+ * unrounded: {@link phaseVoltagesFromNrg} rounds them to 0.01 V, as for the floats of a Gemini's API V1.
+ *
+ * NOTE: the go-e API V2 documentation names the order of the entries but no units. V, A and W are what
+ * evcc and real chargers use. The power factors (index 12-15, `%` in API V1) are passed through
+ * unscaled - their API V2 unit is not documented, and the adapter does not use them.
+ *
+ * @param nrg `nrg` of the API V2 status
+ * @returns the array in API V1 units; entries that are not numbers become `NaN`
+ */
+export function nrgV1FromV2(nrg: unknown[]): number[] {
+	return nrg.map((raw, index) => {
+		const value = typeof raw === "number" ? raw : typeof raw === "string" && raw.trim() !== "" ? Number(raw) : Number.NaN;
+		if (!Number.isFinite(value)) {
+			return Number.NaN;
+		}
+		if (index >= 4 && index <= 6) {
+			return Math.round(value * 10); // A -> 0.1 A
+		}
+		if (index >= 7 && index <= 10) {
+			return Math.round(value / 100); // W -> 0.1 kW
+		}
+		if (index === 11) {
+			return Math.round(value / 10); // W -> 0.01 kW
+		}
+		return value;
+	});
+}
+
+/**
+ * Builds an API V1 shaped status from an API V2 status, for chargers without API V1 (#939). The API V1
+ * parsing then writes exactly the same states with the same units as for every other charger.
+ *
+ * @param status API V2 status object (after {@link normalizeStatusV2})
+ * @returns the API V1 shaped status
+ * @throws {Error} when the status has no `nrg` array (not a usable charger status)
+ */
+export function statusV1FromV2(status: Record<string, unknown>): StatusV1FromV2 {
+	if (!Array.isArray(status.nrg)) {
+		throw new Error("API V2 status without nrg array");
+	}
+	const alw = status.alw === true || status.alw === 1 ? "1" : status.alw === false || status.alw === 0 ? "0" : "";
+	const eto = Number(status.eto);
+	const optionalNumber = (value: unknown): number | undefined => (typeof value === "number" && Number.isFinite(value) ? value : undefined);
+	return {
+		rbc: Number(status.rbc),
+		rbt: Number(status.rbt),
+		car: typeof status.car === "number" || typeof status.car === "string" ? String(status.car) : "0",
+		amp: Number(status.amp),
+		amx: Number(status.amp),
+		alw,
+		pha: phaseFlagsFromV2(status.pha),
+		eto: status.eto === null || status.eto === undefined || !Number.isFinite(eto) ? Number.NaN : eto / 100, // Wh -> 0.1 kWh
+		nrg: nrgV1FromV2(status.nrg as unknown[]),
+		fwv: typeof status.fwv === "string" ? status.fwv : typeof status.fwv === "number" ? String(status.fwv) : "",
+		ast: optionalNumber(status.ast),
+		ama: optionalNumber(status.ama),
+		cbl: optionalNumber(status.cbl),
+	};
+}
+
+/** One write to a charger over HTTP API v2 (`/api/set?<key>=<value>`). */
+export interface ApiV2Write {
+	/** API V2 key */
+	key: "frc" | "amp" | "trx";
+	/** value to write */
+	value: number;
+}
+
+/**
+ * Translates a charger command into its HTTP API v2 write. API V2 has no writable `alw` and no `amx`:
+ * the charge release is given with force state "on" and withdrawn with force state "off" - which is
+ * what an API V1 `alw` write does on gen 3+ chargers - and the current is written to `amp`. Force state
+ * "neutral", where the charger decides by itself, is never written.
+ *
+ * @param command command from {@link buildChargerCommands}
+ * @returns the API V2 key and value to write
+ */
+export function apiV2WriteFor(command: ChargerCommand): ApiV2Write {
+	if (command.parameter === "alw") {
+		return { key: "frc", value: command.value === 1 ? FORCE_STATE_ON : FORCE_STATE_OFF };
+	}
+	return { key: "amp", value: command.value };
+}
+
+/**
+ * Whether the charger accepted an HTTP API v2 write. `/api/set` answers with a JSON object holding
+ * `true` for every accepted key, or an error message string.
+ *
+ * @param responseData raw response body of `/api/set`
+ * @param key the key that was written
+ * @returns `null` when accepted, otherwise the reason as text
+ */
+export function apiV2WriteRejection(responseData: unknown, key: string): string | null {
+	let result: unknown = responseData;
+	if (typeof responseData === "string") {
+		try {
+			result = JSON.parse(responseData);
+		} catch {
+			return `invalid answer ${JSON.stringify(responseData.slice(0, 100))}`;
+		}
+	}
+	if (typeof result !== "object" || result === null) {
+		return `invalid answer ${JSON.stringify(result)}`;
+	}
+	const value = (result as Record<string, unknown>)[key];
+	return value === true ? null : `answer ${JSON.stringify(value ?? null)}`;
+}
+
+/**
+ * HTTP status code of a failed charger request, when the charger answered at all.
+ *
+ * @param error error caught around a charger request
+ * @returns the HTTP status, or `null` for timeouts, connection problems and other errors
+ */
+export function httpStatusOf(error: unknown): number | null {
+	if (typeof error !== "object" || error === null) {
+		return null;
+	}
+	const status = (error as { response?: { status?: unknown } }).response?.status;
+	return typeof status === "number" && Number.isInteger(status) ? status : null;
+}
+
+/**
+ * Explains an HTTP error status the charger answered with. A charger that answers with an HTTP status
+ * is reachable, so asking to verify its IP address would point in the wrong direction.
+ *
+ * @param status HTTP status from {@link httpStatusOf}
+ * @param api which HTTP API was called
+ * @returns the hint, or `null` when there was no HTTP answer
+ */
+export function describeApiHttpError(status: number | null, api: ChargerApiMode): string | null {
+	if (status === null) {
+		return null;
+	}
+	const apiName = api === "v1" ? "HTTP API v1" : "HTTP API v2";
+	if (status === 401 || status === 403) {
+		return `the charger refuses access to its ${apiName} (HTTP ${status}) - probably password protection (hsa, not documented by go-e). Authentication of the local HTTP API is not supported by the adapter yet - allow local API access without password in the go-e app if possible`;
+	}
+	if (status === 404) {
+		return api === "v1"
+			? `the charger does not offer ${apiName} (HTTP 404) - enable "HTTP API v1" in the go-e app. Chargers without API v1 (e.g. go-e CORE / PRO) are used over API v2 automatically when "HTTP API v2" is enabled`
+			: `the charger does not offer ${apiName} (HTTP 404) - enable "HTTP API v2" in the go-e app`;
+	}
+	return `the charger answered ${apiName} with HTTP ${status}`;
+}
+
+/** go-e API V2 `modelStatus` "NotChargingBecauseAccessControlWait": the charger waits for an RFID card or the app */
+export const MODEL_STATUS_ACCESS_CONTROL_WAIT = 2;
+
+/** car states with a vehicle plugged in: 2 = charging, 3 = waiting for the car, 4 = charge finished */
+const CAR_STATES_PLUGGED_IN: readonly number[] = [2, 3, 4];
+
+/**
+ * Whether a charger refuses to charge because it waits for RFID/app authorization. go-e: "force state
+ * is only considered after the authentication is either disabled, or enabled and authenticated"
+ * (go-eCharger-API-v2 issue #218), so a force state "on" cannot start such a charger.
+ *
+ * @param modelStatus `modelStatus` of the last API V2 read (`NaN` when unknown)
+ * @returns true while the charger waits for authorization
+ */
+export function waitsForAuthorization(modelStatus: number): boolean {
+	return modelStatus === MODEL_STATUS_ACCESS_CONTROL_WAIT;
+}
+
+/** Inputs of {@link apiV2AuthorizeWrite} */
+export interface ApiV2AuthorizeInput {
+	/** the instance option "start transaction without RFID" of this charger */
+	enabled: boolean;
+	/** API the charger is used with */
+	apiMode: ChargerApiMode;
+	/** `trx` of the last API V2 read: `null` = no transaction, `undefined` = not reported */
+	transaction: number | null | undefined;
+	/** car state of the last read */
+	carState: number;
+}
+
+/**
+ * The write that starts a charging transaction without an RFID card (`trx=0`) before a charge release
+ * on a charger that is used over API V2 only (#939). go-e documents `trx` as "null when no transaction,
+ * 0 when without card"; writing 0 starts a transaction like the app does, and the charger clears it
+ * when the vehicle is unplugged.
+ *
+ * This bypasses the RFID/app access protection of the charger, so it is only sent when the user enabled
+ * it for the charger, for a charge release (`alw` 1), while no transaction runs and a vehicle is plugged in.
+ *
+ * @param command charger command about to be sent
+ * @param input state of the charger and the option
+ * @returns the `trx` write to send before the release, or `null`
+ */
+export function apiV2AuthorizeWrite(command: ChargerCommand, input: ApiV2AuthorizeInput): ApiV2Write | null {
+	if (!input.enabled || input.apiMode !== "v2" || command.parameter !== "alw" || command.value !== 1) {
+		return null;
+	}
+	if (input.transaction !== null || !CAR_STATES_PLUGGED_IN.includes(input.carState)) {
+		return null;
+	}
+	return { key: "trx", value: 0 };
+}
+
+/**
+ * The rejection a charger sent with an HTTP error status on an API V2 write. go-e answers `/api/set` with
+ * a JSON object holding `true` or an error text per key; the HTTP status of a rejection is not documented.
+ *
+ * @param error error caught around an `/api/set` request
+ * @param key the written key
+ * @returns the rejection text, or `null` when the error carries no JSON answer for the key
+ */
+export function apiV2ErrorRejection(error: unknown, key: string): string | null {
+	const status = httpStatusOf(error);
+	if (status === null) {
+		return null;
+	}
+	const data = (error as { response?: { data?: unknown } }).response?.data;
+	let result: unknown = data;
+	if (typeof data === "string") {
+		try {
+			result = JSON.parse(data);
+		} catch {
+			return null;
+		}
+	}
+	if (typeof result !== "object" || result === null || !(key in result)) {
+		return null;
+	}
+	const rejection = apiV2WriteRejection(result, key);
+	return rejection === null ? null : `HTTP ${status}, ${rejection}`;
+}
+
+/** Keys every API V1 `/status` answer has; a charger only counts as having API V1 when its answer has them */
+export const API_V1_STATUS_KEYS: readonly string[] = ["car", "amp", "fwv"];
+
+/**
+ * Whether an answer to `/status` is a real API V1 status. The go-e CORE (firmware 60.4, #939) has no
+ * API V1 and answers `/status` with the text "The WebSocket handshake Upgrade field is missing" -
+ * possibly even with HTTP 200 - and other firmware may answer with JSON that is not an API V1 status.
+ *
+ * @param data raw response body of `/status` (string) or an already parsed value
+ * @returns true only for a JSON object holding all of {@link API_V1_STATUS_KEYS}
+ */
+export function isStatusV1Answer(data: unknown): boolean {
+	let result: unknown = data;
+	if (typeof data === "string") {
+		try {
+			result = JSON.parse(data);
+		} catch {
+			return false;
+		}
+	}
+	if (typeof result !== "object" || result === null || Array.isArray(result)) {
+		return false;
+	}
+	return API_V1_STATUS_KEYS.every(key => key in result);
+}
+
+/** go-e `psm` value of the charger's own automatic phase switching (shown as "auto" in the go-e app) */
+export const PHASE_SWITCH_MODE_CHARGER_AUTO = 0;
+
+/**
+ * Number of phases the charger charges on: API V1 `pha` bits 0-2 (L1-L3 after the contactor).
+ *
+ * @param pha API V1 `pha` bit field
+ * @returns 0-3, 0 while the contactor is open or the value is unknown
+ */
+export function activePhasesFromFlags(pha: unknown): number {
+	const flags = Number(pha);
+	return Number.isInteger(flags) && flags >= 0 ? [1, 2, 4].filter(bit => (flags & bit) !== 0).length : 0;
+}
+
+/**
+ * Value of the state `Power.EnabledPhases`: the fixed phase mode of the charger, or - while the charger
+ * switches the phases itself (`psm` 0) - the phases it charges on. The internal phase count used to
+ * decide phase writes stays the fixed mode (0 for `psm` 0).
+ *
+ * @param psm `psm` the charger reports (1 = one phase, 2 = three phases, 0 = automatic)
+ * @param activePhases phases in use, see {@link activePhasesFromFlags}
+ * @returns 1 or 3 for a fixed mode, otherwise the phases in use (0 while idle)
+ */
+export function enabledPhasesState(psm: unknown, activePhases: number): number {
+	if (psm === 1) {
+		return 1;
+	}
+	if (psm === 2) {
+		return 3;
+	}
+	return activePhases;
+}
+
+/**
+ * Whether to log that a phase write overrides the charger's own automatic phase switching (`psm` 0).
+ * The adapter overrides it on purpose; the hint is logged once until the charger reports another
+ * `psm` and then automatic mode again (e.g. re-enabled in the go-e app).
+ *
+ * @param psm `psm` the charger last reported
+ * @param alreadyLogged whether the hint was logged for the current automatic period
+ * @returns true to log the hint now
+ */
+export function phaseAutoOverrideNotice(psm: unknown, alreadyLogged: boolean): boolean {
+	return psm === PHASE_SWITCH_MODE_CHARGER_AUTO && !alreadyLogged;
 }

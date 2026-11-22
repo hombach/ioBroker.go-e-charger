@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RFID_V2_FILTER_KEYS = exports.RFID_CARD_SLOTS = exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_ON = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.DEFAULT_PHASE_TOGGLE_WAIT_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_HYSTERESIS = exports.PHASE_SWITCH_DOWN_DELAY_MS = exports.PHASE_SWITCH_UP_DELAY_MS = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.PHASE_SWITCH_MODE_CHARGER_AUTO = exports.API_V1_STATUS_KEYS = exports.MODEL_STATUS_ACCESS_CONTROL_WAIT = exports.API_DETECT_RETRY_CYCLES = exports.API_V2_ONLY_FILTER_KEYS = exports.RFID_V2_CARD_SLOT_KEYS = exports.API_V2_ONLY_STATUS_KEYS = exports.API_V2_PROBE_KEYS = exports.RFID_V2_FILTER_KEYS = exports.RFID_CARD_SLOTS = exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_ON = exports.FORCE_STATE_OFF = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.DEFAULT_PHASE_TOGGLE_WAIT_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_HYSTERESIS = exports.PHASE_SWITCH_DOWN_DELAY_MS = exports.PHASE_SWITCH_UP_DELAY_MS = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateAvailableSurplusPower = calculateAvailableSurplusPower;
@@ -43,9 +43,31 @@ exports.parseWallboxIndex = parseWallboxIndex;
 exports.isConnectionError = isConnectionError;
 exports.connectionTransition = connectionTransition;
 exports.wallboxLabel = wallboxLabel;
+exports.resolveGridInputMode = resolveGridInputMode;
+exports.acceptGridMeterState = acceptGridMeterState;
+exports.evaluateGridMeterReading = evaluateGridMeterReading;
+exports.surplusInputsFromGridMeter = surplusInputsFromGridMeter;
+exports.negatePowerValue = negatePowerValue;
 exports.parseRfidCardsV1 = parseRfidCardsV1;
 exports.parseRfidCardsV2 = parseRfidCardsV2;
 exports.rfidCardsFromV1 = rfidCardsFromV1;
+exports.apiV2OnlyStatusUrl = apiV2OnlyStatusUrl;
+exports.retryApiV2Unfiltered = retryApiV2Unfiltered;
+exports.normalizeStatusV2 = normalizeStatusV2;
+exports.phaseFlagsFromV2 = phaseFlagsFromV2;
+exports.nrgV1FromV2 = nrgV1FromV2;
+exports.statusV1FromV2 = statusV1FromV2;
+exports.apiV2WriteFor = apiV2WriteFor;
+exports.apiV2WriteRejection = apiV2WriteRejection;
+exports.httpStatusOf = httpStatusOf;
+exports.describeApiHttpError = describeApiHttpError;
+exports.waitsForAuthorization = waitsForAuthorization;
+exports.apiV2AuthorizeWrite = apiV2AuthorizeWrite;
+exports.apiV2ErrorRejection = apiV2ErrorRejection;
+exports.isStatusV1Answer = isStatusV1Answer;
+exports.activePhasesFromFlags = activePhasesFromFlags;
+exports.enabledPhasesState = enabledPhasesState;
+exports.phaseAutoOverrideNotice = phaseAutoOverrideNotice;
 exports.MIN_CHARGE_CURRENT = 6;
 exports.MAX_CHARGE_CURRENT = 32;
 exports.START_CHARGE_CURRENT = 10;
@@ -348,6 +370,7 @@ function seedChargeManagerState(reportedAllow, reportedAmp, minimum, maximum) {
     return { currentAmp: Math.min(Math.max(Math.trunc(reportedAmp), minimum), maximum), shutdownDelay: 0 };
 }
 exports.FORCE_STATE_NEUTRAL = 0;
+exports.FORCE_STATE_OFF = 1;
 exports.FORCE_STATE_ON = 2;
 function releaseReadback(reportedAllow, forceState) {
     return forceState === exports.FORCE_STATE_NEUTRAL ? undefined : reportedAllow;
@@ -580,6 +603,57 @@ function wallboxLabel(index, name, ipAddress) {
     const trimmedIp = typeof ipAddress === "string" ? ipAddress.trim() : "";
     return trimmedIp ? `${label} (${trimmedIp})` : label;
 }
+function resolveGridInputMode(mode, gridStateId) {
+    if (mode === undefined || mode === null || mode === "" || mode === "pvAndConsumption") {
+        return { mode: "pvAndConsumption", fallback: null };
+    }
+    if (mode !== "gridMeter") {
+        return { mode: "pvAndConsumption", fallback: "invalid-mode" };
+    }
+    if (typeof gridStateId !== "string" || !gridStateId.trim()) {
+        return { mode: "pvAndConsumption", fallback: "missing-grid-state" };
+    }
+    return { mode: "gridMeter", fallback: null };
+}
+function acceptGridMeterState(state, options) {
+    if (!state) {
+        return { sample: null, reason: "missing" };
+    }
+    if (options.ackOnly && state.ack !== true) {
+        return { sample: null, reason: "not-acknowledged" };
+    }
+    if (typeof state.val !== "number" || !Number.isFinite(state.val)) {
+        return { sample: null, reason: "invalid" };
+    }
+    const power = options.negate ? 0 - state.val : state.val;
+    const ts = typeof state.ts === "number" && Number.isFinite(state.ts) ? state.ts : Date.now();
+    return { sample: { power, ts }, reason: "accepted" };
+}
+function evaluateGridMeterReading(sample, nowMs, maximumAgeSeconds) {
+    if (!sample || !Number.isFinite(sample.power)) {
+        return { gridPower: null, reason: "missing" };
+    }
+    if (maximumAgeSeconds > 0) {
+        const ageMs = nowMs - sample.ts;
+        if (!Number.isFinite(ageMs) || ageMs < 0 || ageMs > maximumAgeSeconds * 1000) {
+            return { gridPower: null, reason: "stale" };
+        }
+    }
+    return { gridPower: sample.power, reason: "available" };
+}
+function surplusInputsFromGridMeter(gridPower) {
+    return {
+        solarPower: gridPower === null ? Number.NaN : 0 - gridPower,
+        houseConsumption: 0,
+        subtractChargerPower: true,
+    };
+}
+function negatePowerValue(value, negate) {
+    if (!negate || typeof value !== "number" || !Number.isFinite(value)) {
+        return value;
+    }
+    return 0 - value;
+}
 exports.RFID_CARD_SLOTS = 10;
 const RFID_V1_ID_KEYS = ["rca", "rcr", "rcd", "rc4", "rc5", "rc6", "rc7", "rc8", "rc9", "rc1"];
 const RFID_V1_NAME_KEYS = ["rna", "rnm", "rne", "rn4", "rn5", "rn6", "rn7", "rn8", "rn9", "rn1"];
@@ -643,5 +717,213 @@ function parseRfidCardsV2(status) {
 }
 function rfidCardsFromV1(hardwareMin3, rfidFromV2) {
     return !hardwareMin3 || !rfidFromV2;
+}
+exports.API_V2_PROBE_KEYS = ["fwv", "typ"];
+exports.API_V2_ONLY_STATUS_KEYS = [
+    "alw",
+    "frc",
+    "modelStatus",
+    "acu",
+    "eto",
+    "amp",
+    "rbc",
+    "rbt",
+    "car",
+    "pha",
+    "fwv",
+    "nrg",
+    "psm",
+    "typ",
+    "fhz",
+    "trx",
+    "acs",
+    "ama",
+    "cll",
+    "mca",
+];
+exports.RFID_V2_CARD_SLOT_KEYS = exports.RFID_V2_FILTER_KEYS.filter(key => key !== "cards");
+exports.API_V2_ONLY_FILTER_KEYS = [...exports.API_V2_ONLY_STATUS_KEYS, ...exports.RFID_V2_CARD_SLOT_KEYS];
+function apiV2OnlyStatusUrl(ipAddress, unfiltered) {
+    return unfiltered ? `http://${ipAddress}/api/status` : `http://${ipAddress}/api/status?filter=${exports.API_V2_ONLY_FILTER_KEYS.join(",")}`;
+}
+function retryApiV2Unfiltered(error, unfiltered) {
+    return !unfiltered && httpStatusOf(error) === 400;
+}
+exports.API_DETECT_RETRY_CYCLES = 6;
+function normalizeStatusV2(status) {
+    const normalized = { ...status };
+    if ((normalized.ast === undefined || normalized.ast === null) && (status.acs === 0 || status.acs === 1)) {
+        normalized.ast = status.acs;
+    }
+    const currentLimits = status.cll;
+    if ((normalized.cbl === undefined || normalized.cbl === null) && typeof currentLimits === "object" && currentLimits !== null) {
+        const cableLimit = currentLimits.cableCurrentLimit;
+        if (typeof cableLimit === "number" && Number.isFinite(cableLimit)) {
+            normalized.cbl = cableLimit;
+        }
+    }
+    return normalized;
+}
+function phaseFlagsFromV2(pha) {
+    if (typeof pha === "number" && Number.isInteger(pha) && pha >= 0) {
+        return pha;
+    }
+    if (!Array.isArray(pha)) {
+        return 0;
+    }
+    return pha.slice(0, 6).reduce((flags, active, index) => (active === true || active === 1 ? flags | (1 << index) : flags), 0);
+}
+function nrgV1FromV2(nrg) {
+    return nrg.map((raw, index) => {
+        const value = typeof raw === "number" ? raw : typeof raw === "string" && raw.trim() !== "" ? Number(raw) : Number.NaN;
+        if (!Number.isFinite(value)) {
+            return Number.NaN;
+        }
+        if (index >= 4 && index <= 6) {
+            return Math.round(value * 10);
+        }
+        if (index >= 7 && index <= 10) {
+            return Math.round(value / 100);
+        }
+        if (index === 11) {
+            return Math.round(value / 10);
+        }
+        return value;
+    });
+}
+function statusV1FromV2(status) {
+    if (!Array.isArray(status.nrg)) {
+        throw new Error("API V2 status without nrg array");
+    }
+    const alw = status.alw === true || status.alw === 1 ? "1" : status.alw === false || status.alw === 0 ? "0" : "";
+    const eto = Number(status.eto);
+    const optionalNumber = (value) => (typeof value === "number" && Number.isFinite(value) ? value : undefined);
+    return {
+        rbc: Number(status.rbc),
+        rbt: Number(status.rbt),
+        car: typeof status.car === "number" || typeof status.car === "string" ? String(status.car) : "0",
+        amp: Number(status.amp),
+        amx: Number(status.amp),
+        alw,
+        pha: phaseFlagsFromV2(status.pha),
+        eto: status.eto === null || status.eto === undefined || !Number.isFinite(eto) ? Number.NaN : eto / 100,
+        nrg: nrgV1FromV2(status.nrg),
+        fwv: typeof status.fwv === "string" ? status.fwv : typeof status.fwv === "number" ? String(status.fwv) : "",
+        ast: optionalNumber(status.ast),
+        ama: optionalNumber(status.ama),
+        cbl: optionalNumber(status.cbl),
+    };
+}
+function apiV2WriteFor(command) {
+    if (command.parameter === "alw") {
+        return { key: "frc", value: command.value === 1 ? exports.FORCE_STATE_ON : exports.FORCE_STATE_OFF };
+    }
+    return { key: "amp", value: command.value };
+}
+function apiV2WriteRejection(responseData, key) {
+    let result = responseData;
+    if (typeof responseData === "string") {
+        try {
+            result = JSON.parse(responseData);
+        }
+        catch {
+            return `invalid answer ${JSON.stringify(responseData.slice(0, 100))}`;
+        }
+    }
+    if (typeof result !== "object" || result === null) {
+        return `invalid answer ${JSON.stringify(result)}`;
+    }
+    const value = result[key];
+    return value === true ? null : `answer ${JSON.stringify(value ?? null)}`;
+}
+function httpStatusOf(error) {
+    if (typeof error !== "object" || error === null) {
+        return null;
+    }
+    const status = error.response?.status;
+    return typeof status === "number" && Number.isInteger(status) ? status : null;
+}
+function describeApiHttpError(status, api) {
+    if (status === null) {
+        return null;
+    }
+    const apiName = api === "v1" ? "HTTP API v1" : "HTTP API v2";
+    if (status === 401 || status === 403) {
+        return `the charger refuses access to its ${apiName} (HTTP ${status}) - probably password protection (hsa, not documented by go-e). Authentication of the local HTTP API is not supported by the adapter yet - allow local API access without password in the go-e app if possible`;
+    }
+    if (status === 404) {
+        return api === "v1"
+            ? `the charger does not offer ${apiName} (HTTP 404) - enable "HTTP API v1" in the go-e app. Chargers without API v1 (e.g. go-e CORE / PRO) are used over API v2 automatically when "HTTP API v2" is enabled`
+            : `the charger does not offer ${apiName} (HTTP 404) - enable "HTTP API v2" in the go-e app`;
+    }
+    return `the charger answered ${apiName} with HTTP ${status}`;
+}
+exports.MODEL_STATUS_ACCESS_CONTROL_WAIT = 2;
+const CAR_STATES_PLUGGED_IN = [2, 3, 4];
+function waitsForAuthorization(modelStatus) {
+    return modelStatus === exports.MODEL_STATUS_ACCESS_CONTROL_WAIT;
+}
+function apiV2AuthorizeWrite(command, input) {
+    if (!input.enabled || input.apiMode !== "v2" || command.parameter !== "alw" || command.value !== 1) {
+        return null;
+    }
+    if (input.transaction !== null || !CAR_STATES_PLUGGED_IN.includes(input.carState)) {
+        return null;
+    }
+    return { key: "trx", value: 0 };
+}
+function apiV2ErrorRejection(error, key) {
+    const status = httpStatusOf(error);
+    if (status === null) {
+        return null;
+    }
+    const data = error.response?.data;
+    let result = data;
+    if (typeof data === "string") {
+        try {
+            result = JSON.parse(data);
+        }
+        catch {
+            return null;
+        }
+    }
+    if (typeof result !== "object" || result === null || !(key in result)) {
+        return null;
+    }
+    const rejection = apiV2WriteRejection(result, key);
+    return rejection === null ? null : `HTTP ${status}, ${rejection}`;
+}
+exports.API_V1_STATUS_KEYS = ["car", "amp", "fwv"];
+function isStatusV1Answer(data) {
+    let result = data;
+    if (typeof data === "string") {
+        try {
+            result = JSON.parse(data);
+        }
+        catch {
+            return false;
+        }
+    }
+    if (typeof result !== "object" || result === null || Array.isArray(result)) {
+        return false;
+    }
+    return exports.API_V1_STATUS_KEYS.every(key => key in result);
+}
+exports.PHASE_SWITCH_MODE_CHARGER_AUTO = 0;
+function activePhasesFromFlags(pha) {
+    const flags = Number(pha);
+    return Number.isInteger(flags) && flags >= 0 ? [1, 2, 4].filter(bit => (flags & bit) !== 0).length : 0;
+}
+function enabledPhasesState(psm, activePhases) {
+    if (psm === 1) {
+        return 1;
+    }
+    if (psm === 2) {
+        return 3;
+    }
+    return activePhases;
+}
+function phaseAutoOverrideNotice(psm, alreadyLogged) {
+    return psm === exports.PHASE_SWITCH_MODE_CHARGER_AUTO && !alreadyLogged;
 }
 //# sourceMappingURL=chargeManagerUtils.js.map
