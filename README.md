@@ -209,9 +209,11 @@ Because the current implementation starts charging when its internal target exce
 
 Enable **automatic 1-/3-phase switching** per wallbox (gen 3+ only, off by default) to let ChargeManager pick the phase mode from the available surplus:
 
-- It switches **up to three phases** once one-phase charging is saturated (the surplus exceeds the one-phase maximum), giving access to the higher three-phase ceiling.
-- It switches **down to one phase** once the surplus can no longer sustain the three-phase minimum (~4.1 kW at 6 A), so a shrinking surplus keeps charging one-phase instead of stopping.
-- The gap between those thresholds plus a dwell time prevents rapid back-and-forth switching, which would interrupt charging each time.
+- It switches **up to three phases** once the surplus exceeds both the one-phase maximum and 1.25 times the three-phase minimum (5175 W with 6-16 A), so three-phase charging starts with headroom above its own floor instead of right on it.
+- It switches **down to one phase** once the surplus drops below the three-phase minimum (4140 W at 6 A) but still carries one-phase charging at the minimum (1380 W at 6 A). Below that, one phase would not charge either, so the charge stops instead of switching.
+- More surplus must hold for 1 minute before switching up, less surplus for 3 minutes before switching down. A three-phase charge that would otherwise be stopped for too little surplus switches down at once. No switch follows before the charger's own minimum time between two switches (`mptwt`, 10 minutes by default) has passed: every switch costs the charger a pause, and some firmware versions hang in that pause.
+- The phase count is only written to the charger while the charge release is active (force state "on"). While the charger is held off, the phase count for the next start is only planned: it follows the surplus at once without a dwell, uses the start current (10 A) instead of the minimum, sizes the charging current right away and is written right after the next charge release. The same applies to a fixed phase mode and to ChargeNOW.
+- A charger set to its own automatic phase switching (`psm` 0) is taken over from the phases it charges on; while it does not charge, the start phase is picked from the surplus right away.
 
 The option makes automatic switching available; `Settings.PhaseMode` selects it at runtime without restarting the adapter:
 
@@ -279,6 +281,15 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+
+- (typhosj) ChargeManager: the automatic 1-/3-phase switching now keeps a real gap between switching up and switching back down - for a 16 A wallbox both thresholds used to be the same value
+- (typhosj) ChargeManager: the automatic phase switching no longer switches down to one phase when the surplus would not be enough for one-phase charging either, waits 1 minute before switching up and 3 minutes before switching down, and never switches again before the charger's own minimum time between two switches has passed - every switch costs the charger a pause, and on some firmware versions it hangs in that pause
+- (typhosj) ChargeManager: a three-phase charge whose surplus no longer carries three phases but still carries one now switches down to one phase instead of being stopped - the shutdown delay ran out before the 3-minute down dwell, so the charge stopped and restarted on one phase instead
+- (typhosj) the phase count is no longer switched while the charger is held off - neither by the automatic switching, nor by a fixed phase mode, nor by ChargeNOW. The new phase count is planned at once without the switching dwell, sizes the charging current right away and is written right after the next charge release. A switch without a release is never needed, starts the charger's minimum time between two switches, which can then block the switch the start needs, and left the go-e hanging in "min pause duration" for hours on some firmware versions. The info log reports a phase switch when it is written to the charger, the plan only at debug level
+- (typhosj) ChargeManager: before a charge starts, the automatic phase switching now plans with the start current (10 A) instead of the minimum current - a surplus between the three-phase minimum and the three-phase start (5520 to 6900 W with 8-16 A) kept the charger on three phases, where it never started, although one phase could have charged at full current
+- (typhosj) ChargeManager: a charger set to its own automatic phase switching (`psm` 0) now starts the automatic phase switching from the phases it charges on, or - while it does not charge - picks the start phase from the surplus right away; it used to be switched to one phase first, and the charger's minimum time between two switches then kept a sunny start on one phase for ten minutes
+
 ### 1.11.0 (2026-11-22)
 
 - (HombachC) added grid meter input for ChargeManager: one signed grid power value (import positive, export negative) instead of PV generation and house consumption, with Negate, Ack-only and maximum age options (#919)

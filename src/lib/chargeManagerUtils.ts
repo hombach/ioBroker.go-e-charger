@@ -8,6 +8,16 @@ export const DEFAULT_MAXIMUM_BATTERY_BONUS = 2000;
 export const PHASE_VOLTAGE = 230;
 /** Number of consecutive cycles a phase-switch condition must hold before the phase is actually switched */
 export const PHASE_SWITCH_DELAY_CYCLES = 12;
+/** How long more surplus must hold before switching up to three phases */
+export const PHASE_SWITCH_UP_DELAY_MS = 60 * 1000;
+/** How long a lower surplus must hold before switching down to one phase */
+export const PHASE_SWITCH_DOWN_DELAY_MS = 3 * 60 * 1000;
+/**
+ * How far above the three-phase minimum the surplus must reach before switching up, as a factor
+ * of that minimum. This is the width of the phase hysteresis band and the tuning knob for it:
+ * raise it if the installation still switches back and forth on partly cloudy days.
+ */
+export const PHASE_SWITCH_HYSTERESIS = 1.25;
 
 /** Per-wallbox configuration and optional hardware caps used to resolve its current limits. */
 export interface WallboxLimitInput {
@@ -537,7 +547,7 @@ export function decideChargeManagerFleet(shared: FleetSurplusInput, participants
 
 /** Input for the automatic one-/three-phase switching decision of a single wallbox. */
 export interface PhaseSwitchInput {
-	/** Number of phases the wallbox is charging with right now (1 or 3) */
+	/** Number of phases the wallbox is charging with right now (1 or 3, 0 if unknown - see {@link phasesInUse}) */
 	currentPhases: number;
 	/** PV surplus power available to this wallbox in watts, independent of the phase count */
 	availablePower: number;
@@ -547,6 +557,14 @@ export interface PhaseSwitchInput {
 	maximumChargeCurrent: number;
 	/** Consecutive cycles the pending switch condition has already held */
 	switchDelay: number;
+	/** Cycles the condition must hold before switching up (default {@link PHASE_SWITCH_DELAY_CYCLES}) */
+	upDelayCycles?: number;
+	/** Cycles the condition must hold before switching down (default {@link PHASE_SWITCH_DELAY_CYCLES}) */
+	downDelayCycles?: number;
+	/** No switch at all, e.g. while the charger's own wait after the last switch is still running */
+	blocked?: boolean;
+	/** The charger is not charging yet, so the ramp must reach the start current before it does */
+	waitingForStart?: boolean;
 }
 
 /** Result of the automatic phase-switching decision. */
@@ -567,15 +585,37 @@ export interface PhaseSwitchDecision {
  * thresholds plus a dwell time of {@link PHASE_SWITCH_DELAY_CYCLES} cycles keeps a wallbox
  * from flapping between phase modes, which would interrupt charging each time.
  *
- * The up threshold is floored at the three-phase minimum, so a wallbox whose one-phase
- * maximum is already below that minimum still has a stable (non-overlapping) hysteresis band.
+ * The up threshold is floored at the three-phase minimum times {@link PHASE_SWITCH_HYSTERESIS},
+ * never at the bare minimum: flooring it there gives a band of width zero, and the surplus then
+ * crosses a single threshold in both directions. That is the case for every wallbox whose
+ * maximum is at most three times its minimum - with 8-16 A both thresholds land on 5520 W.
+ * The factor also means three-phase charging starts with headroom above its own floor instead
+ * of right on it, where the next cloud drops it below again.
+ *
+ * Switching down also needs enough surplus for one-phase charging at the minimum. Below that,
+ * one phase would not charge either: the switch would only cost a pause - and on the go-e it can
+ * leave the charger stuck in "min pause duration" until it is restarted (2026-09-22: a switch at
+ * 571 W with nothing charging). The controller stops charging instead, and the switch happens
+ * once one-phase charging can actually start.
+ *
+ * Before the charge has started, the floor is the start current instead of the minimum: the ramp
+ * releases the charge only there. With the minimum as the floor, a surplus between the three-phase
+ * minimum and the three-phase start kept the charger on three phases, where it never started,
+ * although one phase could have charged at full current (2026-09-25: 6831 W, 8-16 A). The switch
+ * is only planned then, not written (see {@link mayWritePhaseSwitch}), so both directions use the
+ * same threshold without a band.
+ *
+ * With an unknown phase count (0: the charger switches the phases itself, `psm` 0, and is not
+ * charging) the start phase follows the surplus at once, with the threshold of a one-phase charge.
+ * Treating 0 as one phase forced every such charger to one phase first, and the charger's minimum
+ * time between two switches then held a sunny start there for ten minutes.
  *
  * @param input Current phase count, available surplus power and the pending-switch counter
  * @returns The phase count to use next cycle and the updated dwell counter
  */
 export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision {
 	if (
-		(input.currentPhases !== 1 && input.currentPhases !== 3) ||
+		(input.currentPhases !== 0 && input.currentPhases !== 1 && input.currentPhases !== 3) ||
 		!Number.isFinite(input.availablePower) ||
 		!Number.isFinite(input.minimumChargeCurrent) ||
 		!Number.isFinite(input.maximumChargeCurrent)
@@ -583,14 +623,27 @@ export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision 
 		return { targetPhases: input.currentPhases, switchDelay: 0 };
 	}
 
-	const threePhaseMinPower = input.minimumChargeCurrent * 3 * PHASE_VOLTAGE;
-	// the up threshold can never be below the three-phase minimum, so the band never inverts
-	const upThreshold = Math.max(input.maximumChargeCurrent * PHASE_VOLTAGE, threePhaseMinPower);
+	const floorCurrent = input.waitingForStart ? resolveStartChargeCurrent(input.minimumChargeCurrent, input.maximumChargeCurrent) : input.minimumChargeCurrent;
+	const threePhaseMinPower = floorCurrent * 3 * PHASE_VOLTAGE;
+	// during a charge the up threshold keeps a real distance from the three-phase minimum, so the
+	// band never inverts and never collapses to a single value the surplus crosses in both directions
+	const upThreshold = Math.max(
+		input.maximumChargeCurrent * PHASE_VOLTAGE,
+		input.waitingForStart ? threePhaseMinPower : threePhaseMinPower * PHASE_SWITCH_HYSTERESIS,
+	);
+
+	if (input.currentPhases === 0) {
+		// no own switch to wait for and nothing to dwell on: so far the charger switched by itself
+		return { targetPhases: input.availablePower >= upThreshold ? 3 : 1, switchDelay: 0 };
+	}
+	if (input.blocked === true) {
+		return { targetPhases: input.currentPhases, switchDelay: 0 };
+	}
 
 	let targetPhases = input.currentPhases;
 	if (input.currentPhases === 1 && input.availablePower >= upThreshold) {
 		targetPhases = 3;
-	} else if (input.currentPhases === 3 && input.availablePower < threePhaseMinPower) {
+	} else if (input.currentPhases === 3 && input.availablePower < threePhaseMinPower && input.availablePower >= floorCurrent * PHASE_VOLTAGE) {
 		targetPhases = 1;
 	}
 
@@ -598,12 +651,32 @@ export function decidePhaseSwitch(input: PhaseSwitchInput): PhaseSwitchDecision 
 		return { targetPhases: input.currentPhases, switchDelay: 0 };
 	}
 
+	const delayCycles = validDelayCycles(targetPhases === 3 ? input.upDelayCycles : input.downDelayCycles);
 	const switchDelay = input.switchDelay + 1;
-	if (switchDelay > PHASE_SWITCH_DELAY_CYCLES) {
+	if (switchDelay > delayCycles) {
 		return { targetPhases, switchDelay: 0 };
 	}
 	// condition holds but the dwell time has not elapsed yet - keep the current phase count
 	return { targetPhases: input.currentPhases, switchDelay };
+}
+
+function validDelayCycles(cycles: number | undefined): number {
+	return cycles !== undefined && Number.isFinite(cycles) && cycles >= 0 ? Math.trunc(cycles) : PHASE_SWITCH_DELAY_CYCLES;
+}
+
+/** go-e default for `mptwt`, the minimum time between two phase switches */
+export const DEFAULT_PHASE_TOGGLE_WAIT_MS = 10 * 60 * 1000;
+
+/**
+ * A pause setting the charger reports (`mptwt`), or the go-e default when the value is missing or
+ * unusable.
+ *
+ * @param value Reported value in milliseconds
+ * @param fallback Default in milliseconds
+ * @returns The pause in milliseconds
+ */
+export function chargerPauseMs(value: unknown, fallback: number): number {
+	return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : fallback;
 }
 
 /** How long a connected vehicle may ignore an active charge release before it is withdrawn */
@@ -797,6 +870,10 @@ export function seedChargeManagerState(
 
 /** go-e `frc` (forceState) value for "neutral": the charger follows its own default and charges any vehicle */
 export const FORCE_STATE_NEUTRAL = 0;
+/** go-e `frc` (forceState) value "off": the charger does not charge */
+export const FORCE_STATE_OFF = 1;
+/** go-e `frc` (forceState) value that forces charging on - what the adapter's release sets */
+export const FORCE_STATE_ON = 2;
 
 /**
  * The charge release to compare a write against, from what the charger reports.
@@ -829,6 +906,53 @@ export function releaseReadback(reportedAllow: number | undefined, forceState: u
  */
 export function enforceOffState(forceState: unknown, releasedByAdapter: boolean): boolean {
 	return releasedByAdapter !== true && forceState === FORCE_STATE_NEUTRAL;
+}
+
+/**
+ * Phase count the ChargeManager plans with: the one decided or requested but not written yet -
+ * a phase switch waits for the charge release - otherwise the one the charger reports.
+ *
+ * @param pendingPhases Decided or requested phase count, `null` if none
+ * @param enabledPhases Phase count the charger reports
+ * @returns The phase count to size the charging current for
+ */
+export function planningPhases(pendingPhases: number | null, enabledPhases: number): number {
+	return pendingPhases === 1 || pendingPhases === 3 ? pendingPhases : enabledPhases;
+}
+
+/**
+ * Whether a phase switch may be written to the charger now.
+ *
+ * The phase count only matters once the charger charges. A switch while it is held off is never
+ * needed, and it starts the charger's minimum time between two switches (`mptwt`, 10 minutes by
+ * default), which can then block the switch the start really needs if the surplus has moved on
+ * in the meantime. Each write also wakes the charger. On top of that, a switch while held off
+ * left the go-e hanging in "min pause duration" for hours on 2026-09-22 (12:33 and 18:46), while a
+ * switch during a charge went through within 20 seconds. So the switch waits until the release is
+ * active, and a switch that would be followed by a withdrawal right away is not written at all.
+ *
+ * @param forceState `frc` the charger reports
+ * @param action What the ChargeManager does with the charger this cycle
+ * @returns `true` only while charging is forced on and not about to be switched off
+ */
+export function mayWritePhaseSwitch(forceState: unknown, action: ChargeManagerAction): boolean {
+	return forceState === FORCE_STATE_ON && action !== "disable";
+}
+
+/**
+ * Cycles a phase-switch condition must hold before the switch is planned.
+ *
+ * The dwell protects a running charge from being interrupted again and again. While the charger
+ * is held off a switch is only planned, not written, so it costs nothing and follows the surplus
+ * at once - on 2026-09-23 the dwell alone held back a PV start by three minutes.
+ *
+ * @param delayMs Dwell for a switch during a charge
+ * @param cycleTimeMs Poll cycle time
+ * @param forceState `frc` the charger reports
+ * @returns The dwell in cycles, 0 while charging is not forced on
+ */
+export function phaseSwitchDwellCycles(delayMs: number, cycleTimeMs: number, forceState: unknown): number {
+	return forceState === FORCE_STATE_ON ? Math.ceil(delayMs / cycleTimeMs) : 0;
 }
 
 /**
@@ -869,6 +993,26 @@ export function carryCurrentOverPhaseSwitch(
 		return currentAmp;
 	}
 	return Math.max(0, Math.min(samePower, Math.floor(availablePower / PHASE_VOLTAGE / toPhases), maximumChargeCurrent));
+}
+
+/**
+ * The decision for a cycle that switches the phase count, with the ramp carried over.
+ *
+ * The shutdown delay runs out before the down dwell does, so a three-phase charge that one phase
+ * could carry was stopped and restarted on one phase 40 seconds later (2026-09-26 12:22:43: 5109 W,
+ * 8-16 A, dwell at 8 of 18 cycles). The switch costs the charge a short pause, the stop all of it,
+ * so a stop for too little surplus goes on charging once the carried current reaches the minimum.
+ *
+ * @param decision Decision the controller made for the old phase count
+ * @param carriedAmp Current carried over to the new phase count ({@link carryCurrentOverPhaseSwitch})
+ * @param minimumChargeCurrent Lowest current the ChargeManager may assign to this wallbox
+ * @returns The decision to apply with the switch
+ */
+export function decisionAfterPhaseSwitch<T extends ChargeManagerDecision>(decision: T, carriedAmp: number, minimumChargeCurrent: number): T {
+	if (decision.action === "disable" && decision.reason === "insufficient-surplus" && carriedAmp >= minimumChargeCurrent) {
+		return { ...decision, action: "enable", reason: "charging-current", nextState: { currentAmp: carriedAmp, shutdownDelay: 0 } };
+	}
+	return { ...decision, nextState: { ...decision.nextState, currentAmp: carriedAmp } };
 }
 
 /**
@@ -1706,6 +1850,7 @@ export const API_V2_ONLY_STATUS_KEYS: readonly string[] = [
 	"alw",
 	"frc",
 	"modelStatus",
+	"mptwt",
 	"acu",
 	"eto",
 	"amp",
@@ -1758,11 +1903,6 @@ export function retryApiV2Unfiltered(error: unknown, unfiltered: boolean): boole
 
 /** API V2 detection is retried every this many cycles for a charger that never answered since adapter start */
 export const API_DETECT_RETRY_CYCLES = 6;
-
-/** go-e `frc` (forceState) value "off": the charger does not charge */
-export const FORCE_STATE_OFF = 1;
-/** go-e `frc` (forceState) value "on": the charger releases charging */
-export const FORCE_STATE_ON = 2;
 
 /**
  * Fills the API V2 keys some firmware does not report from their equivalents, without changing the
@@ -2107,6 +2247,23 @@ export function isStatusV1Answer(data: unknown): boolean {
 
 /** go-e `psm` value of the charger's own automatic phase switching (shown as "auto" in the go-e app) */
 export const PHASE_SWITCH_MODE_CHARGER_AUTO = 0;
+
+/**
+ * Phase count the charger charges with as far as the automatic switching is concerned: the fixed
+ * phase mode it reports, or - while it switches the phases itself (`psm` 0) - the phases in use.
+ * The phase write still compares with the fixed mode, so `psm` 0 is always converted to 1 or 2.
+ *
+ * @param enabledPhases Fixed phase count from `psm` (1 or 3, 0 for `psm` 0 or unknown)
+ * @param phaseSwitchMode `psm` the charger reports (`NaN` if unknown)
+ * @param activePhases Phases in use, see {@link activePhasesFromFlags}
+ * @returns 1 or 3, or 0 if unknown (e.g. `psm` 0 while the contactor is open)
+ */
+export function phasesInUse(enabledPhases: number, phaseSwitchMode: number, activePhases: number): number {
+	if (enabledPhases === 1 || enabledPhases === 3) {
+		return enabledPhases;
+	}
+	return phaseSwitchMode === PHASE_SWITCH_MODE_CHARGER_AUTO && (activePhases === 1 || activePhases === 3) ? activePhases : 0;
+}
 
 /**
  * Number of phases the charger charges on: API V1 `pha` bits 0-2 (L1-L3 after the contactor).
