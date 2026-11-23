@@ -281,7 +281,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 1.12.0 (2026-11-23)
 
 - (typhosj) ChargeManager: the automatic 1-/3-phase switching now keeps a real gap between switching up and switching back down - for a 16 A wallbox both thresholds used to be the same value
 - (typhosj) ChargeManager: the automatic phase switching no longer switches down to one phase when the surplus would not be enough for one-phase charging either, waits 1 minute before switching up and 3 minutes before switching down, and never switches again before the charger's own minimum time between two switches has passed - every switch costs the charger a pause, and on some firmware versions it hangs in that pause
@@ -327,15 +327,6 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (typhosj) a ChargeManager that takes over a charger - at adapter start or after ChargeNOW - continues a running charge at its current, with a fresh shutdown delay; it used to start from its previous state and could withdraw the release in its first cycle
 - (typhosj) ChargeManager: a charger in force state neutral, where it decides by itself and charges any vehicle, is now held off unless the adapter released it - firmware 60.6 comes back from every restart in that state, the go-e app sets it when a setting is saved, and firmware 59.4 and 60.6 set it when a vehicle is unplugged; the next vehicle used to charge at full power from the grid until the shutdown delay ran out. The release the charger reports in that state is no longer taken for one the adapter gave
 - (HombachC) fixed TypeError in log when a state change arrives for an unconfigured wallbox number
-
-### 1.9.0 (2026-10-28)
-
-- (solar0x) new states `Wallbox_X.Power.VoltageL1`, `VoltageL2` and `VoltageL3` show the voltage the charger measures on each grid phase, in V; all hardware generations. As in the go-e app, a single-phase supply with L and N swapped shows its N voltage as L1
-- (typhosj) new state `Wallbox_X.Power.GridFrequency` shows the grid frequency the charger measures, in Hz; hardware gen 3 and newer with HTTP API v2 enabled only, and it stays empty while the charger reports the frequency as unknown [#898]
-- (typhosj) new state `Wallbox_X.info.chargeState` explains why the charger is charging or not - waiting for a vehicle, charging the home battery first, not enough PV surplus, ramping up to the start current, charging, current budget exhausted, both modes off; every change of the reason is also logged once. A charger that never started used to leave no trace in the log, because most of these reasons were only logged together with a write to the charger
-- (typhosj) ChargeManager: new per-wallbox option to withdraw the charge release when the vehicle draws no power for 5 minutes - vehicles such as the Renault Zoe otherwise stay in charging mode, e.g. in the evening when the battery bonus keeps the release active (reported by a user)
-- (hombach) phase voltages and grid frequency are rounded to 2 decimal places
-- (hombach) updated dependencies
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 
