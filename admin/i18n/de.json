@@ -1,4 +1,5 @@
 {
+	"ERR_maxAmpTotalBelowMin": "0 deaktiviert die Begrenzung; eine aktive Begrenzung braucht mindestens 6 A",
 	"ERR_maxCurrentBelowMin": "Maximalstrom muss größer oder gleich dem Mindeststrom sein",
 	"ERR_minCurrentAboveMax": "Mindeststrom muss kleiner oder gleich dem Maximalstrom sein",
 	"LBL_autoPhaseSwitch": "Automatische 1-/3-phasige Umschaltung (Hardware Gen 3+)",

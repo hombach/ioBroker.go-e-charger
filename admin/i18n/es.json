@@ -1,4 +1,5 @@
 {
+	"ERR_maxAmpTotalBelowMin": "0 desactiva el límite; un límite activo necesita al menos 6 A",
 	"ERR_maxCurrentBelowMin": "La corriente máxima debe ser mayor o igual que la mínima",
 	"ERR_minCurrentAboveMax": "La corriente mínima debe ser menor o igual que la máxima",
 	"LBL_autoPhaseSwitch": "Conmutación automática 1/3 fases (hardware gen 3+)",

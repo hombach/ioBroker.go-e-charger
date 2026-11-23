@@ -29,6 +29,7 @@ exports.phaseModeToSend = phaseModeToSend;
 exports.resolvePhaseModeWrite = resolvePhaseModeWrite;
 exports.autoPhaseSupported = autoPhaseSupported;
 exports.phaseModeOf = phaseModeOf;
+exports.isVehiclePluggedIn = isVehiclePluggedIn;
 exports.isVehicleDisconnected = isVehicleDisconnected;
 exports.gridFrequencyFromStatus = gridFrequencyFromStatus;
 exports.phaseVoltagesFromNrg = phaseVoltagesFromNrg;
@@ -433,6 +434,9 @@ function autoPhaseSupported(hardwareMin3, online) {
 }
 function phaseModeOf(auto, charge3Phase) {
     return auto ? exports.PHASE_MODE_AUTO : charge3Phase ? 3 : 1;
+}
+function isVehiclePluggedIn(carState) {
+    return carState === 2 || carState === 3 || carState === 4;
 }
 function isVehicleDisconnected(carState) {
     return carState === 1;

@@ -1,4 +1,5 @@
 {
+	"ERR_maxAmpTotalBelowMin": "0 schakelt de limiet uit; een actieve limiet vereist minstens 6 A",
 	"ERR_maxCurrentBelowMin": "Maximale stroom mag niet lager zijn dan de minimale stroom",
 	"ERR_minCurrentAboveMax": "Minimale stroom mag niet hoger zijn dan de maximale stroom",
 	"LBL_autoPhaseSwitch": "Automatische 1-/3-fasen-omschakeling (hardware gen 3+)",

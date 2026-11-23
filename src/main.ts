@@ -46,6 +46,7 @@ import {
 	parseWallboxIndex,
 	holdRejectedRelease,
 	isVehicleDisconnected,
+	isVehiclePluggedIn,
 	MIN_CHARGE_CURRENT,
 	RELEASE_RETRY_INTERVAL,
 	RELEASE_RETRY_LIMIT,
@@ -810,7 +811,7 @@ class go_e_charger extends utils.Adapter {
 			if (budgetActive) {
 				const targetAmp = (iWB: number): number => {
 					const info = this.wallboxInfoList[iWB];
-					const hasVehicle = info.CarState === 2 || info.CarState === 3;
+					const hasVehicle = isVehiclePluggedIn(info.CarState);
 					const alloc = budgetAllocations[iWB];
 					return hasVehicle && alloc?.allow ? alloc.ampere : 0;
 				};
@@ -819,10 +820,10 @@ class go_e_charger extends utils.Adapter {
 
 			for (const iWB of applyOrder) {
 				const info = this.wallboxInfoList[iWB];
-				// a charger only draws current once a vehicle is connected (go-e car state 2 or 3). With
+				// a charger only draws current once a vehicle is connected (go-e car state 2, 3 or 4). With
 				// the budget active, a charger without a vehicle is kept off and reserves nothing, so it
 				// neither trips the fuse when a car is plugged in nor starves a charger that already charges.
-				const hasVehicle = info.CarState === 2 || info.CarState === 3;
+				const hasVehicle = isVehiclePluggedIn(info.CarState);
 
 				if (!info.ChargeManager || info.ChargeNOW) {
 					this.resetIdleRelease(iWB);
@@ -2431,7 +2432,7 @@ class go_e_charger extends utils.Adapter {
 	private planTotalCurrentBudget(chargePlans: (WallboxChargePlan | undefined)[]): TotalCurrentAllocation[] {
 		const participants: TotalCurrentParticipant[] = this.config.wallBoxList.map((_, iWB) => {
 			const info = this.wallboxInfoList[iWB];
-			const hasVehicle = info.CarState === 2 || info.CarState === 3;
+			const hasVehicle = isVehiclePluggedIn(info.CarState);
 			if (!hasVehicle) {
 				// no vehicle - the charger cannot draw current, so it neither claims budget nor is served
 				info.ReclaimDelay = 0;

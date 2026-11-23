@@ -1081,6 +1081,22 @@ export function phaseModeOf(auto: boolean, charge3Phase: boolean): number {
 }
 
 /**
+ * Whether the charger reports a plugged-in vehicle (go-e car state 2 = charging, 3 = waiting for the
+ * car, 4 = charge finished / paused).
+ *
+ * Car state 4 counts: go-e reports it as soon as a charge is stopped - also when the release is
+ * withdrawn while the vehicle could still charge (go-eCharger-API-v2 issue #156) - and keeps it until
+ * the next release or an unplug. A check that only takes 2 and 3 as "vehicle" withdraws the release in
+ * state 4 and never gives it again, so the vehicle stays at 4 for good.
+ *
+ * @param carState go-e car state as reported by the charger
+ * @returns `true` for car state 2, 3 and 4
+ */
+export function isVehiclePluggedIn(carState: number): boolean {
+	return carState === 2 || carState === 3 || carState === 4;
+}
+
+/**
  * Whether the charger reports that no vehicle is plugged in (go-e car state 1).
  *
  * Unknown or invalid states (0, NaN, out of range) do not count as "no vehicle", so a failed

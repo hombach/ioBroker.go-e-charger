@@ -544,7 +544,7 @@ class go_e_charger extends utils.Adapter {
             if (budgetActive) {
                 const targetAmp = (iWB) => {
                     const info = this.wallboxInfoList[iWB];
-                    const hasVehicle = info.CarState === 2 || info.CarState === 3;
+                    const hasVehicle = (0, chargeManagerUtils_1.isVehiclePluggedIn)(info.CarState);
                     const alloc = budgetAllocations[iWB];
                     return hasVehicle && alloc?.allow ? alloc.ampere : 0;
                 };
@@ -552,7 +552,7 @@ class go_e_charger extends utils.Adapter {
             }
             for (const iWB of applyOrder) {
                 const info = this.wallboxInfoList[iWB];
-                const hasVehicle = info.CarState === 2 || info.CarState === 3;
+                const hasVehicle = (0, chargeManagerUtils_1.isVehiclePluggedIn)(info.CarState);
                 if (!info.ChargeManager || info.ChargeNOW) {
                     this.resetIdleRelease(iWB);
                     info.ChargeManagerRunning = false;
@@ -1479,7 +1479,7 @@ class go_e_charger extends utils.Adapter {
     planTotalCurrentBudget(chargePlans) {
         const participants = this.config.wallBoxList.map((_, iWB) => {
             const info = this.wallboxInfoList[iWB];
-            const hasVehicle = info.CarState === 2 || info.CarState === 3;
+            const hasVehicle = (0, chargeManagerUtils_1.isVehiclePluggedIn)(info.CarState);
             if (!hasVehicle) {
                 info.ReclaimDelay = 0;
                 return { requestedAmp: 0, minAmp: info.MinAmp, chargeNow: !!info.ChargeNOW };
