@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PHASE_SWITCH_MODE_CHARGER_AUTO = exports.API_V1_STATUS_KEYS = exports.MODEL_STATUS_ACCESS_CONTROL_WAIT = exports.FORCE_STATE_ON = exports.FORCE_STATE_OFF = exports.API_DETECT_RETRY_CYCLES = exports.API_V2_ONLY_FILTER_KEYS = exports.RFID_V2_CARD_SLOT_KEYS = exports.API_V2_ONLY_STATUS_KEYS = exports.API_V2_PROBE_KEYS = exports.RFID_V2_FILTER_KEYS = exports.RFID_CARD_SLOTS = exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
+exports.PHASE_SWITCH_MODE_CHARGER_AUTO = exports.API_V1_STATUS_KEYS = exports.MODEL_STATUS_ACCESS_CONTROL_WAIT = exports.API_DETECT_RETRY_CYCLES = exports.API_V2_ONLY_FILTER_KEYS = exports.RFID_V2_CARD_SLOT_KEYS = exports.API_V2_ONLY_STATUS_KEYS = exports.API_V2_PROBE_KEYS = exports.RFID_V2_FILTER_KEYS = exports.RFID_CARD_SLOTS = exports.LIVE_WALLBOX_STATES = exports.DEMAND_HEADROOM = exports.RECLAIM_DELAY_CYCLES = exports.DEMAND_DEADBAND = exports.MAX_AMP_TOTAL = exports.RELEASE_RETRY_INTERVAL = exports.RELEASE_RETRY_LIMIT = exports.CAR_STATE_FINISHED = exports.PHASE_MODE_AUTO = exports.FORCE_STATE_ON = exports.FORCE_STATE_OFF = exports.FORCE_STATE_NEUTRAL = exports.IDLE_CHARGE_POWER = exports.IDLE_RELEASE_DELAY_MS = exports.DEFAULT_PHASE_TOGGLE_WAIT_MS = exports.CURRENT_DEADBAND = exports.PHASE_SWITCH_HYSTERESIS = exports.PHASE_SWITCH_DOWN_DELAY_MS = exports.PHASE_SWITCH_UP_DELAY_MS = exports.PHASE_SWITCH_DELAY_CYCLES = exports.PHASE_VOLTAGE = exports.DEFAULT_MAXIMUM_BATTERY_BONUS = exports.DEFAULT_RESERVE_POWER = exports.SHUTDOWN_DELAY_CYCLES = exports.START_CHARGE_CURRENT = exports.MAX_CHARGE_CURRENT = exports.MIN_CHARGE_CURRENT = void 0;
 exports.resolveWallboxCurrentLimits = resolveWallboxCurrentLimits;
 exports.evaluateBatteryAvailability = evaluateBatteryAvailability;
 exports.calculateAvailableSurplusPower = calculateAvailableSurplusPower;
@@ -12,6 +12,7 @@ exports.updateShutdownDelay = updateShutdownDelay;
 exports.decideChargeManager = decideChargeManager;
 exports.decideChargeManagerFleet = decideChargeManagerFleet;
 exports.decidePhaseSwitch = decidePhaseSwitch;
+exports.chargerPauseMs = chargerPauseMs;
 exports.decideIdleRelease = decideIdleRelease;
 exports.decideChargeNowEnd = decideChargeNowEnd;
 exports.chargePowerFromStatusV1 = chargePowerFromStatusV1;
@@ -19,7 +20,11 @@ exports.withdrawReleaseWithModesOff = withdrawReleaseWithModesOff;
 exports.seedChargeManagerState = seedChargeManagerState;
 exports.releaseReadback = releaseReadback;
 exports.enforceOffState = enforceOffState;
+exports.planningPhases = planningPhases;
+exports.mayWritePhaseSwitch = mayWritePhaseSwitch;
+exports.phaseSwitchDwellCycles = phaseSwitchDwellCycles;
 exports.carryCurrentOverPhaseSwitch = carryCurrentOverPhaseSwitch;
+exports.decisionAfterPhaseSwitch = decisionAfterPhaseSwitch;
 exports.phaseModeToSend = phaseModeToSend;
 exports.resolvePhaseModeWrite = resolvePhaseModeWrite;
 exports.autoPhaseSupported = autoPhaseSupported;
@@ -61,6 +66,7 @@ exports.waitsForAuthorization = waitsForAuthorization;
 exports.apiV2AuthorizeWrite = apiV2AuthorizeWrite;
 exports.apiV2ErrorRejection = apiV2ErrorRejection;
 exports.isStatusV1Answer = isStatusV1Answer;
+exports.phasesInUse = phasesInUse;
 exports.activePhasesFromFlags = activePhasesFromFlags;
 exports.enabledPhasesState = enabledPhasesState;
 exports.phaseAutoOverrideNotice = phaseAutoOverrideNotice;
@@ -72,6 +78,9 @@ exports.DEFAULT_RESERVE_POWER = 100;
 exports.DEFAULT_MAXIMUM_BATTERY_BONUS = 2000;
 exports.PHASE_VOLTAGE = 230;
 exports.PHASE_SWITCH_DELAY_CYCLES = 12;
+exports.PHASE_SWITCH_UP_DELAY_MS = 60 * 1000;
+exports.PHASE_SWITCH_DOWN_DELAY_MS = 3 * 60 * 1000;
+exports.PHASE_SWITCH_HYSTERESIS = 1.25;
 function resolveWallboxCurrentLimits(input) {
     const isUsable = (value) => typeof value === "number" && Number.isFinite(value) && value > 0;
     const installationMax = Number.isFinite(input.installationMaxCurrent) && input.installationMaxCurrent > 0 ? Math.floor(input.installationMaxCurrent) : exports.MAX_CHARGE_CURRENT;
@@ -262,29 +271,44 @@ function decideChargeManagerFleet(shared, participants) {
     });
 }
 function decidePhaseSwitch(input) {
-    if ((input.currentPhases !== 1 && input.currentPhases !== 3) ||
+    if ((input.currentPhases !== 0 && input.currentPhases !== 1 && input.currentPhases !== 3) ||
         !Number.isFinite(input.availablePower) ||
         !Number.isFinite(input.minimumChargeCurrent) ||
         !Number.isFinite(input.maximumChargeCurrent)) {
         return { targetPhases: input.currentPhases, switchDelay: 0 };
     }
-    const threePhaseMinPower = input.minimumChargeCurrent * 3 * exports.PHASE_VOLTAGE;
-    const upThreshold = Math.max(input.maximumChargeCurrent * exports.PHASE_VOLTAGE, threePhaseMinPower);
+    const floorCurrent = input.waitingForStart ? resolveStartChargeCurrent(input.minimumChargeCurrent, input.maximumChargeCurrent) : input.minimumChargeCurrent;
+    const threePhaseMinPower = floorCurrent * 3 * exports.PHASE_VOLTAGE;
+    const upThreshold = Math.max(input.maximumChargeCurrent * exports.PHASE_VOLTAGE, input.waitingForStart ? threePhaseMinPower : threePhaseMinPower * exports.PHASE_SWITCH_HYSTERESIS);
+    if (input.currentPhases === 0) {
+        return { targetPhases: input.availablePower >= upThreshold ? 3 : 1, switchDelay: 0 };
+    }
+    if (input.blocked === true) {
+        return { targetPhases: input.currentPhases, switchDelay: 0 };
+    }
     let targetPhases = input.currentPhases;
     if (input.currentPhases === 1 && input.availablePower >= upThreshold) {
         targetPhases = 3;
     }
-    else if (input.currentPhases === 3 && input.availablePower < threePhaseMinPower) {
+    else if (input.currentPhases === 3 && input.availablePower < threePhaseMinPower && input.availablePower >= floorCurrent * exports.PHASE_VOLTAGE) {
         targetPhases = 1;
     }
     if (targetPhases === input.currentPhases) {
         return { targetPhases: input.currentPhases, switchDelay: 0 };
     }
+    const delayCycles = validDelayCycles(targetPhases === 3 ? input.upDelayCycles : input.downDelayCycles);
     const switchDelay = input.switchDelay + 1;
-    if (switchDelay > exports.PHASE_SWITCH_DELAY_CYCLES) {
+    if (switchDelay > delayCycles) {
         return { targetPhases, switchDelay: 0 };
     }
     return { targetPhases: input.currentPhases, switchDelay };
+}
+function validDelayCycles(cycles) {
+    return cycles !== undefined && Number.isFinite(cycles) && cycles >= 0 ? Math.trunc(cycles) : exports.PHASE_SWITCH_DELAY_CYCLES;
+}
+exports.DEFAULT_PHASE_TOGGLE_WAIT_MS = 10 * 60 * 1000;
+function chargerPauseMs(value, fallback) {
+    return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : fallback;
 }
 exports.IDLE_RELEASE_DELAY_MS = 5 * 60 * 1000;
 exports.IDLE_CHARGE_POWER = 100;
@@ -353,11 +377,22 @@ function seedChargeManagerState(reportedAllow, reportedAmp, minimum, maximum) {
     return { currentAmp: Math.min(Math.max(Math.trunc(reportedAmp), minimum), maximum), shutdownDelay: 0 };
 }
 exports.FORCE_STATE_NEUTRAL = 0;
+exports.FORCE_STATE_OFF = 1;
+exports.FORCE_STATE_ON = 2;
 function releaseReadback(reportedAllow, forceState) {
     return forceState === exports.FORCE_STATE_NEUTRAL ? undefined : reportedAllow;
 }
 function enforceOffState(forceState, releasedByAdapter) {
     return releasedByAdapter !== true && forceState === exports.FORCE_STATE_NEUTRAL;
+}
+function planningPhases(pendingPhases, enabledPhases) {
+    return pendingPhases === 1 || pendingPhases === 3 ? pendingPhases : enabledPhases;
+}
+function mayWritePhaseSwitch(forceState, action) {
+    return forceState === exports.FORCE_STATE_ON && action !== "disable";
+}
+function phaseSwitchDwellCycles(delayMs, cycleTimeMs, forceState) {
+    return forceState === exports.FORCE_STATE_ON ? Math.ceil(delayMs / cycleTimeMs) : 0;
 }
 function carryCurrentOverPhaseSwitch(currentAmp, fromPhases, toPhases, minimumChargeCurrent, maximumChargeCurrent, availablePower) {
     if ((fromPhases !== 1 && fromPhases !== 3) || (toPhases !== 1 && toPhases !== 3) || !Number.isFinite(minimumChargeCurrent)) {
@@ -371,6 +406,12 @@ function carryCurrentOverPhaseSwitch(currentAmp, fromPhases, toPhases, minimumCh
         return currentAmp;
     }
     return Math.max(0, Math.min(samePower, Math.floor(availablePower / exports.PHASE_VOLTAGE / toPhases), maximumChargeCurrent));
+}
+function decisionAfterPhaseSwitch(decision, carriedAmp, minimumChargeCurrent) {
+    if (decision.action === "disable" && decision.reason === "insufficient-surplus" && carriedAmp >= minimumChargeCurrent) {
+        return { ...decision, action: "enable", reason: "charging-current", nextState: { currentAmp: carriedAmp, shutdownDelay: 0 } };
+    }
+    return { ...decision, nextState: { ...decision.nextState, currentAmp: carriedAmp } };
 }
 function phaseModeToSend(charge3Phase, enabledPhases) {
     if (enabledPhases === (charge3Phase ? 3 : 1)) {
@@ -692,6 +733,7 @@ exports.API_V2_ONLY_STATUS_KEYS = [
     "alw",
     "frc",
     "modelStatus",
+    "mptwt",
     "acu",
     "eto",
     "amp",
@@ -719,8 +761,6 @@ function retryApiV2Unfiltered(error, unfiltered) {
     return !unfiltered && httpStatusOf(error) === 400;
 }
 exports.API_DETECT_RETRY_CYCLES = 6;
-exports.FORCE_STATE_OFF = 1;
-exports.FORCE_STATE_ON = 2;
 function normalizeStatusV2(status) {
     const normalized = { ...status };
     if ((normalized.ast === undefined || normalized.ast === null) && (status.acs === 0 || status.acs === 1)) {
@@ -881,6 +921,12 @@ function isStatusV1Answer(data) {
     return exports.API_V1_STATUS_KEYS.every(key => key in result);
 }
 exports.PHASE_SWITCH_MODE_CHARGER_AUTO = 0;
+function phasesInUse(enabledPhases, phaseSwitchMode, activePhases) {
+    if (enabledPhases === 1 || enabledPhases === 3) {
+        return enabledPhases;
+    }
+    return phaseSwitchMode === exports.PHASE_SWITCH_MODE_CHARGER_AUTO && (activePhases === 1 || activePhases === 3) ? activePhases : 0;
+}
 function activePhasesFromFlags(pha) {
     const flags = Number(pha);
     return Number.isInteger(flags) && flags >= 0 ? [1, 2, 4].filter(bit => (flags & bit) !== 0).length : 0;
