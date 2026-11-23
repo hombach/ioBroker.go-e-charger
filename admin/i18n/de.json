@@ -41,8 +41,8 @@
 	"LBL_ipAddress": "IP-Adresse des go-eChargers",
 	"LBL_maxAmpTotal": "Maximaler Gesamtladestrom über alle Wallboxen [A] (0 = deaktiviert)",
 	"LBL_maxAmpTotalHelp": "Anlagen-Strombudget zum Schutz der Zuleitungssicherung. Der Summenstrom aller Wallboxen überschreitet diesen Wert nie; ChargeNOW wird zuerst bedient, dann ChargeManager nach Priorität. 0 deaktiviert die Begrenzung.",
-	"LBL_maxChargeCurrent": "Maximaler Ladestrom des Anschlusses für alle Wallboxen [A]",
-	"LBL_maxChargeCurrentHelp": "Anlagenweites Limit (Hauptsicherung / Anschluss). Begrenzt ChargeManager (PV-Überschuss) und ChargeNOW jeder Wallbox.",
+	"LBL_maxChargeCurrent": "Maximaler Ladestrom je Wallbox [A]",
+	"LBL_maxChargeCurrentHelp": "Obergrenze und Standardwert für jede einzelne Wallbox, gilt für ChargeNOW und ChargeManager. Pro Box lässt sich in der Wallbox-Liste ein engerer maximaler Ladestrom setzen. Die Summe über alle Boxen begrenzt der maximale Gesamtladestrom.",
 	"LBL_readOnlyMode": "Nur-Lese-Modus – es wird keine Ladefreigabe an die Wallbox gesendet (für Betrieb mit RFID-Tags)",
 	"LBL_standardSettings": "Grundeinstellungen",
 	"LBL_stateHomeBatSoc": "Objekt-ID des aktuellen Ladezustands der Hausbatterie [%]",
@@ -55,8 +55,8 @@
 	"LBL_subtractSelfConsumption": "Wallbox-Verbrauch ist im Hausstromverbrauch enthalten",
 	"LBL_wallBoxList": "Wallbox-Liste",
 	"LBL_wallBoxListHelp": "Der ChargeManager bedient die Wallboxen von oben nach unten: Der erste Eintrag erhält den PV-Überschuss zuerst, spätere Einträge nur noch den Rest. Mit den Pfeiltasten lässt sich die Priorität ändern.",
-	"LBL_wallboxMaxAmp": "Maximaler Ladestrom dieser Wallbox [A] (0 = Anlagenlimit)",
-	"LBL_wallboxMaxAmpHelp": "Höchster Strom für diese Wallbox, z. B. zum Drosseln. 0 nutzt das anlagenweite Maximum und überschreitet nie das Anlagenlimit.",
+	"LBL_wallboxMaxAmp": "Maximaler Ladestrom dieser Wallbox [A] (0 = Wert je Wallbox aus den Grundeinstellungen)",
+	"LBL_wallboxMaxAmpHelp": "Höchster Strom für diese Wallbox, z. B. zum Drosseln. 0 nutzt den maximalen Ladestrom je Wallbox aus den Grundeinstellungen und überschreitet diesen Wert nie.",
 	"LBL_wallboxMinAmp": "Minimaler Ladestrom dieser Wallbox [A] (0 = Standard)",
 	"LBL_wallboxMinAmpHelp": "Niedrigster Strom für diese Wallbox. 0 nutzt den technischen Mindestwert (6 A)."
 }

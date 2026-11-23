@@ -41,8 +41,8 @@
 	"LBL_ipAddress": "Adres IP go-eCharger",
 	"LBL_maxAmpTotal": "Maksymalny łączny prąd ładowania wszystkich wallboxów [A] (0 = wyłączone)",
 	"LBL_maxAmpTotalHelp": "Budżet prądowy instalacji chroniący bezpiecznik zasilania. Sumaryczny prąd wszystkich wallboxów nigdy go nie przekracza; najpierw obsługiwany jest ChargeNOW, potem ChargeManager według priorytetu. 0 wyłącza limit.",
-	"LBL_maxChargeCurrent": "Maksymalny prąd ładowania zasilania dla wszystkich wallboxów [A]",
-	"LBL_maxChargeCurrentHelp": "Limit całej instalacji (bezpiecznik główny / zasilanie). Ogranicza ChargeManager (nadwyżka PV) i ChargeNOW dla każdego wallboxa.",
+	"LBL_maxChargeCurrent": "Maksymalny prąd ładowania na wallbox [A]",
+	"LBL_maxChargeCurrentHelp": "Górny limit i wartość domyślna dla każdego wallboxa, obowiązująca dla ChargeNOW i ChargeManager. W liście wallboxów można ustawić niższe maksimum dla pojedynczego boxa. Sumaryczny prąd wszystkich boxów ogranicza maksymalny łączny prąd ładowania.",
 	"LBL_readOnlyMode": "Tryb tylko do odczytu – zezwolenie na ładowanie nie jest wysyłane do ładowarki (do użytku z tagami RFID)",
 	"LBL_standardSettings": "Ustawienia standardowe",
 	"LBL_stateHomeBatSoc": "ID obiektu ze stanem naładowania baterii domowej [%]",
@@ -55,8 +55,8 @@
 	"LBL_subtractSelfConsumption": "Pobór ładowarki jest wliczony w zużycie energii w domu",
 	"LBL_wallBoxList": "Lista wallboxów",
 	"LBL_wallBoxListHelp": "ChargeManager obsługuje wallboxy od góry do dołu: pierwszy wpis otrzymuje nadwyżkę PV jako pierwszy, kolejne tylko to, co zostanie. Priorytet zmienisz przyciskami strzałek.",
-	"LBL_wallboxMaxAmp": "Maksymalny prąd ładowania dla tego wallboxa [A] (0 = limit instalacji)",
-	"LBL_wallboxMaxAmpHelp": "Najwyższy prąd dla tego wallboxa, np. w celu jego ograniczenia. 0 oznacza maksimum całej instalacji. Nigdy nie przekracza limitu instalacji.",
+	"LBL_wallboxMaxAmp": "Maksymalny prąd ładowania dla tego wallboxa [A] (0 = wartość na wallbox z ustawień podstawowych)",
+	"LBL_wallboxMaxAmpHelp": "Najwyższy prąd dla tego wallboxa, np. w celu jego ograniczenia. 0 używa maksymalnego prądu ładowania na wallbox z ustawień podstawowych i nigdy nie przekracza tej wartości.",
 	"LBL_wallboxMinAmp": "Minimalny prąd ładowania dla tego wallboxa [A] (0 = domyślny)",
 	"LBL_wallboxMinAmpHelp": "Najniższy prąd przypisany do tego wallboxa. 0 oznacza minimum techniczne (6 A)."
 }
