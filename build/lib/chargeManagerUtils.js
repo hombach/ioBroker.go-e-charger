@@ -729,6 +729,7 @@ exports.API_V2_ONLY_STATUS_KEYS = [
     "alw",
     "frc",
     "modelStatus",
+    "mptwt",
     "acu",
     "eto",
     "amp",

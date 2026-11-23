@@ -1850,6 +1850,7 @@ export const API_V2_ONLY_STATUS_KEYS: readonly string[] = [
 	"alw",
 	"frc",
 	"modelStatus",
+	"mptwt",
 	"acu",
 	"eto",
 	"amp",

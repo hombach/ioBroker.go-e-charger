@@ -2495,6 +2495,8 @@ describe("ChargeManager safety helpers", () => {
 			for (const key of ["alw", "frc", "car", "amp", "eto", "nrg", "pha", "fwv", "typ", "psm", "trx", "ama", "cll", "acs", "mca", "rbc", "rbt", "fhz"]) {
 				assert.ok(API_V2_ONLY_STATUS_KEYS.includes(key), key);
 			}
+			// without mptwt the phase switching always waits the 10-minute default between two switches
+			assert.ok(API_V2_ONLY_STATUS_KEYS.includes("mptwt"), "mptwt");
 			for (const key of API_V2_ONLY_STATUS_KEYS) {
 				assert.ok(!["rca", "rna", "eca", "uby", "amx"].includes(key), `${key} is an API V1 key`);
 			}
