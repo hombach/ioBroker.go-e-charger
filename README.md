@@ -253,9 +253,9 @@ When ChargeManager runs several wallboxes at once, the PV surplus is shared betw
 
 To protect a shared fuse or supply line feeding several wallboxes, set the **maximum total charging current** [A] on the standard settings page. It is an installation-wide budget: the summed charging current of **all** wallboxes never exceeds it, in **both** ChargeManager and ChargeNOW. Unlike the PV surplus (which is measured in watts), the fuse is protected in **amperes**, because a feed rated for e.g. 20 A carries 20 A regardless of whether a wallbox charges one- or three-phase.
 
-The budget is allocated in priority order: ChargeNOW wallboxes first, then ChargeManager wallboxes in wallbox-list order. A wallbox that no longer fits is throttled to the remaining current, or switched off when even its minimum would not fit. While the budget is active, a wallbox without a connected vehicle is kept off and reserves nothing, so several idle wallboxes plugged in at the same time can never exceed the fuse before the next cycle re-plans, and an idle wallbox never starves one that is already charging.
+The budget is allocated in priority order: ChargeNOW wallboxes first, then ChargeManager wallboxes in wallbox-list order. A wallbox that no longer fits is throttled to the remaining current, or switched off when even its minimum would not fit. While the budget is active, a wallbox without a connected vehicle is kept off and reserves nothing (a vehicle counts as connected in the go-e car states charging, waiting for the car and charge finished), so several idle wallboxes plugged in at the same time can never exceed the fuse before the next cycle re-plans, and an idle wallbox never starves one that is already charging.
 
-A value of `0` (default) disables the budget; the adapter then does not enforce a combined limit, so make sure the sum of the per-wallbox maximum currents stays within your installation's capacity.
+A value of `0` disables the budget (an active budget needs at least 6 A; new instances start with 16 A); the adapter then does not enforce a combined limit, so make sure the sum of the per-wallbox maximum currents stays within your installation's capacity.
 
 While the budget is active, the adapter also **follows the actually measured charging current**: if a wallbox draws noticeably less than it is allowed (e.g. a vehicle with a lower onboard-charger limit, a car tapering near full, or temperature derating), its unused current is reclaimed after a few cycles and handed to the next wallbox in priority order. The wallbox keeps a small headroom above its real draw and is offered one ampere more each cycle as long as it uses what it gets, so it can grow back to its limit. To stay safe, a wallbox is only ever throttled _down_ to reclaim capacity — its command is never left high while the freed amperes are given away — so the summed current can never exceed the fuse even if a vehicle suddenly ramps back up.
 
@@ -279,6 +279,11 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+
+- (HombachC) fixed ChargeNOW and ChargeManager never starting with the total current budget (`maxAmpTotal`) active when the charger reported car state 4 (charge finished / paused): the budget took only car states 2 and 3 as a connected vehicle, withdrew the release and logged "waiting for vehicle", and without a release the charger stays at car state 4; car state 4 now counts as a connected vehicle, as everywhere else in the adapter
+- (HombachC) the maximum total charging current across all wallboxes accepts 0 (budget disabled) again in the admin page, as its label and help say; values 1-5 A are refused; it is placed next to the maximum charging current of the power supply
+
 ### 1.11.0 (2026-11-22)
 
 - (HombachC) added grid meter input for ChargeManager: one signed grid power value (import positive, export negative) instead of PV generation and house consumption, with Negate, Ack-only and maximum age options (#919)

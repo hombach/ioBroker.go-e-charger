@@ -1,4 +1,5 @@
 {
+	"ERR_maxAmpTotalBelowMin": "0 wyłącza limit; aktywny limit wymaga co najmniej 6 A",
 	"ERR_maxCurrentBelowMin": "Prąd maksymalny musi być większy lub równy prądowi minimalnemu",
 	"ERR_minCurrentAboveMax": "Prąd minimalny musi być mniejszy lub równy prądowi maksymalnemu",
 	"LBL_autoPhaseSwitch": "Automatyczne przełączanie 1/3 fazy (sprzęt gen 3+)",

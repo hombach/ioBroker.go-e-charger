@@ -37,23 +37,26 @@
 					"md": 6,
 					"lg": 6,
 					"xl": 6,
-					"newLine": false
+					"newLine": true
 				},
 				"maxAmpTotal": {
 					"type": "number",
 					"label": "LBL_maxAmpTotal",
 					"help": "LBL_maxAmpTotalHelp",
 					"default": 16,
-					"min": 6,
+					"min": 0,
 					"max": 64,
 					"step": 1,
 					"unit": "A",
+					"validator": "data.maxAmpTotal === 0 || data.maxAmpTotal >= 6",
+					"validatorNoSaveOnError": true,
+					"validatorErrorText": "ERR_maxAmpTotalBelowMin",
 					"xs": 12,
 					"sm": 6,
 					"md": 6,
 					"lg": 6,
 					"xl": 6,
-					"newLine": true
+					"newLine": false
 				},
 				"wallBoxList": {
 					"type": "accordion",

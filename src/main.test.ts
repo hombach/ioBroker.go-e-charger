@@ -34,6 +34,7 @@ import {
 	connectionTransition,
 	LIVE_WALLBOX_STATES,
 	isVehicleDisconnected,
+	isVehiclePluggedIn,
 	IDLE_CHARGE_POWER,
 	type IdleReleaseInput,
 	MAX_AMP_TOTAL,
@@ -858,6 +859,51 @@ describe("ChargeManager safety helpers", () => {
 		});
 	});
 
+	describe("total current budget with car state 4 (ChargeNOW waiting for vehicle)", () => {
+		// API V1 status of a go-e Gemini (firmware 60.6) with a vehicle plugged in after the release was
+		// withdrawn: car state 4 ("charge finished") and no release - the charger keeps it until released
+		const statusV1 = JSON.parse(
+			readFileSync(join(__dirname, "..", "test", "fixtures", "api-v1-status-gemini-60.6-car4-release-withdrawn.json"), "utf8"),
+		) as {
+			car: string;
+			alw: string;
+		};
+		// as ParseStatusAPIV1 reads it
+		const carState = Number(statusV1.car) || 0;
+
+		it("the fixture is a plugged-in vehicle without release", () => {
+			assert.equal(carState, 4);
+			assert.equal(statusV1.alw, "0");
+			assert.equal(isVehicleDisconnected(carState), false);
+		});
+
+		it("counts car states 2, 3 and 4 as a plugged-in vehicle", () => {
+			for (const state of [2, 3, 4]) {
+				assert.equal(isVehiclePluggedIn(state), true, `car ${state}`);
+			}
+			for (const state of [0, 1, 5, 6, -1, Number.NaN]) {
+				assert.equal(isVehiclePluggedIn(state), false, `car ${state}`);
+			}
+		});
+
+		it("grants ChargeNOW its current from a 19 A budget for the plugged-in vehicle", () => {
+			// as planTotalCurrentBudget builds the participant: no measured current yet, so the wish is reserved
+			const wish = 16;
+			const demand = effectiveCurrentDemand({ commandedAmp: 0, measuredAmp: 0, wishAmp: wish, minAmp: 6, maxAmp: 20, reclaimDelay: 0 }).demand;
+			const requestedAmp = isVehiclePluggedIn(carState) ? demand : 0;
+			assert.deepEqual(limitTotalCurrent([{ requestedAmp, minAmp: 6, chargeNow: true }], 19), [{ allow: true, ampere: 16 }]);
+		});
+
+		it("main.ts takes the plugged-in check for the budget, not only car states 2 and 3", () => {
+			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
+			assert.ok(!/CarState === 2 \|\| [\w.]*CarState === 3/.test(source), "no budget vehicle check that leaves out car state 4");
+			const budget = source.slice(source.indexOf("private planTotalCurrentBudget"), source.indexOf("const allocations = limitTotalCurrent"));
+			assert.ok(budget.includes("isVehiclePluggedIn(info.CarState)"), "planTotalCurrentBudget");
+			const loop = source.slice(source.indexOf("const budgetActive = maxAmpTotal > 0;"), source.indexOf("} else if (info.ChargeManager) {"));
+			assert.equal(loop.match(/const hasVehicle = isVehiclePluggedIn\(info\.CarState\);/g)?.length, 2, "apply order and apply loop");
+		});
+	});
+
 	describe("gridFrequencyFromStatus", () => {
 		it("passes a reported grid frequency through unchanged", () => {
 			assert.equal(gridFrequencyFromStatus(49.98), 49.98);
@@ -1243,6 +1289,38 @@ describe("ChargeManager safety helpers", () => {
 			assert.equal(item.default, 16);
 			assert.equal(item.max, MAX_AMP_TOTAL);
 			assert.ok(item.default >= item.min && item.default <= item.max);
+		});
+
+		it("accepts 0 (budget disabled) as the label and help say, but no active budget below 6 A", () => {
+			const jsonConfig = JSON.parse(readFileSync(join(__dirname, "..", "admin", "jsonConfig.json"), "utf8"));
+			const item = findItem(jsonConfig.items, "maxAmpTotal");
+			assert.equal(item.min, 0, "0 must be enterable - it disables the budget");
+			assert.deepEqual(validateMaxAmpTotal(item.min), { ampere: 0, valid: true });
+			assert.equal(item.validatorNoSaveOnError, true);
+			assert.ok(item.validatorErrorText, "validator error text");
+			// the admin validator is a JS expression over `data`
+			const validate = new Function("data", `return ${item.validator};`) as (data: Record<string, number>) => boolean;
+			assert.equal(validate({ maxAmpTotal: 0 }), true, "0 = disabled");
+			for (const value of [6, 19, MAX_AMP_TOTAL]) {
+				assert.equal(validate({ maxAmpTotal: value }), true, `${value} A`);
+			}
+			for (const value of [1, 5]) {
+				assert.equal(validate({ maxAmpTotal: value }), false, `${value} A cannot charge any wallbox`);
+			}
+			for (const file of readdirSync(join(__dirname, "..", "admin", "i18n"))) {
+				const texts = JSON.parse(readFileSync(join(__dirname, "..", "admin", "i18n", file), "utf8"));
+				assert.ok(texts[item.validatorErrorText], `${file}: ${item.validatorErrorText}`);
+			}
+		});
+
+		it("sits next to the maximum charging current of the power supply, both with unit A", () => {
+			const jsonConfig = JSON.parse(readFileSync(join(__dirname, "..", "admin", "jsonConfig.json"), "utf8"));
+			const supply = findItem(jsonConfig.items, "maxChargeCurrent");
+			const total = findItem(jsonConfig.items, "maxAmpTotal");
+			assert.equal(supply.newLine, true);
+			assert.equal(total.newLine, false);
+			assert.equal(supply.unit, "A");
+			assert.equal(total.unit, "A");
 		});
 	});
 
