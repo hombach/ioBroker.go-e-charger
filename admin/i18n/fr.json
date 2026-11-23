@@ -42,8 +42,8 @@
 	"LBL_ipAddress": "Adresse IP du go-eCharger",
 	"LBL_maxAmpTotal": "Courant de charge total maximal pour toutes les wallboxes [A] (0 = désactivé)",
 	"LBL_maxAmpTotalHelp": "Budget de courant de l'installation protégeant le fusible d'alimentation. Le courant cumulé de toutes les wallboxes ne le dépasse jamais ; ChargeNOW est servi en premier, puis ChargeManager par priorité. 0 désactive la limite.",
-	"LBL_maxChargeCurrent": "Courant de charge maximal de l'alimentation pour toutes les wallbox [A]",
-	"LBL_maxChargeCurrentHelp": "Limite globale de l'installation (disjoncteur principal / alimentation). Plafonne ChargeManager (surplus PV) et ChargeNOW pour chaque wallbox.",
+	"LBL_maxChargeCurrent": "Courant de charge maximal par wallbox [A]",
+	"LBL_maxChargeCurrentHelp": "Limite supérieure et valeur par défaut de chaque wallbox, valable pour ChargeNOW et ChargeManager. Un maximum plus bas peut être défini par box dans la liste des wallboxes. Le courant cumulé de toutes les box est limité par le courant de charge total maximal.",
 	"LBL_readOnlyMode": "Mode lecture seule - l'autorisation de charge n'est pas envoyée au chargeur (pour une utilisation avec badges RFID)",
 	"LBL_standardSettings": "Paramètres généraux",
 	"LBL_stateHomeBatSoc": "ID d'objet de l'état de charge de la batterie domestique [%]",
@@ -56,8 +56,8 @@
 	"LBL_subtractSelfConsumption": "La consommation du chargeur est incluse dans la consommation du domicile",
 	"LBL_wallBoxList": "Liste des wallbox",
 	"LBL_wallBoxListHelp": "Le ChargeManager sert les wallbox de haut en bas : la première entrée reçoit le surplus PV en premier, les suivantes seulement le reste. Modifiez la priorité avec les boutons fléchés.",
-	"LBL_wallboxMaxAmp": "Courant de charge maximal de cette wallbox [A] (0 = limite de l'installation)",
-	"LBL_wallboxMaxAmpHelp": "Courant le plus élevé pour cette wallbox, par ex. pour la brider. 0 applique le maximum de l'installation. Ne dépasse jamais la limite de l'installation.",
+	"LBL_wallboxMaxAmp": "Courant de charge maximal de cette wallbox [A] (0 = valeur par wallbox des paramètres de base)",
+	"LBL_wallboxMaxAmpHelp": "Courant le plus élevé pour cette wallbox, par ex. pour la brider. 0 applique le courant de charge maximal par wallbox des paramètres de base et ne dépasse jamais cette valeur.",
 	"LBL_wallboxMinAmp": "Courant de charge minimal de cette wallbox [A] (0 = par défaut)",
 	"LBL_wallboxMinAmpHelp": "Courant le plus bas attribué à cette wallbox. 0 applique le minimum technique (6 A)."
 }

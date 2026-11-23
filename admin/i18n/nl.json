@@ -42,8 +42,8 @@
 	"LBL_ipAddress": "IP-adres van de go-eCharger",
 	"LBL_maxAmpTotal": "Maximale totale laadstroom over alle wallboxen [A] (0 = uitgeschakeld)",
 	"LBL_maxAmpTotalHelp": "Stroombudget van de installatie ter bescherming van de hoofdzekering. De opgetelde stroom van alle wallboxen overschrijdt dit nooit; ChargeNOW wordt eerst bediend, daarna ChargeManager op prioriteit. 0 schakelt de limiet uit.",
-	"LBL_maxChargeCurrent": "Maximale laadstroom van de voeding voor alle wallboxen [A]",
-	"LBL_maxChargeCurrentHelp": "Limiet voor de hele installatie (hoofdzekering / voeding). Begrenst ChargeManager (PV-overschot) en ChargeNOW voor elke wallbox.",
+	"LBL_maxChargeCurrent": "Maximale laadstroom per wallbox [A]",
+	"LBL_maxChargeCurrentHelp": "Bovengrens en standaardwaarde voor elke afzonderlijke wallbox, geldig voor ChargeNOW en ChargeManager. In de wallboxlijst kan per box een lager maximum worden ingesteld. De som van alle boxen wordt begrensd door de maximale totale laadstroom.",
 	"LBL_readOnlyMode": "Alleen-lezen modus - laadvrijgave wordt niet naar de wallbox gestuurd (voor gebruik met RFID-tags)",
 	"LBL_standardSettings": "Standaardinstellingen",
 	"LBL_stateHomeBatSoc": "Object-ID van de laadtoestand van de thuisbatterij [%]",
@@ -56,8 +56,8 @@
 	"LBL_subtractSelfConsumption": "Verbruik van de wallbox zit al in het huisverbruik",
 	"LBL_wallBoxList": "Wallboxlijst",
 	"LBL_wallBoxListHelp": "De ChargeManager bedient de wallboxen van boven naar beneden: de eerste vermelding krijgt het PV-overschot als eerste, latere alleen wat overblijft. Wijzig de prioriteit met de pijlknoppen.",
-	"LBL_wallboxMaxAmp": "Maximale laadstroom voor deze wallbox [A] (0 = installatielimiet)",
-	"LBL_wallboxMaxAmpHelp": "Hoogste stroom voor deze wallbox, bijv. om te begrenzen. 0 gebruikt het maximum van de installatie. Overschrijdt nooit de installatielimiet.",
+	"LBL_wallboxMaxAmp": "Maximale laadstroom voor deze wallbox [A] (0 = waarde per wallbox uit de standaardinstellingen)",
+	"LBL_wallboxMaxAmpHelp": "Hoogste stroom voor deze wallbox, bijv. om te begrenzen. 0 gebruikt de maximale laadstroom per wallbox uit de standaardinstellingen en overschrijdt die waarde nooit.",
 	"LBL_wallboxMinAmp": "Minimale laadstroom voor deze wallbox [A] (0 = standaard)",
 	"LBL_wallboxMinAmpHelp": "Laagste stroom voor deze wallbox. 0 gebruikt het technische minimum (6 A)."
 }

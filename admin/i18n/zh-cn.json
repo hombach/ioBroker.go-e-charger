@@ -42,8 +42,8 @@
 	"LBL_ipAddress": "go-eCharger 的 IP 地址",
 	"LBL_maxAmpTotal": "所有充电桩的最大总充电电流 [A]（0 = 禁用）",
 	"LBL_maxAmpTotalHelp": "用于保护供电保险丝的安装电流预算。所有充电桩的电流总和绝不会超过此值；先分配 ChargeNOW，再按优先级分配 ChargeManager。0 表示禁用该限制。",
-	"LBL_maxChargeCurrent": "供电电源对所有充电桩的最大充电电流 [A]",
-	"LBL_maxChargeCurrentHelp": "整个电气装置的上限（主断路器/供电）。对每个充电桩的 ChargeManager（光伏盈余）和 ChargeNOW 均生效。",
+	"LBL_maxChargeCurrent": "每个充电桩的最大充电电流 [A]",
+	"LBL_maxChargeCurrentHelp": "每个充电桩的上限和默认值，适用于 ChargeNOW 和 ChargeManager。可在充电桩列表中为单个充电桩设置更低的最大值。所有充电桩的电流总和由最大总充电电流限制。",
 	"LBL_readOnlyMode": "只读模式——不向充电桩发送充电许可（配合 RFID 标签使用）",
 	"LBL_standardSettings": "常规设置",
 	"LBL_stateHomeBatSoc": "家庭电池当前电量的对象 ID [%]",
@@ -56,8 +56,8 @@
 	"LBL_subtractSelfConsumption": "家庭用电量中已包含充电桩的耗电",
 	"LBL_wallBoxList": "充电桩列表",
 	"LBL_wallBoxListHelp": "ChargeManager 从上到下依次分配：列表中的第一项优先获得光伏余电，靠后的充电桩只能获得剩余部分。用箭头按钮调整优先级。",
-	"LBL_wallboxMaxAmp": "此充电桩的最大充电电流 [A]（0 = 装置上限）",
-	"LBL_wallboxMaxAmpHelp": "此充电桩的最大电流，例如用于限流。0 表示使用整个装置的最大值，且绝不超过装置上限。",
+	"LBL_wallboxMaxAmp": "此充电桩的最大充电电流 [A]（0 = 基本设置中的每桩值）",
+	"LBL_wallboxMaxAmpHelp": "此充电桩的最大电流，例如用于限流。0 表示使用基本设置中的每个充电桩最大充电电流，且绝不超过该值。",
 	"LBL_wallboxMinAmp": "此充电桩的最小充电电流 [A]（0 = 默认值）",
 	"LBL_wallboxMinAmpHelp": "分配给此充电桩的最小电流。0 表示使用技术最小值（6 A）。"
 }

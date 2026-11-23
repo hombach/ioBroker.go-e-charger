@@ -42,8 +42,8 @@
 	"LBL_ipAddress": "IP address of the go-eCharger",
 	"LBL_maxAmpTotal": "Maximum total charging current across all wallboxes [A] (0 = disabled)",
 	"LBL_maxAmpTotalHelp": "Installation current budget protecting the supply fuse. The summed current of all wallboxes never exceeds it; ChargeNOW is served first, then ChargeManager by priority. 0 disables the limit.",
-	"LBL_maxChargeCurrent": "Maximum charging current of the power supply for all wallboxes [A]",
-	"LBL_maxChargeCurrentHelp": "Installation-wide limit (main breaker / supply). Caps ChargeManager (PV surplus) and ChargeNOW for every wallbox.",
+	"LBL_maxChargeCurrent": "Maximum charging current per wallbox [A]",
+	"LBL_maxChargeCurrentHelp": "Upper limit and default for each individual wallbox, used by ChargeNOW and ChargeManager. A tighter maximum can be set per box in the wallbox list. The summed current of all boxes is limited by the maximum total charging current.",
 	"LBL_readOnlyMode": "Read-only mode - charging release is not sent to the charger (for use with RFID tags)",
 	"LBL_standardSettings": "Standard settings",
 	"LBL_stateHomeBatSoc": "Object ID for the current state of charge of the home battery [%]",
@@ -56,8 +56,8 @@
 	"LBL_subtractSelfConsumption": "Charger consumption is included in the home power consumption value",
 	"LBL_wallBoxList": "Wallbox list",
 	"LBL_wallBoxListHelp": "The ChargeManager serves the wallboxes from top to bottom: the first entry receives the PV surplus first, later entries only get what is left over. Use the arrow buttons to change the priority.",
-	"LBL_wallboxMaxAmp": "Maximum charging current for this wallbox [A] (0 = installation limit)",
-	"LBL_wallboxMaxAmpHelp": "Highest current for this wallbox, e.g. to throttle it. 0 uses the installation-wide maximum. Never exceeds the installation limit.",
+	"LBL_wallboxMaxAmp": "Maximum charging current for this wallbox [A] (0 = per-wallbox value from the standard settings)",
+	"LBL_wallboxMaxAmpHelp": "Highest current for this wallbox, e.g. to throttle it. 0 uses the maximum charging current per wallbox from the standard settings and never exceeds that value.",
 	"LBL_wallboxMinAmp": "Minimum charging current for this wallbox [A] (0 = default)",
 	"LBL_wallboxMinAmpHelp": "Lowest current assigned to this wallbox. 0 uses the technical minimum (6 A)."
 }

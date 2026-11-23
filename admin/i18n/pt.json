@@ -42,8 +42,8 @@
 	"LBL_ipAddress": "Endereço IP do go-eCharger",
 	"LBL_maxAmpTotal": "Corrente de carga total máxima de todas as wallboxes [A] (0 = desativado)",
 	"LBL_maxAmpTotalHelp": "Orçamento de corrente da instalação para proteger o fusível de alimentação. A corrente somada de todas as wallboxes nunca o excede; o ChargeNOW é servido primeiro, depois o ChargeManager por prioridade. 0 desativa o limite.",
-	"LBL_maxChargeCurrent": "Corrente máxima de carga da alimentação para todas as wallboxes [A]",
-	"LBL_maxChargeCurrentHelp": "Limite de toda a instalação (disjuntor principal / alimentação). Limita o ChargeManager (excedente FV) e o ChargeNOW em cada wallbox.",
+	"LBL_maxChargeCurrent": "Corrente máxima de carga por wallbox [A]",
+	"LBL_maxChargeCurrentHelp": "Limite superior e valor predefinido de cada wallbox, válido para ChargeNOW e ChargeManager. Na lista de wallboxes pode definir-se um máximo mais baixo por caixa. A corrente somada de todas as caixas é limitada pela corrente de carga total máxima.",
 	"LBL_readOnlyMode": "Modo somente leitura - a liberação de carga não é enviada ao carregador (para uso com tags RFID)",
 	"LBL_standardSettings": "Configurações padrão",
 	"LBL_stateHomeBatSoc": "ID de objeto do estado de carga da bateria doméstica [%]",
@@ -56,8 +56,8 @@
 	"LBL_subtractSelfConsumption": "O consumo do carregador já está incluído no consumo da casa",
 	"LBL_wallBoxList": "Lista de wallboxes",
 	"LBL_wallBoxListHelp": "O ChargeManager atende as wallboxes de cima para baixo: a primeira entrada recebe o excedente FV primeiro, as seguintes apenas o que sobra. Altere a prioridade com os botões de seta.",
-	"LBL_wallboxMaxAmp": "Corrente máxima de carga desta wallbox [A] (0 = limite da instalação)",
-	"LBL_wallboxMaxAmpHelp": "Corrente mais alta desta wallbox, p. ex. para limitá-la. 0 usa o máximo de toda a instalação. Nunca excede o limite da instalação.",
+	"LBL_wallboxMaxAmp": "Corrente máxima de carga desta wallbox [A] (0 = valor por wallbox das definições básicas)",
+	"LBL_wallboxMaxAmpHelp": "Corrente mais alta desta wallbox, p. ex. para limitá-la. 0 usa a corrente máxima de carga por wallbox das definições básicas e nunca excede esse valor.",
 	"LBL_wallboxMinAmp": "Corrente mínima de carga desta wallbox [A] (0 = padrão)",
 	"LBL_wallboxMinAmpHelp": "Corrente mais baixa atribuída a esta wallbox. 0 usa o mínimo técnico (6 A)."
 }
