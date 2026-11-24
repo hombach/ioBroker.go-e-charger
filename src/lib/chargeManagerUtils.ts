@@ -679,6 +679,26 @@ export function chargerPauseMs(value: unknown, fallback: number): number {
 	return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : fallback;
 }
 
+/**
+ * Whether a phase switch the adapter writes now holds back the next one for the charger's `mptwt`.
+ *
+ * The wait protects a running charge from being interrupted again and again. A switch written
+ * before the car draws current - with the charge release, while the car still waits (car 3), has
+ * finished (4) or is not there (1) - interrupts nothing, so the next switch may follow at once
+ * (2026-11-14: 3 -> 1 phase at the release, the lift to three phases a minute later waited 10
+ * minutes with 800 W going to the grid). Any other car state, including an unknown one, keeps the wait.
+ *
+ * Known limit: whether the go-e firmware itself counts such a switch towards `mptwt` is not
+ * measured. If it does, it ignores the next switch; the adapter reads the unchanged phase count
+ * back and then waits for that next switch, made during the charge.
+ *
+ * @param carState `car` the charger reported in the last poll
+ * @returns `true` when the switch starts the wait
+ */
+export function phaseSwitchStartsWait(carState: unknown): boolean {
+	return !(carState === 1 || carState === 3 || carState === 4);
+}
+
 /** How long a connected vehicle may ignore an active charge release before it is withdrawn */
 export const IDLE_RELEASE_DELAY_MS = 5 * 60 * 1000;
 /** Charging power below which a connected vehicle counts as not charging */
