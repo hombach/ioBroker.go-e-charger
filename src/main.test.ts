@@ -12,6 +12,7 @@ import {
 	PHASE_SWITCH_DOWN_DELAY_MS,
 	PHASE_SWITCH_UP_DELAY_MS,
 	phaseSwitchDwellCycles,
+	phaseSwitchStartsWait,
 	planningPhases,
 	phasesInUse,
 	FORCE_STATE_NEUTRAL,
@@ -2040,6 +2041,77 @@ describe("ChargeManager safety helpers", () => {
 			for (const value of [undefined, null, -1, Number.NaN, Number.POSITIVE_INFINITY, "600000"]) {
 				assert.equal(chargerPauseMs(value, DEFAULT_PHASE_TOGGLE_WAIT_MS), DEFAULT_PHASE_TOGGLE_WAIT_MS, String(value));
 			}
+		});
+	});
+
+	describe("phaseSwitchStartsWait", () => {
+		it("starts the wait for a switch while the car charges", () => {
+			assert.equal(phaseSwitchStartsWait(2), true);
+		});
+
+		it("leaves the next switch free after one before the car draws current", () => {
+			// 2026-11-14 15:07:34: 3 -> 1 phase together with the release at car=3; the lift to three
+			// phases a minute later then waited the full 10 minutes with 800 W going to the grid
+			for (const carState of [1, 3, CAR_STATE_FINISHED]) {
+				assert.equal(phaseSwitchStartsWait(carState), false, String(carState));
+			}
+		});
+
+		it("keeps the wait for an unknown or invalid car state", () => {
+			for (const carState of [0, 5, -1, Number.NaN, "3", null, undefined]) {
+				assert.equal(phaseSwitchStartsWait(carState), true, String(carState));
+			}
+		});
+
+		it("main.ts only starts the wait through it when the switch was written", () => {
+			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
+			assert.equal(source.split("LastPhaseSwitchMs = Date.now()").length, 2, "one place starts the wait");
+			const compact = source.replace(/\s+/g, " ");
+			assert.ok(
+				compact.includes(
+					"if (phaseSwitchStartsWait(this.wallboxInfoList[iWB].CarState)) { this.wallboxInfoList[iWB].LastPhaseSwitchMs = Date.now(); }",
+				),
+			);
+		});
+
+		// Switch_3Phases itself is not unit-tested (HTTP write). After a successful write it sets
+		// LastPhaseSwitchMs only when phaseSwitchStartsWait is true; the AutoPhase plan then
+		// blocks with lastSwitch !== null && now - lastSwitch < PhaseToggleWaitMs (main.ts).
+		const lastSwitchAfterWrite = (carState: unknown, writtenAt: number): number | null => (phaseSwitchStartsWait(carState) ? writtenAt : null);
+		const waitBlocks = (lastSwitch: number | null, now: number): boolean => lastSwitch !== null && now - lastSwitch < DEFAULT_PHASE_TOGGLE_WAIT_MS;
+		const dueUp = {
+			currentPhases: 1 as const,
+			availablePower: 32 * PHASE_VOLTAGE,
+			minimumChargeCurrent: MIN_CHARGE_CURRENT,
+			maximumChargeCurrent: 32,
+			switchDelay: PHASE_SWITCH_DELAY_CYCLES,
+		};
+
+		it("does not block the next switch after one written before the car draws current", () => {
+			const writtenAt = 1_000_000;
+			// one minute later, well inside the default 10-minute mptwt
+			const later = writtenAt + PHASE_SWITCH_UP_DELAY_MS;
+			for (const carState of [1, 3, CAR_STATE_FINISHED]) {
+				const lastSwitch = lastSwitchAfterWrite(carState, writtenAt);
+				const blocked = waitBlocks(lastSwitch, later);
+				assert.equal(lastSwitch, null, String(carState));
+				assert.equal(blocked, false, String(carState));
+				assert.deepEqual(decidePhaseSwitch({ ...dueUp, blocked }), { targetPhases: 3, switchDelay: 0 }, String(carState));
+			}
+		});
+
+		it("keeps the next switch blocked until mptwt after one written while the car charges", () => {
+			const writtenAt = 1_000_000;
+			const lastSwitch = lastSwitchAfterWrite(2, writtenAt);
+			assert.equal(lastSwitch, writtenAt);
+			const duringWait = writtenAt + PHASE_SWITCH_UP_DELAY_MS;
+			const blockedDuring = waitBlocks(lastSwitch, duringWait);
+			assert.equal(blockedDuring, true);
+			assert.deepEqual(decidePhaseSwitch({ ...dueUp, blocked: blockedDuring }), { targetPhases: 1, switchDelay: 0 });
+			const afterWait = writtenAt + DEFAULT_PHASE_TOGGLE_WAIT_MS;
+			const blockedAfter = waitBlocks(lastSwitch, afterWait);
+			assert.equal(blockedAfter, false);
+			assert.deepEqual(decidePhaseSwitch({ ...dueUp, blocked: blockedAfter }), { targetPhases: 3, switchDelay: 0 });
 		});
 	});
 

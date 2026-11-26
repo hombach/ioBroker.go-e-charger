@@ -62,6 +62,7 @@ import {
 	phaseModeToSend,
 	phasesInUse,
 	phaseSwitchDwellCycles,
+	phaseSwitchStartsWait,
 	phaseVoltagesFromNrg,
 	planningPhases,
 	RELEASE_RETRY_INTERVAL,
@@ -2045,7 +2046,9 @@ class go_e_charger extends utils.Adapter {
 			.get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/set?psm=${psm}`, { transformResponse: r => r })
 			.then(response => {
 				//.status == 200
-				this.wallboxInfoList[iWB].LastPhaseSwitchMs = Date.now();
+				if (phaseSwitchStartsWait(this.wallboxInfoList[iWB].CarState)) {
+					this.wallboxInfoList[iWB].LastPhaseSwitchMs = Date.now();
+				}
 				this.log.info(`Charger ${this.wallboxLabel(iWB)}: switched to ${Charge3Phase ? 3 : 1}-phase charging`);
 				this.log.debug(`Sent: PSM=${psm} to charger ${this.wallboxLabel(iWB)} → Response: ${response.statusText}`);
 				this.logPhaseAutoOverride(iWB, psm);

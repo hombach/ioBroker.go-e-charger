@@ -211,7 +211,7 @@ Enable **automatic 1-/3-phase switching** per wallbox (gen 3+ only, off by defau
 
 - It switches **up to three phases** once the surplus exceeds both the one-phase maximum and 1.25 times the three-phase minimum (5175 W with 6-16 A), so three-phase charging starts with headroom above its own floor instead of right on it.
 - It switches **down to one phase** once the surplus drops below the three-phase minimum (4140 W at 6 A) but still carries one-phase charging at the minimum (1380 W at 6 A). Below that, one phase would not charge either, so the charge stops instead of switching.
-- More surplus must hold for 1 minute before switching up, less surplus for 3 minutes before switching down. A three-phase charge that would otherwise be stopped for too little surplus switches down at once. No switch follows before the charger's own minimum time between two switches (`mptwt`, 10 minutes by default) has passed: every switch costs the charger a pause, and some firmware versions hang in that pause.
+- More surplus must hold for 1 minute before switching up, less surplus for 3 minutes before switching down. A three-phase charge that would otherwise be stopped for too little surplus switches down at once. No switch follows before the charger's own minimum time between two switches (`mptwt`, 10 minutes by default) has passed: every switch costs the charger a pause, and some firmware versions hang in that pause. A switch written while no charge runs (the vehicle waits for the release, has finished or is not plugged in) interrupts nothing, so it does not start this wait.
 - The phase count is only written to the charger while the charge release is active (force state "on"). While the charger is held off, the phase count for the next start is only planned: it follows the surplus at once without a dwell, uses the start current (10 A) instead of the minimum, sizes the charging current right away and is written right after the next charge release. The same applies to a fixed phase mode and to ChargeNOW.
 - A charger set to its own automatic phase switching (`psm` 0) is taken over from the phases it charges on; while it does not charge, the start phase is picked from the surplus right away.
 
@@ -284,6 +284,8 @@ If you enjoyed this project – or are just feeling generous – consider buying
 ### **WORK IN PROGRESS**
 
 - (typhosj) a charge release the adapter no longer requests is no longer counted as ignored: after the vehicle was unplugged, the charger reports the release as withdrawn by itself, the adapter wrote nothing and kept waiting for its last release - five minutes later the log said the release was ignored 30 times, and a later start at car state 4 could send the release only every 6 cycles from the first attempt on
+- (typhosj) ChargeManager: a phase switch written while no charge runs - together with the charge release, while the vehicle waits, has finished or is not plugged in - no longer holds back the next switch for the charger's minimum time between two switches; a start switched to one phase at the release used to wait ten minutes before it could go up to three phases
+- (hombach) ChargeManager: documented that on firmware 60.6 a start phase switch does not count towards the charger's minimum time between two switches (`mptwt`), and added a regression test that a switch written before the car draws current does not block the next one
 
 ### 1.12.1 (2026-11-26)
 
