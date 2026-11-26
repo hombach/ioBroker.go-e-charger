@@ -13,6 +13,7 @@ exports.decideChargeManager = decideChargeManager;
 exports.decideChargeManagerFleet = decideChargeManagerFleet;
 exports.decidePhaseSwitch = decidePhaseSwitch;
 exports.chargerPauseMs = chargerPauseMs;
+exports.phaseSwitchStartsWait = phaseSwitchStartsWait;
 exports.decideIdleRelease = decideIdleRelease;
 exports.decideChargeNowEnd = decideChargeNowEnd;
 exports.chargePowerFromStatusV1 = chargePowerFromStatusV1;
@@ -309,6 +310,9 @@ function validDelayCycles(cycles) {
 exports.DEFAULT_PHASE_TOGGLE_WAIT_MS = 10 * 60 * 1000;
 function chargerPauseMs(value, fallback) {
     return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : fallback;
+}
+function phaseSwitchStartsWait(carState) {
+    return !(carState === 1 || carState === 3 || carState === 4);
 }
 exports.IDLE_RELEASE_DELAY_MS = 5 * 60 * 1000;
 exports.IDLE_CHARGE_POWER = 100;

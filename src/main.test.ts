@@ -12,6 +12,7 @@ import {
 	PHASE_SWITCH_DOWN_DELAY_MS,
 	PHASE_SWITCH_UP_DELAY_MS,
 	phaseSwitchDwellCycles,
+	phaseSwitchStartsWait,
 	planningPhases,
 	phasesInUse,
 	FORCE_STATE_NEUTRAL,
@@ -1987,6 +1988,37 @@ describe("ChargeManager safety helpers", () => {
 			for (const value of [undefined, null, -1, Number.NaN, Number.POSITIVE_INFINITY, "600000"]) {
 				assert.equal(chargerPauseMs(value, DEFAULT_PHASE_TOGGLE_WAIT_MS), DEFAULT_PHASE_TOGGLE_WAIT_MS, String(value));
 			}
+		});
+	});
+
+	describe("phaseSwitchStartsWait", () => {
+		it("starts the wait for a switch while the car charges", () => {
+			assert.equal(phaseSwitchStartsWait(2), true);
+		});
+
+		it("leaves the next switch free after one before the car draws current", () => {
+			// 2026-11-14 15:07:34: 3 -> 1 phase together with the release at car=3; the lift to three
+			// phases a minute later then waited the full 10 minutes with 800 W going to the grid
+			for (const carState of [1, 3, CAR_STATE_FINISHED]) {
+				assert.equal(phaseSwitchStartsWait(carState), false, String(carState));
+			}
+		});
+
+		it("keeps the wait for an unknown or invalid car state", () => {
+			for (const carState of [0, 5, -1, Number.NaN, "3", null, undefined]) {
+				assert.equal(phaseSwitchStartsWait(carState), true, String(carState));
+			}
+		});
+
+		it("main.ts only starts the wait through it when the switch was written", () => {
+			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
+			assert.equal(source.split("LastPhaseSwitchMs = Date.now()").length, 2, "one place starts the wait");
+			const compact = source.replace(/\s+/g, " ");
+			assert.ok(
+				compact.includes(
+					"if (phaseSwitchStartsWait(this.wallboxInfoList[iWB].CarState)) { this.wallboxInfoList[iWB].LastPhaseSwitchMs = Date.now(); }",
+				),
+			);
 		});
 	});
 

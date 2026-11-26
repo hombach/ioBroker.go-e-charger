@@ -1232,7 +1232,9 @@ class go_e_charger extends utils.Adapter {
         await axiosInstance
             .get(`http://${this.config.wallBoxList[iWB].ipAddress}/api/set?psm=${psm}`, { transformResponse: r => r })
             .then(response => {
-            this.wallboxInfoList[iWB].LastPhaseSwitchMs = Date.now();
+            if ((0, chargeManagerUtils_1.phaseSwitchStartsWait)(this.wallboxInfoList[iWB].CarState)) {
+                this.wallboxInfoList[iWB].LastPhaseSwitchMs = Date.now();
+            }
             this.log.info(`Charger ${this.wallboxLabel(iWB)}: switched to ${Charge3Phase ? 3 : 1}-phase charging`);
             this.log.debug(`Sent: PSM=${psm} to charger ${this.wallboxLabel(iWB)} → Response: ${response.statusText}`);
             this.logPhaseAutoOverride(iWB, psm);
