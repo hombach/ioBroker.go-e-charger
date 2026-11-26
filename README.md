@@ -281,8 +281,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.12.1 (2026-11-26)
 
 - (hombach) added support for firmware V60.4
 
@@ -320,18 +319,6 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (hombach) added read-only state info.ipAddress with the configured IP address of each charger
 - (hombach) log messages now name a charger by its configured name (e.g. charger "WEST - Tesla" (192.168.11.181)) instead of its number; the number is only used when no name is configured
 - (typhosj) ChargeManager: new state `Settings.PhaseMode` switches between fixed one-phase, fixed three-phase and automatic phase switching at runtime; the instance option now only makes the automatic mode available
-
-### 1.10.0 (2026-10-29)
-
-- (hombach) improved log message for invalid wallbox responses (no longer suggests checking the IP)
-- (hombach) fixed maxAmpTotal config: default 16 A, max 64 A consistent between admin and code
-- (hombach) fixed outdated native defaults in io-package.json (e.g. subtractSelfConsumption undefined on new installs)
-- (typhosj) with ChargeNOW and ChargeManager both off, the adapter no longer aborts a charge it did not start - a charge started from the go-e app, the button or after a charger restart used to be cut off in the next cycle, until the vehicle gave up
-- (typhosj) ChargeNOW now switches itself off when the vehicle is unplugged, and with the option above when the vehicle stops drawing power; it used to hold the charge release until switched off by hand, so the next vehicle plugged in started charging at the full ChargeNOW current. While ChargeNOW waits for a vehicle, nothing is sent to the charger
-- (typhosj) ChargeNOW and ChargeManager are now exclusive: switching one on switches the other off, instead of ChargeNOW silently taking precedence
-- (typhosj) a ChargeManager that takes over a charger - at adapter start or after ChargeNOW - continues a running charge at its current, with a fresh shutdown delay; it used to start from its previous state and could withdraw the release in its first cycle
-- (typhosj) ChargeManager: a charger in force state neutral, where it decides by itself and charges any vehicle, is now held off unless the adapter released it - firmware 60.6 comes back from every restart in that state, the go-e app sets it when a setting is saved, and firmware 59.4 and 60.6 set it when a vehicle is unplugged; the next vehicle used to charge at full power from the grid until the shutdown delay ran out. The release the charger reports in that state is no longer taken for one the adapter gave
-- (HombachC) fixed TypeError in log when a state change arrives for an unconfigured wallbox number
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 
