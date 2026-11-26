@@ -283,6 +283,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 -->
 ### **WORK IN PROGRESS**
 
+- (typhosj) a charge release the adapter no longer requests is no longer counted as ignored: after the vehicle was unplugged, the charger reports the release as withdrawn by itself, the adapter wrote nothing and kept waiting for its last release - five minutes later the log said the release was ignored 30 times, and a later start at car state 4 could send the release only every 6 cycles from the first attempt on
 - (typhosj) ChargeManager: a phase switch written while no charge runs - together with the charge release, while the vehicle waits, has finished or is not plugged in - no longer holds back the next switch for the charger's minimum time between two switches; a start switched to one phase at the release used to wait ten minutes before it could go up to three phases
 - (hombach) ChargeManager: documented that on firmware 60.6 a start phase switch does not count towards the charger's minimum time between two switches (`mptwt`), and added a regression test that a switch written before the car draws current does not block the next one
 

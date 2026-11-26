@@ -668,6 +668,10 @@ class go_e_charger extends utils.Adapter {
                         this.wallboxInfoList[iWB].SetAmp = 0;
                         await this.Charge_Config("0", this.wallboxInfoList[iWB].MinAmp, `Deactivate go-eCharger`, iWB);
                     }
+                    else {
+                        this.wallboxInfoList[iWB].RequestedAllow = null;
+                        this.wallboxInfoList[iWB].ReleaseRejects = 0;
+                    }
                 }
                 totalChargeEnergy += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.statistics.chargedEnergy`)) || 0;
                 totalChargePower += Number(await this.projectUtils.getStateValue(`Wallbox_${iWB}.Power.Charge`)) || 0;
@@ -1269,6 +1273,7 @@ class go_e_charger extends utils.Adapter {
         }
         this.wallboxInfoList[iWB].ReleasedByAdapter = Allow === "1";
         let pending = (0, chargeManagerUtils_1.dropUnchangedChargerCommands)(commands, this.wallboxInfoList[iWB].Reported);
+        this.wallboxInfoList[iWB].RequestedAllow = (0, chargeManagerUtils_1.requestedAllowAfter)(commands, this.wallboxInfoList[iWB].Reported, this.wallboxInfoList[iWB].RequestedAllow);
         if ((0, chargeManagerUtils_1.holdRejectedRelease)(this.wallboxInfoList[iWB].ReleaseRejects, this.wallboxInfoList[iWB].CarState)) {
             pending = pending.filter(command => command.parameter === "alw" && command.value === 0);
         }
