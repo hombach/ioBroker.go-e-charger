@@ -284,6 +284,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
 ### **WORK IN PROGRESS**
 
 - (typhosj) ChargeManager: a phase switch written while no charge runs - together with the charge release, while the vehicle waits, has finished or is not plugged in - no longer holds back the next switch for the charger's minimum time between two switches; a start switched to one phase at the release used to wait ten minutes before it could go up to three phases
+- (HombachC) ChargeManager: documented that on firmware 60.6 a start phase switch does not count towards the charger's minimum time between two switches (`mptwt`), and added a regression test that a switch written before the car draws current does not block the next one
 
 ### 1.12.1 (2026-11-26)
 
