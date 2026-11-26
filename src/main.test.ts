@@ -70,6 +70,7 @@ import {
 	SHUTDOWN_DELAY_CYCLES,
 	START_CHARGE_CURRENT,
 	stepChargeCurrent,
+	requestedAllowAfter,
 	updateReleaseRejects,
 	updateShutdownDelay,
 	withdrawReleaseWithModesOff,
@@ -1724,6 +1725,58 @@ describe("ChargeManager safety helpers", () => {
 				assert.equal(phaseModeToSend(false, enabledPhases), 1);
 				assert.equal(phaseModeToSend(true, enabledPhases), 2);
 			}
+		});
+	});
+
+	describe("requestedAllowAfter", () => {
+		it("takes a release request the charger already reports as met", () => {
+			// ChargeManager stops after the vehicle was unplugged: the charger already reports alw=0,
+			// so the withdrawal is not written - the old release must not stay the request
+			assert.equal(requestedAllowAfter([{ parameter: "alw", value: 0 }], { alw: 0 }, 1), 0);
+			assert.equal(
+				requestedAllowAfter(
+					[
+						{ parameter: "amp", value: 10 },
+						{ parameter: "alw", value: 1 },
+					],
+					{ alw: 1, amp: 6 },
+					0,
+				),
+				1,
+			);
+		});
+
+		it("keeps the request while the release still has to be written", () => {
+			assert.equal(requestedAllowAfter([{ parameter: "alw", value: 1 }], { alw: 0 }, 0), 0);
+			assert.equal(requestedAllowAfter([{ parameter: "alw", value: 0 }], { alw: 1 }, 1), 1);
+			assert.equal(requestedAllowAfter([{ parameter: "alw", value: 1 }], { alw: 0 }, null), null);
+		});
+
+		it("keeps the request without a release command or a usable reading", () => {
+			assert.equal(requestedAllowAfter([{ parameter: "amp", value: 10 }], { alw: 0, amp: 10 }, 1), 1);
+			assert.equal(requestedAllowAfter([], { alw: 0 }, 1), 1);
+			assert.equal(requestedAllowAfter([{ parameter: "alw", value: 0 }], {}, 1), 1);
+			assert.equal(requestedAllowAfter([{ parameter: "alw", value: 0 }], { alw: Number.NaN }, 1), 1);
+		});
+
+		it("stops counting ignored releases once the unplugged charger reports alw=0", () => {
+			// 2026-11-25: ChargeNOW released (alw=1 written), vehicle unplugged, ChargeManager stopped -
+			// 30 cycles later the log said the release was ignored 30 times
+			let requested: number | null = 1;
+			let rejects = 0;
+			for (let cycle = 0; cycle < 40; cycle++) {
+				requested = requestedAllowAfter([{ parameter: "alw", value: 0 }], { alw: 0 }, requested);
+				rejects = updateReleaseRejects(0, requested, rejects);
+			}
+			assert.equal(rejects, 0);
+		});
+
+		it("main.ts takes a met request before thinning out and clears it with both modes off", () => {
+			const source = readFileSync(join(__dirname, "main.ts"), "utf8");
+			const config = source.slice(source.indexOf("let pending = dropUnchangedChargerCommands"), source.indexOf("if (holdRejectedRelease("));
+			assert.ok(config.includes("requestedAllowAfter(commands, this.wallboxInfoList[iWB].Reported,"), "Charge_Config");
+			const bothOff = source.slice(source.indexOf("both modes off: if the adapter"), source.indexOf("totalChargeEnergy +="));
+			assert.ok(/RequestedAllow = null;/.test(bothOff) && /ReleaseRejects = 0;/.test(bothOff), "both modes off");
 		});
 	});
 

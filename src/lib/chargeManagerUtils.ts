@@ -1228,6 +1228,28 @@ export function dropUnchangedChargerCommands(commands: ChargerCommand[], reporte
 }
 
 /**
+ * The charge release the adapter waits for after a request, for {@link updateReleaseRejects}.
+ *
+ * A release request the charger already reports is met and is not written again (see
+ * {@link dropUnchangedChargerCommands}), so it would never replace the previous request. After an
+ * unplug the charger reports `alw=0` by itself: the withdrawal is dropped, the old release stayed
+ * the request, and every later read counted as an ignored release.
+ *
+ * @param commands Ordered charger commands of this request, before unchanged ones are dropped
+ * @param reported Values the charger reported in the last successful read
+ * @param previous The release requested so far (`null` = none)
+ * @returns The release value of a met request, otherwise `previous`
+ */
+export function requestedAllowAfter(
+	commands: ChargerCommand[],
+	reported: Partial<Record<ChargerCommand["parameter"], number>>,
+	previous: number | null,
+): number | null {
+	const release = commands.find(command => command.parameter === "alw");
+	return release !== undefined && reported.alw === release.value ? release.value : previous;
+}
+
+/**
  * Builds a safe sequence of commands for the go-e Charger.
  *
  * When charging is enabled, the current is configured before the charge

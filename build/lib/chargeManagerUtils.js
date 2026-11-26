@@ -36,6 +36,7 @@ exports.phaseVoltagesFromNrg = phaseVoltagesFromNrg;
 exports.updateReleaseRejects = updateReleaseRejects;
 exports.holdRejectedRelease = holdRejectedRelease;
 exports.dropUnchangedChargerCommands = dropUnchangedChargerCommands;
+exports.requestedAllowAfter = requestedAllowAfter;
 exports.buildChargerCommands = buildChargerCommands;
 exports.validateMaxAmpTotal = validateMaxAmpTotal;
 exports.limitTotalCurrent = limitTotalCurrent;
@@ -476,6 +477,10 @@ function holdRejectedRelease(rejects, carState) {
 const COMMAND_READBACK = { alw: "alw", amp: "amp", amx: "amp" };
 function dropUnchangedChargerCommands(commands, reported) {
     return commands.filter(command => reported[COMMAND_READBACK[command.parameter]] !== command.value);
+}
+function requestedAllowAfter(commands, reported, previous) {
+    const release = commands.find(command => command.parameter === "alw");
+    return release !== undefined && reported.alw === release.value ? release.value : previous;
 }
 function buildChargerCommands(allow, ampere, firmware) {
     if (!allow) {
