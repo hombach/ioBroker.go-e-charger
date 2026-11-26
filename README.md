@@ -281,7 +281,7 @@ If you enjoyed this project – or are just feeling generous – consider buying
   Placeholder for the next version (at the beginning of the line):
   ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 1.12.2 (2026-11-26)
 
 - (typhosj) a charge release the adapter no longer requests is no longer counted as ignored: after the vehicle was unplugged, the charger reports the release as withdrawn by itself, the adapter wrote nothing and kept waiting for its last release - five minutes later the log said the release was ignored 30 times, and a later start at car state 4 could send the release only every 6 cycles from the first attempt on
 - (typhosj) ChargeManager: a phase switch written while no charge runs - together with the charge release, while the vehicle waits, has finished or is not plugged in - no longer holds back the next switch for the charger's minimum time between two switches; a start switched to one phase at the release used to wait ten minutes before it could go up to three phases
@@ -318,13 +318,6 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 - (hombach) added a migration guide from the go-e adapter (ioBroker.go-e) in English and German
 - (hombach) fixed the RFID card energy (statistics.RFID<n>.chargedEnergy) on gen 3+ chargers freezing at the value read at adapter start: it is now read from the API V2 card keys in Wh precision, with an API V1 fallback refreshed every cycle (#889)
-
-### 1.10.1 (2026-10-31)
-
-- (hombach) an unreachable charger (e.g. without power) is now shown offline: its info.connection turns false, live readings are cleared and it is left out of ChargeManager and current budget until it answers again; the error is logged once instead of every cycle
-- (hombach) added read-only state info.ipAddress with the configured IP address of each charger
-- (hombach) log messages now name a charger by its configured name (e.g. charger "WEST - Tesla" (192.168.11.181)) instead of its number; the number is only used when no name is configured
-- (typhosj) ChargeManager: new state `Settings.PhaseMode` switches between fixed one-phase, fixed three-phase and automatic phase switching at runtime; the instance option now only makes the automatic mode available
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 
