@@ -49,7 +49,7 @@ For more information about the go-e Charger hardware, visit the manufacturer's w
 - energy statistics per RFID card (card name, ID, and charged energy)
 - read-only mode per wallbox – monitor a charger purely, without sending **any** control commands to it (no charge release, no charging current, no phase switching), e.g. when charging is controlled elsewhere or access is managed via RFID tags
 
-Tested with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1, V56.2, V56.8, V56.9, V56.11, V57.0, V57.1, V59.4, V60.0, V60.1, V60.2, V60.5, V60.6 and with up to 3 chargers operated in parallel.
+Tested with firmware V033, V040.0, V041.0, V054.7, V054.11, V055.5, V055.7, V055.8, V56.1, V56.2, V56.8, V56.9, V56.11, V57.0, V57.1, V59.4, V60.0, V60.1, V60.2, V60.4, V60.5, V60.6 and with up to 3 chargers operated in parallel.
 
 ### Requirements
 
@@ -285,6 +285,10 @@ If you enjoyed this project – or are just feeling generous – consider buying
 
 - (typhosj) ChargeManager: a phase switch written while no charge runs - together with the charge release, while the vehicle waits, has finished or is not plugged in - no longer holds back the next switch for the charger's minimum time between two switches; a start switched to one phase at the release used to wait ten minutes before it could go up to three phases
 
+### 1.12.1 (2026-11-26)
+
+- (hombach) added support for firmware V60.4
+
 ### 1.12.0 (2026-11-23)
 
 - (typhosj) ChargeManager: the automatic 1-/3-phase switching now keeps a real gap between switching up and switching back down - for a 16 A wallbox both thresholds used to be the same value
@@ -293,44 +297,32 @@ If you enjoyed this project – or are just feeling generous – consider buying
 - (typhosj) the phase count is no longer switched while the charger is held off - neither by the automatic switching, nor by a fixed phase mode, nor by ChargeNOW. The new phase count is planned at once without the switching dwell, sizes the charging current right away and is written right after the next charge release. A switch without a release is never needed, starts the charger's minimum time between two switches, which can then block the switch the start needs, and left the go-e hanging in "min pause duration" for hours on some firmware versions. The info log reports a phase switch when it is written to the charger, the plan only at debug level
 - (typhosj) ChargeManager: before a charge starts, the automatic phase switching now plans with the start current (10 A) instead of the minimum current - a surplus between the three-phase minimum and the three-phase start (5520 to 6900 W with 8-16 A) kept the charger on three phases, where it never started, although one phase could have charged at full current
 - (typhosj) ChargeManager: a charger set to its own automatic phase switching (`psm` 0) now starts the automatic phase switching from the phases it charges on, or - while it does not charge - picks the start phase from the surplus right away; it used to be switched to one phase first, and the charger's minimum time between two switches then kept a sunny start on one phase for ten minutes
-- (HombachC) fixed ChargeNOW and ChargeManager never starting with the total current budget (`maxAmpTotal`) active when the charger reported car state 4 (charge finished / paused): the budget took only car states 2 and 3 as a connected vehicle, withdrew the release and logged "waiting for vehicle", and without a release the charger stays at car state 4; car state 4 now counts as a connected vehicle, as everywhere else in the adapter
-- (HombachC) the maximum total charging current across all wallboxes accepts 0 (budget disabled) again in the admin page, as its label and help say; values 1-5 A are refused; it is placed next to the maximum charging current per wallbox
-- (HombachC) clarified the labels and help texts of the maximum charging current per wallbox (`maxChargeCurrent`): it is the upper limit and default for each individual wallbox, not the installation fuse; a tighter per-box limit is set in the wallbox list, and the summed current is limited by the maximum total charging current
+- (hombach) fixed ChargeNOW and ChargeManager never starting with the total current budget (`maxAmpTotal`) active when the charger reported car state 4 (charge finished / paused): the budget took only car states 2 and 3 as a connected vehicle, withdrew the release and logged "waiting for vehicle", and without a release the charger stays at car state 4; car state 4 now counts as a connected vehicle, as everywhere else in the adapter
+- (hombach) the maximum total charging current across all wallboxes accepts 0 (budget disabled) again in the admin page, as its label and help say; values 1-5 A are refused; it is placed next to the maximum charging current per wallbox
+- (hombach) clarified the labels and help texts of the maximum charging current per wallbox (`maxChargeCurrent`): it is the upper limit and default for each individual wallbox, not the installation fuse; a tighter per-box limit is set in the wallbox list, and the summed current is limited by the maximum total charging current
 
 ### 1.11.0 (2026-11-22)
 
-- (HombachC) added grid meter input for ChargeManager: one signed grid power value (import positive, export negative) instead of PV generation and house consumption, with Negate, Ack-only and maximum age options (#919)
-- (HombachC) added Negate options for the solar power and home power consumption objects (#919)
-- (HombachC) reorganized the ChargeManager configuration page into the logical blocks surplus input, home battery and surplus control: options are placed next to the object they belong to, settings that do not apply to the selected surplus source or home battery mode are hidden, and all value fields show their unit (#919)
-- (HombachC) added support for chargers without HTTP API v1 (e.g. go-e Charger CORE / PRO, firmware 60.x): they are detected automatically and read and controlled over HTTP API v2 only; HTTP error answers (e.g. 404 for a disabled API, 401/403 for probable password protection) are now logged with a hint instead of asking to verify the IP address; a charger waiting for RFID/app authorization is logged once, and the new charger option "Start transaction without RFID on API-v2-only chargers (trx=0)" (off by default) can authorize it; rejections of API v2 writes are logged with the charger's reason; car states "Initializing" and "Unknown" are no longer shown as "Error"; these chargers are no longer asked for `ast`, `cbl` and `cards` (the go-e CORE 60.4 has none of them, and unknown keys are ignored); the cause of an HTTP 400 on a go-e CORE 60.4 is unknown, and as a safety net a charger that refuses the filtered status with HTTP 400 is read without filter; every HTTP request to a charger is logged at debug level with URL, HTTP status, duration and response length (#939)
-- (HombachC) a charger set to its own automatic phase switching (`psm` 0) is still switched to the fixed phase mode of the adapter on purpose - this is now logged once; `Power.EnabledPhases` shows the phases in use instead of 0 while the charger is set to automatic phase switching
-- (HombachC) moved the Sentry notice near the top of README.md to satisfy the repository checker (#938)
+- (hombach) added grid meter input for ChargeManager: one signed grid power value (import positive, export negative) instead of PV generation and house consumption, with Negate, Ack-only and maximum age options (#919)
+- (hombach) added Negate options for the solar power and home power consumption objects (#919)
+- (hombach) reorganized the ChargeManager configuration page into the logical blocks surplus input, home battery and surplus control: options are placed next to the object they belong to, settings that do not apply to the selected surplus source or home battery mode are hidden, and all value fields show their unit (#919)
+- (hombach) added support for chargers without HTTP API v1 (e.g. go-e Charger CORE / PRO, firmware 60.x): they are detected automatically and read and controlled over HTTP API v2 only; HTTP error answers (e.g. 404 for a disabled API, 401/403 for probable password protection) are now logged with a hint instead of asking to verify the IP address; a charger waiting for RFID/app authorization is logged once, and the new charger option "Start transaction without RFID on API-v2-only chargers (trx=0)" (off by default) can authorize it; rejections of API v2 writes are logged with the charger's reason; car states "Initializing" and "Unknown" are no longer shown as "Error"; these chargers are no longer asked for `ast`, `cbl` and `cards` (the go-e CORE 60.4 has none of them, and unknown keys are ignored); the cause of an HTTP 400 on a go-e CORE 60.4 is unknown, and as a safety net a charger that refuses the filtered status with HTTP 400 is read without filter; every HTTP request to a charger is logged at debug level with URL, HTTP status, duration and response length (#939)
+- (HombahombachchC) a charger set to its own automatic phase switching (`psm` 0) is still switched to the fixed phase mode of the adapter on purpose - this is now logged once; `Power.EnabledPhases` shows the phases in use instead of 0 while the charger is set to automatic phase switching
+- (hombach) moved the Sentry notice near the top of README.md to satisfy the repository checker (#938)
 - (hombach) updated iobroker/testing
 - (hombach) updated dependencies
 
 ### 1.10.2 (2026-11-01)
 
-- (HombachC) added a migration guide from the go-e adapter (ioBroker.go-e) in English and German
-- (HombachC) fixed the RFID card energy (statistics.RFID<n>.chargedEnergy) on gen 3+ chargers freezing at the value read at adapter start: it is now read from the API V2 card keys in Wh precision, with an API V1 fallback refreshed every cycle (#889)
+- (hombach) added a migration guide from the go-e adapter (ioBroker.go-e) in English and German
+- (hombach) fixed the RFID card energy (statistics.RFID<n>.chargedEnergy) on gen 3+ chargers freezing at the value read at adapter start: it is now read from the API V2 card keys in Wh precision, with an API V1 fallback refreshed every cycle (#889)
 
 ### 1.10.1 (2026-10-31)
 
-- (HombachC) an unreachable charger (e.g. without power) is now shown offline: its info.connection turns false, live readings are cleared and it is left out of ChargeManager and current budget until it answers again; the error is logged once instead of every cycle
-- (HombachC) added read-only state info.ipAddress with the configured IP address of each charger
-- (HombachC) log messages now name a charger by its configured name (e.g. charger "WEST - Tesla" (192.168.11.181)) instead of its number; the number is only used when no name is configured
+- (hombach) an unreachable charger (e.g. without power) is now shown offline: its info.connection turns false, live readings are cleared and it is left out of ChargeManager and current budget until it answers again; the error is logged once instead of every cycle
+- (hombach) added read-only state info.ipAddress with the configured IP address of each charger
+- (hombach) log messages now name a charger by its configured name (e.g. charger "WEST - Tesla" (192.168.11.181)) instead of its number; the number is only used when no name is configured
 - (typhosj) ChargeManager: new state `Settings.PhaseMode` switches between fixed one-phase, fixed three-phase and automatic phase switching at runtime; the instance option now only makes the automatic mode available
-
-### 1.10.0 (2026-10-29)
-
-- (HombachC) improved log message for invalid wallbox responses (no longer suggests checking the IP)
-- (HombachC) fixed maxAmpTotal config: default 16 A, max 64 A consistent between admin and code
-- (HombachC) fixed outdated native defaults in io-package.json (e.g. subtractSelfConsumption undefined on new installs)
-- (typhosj) with ChargeNOW and ChargeManager both off, the adapter no longer aborts a charge it did not start - a charge started from the go-e app, the button or after a charger restart used to be cut off in the next cycle, until the vehicle gave up
-- (typhosj) ChargeNOW now switches itself off when the vehicle is unplugged, and with the option above when the vehicle stops drawing power; it used to hold the charge release until switched off by hand, so the next vehicle plugged in started charging at the full ChargeNOW current. While ChargeNOW waits for a vehicle, nothing is sent to the charger
-- (typhosj) ChargeNOW and ChargeManager are now exclusive: switching one on switches the other off, instead of ChargeNOW silently taking precedence
-- (typhosj) a ChargeManager that takes over a charger - at adapter start or after ChargeNOW - continues a running charge at its current, with a fresh shutdown delay; it used to start from its previous state and could withdraw the release in its first cycle
-- (typhosj) ChargeManager: a charger in force state neutral, where it decides by itself and charges any vehicle, is now held off unless the adapter released it - firmware 60.6 comes back from every restart in that state, the go-e app sets it when a setting is saved, and firmware 59.4 and 60.6 set it when a vehicle is unplugged; the next vehicle used to charge at full power from the grid until the shutdown delay ran out. The release the charger reports in that state is no longer taken for one the adapter gave
-- (HombachC) fixed TypeError in log when a state change arrives for an unconfigured wallbox number
 
 [Older changelogs can be found there](CHANGELOG_OLD.md)
 

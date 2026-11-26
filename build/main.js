@@ -470,6 +470,7 @@ class go_e_charger extends utils.Adapter {
                 case "60.0":
                 case "60.1":
                 case "60.2":
+                case "60.4":
                 case "60.5":
                 case "60.6":
                     this.log.debug(`Init done, launching state machine`);
