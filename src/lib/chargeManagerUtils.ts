@@ -688,9 +688,8 @@ export function chargerPauseMs(value: unknown, fallback: number): number {
  * (2026-11-14: 3 -> 1 phase at the release, the lift to three phases a minute later waited 10
  * minutes with 800 W going to the grid). Any other car state, including an unknown one, keeps the wait.
  *
- * Known limit: whether the go-e firmware itself counts such a switch towards `mptwt` is not
- * measured. If it does, it ignores the next switch; the adapter reads the unchanged phase count
- * back and then waits for that next switch, made during the charge.
+ * On firmware 60.6 a `psm` write 64 s after such a start switch was accepted, so the start
+ * switch does not count towards `mptwt`. Older firmware was not part of that measurement.
  *
  * @param carState `car` the charger reported in the last poll
  * @returns `true` when the switch starts the wait

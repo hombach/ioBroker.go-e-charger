@@ -2020,6 +2020,46 @@ describe("ChargeManager safety helpers", () => {
 				),
 			);
 		});
+
+		// Switch_3Phases itself is not unit-tested (HTTP write). After a successful write it sets
+		// LastPhaseSwitchMs only when phaseSwitchStartsWait is true; the AutoPhase plan then
+		// blocks with lastSwitch !== null && now - lastSwitch < PhaseToggleWaitMs (main.ts).
+		const lastSwitchAfterWrite = (carState: unknown, writtenAt: number): number | null => (phaseSwitchStartsWait(carState) ? writtenAt : null);
+		const waitBlocks = (lastSwitch: number | null, now: number): boolean => lastSwitch !== null && now - lastSwitch < DEFAULT_PHASE_TOGGLE_WAIT_MS;
+		const dueUp = {
+			currentPhases: 1 as const,
+			availablePower: 32 * PHASE_VOLTAGE,
+			minimumChargeCurrent: MIN_CHARGE_CURRENT,
+			maximumChargeCurrent: 32,
+			switchDelay: PHASE_SWITCH_DELAY_CYCLES,
+		};
+
+		it("does not block the next switch after one written before the car draws current", () => {
+			const writtenAt = 1_000_000;
+			// one minute later, well inside the default 10-minute mptwt
+			const later = writtenAt + PHASE_SWITCH_UP_DELAY_MS;
+			for (const carState of [1, 3, CAR_STATE_FINISHED]) {
+				const lastSwitch = lastSwitchAfterWrite(carState, writtenAt);
+				const blocked = waitBlocks(lastSwitch, later);
+				assert.equal(lastSwitch, null, String(carState));
+				assert.equal(blocked, false, String(carState));
+				assert.deepEqual(decidePhaseSwitch({ ...dueUp, blocked }), { targetPhases: 3, switchDelay: 0 }, String(carState));
+			}
+		});
+
+		it("keeps the next switch blocked until mptwt after one written while the car charges", () => {
+			const writtenAt = 1_000_000;
+			const lastSwitch = lastSwitchAfterWrite(2, writtenAt);
+			assert.equal(lastSwitch, writtenAt);
+			const duringWait = writtenAt + PHASE_SWITCH_UP_DELAY_MS;
+			const blockedDuring = waitBlocks(lastSwitch, duringWait);
+			assert.equal(blockedDuring, true);
+			assert.deepEqual(decidePhaseSwitch({ ...dueUp, blocked: blockedDuring }), { targetPhases: 1, switchDelay: 0 });
+			const afterWait = writtenAt + DEFAULT_PHASE_TOGGLE_WAIT_MS;
+			const blockedAfter = waitBlocks(lastSwitch, afterWait);
+			assert.equal(blockedAfter, false);
+			assert.deepEqual(decidePhaseSwitch({ ...dueUp, blocked: blockedAfter }), { targetPhases: 3, switchDelay: 0 });
+		});
 	});
 
 	describe("planningPhases", () => {
